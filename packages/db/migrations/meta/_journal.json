@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789943822797,
+      "tag": "0000_create_property_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789944321529,
+      "tag": "0001_create_user_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789952204093,
+      "tag": "0002_create_library_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789984597886,
+      "tag": "0003_create_now_playing_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789987256526,
+      "tag": "0004_create_play_queue_table",
+      "breakpoints": true
+    }
+  ]
+}
