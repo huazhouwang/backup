@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789943822797,
+      "tag": "0000_create_property_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789944321529,
+      "tag": "0001_create_user_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789952204093,
+      "tag": "0002_create_library_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789984597886,
+      "tag": "0003_create_now_playing_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789987256526,
+      "tag": "0004_create_play_queue_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789987731732,
+      "tag": "0005_create_bookmark_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790628034865,
+      "tag": "0006_add_track_lyrics_and_scan_version",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790629173180,
+      "tag": "0007_add_now_playing_playback_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790675072863,
+      "tag": "0008_add_better_auth_tables",
+      "breakpoints": true
+    }
+  ]
+}

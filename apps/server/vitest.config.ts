@@ -1,0 +1,39 @@
+import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
+import { configDefaults, defineConfig } from "vitest/config";
+
+// Resolved against this project directory, which is Vitest's working directory.
+const migrationsDir = "../../packages/db/migrations";
+
+export default defineConfig(async () => {
+  // Tests run against a real D1 carrying the same migrations that
+  // `wrangler d1 migrations apply` would run in production.
+  const migrations = await readD1Migrations(migrationsDir);
+
+  return {
+    plugins: [
+      cloudflareTest({
+        wrangler: { configPath: "./wrangler.jsonc" },
+        miniflare: {
+          // `INITIAL_PASSWORD` and `PASSWORD_ENCRYPTION_KEY` are Worker secrets
+          // in production (`wrangler secret put`); tests supply them the same
+          // way the runtime sees them, as plain bindings.
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            INITIAL_USER: "admin",
+            INITIAL_PASSWORD: "sesame",
+            PASSWORD_ENCRYPTION_KEY: "test-password-encryption-key",
+          },
+          // A second, empty database, which no setup file migrates: a test
+          // migrates it part of the way, writes the rows a deployed server
+          // would have, then applies the rest (test/migration-0008.test.ts).
+          d1Databases: ["MIGRATION_DB"],
+        },
+      }),
+    ],
+    test: {
+      setupFiles: ["./test/apply-migrations.ts"],
+      // Run in Node by vitest.routing.config.ts, not inside the Workers pool.
+      exclude: [...configDefaults.exclude, "test/routing/**"],
+    },
+  };
+});
