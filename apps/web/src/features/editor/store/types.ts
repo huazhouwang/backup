@@ -16,15 +16,20 @@ export interface LastChange {
 /** What the user is placing from the add palette: it follows the pointer in the plan until a click puts it down */
 export type Placing = { kind: 'furniture'; type: string } | { kind: 'opening'; opening: OpeningKind };
 
+/** SketchUp's standard views: the camera turns to look from there (top, or one side named by true north), and still orbits */
+export type StandardView = 'iso' | 'top' | 'front' | 'back' | 'left' | 'right';
+
 /**
- * What the 3D view shows: the perspective model, walking through it at eye height, an orthographic elevation (named by true
- * north), or a section across a line
+ * The 3D camera, as SketchUp's Camera menu and section planes: perspective or parallel projection, walking at eye height, a section
+ * plane cut across a line drawn in the plan (looking across from its right-hand side), and the last standard view asked for
  */
-export type View3D =
-  | { kind: 'perspective' }
-  | { kind: 'walk' }
-  | { kind: 'elevation'; side: 'north' | 'south' | 'east' | 'west' }
-  | { kind: 'section'; a: Point; b: Point };
+export interface Camera3D {
+  projection: 'perspective' | 'parallel';
+  walking: boolean;
+  section: { a: Point; b: Point } | null;
+  /** A standard view to turn to; `at` makes each request new */
+  standard: { view: StandardView; at: number } | null;
+}
 
 export interface ModelOption {
   id: string;
@@ -79,8 +84,8 @@ export interface EditorState {
   measuring: boolean;
   /** The section tool is out in the plan: two clicks draw a section line */
   sectioning: boolean;
-  /** What the 3D view shows (see View3D) */
-  view3d: View3D;
+  /** The 3D camera (see Camera3D) */
+  camera3d: Camera3D;
 }
 
 export interface EditorActions {
@@ -94,7 +99,7 @@ export interface EditorActions {
   setPlacing(p: Placing | null): void;
   setMeasuring(on: boolean): void;
   setSectioning(on: boolean): void;
-  setView3d(v: View3D): void;
+  setCamera3d(patch: Partial<Camera3D>): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

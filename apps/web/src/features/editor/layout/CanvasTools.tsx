@@ -1,35 +1,39 @@
-import { BoxIcon, CrosshairIcon, EyeIcon, LayersIcon, RulerIcon, ScissorsLineDashedIcon, SquareIcon } from 'lucide-react';
+import { BoxIcon, CameraIcon, CrosshairIcon, LayersIcon, RulerIcon, ScissorsLineDashedIcon, SquareIcon } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { m } from '@/lib/i18n';
 import { useEditor } from '../store';
+import type { StandardView } from '../store/types';
 import { AddMenu } from './AddMenu';
 
-const VIEW_LABEL: Record<string, () => string> = {
-  perspective: m.view_perspective,
-  walk: m.view_walk,
-  north: m.view_north,
-  south: m.view_south,
-  east: m.view_east,
-  west: m.view_west,
-  section: m.view_section,
+const STANDARD_VIEWS: StandardView[] = ['iso', 'top', 'front', 'back', 'left', 'right'];
+const STANDARD_LABEL: Record<StandardView, () => string> = {
+  iso: m.camera_iso,
+  top: m.camera_top,
+  front: m.camera_front,
+  back: m.camera_back,
+  left: m.camera_left,
+  right: m.camera_right,
 };
 
 /**
  * View tools, floating over the canvas top-right: in the plan the add palette and the section tool, in 3D the view menu
- * (perspective, walking, elevations, the section) and the cutaway toggle, the tape measure, fit all, and the view switch (showing the view you are in; pressing it goes to the other one).
+ * (SketchUp's Camera menu: standard views, perspective or parallel projection, walking; flipping or clearing the section) and the cutaway toggle, the tape measure, fit all, and the view switch (showing the view you are in; pressing it goes to the other one).
  */
 export function CanvasTools({ className }: { className?: string }) {
   const view = useEditor(s => s.view);
@@ -42,9 +46,8 @@ export function CanvasTools({ className }: { className?: string }) {
   const setMeasuring = useEditor(s => s.setMeasuring);
   const sectioning = useEditor(s => s.sectioning);
   const setSectioning = useEditor(s => s.setSectioning);
-  const view3d = useEditor(s => s.view3d);
-  const setView3d = useEditor(s => s.setView3d);
-  const viewValue = view3d.kind === 'elevation' ? view3d.side : view3d.kind;
+  const camera3d = useEditor(s => s.camera3d);
+  const setCamera3d = useEditor(s => s.setCamera3d);
   const canEdit = useEditor(s => s.canEdit());
   const [switching, setSwitching] = useState(false);
   const to = view.mode === '2d' ? '3d' : '2d';
@@ -56,8 +59,8 @@ export function CanvasTools({ className }: { className?: string }) {
     try {
       if (to === '2d' && leave3D) await leave3D();
       else if (to === '3d') setPlanUntil3D(true);
-      // The plan is always left from, and 3D always entered in, the perspective view
-      setView3d({ kind: 'perspective' });
+      // Walking and the section plane end with 3D; the projection stays, as in SketchUp
+      setCamera3d({ walking: false, section: null });
       setView({ mode: to });
     } finally {
       setSwitching(false);
@@ -88,44 +91,45 @@ export function CanvasTools({ className }: { className?: string }) {
       )}
       {view.mode === '3d' && (
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button size="sm" variant="outline" className="bg-background" aria-label={m.view_menu()} />}>
-            <EyeIcon />
-            {VIEW_LABEL[viewValue]()}
+          <DropdownMenuTrigger render={<Button size="sm" variant="outline" className="bg-background" aria-label={m.camera_menu()} />}>
+            <CameraIcon />
+            {camera3d.walking ? m.camera_walk() : camera3d.projection === 'parallel' ? m.camera_parallel() : m.camera_menu()}
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuRadioGroup
-              value={viewValue}
-              onValueChange={v =>
-                setView3d(
-                  v === 'perspective' || v === 'walk'
-                    ? { kind: v }
-                    : v === 'section'
-                      ? view3d
-                      : { kind: 'elevation', side: v as 'north' | 'south' | 'east' | 'west' },
-                )
-              }
-            >
-              {(['perspective', 'walk', 'north', 'south', 'east', 'west'] as const).map(k => (
-                <DropdownMenuRadioItem key={k} value={k} closeOnClick>
-                  {VIEW_LABEL[k]()}
-                </DropdownMenuRadioItem>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{m.camera_standard()}</DropdownMenuLabel>
+              {STANDARD_VIEWS.map(v => (
+                <DropdownMenuItem key={v} onClick={() => setCamera3d({ walking: false, standard: { view: v, at: Date.now() } })}>
+                  {STANDARD_LABEL[v]()}
+                </DropdownMenuItem>
               ))}
-              {view3d.kind === 'section' && (
-                <DropdownMenuRadioItem value="section" closeOnClick>
-                  {VIEW_LABEL.section()}
-                </DropdownMenuRadioItem>
-              )}
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup value={camera3d.projection} onValueChange={v => setCamera3d({ projection: v as 'perspective' | 'parallel' })}>
+              <DropdownMenuRadioItem value="perspective" closeOnClick>
+                {m.camera_perspective()}
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="parallel" closeOnClick>
+                {m.camera_parallel()}
+              </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
-            {view3d.kind === 'section' && (
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem checked={camera3d.walking} onCheckedChange={walking => setCamera3d({ walking })} closeOnClick>
+              {m.camera_walk()}
+            </DropdownMenuCheckboxItem>
+            {camera3d.section && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setView3d({ kind: 'section', a: view3d.b, b: view3d.a })}>{m.view_section_flip()}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => camera3d.section && setCamera3d({ section: { a: camera3d.section.b, b: camera3d.section.a } })}>
+                  {m.view_section_flip()}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCamera3d({ section: null })}>{m.camera_section_clear()}</DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      {view.mode === '3d' && view3d.kind === 'perspective' && (
+      {view.mode === '3d' && !camera3d.walking && !camera3d.section && (
         <Tooltip>
           <TooltipTrigger
             render={

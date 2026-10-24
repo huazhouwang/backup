@@ -5,7 +5,7 @@
  * plan. The parts are in meshes.tsx over the shared scene layer (./scene); the camera, picking and screenshots in their own
  * modules. Units: data in millimetres, scene in metres.
  */
-import { OrbitControls, PerformanceMonitor } from '@react-three/drei';
+import { PerformanceMonitor } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import {
   findObject,
@@ -30,7 +30,7 @@ import { useThemeColors } from '@/lib/theme';
 import { modelStyle } from '@/graphics/model-style';
 import { planFrame } from '@/graphics/plan/plan-geometry';
 import { useEditor } from '../store';
-import { CameraRig } from './CameraRig';
+import { CameraRig, OrbitRig } from './CameraRig';
 import { Capture, Wake } from './Capture';
 import { TintColors } from './feedback';
 import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
@@ -38,8 +38,9 @@ import { FOV } from '@/graphics/three/framing';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
-import { OrthoView } from './OrthoView';
+import { SectionPlane } from './SectionPlane';
 import { WalkView } from './WalkView';
+import { WalkJoystick } from './WalkJoystick';
 import { ElementExtras, Furniture, OpeningLook, RailingLook, RoofMesh, Slab, SolidMesh, WallMesh } from './meshes';
 import { detectQuality, isTouchDevice, Renderer, type Quality } from './Renderer';
 import { Reveal } from './Reveal';
@@ -95,9 +96,10 @@ export function Model3D() {
   useBuildsVersion();
   const current = project.levels.find(l => l.id === view.level);
   // The whole house by default; the cutaway shows the current level and below, to look into it
-  const view3d = useEditor(s => s.view3d);
-  // Walking, elevations and sections show the whole house
-  const shown = project.levels.filter(l => view3d.kind !== 'perspective' || !view.layers.cutaway || !current || l.elevation <= current.elevation);
+  const camera3d = useEditor(s => s.camera3d);
+  // Walking and sections show the whole house
+  const whole = camera3d.walking || !!camera3d.section;
+  const shown = project.levels.filter(l => whole || !view.layers.cutaway || !current || l.elevation <= current.elevation);
   const elev = new Map(project.levels.map(l => [l.id, l.elevation]));
   const boxes = useMemo(() => projectBoxes(project), [project]);
   const solids = useMemo(() => projectElements(project).flatMap(g => g.solids), [project]);
@@ -266,38 +268,29 @@ export function Model3D() {
               );
             })}
           </group>
-          {view3d.kind === 'perspective' ? (
-            <>
-              <OrbitControls
-                makeDefault
-                enableDamping
-                dampingFactor={0.09}
-                maxPolarAngle={Math.PI / 2 - 0.05}
-                minDistance={Math.max(1.5, radius * 0.15)}
-                maxDistance={radius * 6}
-              />
-              <CameraRig box={box} levels={levels} current={current?.id ?? ''} growing={growing} drawings={drawings} growth={growth} projectId={projectId} />
-            </>
-          ) : view3d.kind === 'walk' ? (
+          {camera3d.walking ? (
             <WalkView />
           ) : (
-            <OrthoView key={JSON.stringify(view3d)} view3d={view3d} box={box} />
+            <>
+              <OrbitRig radius={radius} />
+              <CameraRig box={box} levels={levels} current={current?.id ?? ''} growing={growing} drawings={drawings} growth={growth} projectId={projectId} />
+            </>
           )}
+          {camera3d.section && <SectionPlane key={JSON.stringify(camera3d.section)} section={camera3d.section} box={box} />}
           <SafariPinch />
           <Picker />
           <Measure3D />
           <Reveal ownerOf={ownerOf} />
-          {/* Elevations and sections read as drawings: always with edges */}
-          <Renderer draw={draw} edges={style.edges || view3d.kind === 'elevation' || view3d.kind === 'section'} edgeColor={c.edge} growth={growth} />
+          {/* Parallel projection and sections read as drawings: with edges */}
+          <Renderer draw={draw} edges={style.edges || camera3d.projection === 'parallel' || !!camera3d.section} edgeColor={c.edge} growth={growth} />
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
           {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
           <Wake on={[view.selection, view.highlight]} />
           <Capture draw={draw} />
         </Canvas>
       </TintColors.Provider>
-      <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground max-md:hidden">
-        {view3d.kind === 'perspective' ? m.model3d_hint() : view3d.kind === 'walk' ? m.model3d_hint_walk() : m.model3d_hint_ortho()}
-      </p>
+      {camera3d.walking && <WalkJoystick className="absolute bottom-6 left-6 max-md:bottom-20" />}
+      <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground max-md:hidden">{!camera3d.walking && m.model3d_hint()}</p>
     </div>
   );
 }

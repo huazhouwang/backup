@@ -151,7 +151,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   // The section tool: two clicks draw the line, then 3D shows the section looking across it (arrows show which way)
   const sectioning = useEditor(s => s.sectioning);
   const setSectioning = useEditor(s => s.setSectioning);
-  const setView3d = useEditor(s => s.setView3d);
+  const setCamera3d = useEditor(s => s.setCamera3d);
   const setView = useEditor(s => s.setView);
   const [cutFrom, setCutFrom] = useState<Point | null>(null);
   const [cutHover, setCutHover] = useState<Point | null>(null);
@@ -168,7 +168,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     const q = cutPoint(e);
     if (!cutFrom) return setCutFrom(q);
     if (Math.hypot(q[0] - cutFrom[0], q[1] - cutFrom[1]) < 300) return;
-    setView3d({ kind: 'section', a: cutFrom, b: q });
+    setCamera3d({ section: { a: cutFrom, b: q }, walking: false });
     setSectioning(false);
     setView({ mode: '3d' });
   };

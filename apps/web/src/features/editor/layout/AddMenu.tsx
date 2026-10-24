@@ -63,7 +63,7 @@ export function AddMenu() {
   );
 }
 
-/** While placing, measuring or drawing a section: what to do, and a way out */
+/** While placing, measuring, drawing a section or walking: what to do, and a way out */
 export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
@@ -71,6 +71,8 @@ export function ToolHint({ className }: { className?: string }) {
   const setMeasuring = useEditor(s => s.setMeasuring);
   const sectioning = useEditor(s => s.sectioning);
   const setSectioning = useEditor(s => s.setSectioning);
+  const walking = useEditor(s => s.camera3d.walking);
+  const setCamera3d = useEditor(s => s.setCamera3d);
   const mode = useEditor(s => s.view.mode);
   const furniture = useEditor(s => s.project.library.furniture);
   let text: string | null = null;
@@ -79,6 +81,7 @@ export function ToolHint({ className }: { className?: string }) {
     text = placing.kind === 'opening' ? m.add_hint_opening({ name }) : m.add_hint_furniture({ name });
   } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
   else if (sectioning && mode === '2d') text = m.section_hint();
+  else if (walking && mode === '3d') text = m.model3d_hint_walk();
   if (!text) return null;
   return (
     <div className={className}>
@@ -91,9 +94,10 @@ export function ToolHint({ className }: { className?: string }) {
             setPlacing(null);
             setMeasuring(false);
             setSectioning(false);
+            if (walking) setCamera3d({ walking: false });
           }}
         >
-          {measuring ? m.measure_done() : m.add_cancel()}
+          {measuring ? m.measure_done() : walking ? m.walk_leave() : m.add_cancel()}
         </Button>
       </div>
     </div>

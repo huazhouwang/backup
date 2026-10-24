@@ -5,10 +5,10 @@
 import type { StoreContext } from './create';
 import type { EditorActions, EditorState } from './types';
 
-type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring' | 'sectioning' | 'view3d'> &
+type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring' | 'sectioning' | 'camera3d'> &
   Pick<
     EditorActions,
-    'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing' | 'setMeasuring' | 'setSectioning' | 'setView3d'
+    'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing' | 'setMeasuring' | 'setSectioning' | 'setCamera3d'
   >;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
@@ -21,7 +21,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   placing: null,
   measuring: false,
   sectioning: false,
-  view3d: { kind: 'perspective' },
+  camera3d: { projection: 'perspective', walking: false, section: null, standard: null },
 
   setCompare(on) {
     set({ compare: on });
@@ -56,7 +56,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
     set({ sectioning, ...(sectioning ? { placing: null, measuring: false } : {}) });
   },
 
-  setView3d(view3d) {
-    set({ view3d });
+  setCamera3d(patch) {
+    set(s => ({ camera3d: { ...s.camera3d, ...patch } }));
   },
 });

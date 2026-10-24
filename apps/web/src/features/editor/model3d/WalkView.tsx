@@ -1,7 +1,8 @@
 /**
  * Walking through the house at eye height, as SketchUp's walk and look-around tools: the camera stands 1.6 m above the floor in a
  * room of the current level (the selected one if any), with a wider lens. Dragging looks around; a tap on a floor walks there; the
- * wheel steps forward or back; WASD or the arrow keys walk. The whole house is shown, so the floors above are the ceilings.
+ * wheel steps forward or back; WASD, the arrow keys or the on-screen joystick (on a phone) walk. The whole house is shown, so the
+ * floors above are the ceilings.
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
@@ -11,7 +12,13 @@ import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { FOV } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
 import { useEditor, useEditorStore } from '../store';
-import { resumeOrbit } from './CameraRig';
+import { perspectiveOf, resumeOrbit } from './CameraRig';
+
+/**
+ * The on-screen joystick's push (see WalkJoystick): forward and right, each -1…1. A plain shared object, as the joystick lives
+ * outside the 3D canvas
+ */
+export const walkStick = { forward: 0, right: 0, wake: () => {} };
 
 /** Eye height above the floor (m) */
 const EYE = 1.6;
@@ -48,7 +55,7 @@ export function WalkView() {
   const project = useEditor(s => s.project);
   const projectId = useEditor(s => s.projectId);
   const store = useEditorStore();
-  const { camera, gl, scene, raycaster, invalidate } = useThree();
+  const { camera, gl, scene, raycaster, invalidate, set } = useThree();
   const doc = useCanvasDocument();
   const look = useRef({ yaw: 0, pitch: 0 });
   const walk = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
@@ -64,7 +71,12 @@ export function WalkView() {
   // Stand in the room; a wider lens and a near plane for close walls. Coming from an elevation, the perspective camera is back
   // as the default one a render later: set up then
   useEffect(() => {
-    if (!(camera as THREE.PerspectiveCamera).isPerspectiveCamera) return;
+    // Walking always looks through the perspective camera, also when the orbit view was in parallel projection
+    if (!(camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+      const persp = perspectiveOf.get(gl);
+      if (persp) set({ camera: persp });
+      return;
+    }
     const { view } = store.getState();
     const level = project.levels.find(l => l.id === view.level) ?? project.levels[0];
     const at = walkStart(project, level.id, view.selection[0]) ?? [0, 0];
@@ -83,9 +95,13 @@ export function WalkView() {
     };
   }, [camera]);
 
-  // Drag to look around, tap a floor to walk there, wheel to step
+  // Drag to look around, tap a floor to walk there, wheel to step. Touch gestures are ours, not the page's (scrolling, zooming):
+  // the orbit controls that claimed them are gone while walking
   useEffect(() => {
     const el = gl.domElement;
+    const before = el.style.touchAction;
+    el.style.touchAction = 'none';
+    walkStick.wake = invalidate;
     let down: { x: number; y: number; id: number; moved: boolean } | null = null;
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary) return;
@@ -129,6 +145,8 @@ export function WalkView() {
     el.addEventListener('pointerup', onUp);
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
+      el.style.touchAction = before;
+      walkStick.wake = () => {};
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
@@ -170,9 +188,9 @@ export function WalkView() {
       if (w.t === 1) walk.current = null;
       invalidate();
     }
-    if (keys.current.size) {
-      let fwd = 0,
-        side = 0;
+    if (keys.current.size || walkStick.forward || walkStick.right) {
+      let fwd = walkStick.forward,
+        side = walkStick.right;
       for (const k of keys.current) {
         fwd += MOVE_KEYS[k][0];
         side += MOVE_KEYS[k][1];

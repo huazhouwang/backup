@@ -1,5 +1,5 @@
-// E2E: sections and elevations → draw a section line in the plan, 3D shows the section → the view menu switches to an elevation
-// and back to perspective → leaving 3D and coming back starts in perspective
+// E2E: the camera, SketchUp's way → a section line drawn in the plan cuts the 3D model and the model still orbits → the camera
+// menu's standard views and parallel projection change the picture without locking it → the section clears on leaving 3D
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
@@ -12,7 +12,8 @@ test('views', async ({ browser: b }) => {
   await page.waitForURL(/\/p\//);
   await page.waitForFunction(() => window.artifact?.ready);
   const frame = page.frames().find(f => f !== page.mainFrame());
-  const iframe = await page.locator('iframe[title="画布"], iframe[title="Canvas"]').first().boundingBox();
+  const canvas = page.locator('iframe[title="画布"], iframe[title="Canvas"]').first();
+  const iframe = await canvas.boundingBox();
   const at = async (x, y) => {
     const q = await frame.evaluate(
       ([x, y]) => {
@@ -23,44 +24,68 @@ test('views', async ({ browser: b }) => {
     );
     return [iframe.x + q[0], iframe.y + q[1]];
   };
-  const viewButton = () => page.getByRole('button', { name: '视图' });
+  const cameraButton = () => page.getByRole('button', { name: '相机' });
+  const datums = () => frame.evaluate(() => [...document.querySelectorAll('div')].filter(d => /^[±+-]\d+\.\d{3} /.test(d.textContent ?? '')).length);
+  const drag = async (dx, dy) => {
+    const cx = iframe.x + iframe.width / 2;
+    const cy = iframe.y + iframe.height / 2;
+    await page.mouse.move(cx, cy);
+    await page.mouse.down();
+    await page.mouse.move(cx + dx, cy + dy, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+  };
 
-  // A section east to west through the living room: it looks north
+  // A section east to west through the living room: 3D turns to face it, cut, with the levels as datums
   await page.getByRole('button', { name: '剖切' }).click();
   await page.mouse.click(...(await at(17900, 2500)));
   await page.mouse.click(...(await at(1500, 2500)));
-  await page.waitForTimeout(3000);
-  check((await viewButton().textContent())?.includes('剖面'), 'drawing a section line opens the section in 3D');
-  const datums = await frame.evaluate(() => [...document.querySelectorAll('div')].filter(d => /^[±+-]\d+\.\d{3} /.test(d.textContent ?? '')).length);
-  check(datums >= 4, `the section shows the levels as datums (${datums})`);
+  await page.waitForTimeout(3500);
+  check(await cameraButton().isVisible(), 'drawing a section line opens 3D');
+  check((await datums()) >= 4, `the section shows the levels as datums (${await datums()})`);
   await page.screenshot({ path: `${OUT}/views-section.png` });
-
-  // An elevation, then back to perspective
-  await viewButton().click();
-  await page.getByRole('menuitemradio', { name: '南立面' }).click();
-  await page.waitForTimeout(2000);
-  check((await viewButton().textContent())?.includes('南立面'), 'the view menu switches to the south elevation');
-  await page.screenshot({ path: `${OUT}/views-elevation.png` });
-  await viewButton().click();
-  await page.getByRole('menuitemradio', { name: '透视' }).click();
+  // The section is a plane in the model, not a locked view: dragging orbits around it
+  const facing = await canvas.screenshot();
+  await drag(-220, 60);
+  await page.screenshot({ path: `${OUT}/views-section-orbit.png` });
+  check(!facing.equals(await canvas.screenshot()), 'the sectioned model still orbits');
+  check((await datums()) >= 4, 'and stays cut');
+  const before = await canvas.screenshot();
+  await cameraButton().click();
+  await page.getByRole('menuitem', { name: '反方向看' }).click();
   await page.waitForTimeout(1500);
-  check((await viewButton().textContent())?.includes('透视'), 'and back to perspective');
+  await page.screenshot({ path: `${OUT}/views-section-flip.png` });
+  check(!before.equals(await canvas.screenshot()) && (await datums()) >= 4, 'the camera menu flips the section');
+  await cameraButton().click();
+  await page.getByRole('menuitem', { name: '取消剖切' }).click();
+  await page.waitForTimeout(800);
+  check((await datums()) === 0, 'the camera menu clears the section');
 
-  // Leaving 3D in an elevation, 3D comes back in perspective
-  await viewButton().click();
-  await page.getByRole('menuitemradio', { name: '东立面' }).click();
-  await page.waitForTimeout(1000);
-  await page
-    .getByRole('button', { name: /切换到平面|平面/ })
-    .last()
-    .click();
-  await page.waitForTimeout(2000);
-  await page
-    .getByRole('button', { name: /三维/ })
-    .first()
-    .click();
-  await page.waitForTimeout(4000);
-  check((await viewButton().textContent())?.includes('透视'), '3D comes back in perspective');
+  // A standard view turns the camera; parallel projection flattens perspective, and the model still orbits
+  await cameraButton().click();
+  await page.getByRole('menuitem', { name: '前视' }).click();
+  await page.waitForTimeout(1500);
+  const front = await canvas.screenshot();
+  await page.screenshot({ path: `${OUT}/views-front.png` });
+  await cameraButton().click();
+  await page.getByRole('menuitemradio', { name: '平行投影' }).click();
+  await page.waitForTimeout(1200);
+  const parallelButton = () => page.getByRole('button', { name: '相机' });
+  check((await parallelButton().textContent())?.includes('平行投影'), 'the camera menu switches to parallel projection');
+  const flat = await canvas.screenshot();
+  await page.screenshot({ path: `${OUT}/views-front-parallel.png` });
+  check(!front.equals(flat), 'parallel projection changes the picture');
+  await drag(200, -80);
+  await page.screenshot({ path: `${OUT}/views-parallel-orbit.png` });
+  check(!flat.equals(await canvas.screenshot()), 'the parallel view still orbits');
+  await cameraButton().click();
+  await page.getByRole('menuitem', { name: '等轴测' }).click();
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}/views-iso-parallel.png` });
+  await cameraButton().click();
+  await page.getByRole('menuitemradio', { name: '透视' }).click();
+  await page.waitForTimeout(1200);
+  check(!(await cameraButton().textContent())?.includes('平行投影'), 'and back to perspective');
 
   check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 });
