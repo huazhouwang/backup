@@ -148,6 +148,32 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     if (Math.hypot(point[0] - from[0], point[1] - from[1]) > 1) setMeasures(ms => [...ms, [from, point]]);
     setFrom(null);
   };
+  // The section tool: two clicks draw the line, then 3D shows the section looking across it (arrows show which way)
+  const sectioning = useEditor(s => s.sectioning);
+  const setSectioning = useEditor(s => s.setSectioning);
+  const setView3d = useEditor(s => s.setView3d);
+  const setView = useEditor(s => s.setView);
+  const [cutFrom, setCutFrom] = useState<Point | null>(null);
+  const [cutHover, setCutHover] = useState<Point | null>(null);
+  useEffect(() => {
+    setCutFrom(null);
+    setCutHover(null);
+  }, [sectioning, view.level]);
+  const cutPoint = (e: React.MouseEvent) => {
+    const q = pointMm(e);
+    return cutFrom && e.shiftKey ? holdAxis(cutFrom, q) : q;
+  };
+  const cutClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const q = cutPoint(e);
+    if (!cutFrom) return setCutFrom(q);
+    if (Math.hypot(q[0] - cutFrom[0], q[1] - cutFrom[1]) < 300) return;
+    setView3d({ kind: 'section', a: cutFrom, b: q });
+    setSectioning(false);
+    setView({ mode: '3d' });
+  };
+  const cutLine = cutFrom && cutHover && Math.hypot(cutHover[0] - cutFrom[0], cutHover[1] - cutFrom[1]) > 1 ? ([cutFrom, cutHover] as const) : null;
+
   const tape = (a: Point, b: Point): DimChain => {
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const dir: Point = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
@@ -316,6 +342,50 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           {temporary.length > 0 && (
             <g data-feedback>
               <PlanDimensions chains={temporary} size={scale.size} line={screenLine} />
+            </g>
+          )}
+          {/* The section tool: the line, with arrows at its ends looking across it */}
+          {sectioning && (
+            <g data-feedback>
+              {cutLine &&
+                (() => {
+                  const [a, b] = cutLine;
+                  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                  const d = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+                  // The viewer stands on the line's right-hand side and looks across it
+                  const look = [d[1], -d[0]];
+                  const s = 14 * pxMm;
+                  const arrow = (p: Point) =>
+                    `${p[0] + look[0] * s * 1.6},${p[1] + look[1] * s * 1.6} ${p[0] + d[0] * s * 0.6},${p[1] + d[1] * s * 0.6} ${p[0] - d[0] * s * 0.6},${p[1] - d[1] * s * 0.6}`;
+                  return (
+                    <g pointerEvents="none">
+                      <line
+                        x1={a[0]}
+                        y1={a[1]}
+                        x2={b[0]}
+                        y2={b[1]}
+                        stroke="var(--chart-2)"
+                        strokeWidth={2}
+                        strokeDasharray="10 4 2 4"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                      <polygon points={arrow(a)} fill="var(--chart-2)" />
+                      <polygon points={arrow(b)} fill="var(--chart-2)" />
+                    </g>
+                  );
+                })()}
+              {cutFrom && <circle cx={cutFrom[0]} cy={cutFrom[1]} r={4 * pxMm} fill="var(--chart-2)" pointerEvents="none" />}
+              <rect
+                x={frame.x - frame.w}
+                y={frame.y - frame.h}
+                width={frame.w * 3}
+                height={frame.h * 3}
+                fill="transparent"
+                className="cursor-crosshair"
+                onPointerMove={e => setCutHover(cutPoint(e))}
+                onPointerLeave={() => setCutHover(null)}
+                onClick={cutClick}
+              />
             </g>
           )}
           {/* The tape measure: a sheet over the drawing takes the clicks; the snapped point shows as a dot */}

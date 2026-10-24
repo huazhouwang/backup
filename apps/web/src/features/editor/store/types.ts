@@ -1,5 +1,5 @@
 /** The editor store's state and actions, and what a project page opens it with */
-import type { Actor, CallResult, OpeningKind, Project, Session, TxResult } from '@plinth/core';
+import type { Actor, CallResult, OpeningKind, Point, Project, Session, TxResult } from '@plinth/core';
 import type { ViewHost, ViewState } from '../agent/view-capabilities';
 import type { Role } from '@/shared/roles';
 
@@ -15,6 +15,9 @@ export interface LastChange {
 
 /** What the user is placing from the add palette: it follows the pointer in the plan until a click puts it down */
 export type Placing = { kind: 'furniture'; type: string } | { kind: 'opening'; opening: OpeningKind };
+
+/** What the 3D view shows: the perspective model, an orthographic elevation (named by true north), or a section across a line */
+export type View3D = { kind: 'perspective' } | { kind: 'elevation'; side: 'north' | 'south' | 'east' | 'west' } | { kind: 'section'; a: Point; b: Point };
 
 export interface ModelOption {
   id: string;
@@ -67,6 +70,10 @@ export interface EditorState {
   placing: Placing | null;
   /** The tape measure is out: clicks in the plan or the 3D view measure instead of selecting */
   measuring: boolean;
+  /** The section tool is out in the plan: two clicks draw a section line */
+  sectioning: boolean;
+  /** What the 3D view shows (see View3D) */
+  view3d: View3D;
 }
 
 export interface EditorActions {
@@ -79,6 +86,8 @@ export interface EditorActions {
   setPlanUntil3D(on: boolean): void;
   setPlacing(p: Placing | null): void;
   setMeasuring(on: boolean): void;
+  setSectioning(on: boolean): void;
+  setView3d(v: View3D): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

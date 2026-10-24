@@ -784,5 +784,16 @@
   "measure_hint_plan": "点两点量距离，按住 Shift 保持水平或竖直",
   "measure_hint_3d": "在模型表面点两点量距离",
   "measure_done": "完成",
-  "plan_north": "北"
+  "plan_north": "北",
+  "section_tool": "剖切",
+  "section_hint": "在平面图上点两点画剖切线，从线的右侧往对面看；按住 Shift 保持水平或竖直",
+  "view_menu": "视图",
+  "view_perspective": "透视",
+  "view_north": "北立面",
+  "view_south": "南立面",
+  "view_east": "东立面",
+  "view_west": "西立面",
+  "view_section": "剖面",
+  "view_section_flip": "反方向看",
+  "model3d_hint_ortho": "拖动平移，双指或滚轮缩放"
 }

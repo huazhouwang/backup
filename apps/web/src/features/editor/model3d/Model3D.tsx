@@ -38,6 +38,7 @@ import { FOV } from '@/graphics/three/framing';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
+import { OrthoView } from './OrthoView';
 import { ElementExtras, Furniture, OpeningLook, RailingLook, RoofMesh, Slab, SolidMesh, WallMesh } from './meshes';
 import { detectQuality, isTouchDevice, Renderer, type Quality } from './Renderer';
 import { Reveal } from './Reveal';
@@ -93,7 +94,9 @@ export function Model3D() {
   useBuildsVersion();
   const current = project.levels.find(l => l.id === view.level);
   // The whole house by default; the cutaway shows the current level and below, to look into it
-  const shown = project.levels.filter(l => !view.layers.cutaway || !current || l.elevation <= current.elevation);
+  const view3d = useEditor(s => s.view3d);
+  // Elevations and sections show the whole house
+  const shown = project.levels.filter(l => view3d.kind !== 'perspective' || !view.layers.cutaway || !current || l.elevation <= current.elevation);
   const elev = new Map(project.levels.map(l => [l.id, l.elevation]));
   const boxes = useMemo(() => projectBoxes(project), [project]);
   const solids = useMemo(() => projectElements(project).flatMap(g => g.solids), [project]);
@@ -261,27 +264,36 @@ export function Model3D() {
               );
             })}
           </group>
-          <OrbitControls
-            makeDefault
-            enableDamping
-            dampingFactor={0.09}
-            maxPolarAngle={Math.PI / 2 - 0.05}
-            minDistance={Math.max(1.5, radius * 0.15)}
-            maxDistance={radius * 6}
-          />
-          <CameraRig box={box} levels={levels} current={current?.id ?? ''} growing={growing} drawings={drawings} growth={growth} projectId={projectId} />
+          {view3d.kind === 'perspective' ? (
+            <>
+              <OrbitControls
+                makeDefault
+                enableDamping
+                dampingFactor={0.09}
+                maxPolarAngle={Math.PI / 2 - 0.05}
+                minDistance={Math.max(1.5, radius * 0.15)}
+                maxDistance={radius * 6}
+              />
+              <CameraRig box={box} levels={levels} current={current?.id ?? ''} growing={growing} drawings={drawings} growth={growth} projectId={projectId} />
+            </>
+          ) : (
+            <OrthoView key={JSON.stringify(view3d)} view3d={view3d} box={box} />
+          )}
           <SafariPinch />
           <Picker />
           <Measure3D />
           <Reveal ownerOf={ownerOf} />
-          <Renderer draw={draw} edges={style.edges} edgeColor={c.edge} growth={growth} />
+          {/* Elevations and sections read as drawings: always with edges */}
+          <Renderer draw={draw} edges={style.edges || view3d.kind !== 'perspective'} edgeColor={c.edge} growth={growth} />
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
           {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
           <Wake on={[view.selection, view.highlight]} />
           <Capture draw={draw} />
         </Canvas>
       </TintColors.Provider>
-      <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground max-md:hidden">{m.model3d_hint()}</p>
+      <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground max-md:hidden">
+        {view3d.kind === 'perspective' ? m.model3d_hint() : m.model3d_hint_ortho()}
+      </p>
     </div>
   );
 }

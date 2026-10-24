@@ -14,6 +14,8 @@ const shader = {
     resolution: { value: new THREE.Vector2(1, 1) },
     cameraNear: { value: 0.1 },
     cameraFar: { value: 2000 },
+    /** An elevation or a section: the depth buffer is linear */
+    orthographic: { value: false },
     edgeColor: { value: new THREE.Color(0, 0, 0) },
     /** 0 hides the edges (while the house still lies flat as the plan), 1 shows them */
     strength: { value: 1 },
@@ -29,12 +31,13 @@ const shader = {
     uniform sampler2D tDiffuse, tNormal, tDepth;
     uniform vec2 resolution;
     uniform float cameraNear, cameraFar, strength, profile;
+    uniform bool orthographic;
     uniform vec3 edgeColor;
     varying vec2 vUv;
 
     float depthAt(vec2 uv) {
       float d = texture2D(tDepth, uv).x;
-      return perspectiveDepthToViewZ(d, cameraNear, cameraFar);
+      return orthographic ? orthographicDepthToViewZ(d, cameraNear, cameraFar) : perspectiveDepthToViewZ(d, cameraNear, cameraFar);
     }
     vec3 normalAt(vec2 uv) { return texture2D(tNormal, uv).xyz * 2.0 - 1.0; }
     // Background (nothing drawn): depth at the far plane
@@ -127,7 +130,7 @@ export class EdgePass extends Pass {
   }
 
   render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget) {
-    const cam = this.camera as THREE.PerspectiveCamera;
+    const cam = this.camera as THREE.PerspectiveCamera | THREE.OrthographicCamera;
     // Normals and depth of the model
     this.hide();
     const background = this.scene.background,
@@ -155,6 +158,7 @@ export class EdgePass extends Pass {
     u.tDepth.value = this.target.depthTexture;
     u.cameraNear.value = cam.near;
     u.cameraFar.value = cam.far;
+    u.orthographic.value = (cam as THREE.OrthographicCamera).isOrthographicCamera === true;
     renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer);
     this.quad.render(renderer);
   }

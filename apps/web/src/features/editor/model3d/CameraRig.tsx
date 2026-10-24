@@ -10,6 +10,8 @@ import { M } from '@/graphics/three/scene';
 export type Orbit = { target: THREE.Vector3; enabled: boolean; update(): void };
 /** The last 3D camera per project, so coming back from the plan returns to it */
 const lastPose = new Map<string, Pose>();
+/** Projects coming back from an elevation or a section: the orbit view resumes where it was, without growing the house again */
+export const resumeOrbit = new Set<string>();
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 /**
@@ -102,14 +104,23 @@ export function CameraRig({
   useEffect(() => {
     if (!orbit) return;
     const to = lastPose.get(projectId) ?? framed(box, size.width / size.height, BIRD);
-    const from = planPose();
-    camera.position.copy(from.pos);
-    orbit.target.copy(from.target);
-    orbit.update();
-    grow(hops.reduced ? 1 : 0);
-    run(to, 1600, [0, 1]);
-    // Start once the floor drawings are on (they rasterize asynchronously), so the first frame looks like the plan
-    if (anim.current) anim.current.hold = performance.now();
+    if (resumeOrbit.delete(projectId)) {
+      camera.position.copy(to.pos);
+      orbit.target.copy(to.target);
+      orbit.update();
+      grow(1);
+      setPlanUntil3D(false);
+      invalidate();
+    } else {
+      const from = planPose();
+      camera.position.copy(from.pos);
+      orbit.target.copy(from.target);
+      orbit.update();
+      grow(hops.reduced ? 1 : 0);
+      run(to, 1600, [0, 1]);
+      // Start once the floor drawings are on (they rasterize asynchronously), so the first frame looks like the plan
+      if (anim.current) anim.current.hold = performance.now();
+    }
     // Leaving 3D: remember the view, then sink the house back into the plan and settle on the plan's framing
     setLeave3D(
       () =>

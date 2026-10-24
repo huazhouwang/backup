@@ -784,5 +784,16 @@
   "measure_hint_plan": "Click two points to measure; hold Shift to keep it straight",
   "measure_hint_3d": "Tap two points on the model to measure",
   "measure_done": "Done",
-  "plan_north": "N"
+  "plan_north": "N",
+  "section_tool": "Section",
+  "section_hint": "Click two points to draw a section line; it looks across from the right-hand side. Hold Shift to keep it straight",
+  "view_menu": "View",
+  "view_perspective": "Perspective",
+  "view_north": "North elevation",
+  "view_south": "South elevation",
+  "view_east": "East elevation",
+  "view_west": "West elevation",
+  "view_section": "Section",
+  "view_section_flip": "Look the other way",
+  "model3d_hint_ortho": "Drag to pan, pinch or scroll to zoom"
 }

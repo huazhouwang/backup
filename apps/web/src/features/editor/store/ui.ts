@@ -1,12 +1,15 @@
 /**
  * Editor UI state the canvas and the panels share: the before/after comparison, the screenshot, messages for the agent, the 2D/3D
- * switch, place mode, the tape measure
+ * switch, place mode, the tape measure, the section tool and what the 3D view shows
  */
 import type { StoreContext } from './create';
 import type { EditorActions, EditorState } from './types';
 
-type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring'> &
-  Pick<EditorActions, 'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing' | 'setMeasuring'>;
+type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring' | 'sectioning' | 'view3d'> &
+  Pick<
+    EditorActions,
+    'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing' | 'setMeasuring' | 'setSectioning' | 'setView3d'
+  >;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
   compare: false,
@@ -17,6 +20,8 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   planUntil3D: false,
   placing: null,
   measuring: false,
+  sectioning: false,
+  view3d: { kind: 'perspective' },
 
   setCompare(on) {
     set({ compare: on });
@@ -38,11 +43,20 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
     set({ planUntil3D });
   },
 
+  // One tool at a time: taking one out puts the others away
   setPlacing(placing) {
-    set({ placing, ...(placing ? { measuring: false } : {}) });
+    set({ placing, ...(placing ? { measuring: false, sectioning: false } : {}) });
   },
 
   setMeasuring(measuring) {
-    set({ measuring, ...(measuring ? { placing: null } : {}) });
+    set({ measuring, ...(measuring ? { placing: null, sectioning: false } : {}) });
+  },
+
+  setSectioning(sectioning) {
+    set({ sectioning, ...(sectioning ? { placing: null, measuring: false } : {}) });
+  },
+
+  setView3d(view3d) {
+    set({ view3d });
   },
 });

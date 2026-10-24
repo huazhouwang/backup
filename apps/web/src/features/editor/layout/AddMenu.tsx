@@ -63,12 +63,14 @@ export function AddMenu() {
   );
 }
 
-/** While placing or measuring: what to do, and a way out */
+/** While placing, measuring or drawing a section: what to do, and a way out */
 export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
   const measuring = useEditor(s => s.measuring);
   const setMeasuring = useEditor(s => s.setMeasuring);
+  const sectioning = useEditor(s => s.sectioning);
+  const setSectioning = useEditor(s => s.setSectioning);
   const mode = useEditor(s => s.view.mode);
   const furniture = useEditor(s => s.project.library.furniture);
   let text: string | null = null;
@@ -76,6 +78,7 @@ export function ToolHint({ className }: { className?: string }) {
     const name = placing.kind === 'furniture' ? (furniture[placing.type]?.name ?? placing.type) : kindLabel(placing.opening);
     text = placing.kind === 'opening' ? m.add_hint_opening({ name }) : m.add_hint_furniture({ name });
   } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
+  else if (sectioning && mode === '2d') text = m.section_hint();
   if (!text) return null;
   return (
     <div className={className}>
@@ -87,9 +90,10 @@ export function ToolHint({ className }: { className?: string }) {
           onClick={() => {
             setPlacing(null);
             setMeasuring(false);
+            setSectioning(false);
           }}
         >
-          {placing ? m.add_cancel() : m.measure_done()}
+          {measuring ? m.measure_done() : m.add_cancel()}
         </Button>
       </div>
     </div>
