@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { exteriorDimensions } from '@/graphics/plan/dimensions';
 import { dimensionStep, labelSize, levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
-import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, scaledLine } from '@/graphics/plan/PlanDrawing';
+import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, scaledLine, type Line } from '@/graphics/plan/PlanDrawing';
 import type { Quality } from './Renderer';
 import { useBuildsVersion } from '@/lib/builds';
 import { M } from '@/graphics/three/scene';
@@ -203,6 +203,81 @@ export function PlanSheet({ center, size, color, growth }: { center: [number, nu
     <mesh ref={mesh} position={[center[0], 0.004, center[1]]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null} userData={{ noEdges: true }} renderOrder={1}>
       <planeGeometry args={[size, size]} />
       <meshBasicMaterial ref={material} color={color} transparent depthWrite={false} toneMapped={false} fog={false} />
+    </mesh>
+  );
+}
+
+/**
+ * The current floor's dimension chains in 3D, lying on the ground like a site drawing (see dimensions.ts): they come in as the
+ * plan's paper (which carries them while the house is flat) fades. Lines at least a texel and a half wide, so they don't shimmer.
+ */
+export function GroundDimensions({
+  project,
+  level,
+  quality,
+  growth,
+}: {
+  project: Project;
+  level: string;
+  quality: Quality;
+  growth: React.RefObject<{ g: number }>;
+}) {
+  const doc = useCanvasDocument();
+  const size = useThree(s => s.size);
+  const builds = useBuildsVersion();
+  const shapes = useMemo(() => levelShapes(project, level), [project, level, builds]);
+  const frame = planFrame(project, level, true);
+  const mmPerPx = Math.max(frame.w / size.width, frame.h / size.height);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+
+  useEffect(() => {
+    const px = TEXTURE_PX[quality].ink;
+    const k = px / Math.max(frame.w, frame.h);
+    const [w, h] = [Math.round(frame.w * k), Math.round(frame.h * k)];
+    const texel = 1 / k;
+    const line: Line = (width, dash) => ({ strokeWidth: Math.max(width * mmPerPx, texel * 1.5), strokeDasharray: dash?.map(d => d * mmPerPx).join(' ') });
+    const font = labelSize(shapes.bounds);
+    const svg = markup(
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox={`${frame.x} ${frame.y} ${frame.w} ${frame.h}`} width={w} height={h}>
+        <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, dimensionStep(font))} font={font} line={line} />
+      </svg>,
+      doc,
+    );
+    let live = true;
+    let made: THREE.Texture | null = null;
+    void rasterize(svg, w, h, doc).then(t => {
+      made = t;
+      if (live) setTexture(t);
+      else t.dispose();
+    });
+    return () => {
+      live = false;
+      made?.dispose();
+    };
+  }, [shapes, quality, mmPerPx, doc]);
+
+  const material = useRef<THREE.MeshBasicMaterial>(null);
+  const mesh = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const f = 1 - paperOpacity(growth.current.g);
+    if (material.current) material.current.opacity = f;
+    if (mesh.current) mesh.current.visible = f > 0;
+  });
+
+  if (!texture) return null;
+  // Just above the ground (the shadow-catching plane), below the outdoor paving
+  const y = project.site.groundLevel * M + 0.003;
+  return (
+    <mesh
+      ref={mesh}
+      position={[(frame.x + frame.w / 2) * M, y, (frame.y + frame.h / 2) * M]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      raycast={() => null}
+      userData={{ noEdges: true }}
+      renderOrder={1}
+    >
+      <planeGeometry args={[frame.w * M, frame.h * M]} />
+      <meshBasicMaterial ref={material} map={texture} transparent depthWrite={false} toneMapped={false} fog={false} />
     </mesh>
   );
 }

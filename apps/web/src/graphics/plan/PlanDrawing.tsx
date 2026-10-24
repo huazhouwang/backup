@@ -1,8 +1,9 @@
 /**
  * The plan's drawing, shared by the plan view and the 3D floors (so 3D grows out of exactly the plan): paper (the site boundary,
- * room floors in their material), ink (walls, furniture, doors and windows) and labels. The model seen from above
- * through a section cut: walls cut solid black, floors in their material (see floor-materials.tsx), furniture and fittings white
- * with thin black edges. Coordinates in millimetres. Interaction (picking) is optional.
+ * room floors in their material), ink (walls, furniture, doors and windows) and labels. The model seen from above through a
+ * section cut, in greys like SketchUp's monochrome style: walls cut solid black, floors in their material's grey (see
+ * floor-materials.tsx), furniture and fittings white with thin black edges. Coordinates in millimetres. Interaction (picking)
+ * is optional.
  */
 import type { Project } from '@plinth/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
@@ -48,7 +49,7 @@ export function PlanDefs({ project }: { project: Project }) {
 export function PlanPaper({ project, level, shapes, line, pick }: { project: Project; level: string; shapes: LevelShapes; line: Line; pick?: Pick }) {
   return (
     <>
-      {isGroundLevel(project, level) && <polygon points={pts(project.site.boundary)} fill="none" stroke="var(--chart-3)" {...line(0.8, [6, 4])} />}
+      {isGroundLevel(project, level) && <polygon points={pts(project.site.boundary)} fill="none" stroke="var(--muted-foreground)" {...line(0.8, [6, 4])} />}
       {shapes.spaces.map(({ s, d }) => (
         <path key={s.id} d={d} fill={spaceFill(project, s.kind, s.floor)} {...hit(pick, s.id)} />
       ))}

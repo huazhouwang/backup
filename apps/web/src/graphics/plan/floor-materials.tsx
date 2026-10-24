@@ -1,12 +1,12 @@
 /**
  * Materials drawn as patterns: wood planks, tiles, bricks, terrazzo, gravel… made from a material's procedural texture (its
  * glTF `extras`: pattern, size, colours; see packages/core/src/looks/material.ts), used by the plan (an SVG pattern fill) and by the
- * 3D floors (the same tile rasterized as a texture), so the house growing out of the plan keeps its floors. Sizes in
- * millimetres; colours from the material (library data, not the theme).
+ * 3D floors (the same tile rasterized as a texture). The plan draws them in greys, like SketchUp's monochrome style; 3D in their
+ * colours. Sizes in millimetres; colours from the material (library data, not the theme).
  */
 import { materialOf, type Material, type Project } from '@plinth/core';
 import type { ReactElement } from 'react';
-import { cssColor } from '@/lib/materials';
+import { cssColor, grayColor } from '@/lib/materials';
 
 export interface FloorPattern {
   /** Size of one repeat */
@@ -112,13 +112,14 @@ function marble(base: string, vein: string, grout: string, size: number, seed: n
   };
 }
 
-/** A material's pattern, from its procedural texture; null for a plain material */
-export function materialPattern(m: Material | undefined): FloorPattern | null {
+/** A material's pattern, from its procedural texture, in its colours or in greys (the plan); null for a plain material */
+export function materialPattern(m: Material | undefined, gray = false): FloorPattern | null {
   const x = m?.extras;
   if (!m || !x?.pattern) return null;
-  const base = cssColor(m.pbrMetallicRoughness.baseColorFactor),
-    c2 = x.color2 ? cssColor(x.color2) : base,
-    c3 = x.color3 ? cssColor(x.color3) : c2;
+  const color = gray ? grayColor : cssColor;
+  const base = color(m.pbrMetallicRoughness.baseColorFactor),
+    c2 = x.color2 ? color(x.color2) : base,
+    c3 = x.color3 ? color(x.color3) : c2;
   const [a, b] = Array.isArray(x.size) ? x.size : [x.size ?? 600, x.size ?? 600];
   switch (x.pattern) {
     case 'planks':
@@ -134,19 +135,19 @@ export function materialPattern(m: Material | undefined): FloorPattern | null {
   }
 }
 
-/** The plan's fill for a floor material: its pattern, its colour, or plain white for a material that doesn't exist */
+/** The plan's fill for a floor material, in greys: its pattern, its tone, or plain white for a material that doesn't exist */
 export function floorFill(p: Project, material: string) {
   const m = materialOf(material, null, p.library.materials);
-  return !m ? 'var(--card)' : materialPattern(m) ? `url(#floor-${material})` : cssColor(m.pbrMetallicRoughness.baseColorFactor);
+  return !m ? 'var(--card)' : materialPattern(m) ? `url(#floor-${material})` : grayColor(m.pbrMetallicRoughness.baseColorFactor);
 }
 
-/** Pattern definitions for the floor materials a design uses, inside the plan's <defs> */
+/** Pattern definitions for the floor materials a design uses, in greys, inside the plan's <defs> */
 export function FloorPatternDefs({ project }: { project: Project }) {
   const used = [...new Set(project.spaces.map(s => s.floor))];
   return (
     <>
       {used.map(k => {
-        const p = materialPattern(materialOf(k, null, project.library.materials));
+        const p = materialPattern(materialOf(k, null, project.library.materials), true);
         return (
           p && (
             <pattern key={k} id={`floor-${k}`} width={p.w} height={p.h} patternUnits="userSpaceOnUse">

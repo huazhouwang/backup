@@ -33,7 +33,7 @@ import { useEditor } from '../store';
 import { CameraRig } from './CameraRig';
 import { Capture, Wake } from './Capture';
 import { TintColors } from './feedback';
-import { FloorDrawing, PlanSheet } from './FloorDrawing';
+import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
@@ -164,6 +164,8 @@ export function Model3D() {
           <group position={[0, (current?.elevation ?? 0) * M, 0]}>
             <PlanSheet center={sheet.center} size={Math.max(span, radius) * 40} color={c.page} growth={growth} />
           </group>
+          {/* The current floor's dimensions, on the ground */}
+          {view.layers.dimensions && current && <GroundDimensions project={project} level={current.id} quality={q} growth={growth} />}
           <group>
             {levels.map(l => {
               const base = elev.get(l.id) ?? 0;

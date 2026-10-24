@@ -10,6 +10,15 @@ const encode = (c: number) => Math.round(255 * (c <= 0.0031308 ? 12.92 * c : 1.0
 /** A linear glTF colour as a CSS colour (alpha left out) */
 export const cssColor = (c: RGBA) => `rgb(${encode(c[0])}, ${encode(c[1])}, ${encode(c[2])})`;
 
+/**
+ * A linear glTF colour as a light grey of the same lightness order, for the plan, which is drawn in greys like SketchUp's
+ * monochrome style: its luminance, lifted towards white so floors stay light behind the black walls and their patterns still read
+ */
+export const grayColor = (c: RGBA) => {
+  const v = Math.round(255 - (255 - encode(0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2])) * 0.55);
+  return `rgb(${v}, ${v}, ${v})`;
+};
+
 /** What a material looks like to the renderer; a missing material is a neutral grey */
 export interface MaterialStyle {
   color: string;
