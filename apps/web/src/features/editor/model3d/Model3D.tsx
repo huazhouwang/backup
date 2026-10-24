@@ -46,7 +46,7 @@ import {
   houseBox,
   M,
   siteBounds,
-  skyTexture,
+  backdrop,
   slabLevel,
   solidFallbackColor,
   solidMaterial,
@@ -65,6 +65,7 @@ const useColors = () =>
       grate: '--muted-foreground',
       page: '--canvas-backdrop',
       sky: '--canvas-sky',
+      ground: '--canvas-ground',
       edge: '--foreground',
       shadow: '--canvas-shadow',
       sel: '--chart-2',
@@ -151,7 +152,7 @@ export function Model3D() {
           // so the model sits off-center and clicks miss. Fill the wrapper instead.
           onCreated={({ gl, scene }) => {
             Object.assign(gl.domElement.style, { width: '100%', height: '100%' });
-            scene.background = style.sky ? skyTexture(c.sky, c.backdrop) : new THREE.Color(c.backdrop);
+            scene.background = backdrop(style, { backdrop: c.backdrop, sky: c.sky, horizon: c.backdrop, ground: c.ground });
             setQuality(detectQuality(doc.defaultView!, gl.getContext()));
           }}
         >

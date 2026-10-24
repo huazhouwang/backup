@@ -6,16 +6,18 @@
 export interface ModelStyle {
   /** SketchUp-like black edges and profiles in 3D */
   edges: boolean;
-  /** A sky gradient behind the 3D model instead of the plain backdrop */
+  /** The sky above the horizon behind the 3D model, as SketchUp's background settings (else the plain backdrop) */
   sky: boolean;
+  /** The ground below the horizon, as SketchUp's background settings (else the plain backdrop) */
+  ground: boolean;
   /** Floors drawn with their material (wood, tiles…) or plain white */
   floors: 'material' | 'white';
   /** Walls drawn in their finish (white paint unless chosen otherwise) or plain white */
   walls: 'finish' | 'white';
 }
 
-/** The default ("general") style: walls in their finish (white paint by default), floors in their material, clear glass, soft shadows, a blue sky */
-export const DEFAULT_STYLE: ModelStyle = { edges: false, sky: true, floors: 'material', walls: 'finish' };
+/** The default ("general") style: walls in their finish (white paint by default), floors in their material, clear glass, soft shadows, a blue sky over the ground */
+export const DEFAULT_STYLE: ModelStyle = { edges: false, sky: true, ground: true, floors: 'material', walls: 'finish' };
 
 /** The style a project is shown in (projects can't choose another one yet) */
 export const modelStyle = (): ModelStyle => DEFAULT_STYLE;

@@ -53,13 +53,14 @@
   --shadow-xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 8px 10px -1px hsl(0 0% 0% / 0.18);
   --shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
   --tracking-normal: 0em;
-  /* 3D canvas (the default model style): white walls shaded by a warm white sun and sky light on a light gray backdrop;
-       the plan sits on the same backdrop. The sky is for styles that show one. */
+  /* 3D canvas (the default model style): white walls shaded by a warm white sun and sky light, under a blue sky over the
+       ground (SketchUp's background: the horizon fades from the backdrop's haze up to the sky; the ground is SketchUp's
+       default ground color). The plan sits on the backdrop. */
   --canvas-backdrop: oklch(0.91 0.004 100);
   --canvas-sky: oklch(0.87 0.035 235);
   --canvas-sun: oklch(0.99 0.006 85);
   --canvas-skylight: oklch(0.84 0.008 85);
-  --canvas-ground: oklch(0.93 0.014 115);
+  --canvas-ground: oklch(0.853 0.031 103);
   /* Shadows cast on the ground in 3D */
   --canvas-shadow: oklch(0.45 0.012 85);
   /* Glass: barely tinted, so it reads as clear */

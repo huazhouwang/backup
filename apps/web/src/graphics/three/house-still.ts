@@ -28,6 +28,7 @@ import { BIRD, FOV, framed } from './framing';
 import { withStillRenderer } from './look-preview';
 import { lookMaterial, partsGeometry } from './looks';
 import {
+  backdrop,
   castsShadow,
   elementLook,
   floorMaterial,
@@ -38,7 +39,6 @@ import {
   railingPieces,
   shadowGround,
   SKYLIGHT_INTENSITY,
-  skyTexture,
   slabGeometry,
   slabLevel,
   solidFallbackColor,
@@ -154,8 +154,14 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, W: number, H: num
   await Promise.all(jobs);
 
   const scene = new THREE.Scene();
-  // The 3D view's backdrop: the sky (with the default style) or the plain backdrop
-  scene.background = modelStyle().sky ? keep(skyTexture(themeColor('--canvas-sky', doc), themeColor('--canvas-backdrop', doc))) : color('--canvas-backdrop');
+  // The 3D view's background: sky and ground split at the horizon (see backdrop)
+  const bg = backdrop(modelStyle(), {
+    backdrop: themeColor('--canvas-backdrop', doc),
+    sky: themeColor('--canvas-sky', doc),
+    horizon: themeColor('--canvas-backdrop', doc),
+    ground: themeColor('--canvas-ground', doc),
+  });
+  scene.background = bg instanceof THREE.Texture ? keep(bg) : bg;
   scene.add(house);
   // Framed like the editor's default view, on the walls and floors of every level
   const box = houseBox(p, projectBoxes(p), new Set(p.levels.map(l => l.id)));

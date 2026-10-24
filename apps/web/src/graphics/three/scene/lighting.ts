@@ -1,7 +1,7 @@
 /**
  * The 3D view's light and backdrop, shared by the editor and the house stills: a warm white sun from the south-west casting soft
- * shadows, a sky light, SketchUp's sky gradient, and a ground that only catches shadows. three.js divides diffuse light by π,
- * hence the strong intensities.
+ * shadows, a sky light, SketchUp's sky and ground split at the horizon, and a plane at ground level that catches the shadows.
+ * three.js divides diffuse light by π, hence the strong intensities.
  */
 import * as THREE from 'three';
 
@@ -46,7 +46,7 @@ export function sunLight(color: THREE.ColorRepresentation, center: THREE.Vector3
   return sun;
 }
 
-/** The ground only catches shadows: the house stands on the backdrop (or the sky's horizon) with its shadow, on no board */
+/** A plane at the site's ground level that only catches shadows: the ground itself is drawn by the backdrop, below the horizon */
 export function shadowGround(color: THREE.ColorRepresentation, size: number) {
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2),
@@ -56,20 +56,48 @@ export function shadowGround(color: THREE.ColorRepresentation, size: number) {
   return ground;
 }
 
-/** SketchUp's sky: a vertical gradient from the sky color at the top to the backdrop at the horizon */
-export function skyTexture(sky: string, horizon: string) {
-  const data = new Uint8Array(4 * 64);
-  const a = new THREE.Color(sky),
-    b = new THREE.Color(horizon),
-    c = new THREE.Color();
-  for (let i = 0; i < 64; i++) {
-    // Row 0 is the bottom of the screen: the horizon color up to the middle, then the sky
-    c.copy(b).lerp(a, THREE.MathUtils.smoothstep(i / 63, 0.35, 1));
-    data.set([Math.round(c.r * 255), Math.round(c.g * 255), Math.round(c.b * 255), 255], i * 4);
+/** Which parts of SketchUp's background a style draws (Styles → Background): the sky above the horizon, the ground below it */
+export interface BackdropStyle {
+  sky: boolean;
+  ground: boolean;
+}
+
+/** The colors of the background (CSS colors): the plain backdrop, the sky at the zenith, the haze at the horizon, the ground */
+export interface BackdropColors {
+  backdrop: string;
+  sky: string;
+  horizon: string;
+  ground: string;
+}
+
+/**
+ * The scene's background, as SketchUp draws it: sky and ground at infinity, split at the eye-level horizon, so looking down
+ * shows only ground and a low camera shows a clear horizon line. Above the horizon the sky runs from the horizon's haze up to
+ * the sky color; below it is the ground color. Either can be off (the plain backdrop shows there); with both off, the
+ * background is just the backdrop. An equirectangular texture, so it turns with the camera like the world does.
+ */
+export function backdrop(style: BackdropStyle, colors: BackdropColors): THREE.Color | THREE.Texture {
+  if (!style.sky && !style.ground) return new THREE.Color(colors.backdrop);
+  const rows = 1024;
+  const plain = new THREE.Color(colors.backdrop),
+    sky = new THREE.Color(colors.sky),
+    horizon = new THREE.Color(colors.horizon),
+    ground = new THREE.Color(colors.ground);
+  const c = new THREE.Color(),
+    rgb = { r: 0, g: 0, b: 0 },
+    data = new Uint8Array(4 * rows);
+  for (let i = 0; i < rows; i++) {
+    // Row 0 looks straight down, the middle row at the horizon, the last straight up
+    const up = (i + 0.5) / rows - 0.5;
+    if (up < 0) c.copy(style.ground ? ground : plain);
+    else c.copy(style.sky ? horizon.clone().lerp(sky, THREE.MathUtils.smoothstep(up * 2, 0, 0.25)) : plain);
+    c.getRGB(rgb, THREE.SRGBColorSpace);
+    data.set([Math.round(rgb.r * 255), Math.round(rgb.g * 255), Math.round(rgb.b * 255), 255], i * 4);
   }
-  const t = new THREE.DataTexture(data, 1, 64);
+  const t = new THREE.DataTexture(data, 1, rows);
+  t.mapping = THREE.EquirectangularReflectionMapping;
   t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.LinearFilter;
+  t.magFilter = t.minFilter = THREE.LinearFilter;
   t.needsUpdate = true;
   return t;
 }
