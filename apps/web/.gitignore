@@ -1,0 +1,7 @@
+.dev.vars
+.wrangler/
+dist/
+src/routeTree.gen.ts
+dev.log
+test-results/
+playwright-report/

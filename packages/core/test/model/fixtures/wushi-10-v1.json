@@ -1,0 +1,3675 @@
+{
+  "schema": "plinth/project",
+  "version": 1,
+  "id": "wushi-courtyard-10",
+  "name": "乌石合院 · 方案十",
+  "units": "mm",
+  "site": {
+    "boundary": [
+      [2000, 0],
+      [17500, 0],
+      [17500, 13400],
+      [2000, 13400]
+    ],
+    "northAngle": 0,
+    "location": {
+      "lat": 20.55,
+      "lon": 109.84,
+      "tz": 8
+    },
+    "groundLevel": -200
+  },
+  "levels": [
+    {
+      "id": "L1",
+      "name": "一层",
+      "elevation": 0,
+      "height": 3600
+    },
+    {
+      "id": "L2",
+      "name": "二层",
+      "elevation": 3600,
+      "height": 3300
+    },
+    {
+      "id": "L3",
+      "name": "三层",
+      "elevation": 6900,
+      "height": 3300
+    },
+    {
+      "id": "RF",
+      "name": "屋顶",
+      "elevation": 10200,
+      "height": 0,
+      "roof": true
+    }
+  ],
+  "walls": [
+    {
+      "id": "L1-w01",
+      "name": "北外墙",
+      "level": "L1",
+      "start": [2120, 120],
+      "end": [17380, 120],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w01-o1",
+          "name": "北外墙·窗1",
+          "kind": "window",
+          "at": 1140,
+          "width": 1000,
+          "height": 1200,
+          "sill": 1800,
+          "extras": {
+            "top": 1
+          }
+        },
+        {
+          "id": "L1-w01-o2",
+          "name": "北外墙·窗2",
+          "kind": "window",
+          "at": 3480,
+          "width": 1500,
+          "height": 1200,
+          "sill": 1800,
+          "extras": {
+            "top": 1
+          }
+        },
+        {
+          "id": "L1-w01-o3",
+          "name": "北外墙·窗3",
+          "kind": "window",
+          "at": 6130,
+          "width": 1500,
+          "height": 1200,
+          "sill": 1800,
+          "extras": {
+            "top": 1
+          }
+        },
+        {
+          "id": "L1-w01-o4",
+          "name": "北外墙·窗4",
+          "kind": "window",
+          "at": 9370,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L1-w01-o5",
+          "name": "北外墙·窗5",
+          "kind": "window",
+          "at": 11740,
+          "width": 600,
+          "height": 900,
+          "sill": 1500
+        },
+        {
+          "id": "L1-w01-o6",
+          "name": "北外墙·玻璃砖窗1",
+          "kind": "window",
+          "at": 14260,
+          "width": 300,
+          "height": 1110,
+          "sill": 2490,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L1-w01-o7",
+          "name": "北外墙·玻璃砖窗2",
+          "kind": "window",
+          "at": 14860,
+          "width": 300,
+          "height": 1110,
+          "sill": 2490,
+          "glazing": "glass-block"
+        }
+      ]
+    },
+    {
+      "id": "L1-w02",
+      "name": "西外墙",
+      "level": "L1",
+      "start": [2120, 120],
+      "end": [2120, 6360],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w02-o1",
+          "name": "西外墙·窗1",
+          "kind": "window",
+          "at": 1695,
+          "width": 1500,
+          "height": 900,
+          "sill": 1800
+        },
+        {
+          "id": "L1-w02-o2",
+          "name": "西外墙·窗2",
+          "kind": "window",
+          "at": 4815,
+          "width": 900,
+          "height": 900,
+          "sill": 1200
+        }
+      ]
+    },
+    {
+      "id": "L1-w03",
+      "name": "南外墙",
+      "level": "L1",
+      "start": [2120, 6360],
+      "end": [9580, 6360],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w03-o1",
+          "name": "南外墙·窗",
+          "kind": "window",
+          "at": 1250,
+          "width": 900,
+          "height": 900,
+          "sill": 1200
+        },
+        {
+          "id": "L1-w03-o2",
+          "name": "南外墙·推拉门",
+          "kind": "sliding-door",
+          "at": 5170,
+          "width": 2400,
+          "height": 2400,
+          "sill": 0
+        }
+      ]
+    },
+    {
+      "id": "L1-w04",
+      "name": "储物室东墙",
+      "level": "L1",
+      "start": [12900, 120],
+      "end": [12900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L1-w05",
+      "name": "浴室东墙",
+      "level": "L1",
+      "start": [14900, 120],
+      "end": [14900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L1-w06",
+      "name": "洗手台南墙",
+      "level": "L1",
+      "start": [12900, 3600],
+      "end": [14900, 3600],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L1-w06-o1",
+          "name": "洗手台南墙·玻璃砖窗",
+          "kind": "window",
+          "at": 580,
+          "width": 900,
+          "height": 1800,
+          "sill": 300,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L1-w06-o2",
+          "name": "洗手台南墙·洞口",
+          "kind": "opening",
+          "at": 1460,
+          "width": 800,
+          "height": 2100,
+          "sill": 0
+        }
+      ]
+    },
+    {
+      "id": "L1-w07",
+      "name": "庭院·透水砖南围墙",
+      "level": "L1",
+      "start": [2120, 13280],
+      "end": [10080, 13280],
+      "thickness": 240,
+      "kind": "fence",
+      "height": 1970,
+      "openings": [
+        {
+          "id": "L1-w07-o1",
+          "name": "庭院·透水砖南围墙·大门",
+          "kind": "gate",
+          "at": 5170,
+          "width": 1500,
+          "height": 2400,
+          "sill": 0
+        }
+      ]
+    },
+    {
+      "id": "L1-w08",
+      "name": "庭院·透水砖南围墙（2）",
+      "level": "L1",
+      "start": [6300, 11780],
+      "end": [8240, 11780],
+      "thickness": 180,
+      "kind": "fence",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L1-w09",
+      "name": "庭院·透水砖西围墙",
+      "level": "L1",
+      "start": [8240, 11780],
+      "end": [8240, 13280],
+      "thickness": 180,
+      "kind": "fence",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L1-w10",
+      "name": "檐廊西围墙",
+      "level": "L1",
+      "start": [2120, 6360],
+      "end": [2120, 13280],
+      "thickness": 240,
+      "kind": "fence",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L1-w11",
+      "name": "客厅东墙",
+      "level": "L1",
+      "start": [9580, 120],
+      "end": [9580, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L1-w12",
+      "name": "储物室南墙",
+      "level": "L1",
+      "start": [9580, 3600],
+      "end": [12900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w12-o1",
+          "name": "储物室南墙·门",
+          "kind": "door",
+          "at": 1500,
+          "width": 800,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L1-w13",
+      "name": "老人房二北墙",
+      "level": "L1",
+      "start": [9580, 6360],
+      "end": [17380, 6360],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w13-o1",
+          "name": "老人房二北墙·门1",
+          "kind": "door",
+          "at": 3860,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        },
+        {
+          "id": "L1-w13-o2",
+          "name": "老人房二北墙·门2",
+          "kind": "door",
+          "at": 5100,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L1-w14",
+      "name": "老人房二西墙",
+      "level": "L1",
+      "start": [9580, 6360],
+      "end": [9580, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w14-o1",
+          "name": "老人房二西墙·窗",
+          "kind": "window",
+          "at": 1860,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L1-w15",
+      "name": "南外墙（2）",
+      "level": "L1",
+      "start": [9580, 10400],
+      "end": [17380, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w15-o1",
+          "name": "南外墙（2）·窗1",
+          "kind": "window",
+          "at": 2285,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L1-w15-o2",
+          "name": "南外墙（2）·窗2",
+          "kind": "window",
+          "at": 6155,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L1-w16",
+      "name": "楼梯南墙",
+      "level": "L1",
+      "start": [16060, 4990],
+      "end": [17380, 4990],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w16-o1",
+          "name": "楼梯南墙·玻璃砖窗",
+          "kind": "window",
+          "at": 660,
+          "width": 900,
+          "height": 1400,
+          "sill": 1500,
+          "glazing": "glass-block"
+        }
+      ]
+    },
+    {
+      "id": "L1-w17",
+      "name": "东外墙",
+      "level": "L1",
+      "start": [17380, 120],
+      "end": [17380, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L1-w17-o1",
+          "name": "东外墙·玻璃砖窗1",
+          "kind": "window",
+          "at": 400,
+          "width": 300,
+          "height": 1110,
+          "sill": 2490,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L1-w17-o2",
+          "name": "东外墙·玻璃砖窗2",
+          "kind": "window",
+          "at": 1000,
+          "width": 300,
+          "height": 1110,
+          "sill": 2490,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L1-w17-o3",
+          "name": "东外墙·玻璃砖窗3",
+          "kind": "window",
+          "at": 5555,
+          "width": 1500,
+          "height": 500,
+          "sill": 2500,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L1-w17-o4",
+          "name": "东外墙·窗",
+          "kind": "window",
+          "at": 7680,
+          "width": 1200,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L1-w18",
+      "name": "庭院·透水砖南围墙（3）",
+      "level": "L1",
+      "start": [10080, 13280],
+      "end": [17380, 13280],
+      "thickness": 240,
+      "kind": "fence",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L1-w19",
+      "name": "庭院·透水砖东围墙",
+      "level": "L1",
+      "start": [17380, 10400],
+      "end": [17380, 13280],
+      "thickness": 240,
+      "kind": "fence",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L1-w20",
+      "name": "厨房北墙",
+      "level": "L1",
+      "start": [2120, 3510],
+      "end": [4600, 3510],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L1-w20-o1",
+          "name": "厨房北墙·门",
+          "kind": "door",
+          "at": 2000,
+          "width": 800,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L1-w21",
+      "name": "厨房东墙",
+      "level": "L1",
+      "start": [4600, 3510],
+      "end": [4600, 6360],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L1-w21-o1",
+          "name": "厨房东墙·窗1",
+          "kind": "window",
+          "at": 900,
+          "width": 900,
+          "height": 700,
+          "sill": 2300
+        },
+        {
+          "id": "L1-w21-o2",
+          "name": "厨房东墙·窗2",
+          "kind": "window",
+          "at": 1950,
+          "width": 900,
+          "height": 700,
+          "sill": 2300
+        }
+      ]
+    },
+    {
+      "id": "L1-w22",
+      "name": "客厅东墙（2）",
+      "level": "L1",
+      "start": [9580, 3600],
+      "end": [9580, 4500],
+      "thickness": 180,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L1-w22-o1",
+          "name": "客厅东墙（2）·玻璃砖窗",
+          "kind": "window",
+          "at": 450,
+          "width": 700,
+          "height": 1900,
+          "sill": 1000,
+          "glazing": "glass-block"
+        }
+      ]
+    },
+    {
+      "id": "L1-w23",
+      "name": "浴室南墙",
+      "level": "L1",
+      "start": [12900, 2400],
+      "end": [14900, 2400],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L1-w23-o1",
+          "name": "浴室南墙·门",
+          "kind": "door",
+          "at": 1400,
+          "width": 800,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L1-w24",
+      "name": "老人房二东墙",
+      "level": "L1",
+      "start": [14120, 6360],
+      "end": [14120, 10400],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": []
+    },
+    {
+      "id": "L2-w01",
+      "name": "北外墙",
+      "level": "L2",
+      "start": [9580, 120],
+      "end": [17380, 120],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L2-w01-o1",
+          "name": "北外墙·窗1",
+          "kind": "window",
+          "at": 1910,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L2-w01-o2",
+          "name": "北外墙·窗2",
+          "kind": "window",
+          "at": 4280,
+          "width": 600,
+          "height": 900,
+          "sill": 1500
+        },
+        {
+          "id": "L2-w01-o3",
+          "name": "北外墙·玻璃砖窗1",
+          "kind": "window",
+          "at": 6800,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L2-w01-o4",
+          "name": "北外墙·玻璃砖窗2",
+          "kind": "window",
+          "at": 7400,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        }
+      ]
+    },
+    {
+      "id": "L2-w02",
+      "name": "东外墙",
+      "level": "L2",
+      "start": [17380, 120],
+      "end": [17380, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L2-w02-o1",
+          "name": "东外墙·玻璃砖窗1",
+          "kind": "window",
+          "at": 400,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L2-w02-o2",
+          "name": "东外墙·玻璃砖窗2",
+          "kind": "window",
+          "at": 1000,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L2-w02-o3",
+          "name": "东外墙·窗1",
+          "kind": "window",
+          "at": 5555,
+          "width": 1200,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L2-w02-o4",
+          "name": "东外墙·窗2",
+          "kind": "window",
+          "at": 7980,
+          "width": 1800,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L2-w03",
+      "name": "南外墙",
+      "level": "L2",
+      "start": [9580, 10400],
+      "end": [17380, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L2-w03-o1",
+          "name": "南外墙·窗1",
+          "kind": "window",
+          "at": 2285,
+          "width": 2400,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L2-w03-o2",
+          "name": "南外墙·窗2",
+          "kind": "window",
+          "at": 6155,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L2-w04",
+      "name": "次卧一东墙",
+      "level": "L2",
+      "start": [12900, 120],
+      "end": [12900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L2-w05",
+      "name": "卫生间东墙",
+      "level": "L2",
+      "start": [14900, 120],
+      "end": [14900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L2-w06",
+      "name": "卫生间南墙",
+      "level": "L2",
+      "start": [12900, 3600],
+      "end": [14900, 3600],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L2-w06-o1",
+          "name": "卫生间南墙·门",
+          "kind": "door",
+          "at": 1460,
+          "width": 800,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L2-w07",
+      "name": "次卧一南墙",
+      "level": "L2",
+      "start": [9580, 3600],
+      "end": [12900, 3600],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L2-w07-o1",
+          "name": "次卧一南墙·门",
+          "kind": "door",
+          "at": 1400,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L2-w08",
+      "name": "次卧一西墙",
+      "level": "L2",
+      "start": [9580, 120],
+      "end": [9580, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L2-w09",
+      "name": "家庭厅西墙",
+      "level": "L2",
+      "start": [9580, 3600],
+      "end": [9580, 6360],
+      "thickness": 180,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L2-w09-o1",
+          "name": "家庭厅西墙·推拉门",
+          "kind": "sliding-door",
+          "at": 1380,
+          "width": 1800,
+          "height": 2400,
+          "sill": 0
+        }
+      ]
+    },
+    {
+      "id": "L2-w10",
+      "name": "主卧西墙",
+      "level": "L2",
+      "start": [9580, 6360],
+      "end": [9580, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L2-w10-o1",
+          "name": "主卧西墙·窗",
+          "kind": "window",
+          "at": 1740,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L2-w11",
+      "name": "家庭厅南墙",
+      "level": "L2",
+      "start": [9580, 6360],
+      "end": [17380, 6360],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L2-w11-o1",
+          "name": "家庭厅南墙·门1",
+          "kind": "door",
+          "at": 3860,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        },
+        {
+          "id": "L2-w11-o2",
+          "name": "家庭厅南墙·门2",
+          "kind": "door",
+          "at": 5100,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L2-w12",
+      "name": "露台北墙",
+      "level": "L2",
+      "start": [2120, 120],
+      "end": [9580, 120],
+      "thickness": 200,
+      "kind": "partition",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L2-w13",
+      "name": "露台西墙",
+      "level": "L2",
+      "start": [2120, 120],
+      "end": [2120, 7360],
+      "thickness": 200,
+      "kind": "partition",
+      "height": 1970,
+      "openings": []
+    },
+    {
+      "id": "L2-w14",
+      "name": "露台南栏杆",
+      "level": "L2",
+      "start": [2120, 7360],
+      "end": [9580, 7360],
+      "thickness": 60,
+      "kind": "railing",
+      "openings": []
+    },
+    {
+      "id": "L2-w15",
+      "name": "主卧东墙",
+      "level": "L2",
+      "start": [14120, 6360],
+      "end": [14120, 10400],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": []
+    },
+    {
+      "id": "L3-w01",
+      "name": "北外墙",
+      "level": "L3",
+      "start": [9580, 120],
+      "end": [17380, 120],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L3-w01-o1",
+          "name": "北外墙·窗1",
+          "kind": "window",
+          "at": 1910,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L3-w01-o2",
+          "name": "北外墙·窗2",
+          "kind": "window",
+          "at": 4280,
+          "width": 600,
+          "height": 900,
+          "sill": 1500
+        },
+        {
+          "id": "L3-w01-o3",
+          "name": "北外墙·玻璃砖窗1",
+          "kind": "window",
+          "at": 6800,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L3-w01-o4",
+          "name": "北外墙·玻璃砖窗2",
+          "kind": "window",
+          "at": 7400,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        }
+      ]
+    },
+    {
+      "id": "L3-w02",
+      "name": "东外墙",
+      "level": "L3",
+      "start": [17380, 120],
+      "end": [17380, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L3-w02-o1",
+          "name": "东外墙·玻璃砖窗1",
+          "kind": "window",
+          "at": 400,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L3-w02-o2",
+          "name": "东外墙·玻璃砖窗2",
+          "kind": "window",
+          "at": 1000,
+          "width": 300,
+          "height": 3300,
+          "sill": 0,
+          "glazing": "glass-block"
+        },
+        {
+          "id": "L3-w02-o3",
+          "name": "东外墙·窗1",
+          "kind": "window",
+          "at": 5555,
+          "width": 1200,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L3-w02-o4",
+          "name": "东外墙·窗2",
+          "kind": "window",
+          "at": 7980,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L3-w03",
+      "name": "南外墙",
+      "level": "L3",
+      "start": [9580, 10400],
+      "end": [17380, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L3-w03-o1",
+          "name": "南外墙·窗1",
+          "kind": "window",
+          "at": 2285,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        },
+        {
+          "id": "L3-w03-o2",
+          "name": "南外墙·窗2",
+          "kind": "window",
+          "at": 6155,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L3-w04",
+      "name": "娱乐厅东墙",
+      "level": "L3",
+      "start": [12900, 120],
+      "end": [12900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L3-w05",
+      "name": "卫生间东墙",
+      "level": "L3",
+      "start": [14900, 120],
+      "end": [14900, 3600],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": []
+    },
+    {
+      "id": "L3-w06",
+      "name": "卫生间南墙",
+      "level": "L3",
+      "start": [12900, 3600],
+      "end": [14900, 3600],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L3-w06-o1",
+          "name": "卫生间南墙·门",
+          "kind": "door",
+          "at": 1460,
+          "width": 800,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L3-w07",
+      "name": "娱乐厅南墙",
+      "level": "L3",
+      "start": [9580, 3600],
+      "end": [12900, 3600],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": [
+        {
+          "id": "L3-w07-o1",
+          "name": "娱乐厅南墙·推拉门",
+          "kind": "sliding-door",
+          "at": 1660,
+          "width": 2400,
+          "height": 2400,
+          "sill": 0
+        }
+      ]
+    },
+    {
+      "id": "L3-w08",
+      "name": "西外墙",
+      "level": "L3",
+      "start": [9580, 120],
+      "end": [9580, 10400],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L3-w08-o1",
+          "name": "西外墙·推拉门",
+          "kind": "sliding-door",
+          "at": 4980,
+          "width": 1800,
+          "height": 2400,
+          "sill": 0
+        },
+        {
+          "id": "L3-w08-o2",
+          "name": "西外墙·窗",
+          "kind": "window",
+          "at": 8100,
+          "width": 1500,
+          "height": 1500,
+          "sill": 900
+        }
+      ]
+    },
+    {
+      "id": "L3-w09",
+      "name": "阳台西栏杆",
+      "level": "L3",
+      "start": [8080, 3180],
+      "end": [8080, 6780],
+      "thickness": 60,
+      "kind": "railing",
+      "openings": []
+    },
+    {
+      "id": "L3-w10",
+      "name": "阳台北栏杆",
+      "level": "L3",
+      "start": [8080, 3180],
+      "end": [9580, 3180],
+      "thickness": 60,
+      "kind": "railing",
+      "openings": []
+    },
+    {
+      "id": "L3-w11",
+      "name": "阳台南栏杆",
+      "level": "L3",
+      "start": [8080, 6780],
+      "end": [9580, 6780],
+      "thickness": 60,
+      "kind": "railing",
+      "openings": []
+    },
+    {
+      "id": "L3-w12",
+      "name": "起居厅南墙",
+      "level": "L3",
+      "start": [9580, 6360],
+      "end": [17380, 6360],
+      "thickness": 180,
+      "kind": "bearing",
+      "openings": [
+        {
+          "id": "L3-w12-o1",
+          "name": "起居厅南墙·门1",
+          "kind": "door",
+          "at": 3860,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        },
+        {
+          "id": "L3-w12-o2",
+          "name": "起居厅南墙·门2",
+          "kind": "door",
+          "at": 5100,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "L3-w13",
+      "name": "次卧三东墙",
+      "level": "L3",
+      "start": [14120, 6360],
+      "end": [14120, 10400],
+      "thickness": 120,
+      "kind": "partition",
+      "openings": []
+    },
+    {
+      "id": "RF-w01",
+      "name": "出屋面楼梯间北女儿墙",
+      "level": "RF",
+      "start": [9580, 120],
+      "end": [17380, 120],
+      "thickness": 200,
+      "kind": "parapet",
+      "height": 1100,
+      "openings": []
+    },
+    {
+      "id": "RF-w02",
+      "name": "屋顶平台西女儿墙",
+      "level": "RF",
+      "start": [9580, 120],
+      "end": [9580, 10400],
+      "thickness": 200,
+      "kind": "parapet",
+      "height": 1100,
+      "openings": []
+    },
+    {
+      "id": "RF-w03",
+      "name": "屋顶平台南女儿墙",
+      "level": "RF",
+      "start": [9580, 10400],
+      "end": [17380, 10400],
+      "thickness": 200,
+      "kind": "parapet",
+      "height": 1100,
+      "openings": []
+    },
+    {
+      "id": "RF-w04",
+      "name": "出屋面楼梯间东女儿墙",
+      "level": "RF",
+      "start": [17380, 120],
+      "end": [17380, 10400],
+      "thickness": 200,
+      "kind": "parapet",
+      "height": 1100,
+      "openings": []
+    },
+    {
+      "id": "RF-w05",
+      "name": "出屋面楼梯间北墙",
+      "level": "RF",
+      "start": [14900, 120],
+      "end": [17380, 120],
+      "thickness": 180,
+      "kind": "bearing",
+      "height": 2800,
+      "openings": []
+    },
+    {
+      "id": "RF-w06",
+      "name": "出屋面楼梯间南墙",
+      "level": "RF",
+      "start": [14900, 4990],
+      "end": [17380, 4990],
+      "thickness": 180,
+      "kind": "bearing",
+      "height": 2800,
+      "openings": [
+        {
+          "id": "RF-w06-o1",
+          "name": "出屋面楼梯间南墙·门",
+          "kind": "door",
+          "at": 600,
+          "width": 900,
+          "height": 2100,
+          "sill": 0,
+          "swing": {
+            "hinge": "start",
+            "side": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "RF-w07",
+      "name": "出屋面楼梯间西墙",
+      "level": "RF",
+      "start": [14900, 120],
+      "end": [14900, 4990],
+      "thickness": 180,
+      "kind": "bearing",
+      "height": 2800,
+      "openings": []
+    },
+    {
+      "id": "RF-w08",
+      "name": "出屋面楼梯间东墙",
+      "level": "RF",
+      "start": [17380, 120],
+      "end": [17380, 4990],
+      "thickness": 180,
+      "kind": "bearing",
+      "height": 2800,
+      "openings": []
+    }
+  ],
+  "spaces": [
+    {
+      "id": "L1-s01",
+      "name": "厨房",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [2120, 3510],
+            [4600, 3510],
+            [4600, 6360],
+            [2120, 6360]
+          ]
+        }
+      ],
+      "floor": "tile"
+    },
+    {
+      "id": "L1-s02",
+      "name": "餐厅",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [2120, 120],
+            [5600, 120],
+            [5600, 3510],
+            [2120, 3510]
+          ]
+        }
+      ],
+      "floor": "wood"
+    },
+    {
+      "id": "L1-s03",
+      "name": "客厅",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [4600, 3510],
+            [5600, 3510],
+            [5600, 120],
+            [9580, 120],
+            [9580, 6360],
+            [4600, 6360]
+          ]
+        }
+      ],
+      "floor": "wood"
+    },
+    {
+      "id": "L1-s04",
+      "name": "储物室",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 120],
+            [12900, 120],
+            [12900, 3600],
+            [9580, 3600]
+          ]
+        }
+      ],
+      "floor": "cement"
+    },
+    {
+      "id": "L1-s05",
+      "name": "浴室",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [12900, 120],
+            [14900, 120],
+            [14900, 2400],
+            [12900, 2400]
+          ]
+        }
+      ],
+      "floor": "antislip"
+    },
+    {
+      "id": "L1-s06",
+      "name": "洗衣",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [12900, 3600],
+            [14900, 3600],
+            [14900, 4990],
+            [13890, 4990],
+            [13890, 5460],
+            [12900, 5460]
+          ]
+        },
+        {
+          "outer": [
+            [14900, 120],
+            [17380, 120],
+            [17380, 1360],
+            [14900, 1360]
+          ]
+        }
+      ],
+      "floor": "antislip"
+    },
+    {
+      "id": "L1-s07",
+      "name": "楼梯",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14900, 1360],
+            [17380, 1360],
+            [17380, 4990],
+            [14900, 4990]
+          ]
+        }
+      ],
+      "floor": "terrazzo",
+      "extras": {
+        "stair": true
+      }
+    },
+    {
+      "id": "L1-s08",
+      "name": "厅",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 3600],
+            [12900, 3600],
+            [12900, 5460],
+            [13890, 5460],
+            [13890, 6360],
+            [9580, 6360]
+          ]
+        }
+      ],
+      "floor": "terrazzo"
+    },
+    {
+      "id": "L1-s09",
+      "name": "檐廊",
+      "level": "L1",
+      "kind": "semi-outdoor",
+      "shape": [
+        {
+          "outer": [
+            [2120, 6360],
+            [9580, 6360],
+            [9580, 7360],
+            [2120, 7360]
+          ]
+        }
+      ],
+      "floor": "redtile"
+    },
+    {
+      "id": "L1-s10",
+      "name": "庭院·透水砖",
+      "level": "L1",
+      "kind": "outdoor",
+      "shape": [
+        {
+          "outer": [
+            [3000, 7360],
+            [9580, 7360],
+            [9580, 10400],
+            [17380, 10400],
+            [17380, 13280],
+            [8240, 13280],
+            [8240, 11780],
+            [6300, 11780],
+            [6300, 13280],
+            [3000, 13280]
+          ]
+        }
+      ],
+      "floor": "paver"
+    },
+    {
+      "id": "L1-s11",
+      "name": "玄关",
+      "level": "L1",
+      "kind": "outdoor",
+      "shape": [
+        {
+          "outer": [
+            [6300, 11780],
+            [8240, 11780],
+            [8240, 13280],
+            [6300, 13280]
+          ]
+        }
+      ],
+      "floor": "paver"
+    },
+    {
+      "id": "L1-s12",
+      "name": "庭院·碎石",
+      "level": "L1",
+      "kind": "outdoor",
+      "shape": [
+        {
+          "outer": [
+            [2120, 7360],
+            [3000, 7360],
+            [3000, 13280],
+            [2120, 13280]
+          ]
+        }
+      ],
+      "floor": "gravel"
+    },
+    {
+      "id": "L1-s13",
+      "name": "神位",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [13890, 4990],
+            [17380, 4990],
+            [17380, 6360],
+            [13890, 6360]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L1-s14",
+      "name": "老人房二",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 6360],
+            [14120, 6360],
+            [14120, 10400],
+            [9580, 10400]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L1-s15",
+      "name": "老人房一",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14120, 6360],
+            [17380, 6360],
+            [17380, 10400],
+            [14120, 10400]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L1-s16",
+      "name": "洗手台",
+      "level": "L1",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [12900, 2400],
+            [14900, 2400],
+            [14900, 3600],
+            [12900, 3600]
+          ]
+        }
+      ],
+      "floor": "antislip"
+    },
+    {
+      "id": "L2-s01",
+      "name": "次卧一",
+      "level": "L2",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 120],
+            [12900, 120],
+            [12900, 3600],
+            [9580, 3600]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L2-s02",
+      "name": "卫生间",
+      "level": "L2",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [12900, 120],
+            [14900, 120],
+            [14900, 3600],
+            [12900, 3600]
+          ]
+        }
+      ],
+      "floor": "antislip"
+    },
+    {
+      "id": "L2-s03",
+      "name": "楼梯",
+      "level": "L2",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14900, 120],
+            [17380, 120],
+            [17380, 4990],
+            [14900, 4990]
+          ]
+        }
+      ],
+      "floor": "terrazzo",
+      "slabOpening": true,
+      "extras": {
+        "stair": true
+      }
+    },
+    {
+      "id": "L2-s04",
+      "name": "家庭厅",
+      "level": "L2",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 3600],
+            [14900, 3600],
+            [14900, 4990],
+            [17380, 4990],
+            [17380, 6360],
+            [9580, 6360]
+          ]
+        }
+      ],
+      "floor": "terrazzo"
+    },
+    {
+      "id": "L2-s05",
+      "name": "主卧",
+      "level": "L2",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 6360],
+            [14120, 6360],
+            [14120, 10400],
+            [9580, 10400]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L2-s06",
+      "name": "次卧五",
+      "level": "L2",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14120, 6360],
+            [17380, 6360],
+            [17380, 10400],
+            [14120, 10400]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L2-s07",
+      "name": "露台",
+      "level": "L2",
+      "kind": "roof-terrace",
+      "shape": [
+        {
+          "outer": [
+            [2120, 120],
+            [9580, 120],
+            [9580, 7360],
+            [2120, 7360]
+          ]
+        }
+      ],
+      "floor": "redtile"
+    },
+    {
+      "id": "L3-s01",
+      "name": "娱乐厅",
+      "level": "L3",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 120],
+            [12900, 120],
+            [12900, 3600],
+            [9580, 3600]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L3-s02",
+      "name": "卫生间",
+      "level": "L3",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [12900, 120],
+            [14900, 120],
+            [14900, 3600],
+            [12900, 3600]
+          ]
+        }
+      ],
+      "floor": "antislip"
+    },
+    {
+      "id": "L3-s03",
+      "name": "楼梯",
+      "level": "L3",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14900, 120],
+            [17380, 120],
+            [17380, 4990],
+            [14900, 4990]
+          ]
+        }
+      ],
+      "floor": "terrazzo",
+      "slabOpening": true,
+      "extras": {
+        "stair": true
+      }
+    },
+    {
+      "id": "L3-s04",
+      "name": "起居厅",
+      "level": "L3",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 3600],
+            [14900, 3600],
+            [14900, 4990],
+            [17380, 4990],
+            [17380, 6360],
+            [9580, 6360]
+          ]
+        }
+      ],
+      "floor": "terrazzo"
+    },
+    {
+      "id": "L3-s05",
+      "name": "次卧三",
+      "level": "L3",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [9580, 6360],
+            [14120, 6360],
+            [14120, 10400],
+            [9580, 10400]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L3-s06",
+      "name": "次卧四",
+      "level": "L3",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14120, 6360],
+            [17380, 6360],
+            [17380, 10400],
+            [14120, 10400]
+          ]
+        }
+      ],
+      "floor": "oak"
+    },
+    {
+      "id": "L3-s07",
+      "name": "阳台",
+      "level": "L3",
+      "kind": "semi-outdoor",
+      "shape": [
+        {
+          "outer": [
+            [8080, 3180],
+            [9580, 3180],
+            [9580, 6780],
+            [8080, 6780]
+          ]
+        }
+      ],
+      "floor": "cement"
+    },
+    {
+      "id": "RF-s01",
+      "name": "屋顶平台",
+      "level": "RF",
+      "kind": "roof-terrace",
+      "shape": [
+        {
+          "outer": [
+            [9580, 120],
+            [14900, 120],
+            [14900, 4990],
+            [17380, 4990],
+            [17380, 10400],
+            [9580, 10400]
+          ]
+        }
+      ],
+      "floor": "redtile"
+    },
+    {
+      "id": "RF-s02",
+      "name": "出屋面楼梯间",
+      "level": "RF",
+      "kind": "indoor",
+      "shape": [
+        {
+          "outer": [
+            [14900, 120],
+            [17380, 120],
+            [17380, 4990],
+            [14900, 4990]
+          ]
+        }
+      ],
+      "floor": "terrazzo",
+      "slabOpening": true,
+      "extras": {
+        "stair": true
+      }
+    }
+  ],
+  "elements": [
+    {
+      "id": "e-stair",
+      "name": "楼梯",
+      "type": "legacy-stair",
+      "level": "L1",
+      "topLevel": "RF",
+      "params": {
+        "type": "legacy",
+        "hole1": [14900, 17500, 0, 3880],
+        "holeR": [14900, 17500, 0, 4870],
+        "kiosk": [14900, 17380, 120, 4990],
+        "door": [15500, 4990],
+        "holeM": [
+          [14900, 16140, 0, 4870],
+          [16140, 17500, 0, 3880]
+        ],
+        "footprint": {
+          "x": 14900,
+          "y": 120,
+          "w": 2480,
+          "h": 6150
+        },
+        "flights": {
+          "w0": 15.03,
+          "w1": 16.09,
+          "e0": 16.19,
+          "e1": 17.25,
+          "x0": 14.9,
+          "z1": 6.27,
+          "dz": 0.12
+        }
+      }
+    },
+    {
+      "id": "e-pond",
+      "name": "鱼池",
+      "type": "pond",
+      "level": "L1",
+      "params": {
+        "center": [2240, 13160],
+        "radius": 1130,
+        "sweep": "quarter-ne"
+      }
+    },
+    {
+      "id": "e-drain-1",
+      "name": "排水沟1",
+      "type": "drain",
+      "level": "L1",
+      "params": {
+        "rect": [2240, 7090, 150, 3600]
+      }
+    },
+    {
+      "id": "e-drain-2",
+      "name": "排水沟2",
+      "type": "drain",
+      "level": "L1",
+      "params": {
+        "rect": [3450, 13010, 2550, 150]
+      }
+    }
+  ],
+  "furniture": [
+    {
+      "id": "L1-f01",
+      "name": "洗衣·洗衣机",
+      "type": "washer",
+      "level": "L1",
+      "position": [15380, 540],
+      "rotation": 0,
+      "size": {
+        "w": 600,
+        "d": 600,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f02",
+      "name": "洗衣·洗衣机（2）",
+      "type": "washer",
+      "level": "L1",
+      "position": [16010, 540],
+      "rotation": 0,
+      "size": {
+        "w": 600,
+        "d": 600,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f03",
+      "name": "洗衣·洗衣池",
+      "type": "sink",
+      "level": "L1",
+      "position": [16900, 490],
+      "rotation": 0,
+      "size": {
+        "w": 600,
+        "d": 500,
+        "h": 800
+      }
+    },
+    {
+      "id": "L1-f04",
+      "name": "檐廊·摇椅",
+      "type": "rocker",
+      "level": "L1",
+      "position": [7900, 6860],
+      "rotation": 0,
+      "size": {
+        "w": 650,
+        "d": 950,
+        "h": 900
+      }
+    },
+    {
+      "id": "L1-f05",
+      "name": "檐廊·边几",
+      "type": "sidetable",
+      "level": "L1",
+      "position": [8500, 6860],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 550
+      }
+    },
+    {
+      "id": "L1-f06",
+      "name": "檐廊·摇椅（2）",
+      "type": "rocker",
+      "level": "L1",
+      "position": [9100, 6860],
+      "rotation": 0,
+      "size": {
+        "w": 650,
+        "d": 950,
+        "h": 900
+      }
+    },
+    {
+      "id": "L1-f07",
+      "name": "檐廊·摇椅（3）",
+      "type": "rocker",
+      "level": "L1",
+      "position": [3400, 6860],
+      "rotation": 0,
+      "size": {
+        "w": 650,
+        "d": 950,
+        "h": 900
+      }
+    },
+    {
+      "id": "L1-f08",
+      "name": "檐廊·边几（2）",
+      "type": "sidetable",
+      "level": "L1",
+      "position": [4100, 6860],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 550
+      }
+    },
+    {
+      "id": "L1-f09",
+      "name": "庭院·透水砖·石桌",
+      "type": "stonetable",
+      "level": "L1",
+      "position": [5600, 10300],
+      "rotation": 0,
+      "size": {
+        "w": 900,
+        "d": 900,
+        "h": 750
+      }
+    },
+    {
+      "id": "L1-f10",
+      "name": "庭院·透水砖·石凳",
+      "type": "stool",
+      "level": "L1",
+      "position": [5600, 9650],
+      "rotation": 0,
+      "size": {
+        "w": 400,
+        "d": 400,
+        "h": 450
+      }
+    },
+    {
+      "id": "L1-f11",
+      "name": "庭院·透水砖·石凳（2）",
+      "type": "stool",
+      "level": "L1",
+      "position": [5600, 10950],
+      "rotation": 0,
+      "size": {
+        "w": 400,
+        "d": 400,
+        "h": 450
+      }
+    },
+    {
+      "id": "L1-f12",
+      "name": "庭院·透水砖·石凳（3）",
+      "type": "stool",
+      "level": "L1",
+      "position": [4950, 10300],
+      "rotation": 0,
+      "size": {
+        "w": 400,
+        "d": 400,
+        "h": 450
+      }
+    },
+    {
+      "id": "L1-f13",
+      "name": "庭院·透水砖·石凳（4）",
+      "type": "stool",
+      "level": "L1",
+      "position": [6250, 10300],
+      "rotation": 0,
+      "size": {
+        "w": 400,
+        "d": 400,
+        "h": 450
+      }
+    },
+    {
+      "id": "L1-f14",
+      "name": "神位·神位",
+      "type": "shrine",
+      "level": "L1",
+      "position": [17085, 5675],
+      "rotation": 90,
+      "size": {
+        "w": 1000,
+        "d": 350,
+        "h": 900
+      },
+      "elevation": 1300
+    },
+    {
+      "id": "L1-f15",
+      "name": "厨房·橱柜",
+      "type": "counter",
+      "level": "L1",
+      "position": [2540, 4880],
+      "rotation": -90,
+      "size": {
+        "w": 2600,
+        "d": 600,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f16",
+      "name": "厨房·橱柜（2）",
+      "type": "counter",
+      "level": "L1",
+      "position": [3690, 5970],
+      "rotation": 180,
+      "size": {
+        "w": 1700,
+        "d": 600,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f17",
+      "name": "厨房·冰箱",
+      "type": "fridge",
+      "level": "L1",
+      "position": [4190, 4900],
+      "rotation": 90,
+      "size": {
+        "w": 700,
+        "d": 700,
+        "h": 1800
+      }
+    },
+    {
+      "id": "L1-f18",
+      "name": "餐厅·餐桌",
+      "type": "dining",
+      "level": "L1",
+      "position": [3860, 1815],
+      "rotation": 0,
+      "size": {
+        "w": 1600,
+        "d": 900,
+        "h": 750
+      }
+    },
+    {
+      "id": "L1-f19",
+      "name": "餐厅·餐椅",
+      "type": "chair",
+      "level": "L1",
+      "position": [3510, 1265],
+      "rotation": 0,
+      "size": {
+        "w": 450,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f20",
+      "name": "餐厅·餐椅（2）",
+      "type": "chair",
+      "level": "L1",
+      "position": [4210, 1265],
+      "rotation": 0,
+      "size": {
+        "w": 450,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f21",
+      "name": "餐厅·餐椅（3）",
+      "type": "chair",
+      "level": "L1",
+      "position": [3510, 2365],
+      "rotation": 180,
+      "size": {
+        "w": 450,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f22",
+      "name": "餐厅·餐椅（4）",
+      "type": "chair",
+      "level": "L1",
+      "position": [4210, 2365],
+      "rotation": 180,
+      "size": {
+        "w": 450,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f23",
+      "name": "客厅·电视柜",
+      "type": "tvstand",
+      "level": "L1",
+      "position": [9240, 1860],
+      "rotation": 90,
+      "size": {
+        "w": 1800,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f24",
+      "name": "客厅·茶几",
+      "type": "coffee",
+      "level": "L1",
+      "position": [8100, 1860],
+      "rotation": 90,
+      "size": {
+        "w": 1200,
+        "d": 600,
+        "h": 420
+      }
+    },
+    {
+      "id": "L1-f25",
+      "name": "客厅·三人沙发",
+      "type": "sofa3",
+      "level": "L1",
+      "position": [6500, 1860],
+      "rotation": -90,
+      "size": {
+        "w": 2100,
+        "d": 900,
+        "h": 800
+      }
+    },
+    {
+      "id": "L1-f26",
+      "name": "客厅·盆栽",
+      "type": "plant",
+      "level": "L1",
+      "position": [9200, 4100],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L1-f27",
+      "name": "庭院·透水砖·种植带",
+      "type": "bed",
+      "level": "L1",
+      "position": [12795, 12860],
+      "rotation": 0,
+      "size": {
+        "w": 8930,
+        "d": 600,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f28",
+      "name": "庭院·透水砖·种植带（2）",
+      "type": "bed",
+      "level": "L1",
+      "position": [16960, 11480],
+      "rotation": 90,
+      "size": {
+        "w": 2160,
+        "d": 600,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f29",
+      "name": "庭院·碎石·种植带",
+      "type": "bed",
+      "level": "L1",
+      "position": [2540, 9630],
+      "rotation": 90,
+      "size": {
+        "w": 4540,
+        "d": 600,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f30",
+      "name": "浴室·钻石型淋浴房",
+      "type": "shower5",
+      "level": "L1",
+      "position": [13490, 710],
+      "rotation": 0,
+      "size": {
+        "w": 1000,
+        "d": 1000,
+        "h": 2000
+      }
+    },
+    {
+      "id": "L1-f31",
+      "name": "浴室·洗手台",
+      "type": "basin",
+      "level": "L1",
+      "position": [14400, 435],
+      "rotation": 0,
+      "size": {
+        "w": 700,
+        "d": 450,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f32",
+      "name": "浴室·马桶",
+      "type": "toilet",
+      "level": "L1",
+      "position": [13340, 1890],
+      "rotation": -90,
+      "size": {
+        "w": 400,
+        "d": 700,
+        "h": 750
+      }
+    },
+    {
+      "id": "L1-f33",
+      "name": "洗手台·洗手台",
+      "type": "basin",
+      "level": "L1",
+      "position": [13240, 3000],
+      "rotation": -90,
+      "size": {
+        "w": 1000,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L1-f34",
+      "name": "浴室·安全扶手",
+      "type": "grab",
+      "level": "L1",
+      "position": [13550, 2300],
+      "rotation": 180,
+      "size": {
+        "w": 700,
+        "d": 80,
+        "h": 40
+      },
+      "elevation": 750
+    },
+    {
+      "id": "L1-f35",
+      "name": "浴室·紧急呼叫按钮",
+      "type": "sos",
+      "level": "L1",
+      "position": [14050, 2300],
+      "rotation": 180,
+      "size": {
+        "w": 100,
+        "d": 40,
+        "h": 100
+      },
+      "elevation": 900
+    },
+    {
+      "id": "L1-f36",
+      "name": "浴室·安全扶手（2）",
+      "type": "grab",
+      "level": "L1",
+      "position": [13030, 760],
+      "rotation": -90,
+      "size": {
+        "w": 600,
+        "d": 80,
+        "h": 40
+      },
+      "elevation": 900
+    },
+    {
+      "id": "L1-f37",
+      "name": "浴室·折叠淋浴凳",
+      "type": "foldseat",
+      "level": "L1",
+      "position": [13180, 520],
+      "rotation": -90,
+      "size": {
+        "w": 450,
+        "d": 380,
+        "h": 460
+      }
+    },
+    {
+      "id": "L1-f38",
+      "name": "老人房二·双人床1.5",
+      "type": "bed15",
+      "level": "L1",
+      "position": [11865, 9260],
+      "rotation": 180,
+      "size": {
+        "w": 1500,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L1-f39",
+      "name": "老人房二·床头柜",
+      "type": "nightstand",
+      "level": "L1",
+      "position": [10865, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f40",
+      "name": "老人房二·床头柜（2）",
+      "type": "nightstand",
+      "level": "L1",
+      "position": [12865, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f41",
+      "name": "老人房二·衣柜",
+      "type": "wardrobe",
+      "level": "L1",
+      "position": [13760, 8300],
+      "rotation": 90,
+      "size": {
+        "w": 1600,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "L1-f42",
+      "name": "老人房一·双人床1.5",
+      "type": "bed15",
+      "level": "L1",
+      "position": [15735, 9260],
+      "rotation": 180,
+      "size": {
+        "w": 1500,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L1-f43",
+      "name": "老人房一·床头柜",
+      "type": "nightstand",
+      "level": "L1",
+      "position": [14735, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f44",
+      "name": "老人房一·床头柜（2）",
+      "type": "nightstand",
+      "level": "L1",
+      "position": [16735, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L1-f45",
+      "name": "老人房一·衣柜",
+      "type": "wardrobe",
+      "level": "L1",
+      "position": [14480, 8200],
+      "rotation": -90,
+      "size": {
+        "w": 1400,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "L2-f01",
+      "name": "次卧一·双人床1.5",
+      "type": "bed15",
+      "level": "L2",
+      "position": [11530, 1850],
+      "rotation": 90,
+      "size": {
+        "w": 1500,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L2-f02",
+      "name": "次卧一·床头柜",
+      "type": "nightstand",
+      "level": "L2",
+      "position": [12330, 850],
+      "rotation": 90,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L2-f03",
+      "name": "次卧一·床头柜（2）",
+      "type": "nightstand",
+      "level": "L2",
+      "position": [12330, 2850],
+      "rotation": 90,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L2-f04",
+      "name": "次卧一·衣柜",
+      "type": "wardrobe",
+      "level": "L2",
+      "position": [9970, 1800],
+      "rotation": -90,
+      "size": {
+        "w": 1400,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "L2-f05",
+      "name": "家庭厅·盆栽",
+      "type": "plant",
+      "level": "L2",
+      "position": [15200, 5900],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L2-f06",
+      "name": "露台·茶台",
+      "type": "teatable",
+      "level": "L2",
+      "position": [5000, 3000],
+      "rotation": 0,
+      "size": {
+        "w": 1400,
+        "d": 700,
+        "h": 650
+      }
+    },
+    {
+      "id": "L2-f07",
+      "name": "露台·单人椅",
+      "type": "armchair",
+      "level": "L2",
+      "position": [5000, 1850],
+      "rotation": 0,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "L2-f08",
+      "name": "露台·单人椅（2）",
+      "type": "armchair",
+      "level": "L2",
+      "position": [5000, 4150],
+      "rotation": 180,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "L2-f09",
+      "name": "露台·盆栽",
+      "type": "plant",
+      "level": "L2",
+      "position": [2600, 700],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L2-f10",
+      "name": "露台·盆栽（2）",
+      "type": "plant",
+      "level": "L2",
+      "position": [9400, 700],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L2-f11",
+      "name": "露台·盆栽（3）",
+      "type": "plant",
+      "level": "L2",
+      "position": [2600, 6900],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L2-f12",
+      "name": "露台·盆栽（4）",
+      "type": "plant",
+      "level": "L2",
+      "position": [9400, 6900],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L2-f13",
+      "name": "卫生间·淋浴房",
+      "type": "shower",
+      "level": "L2",
+      "position": [13490, 760],
+      "rotation": 0,
+      "size": {
+        "w": 1000,
+        "d": 1100,
+        "h": 2000
+      }
+    },
+    {
+      "id": "L2-f14",
+      "name": "卫生间·马桶",
+      "type": "toilet",
+      "level": "L2",
+      "position": [13340, 1850],
+      "rotation": -90,
+      "size": {
+        "w": 400,
+        "d": 700,
+        "h": 750
+      }
+    },
+    {
+      "id": "L2-f15",
+      "name": "卫生间·洗手台",
+      "type": "basin",
+      "level": "L2",
+      "position": [13240, 2950],
+      "rotation": -90,
+      "size": {
+        "w": 900,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L2-f16",
+      "name": "主卧·双人床1.8",
+      "type": "bed18",
+      "level": "L2",
+      "position": [11865, 9260],
+      "rotation": 180,
+      "size": {
+        "w": 1800,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L2-f17",
+      "name": "主卧·床头柜",
+      "type": "nightstand",
+      "level": "L2",
+      "position": [10715, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L2-f18",
+      "name": "主卧·床头柜（2）",
+      "type": "nightstand",
+      "level": "L2",
+      "position": [13015, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L2-f19",
+      "name": "主卧·衣柜",
+      "type": "wardrobe",
+      "level": "L2",
+      "position": [13760, 8300],
+      "rotation": 90,
+      "size": {
+        "w": 1600,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "L2-f20",
+      "name": "次卧五·双人床1.5",
+      "type": "bed15",
+      "level": "L2",
+      "position": [15735, 9260],
+      "rotation": 180,
+      "size": {
+        "w": 1500,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L2-f21",
+      "name": "次卧五·床头柜",
+      "type": "nightstand",
+      "level": "L2",
+      "position": [14735, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L2-f22",
+      "name": "次卧五·床头柜（2）",
+      "type": "nightstand",
+      "level": "L2",
+      "position": [16735, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L2-f23",
+      "name": "次卧五·衣柜",
+      "type": "wardrobe",
+      "level": "L2",
+      "position": [14480, 8200],
+      "rotation": -90,
+      "size": {
+        "w": 1400,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "L2-f24",
+      "name": "主卧·单人椅",
+      "type": "armchair",
+      "level": "L2",
+      "position": [10200, 8000],
+      "rotation": 90,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "L2-f25",
+      "name": "主卧·边几",
+      "type": "sidetable",
+      "level": "L2",
+      "position": [10200, 8700],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 550
+      }
+    },
+    {
+      "id": "L3-f01",
+      "name": "起居厅·盆栽",
+      "type": "plant",
+      "level": "L3",
+      "position": [16900, 5650],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L3-f02",
+      "name": "阳台·单人椅",
+      "type": "armchair",
+      "level": "L3",
+      "position": [8750, 4000],
+      "rotation": 90,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "L3-f03",
+      "name": "阳台·边几",
+      "type": "sidetable",
+      "level": "L3",
+      "position": [8750, 4800],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 550
+      }
+    },
+    {
+      "id": "L3-f04",
+      "name": "阳台·单人椅（2）",
+      "type": "armchair",
+      "level": "L3",
+      "position": [8750, 5600],
+      "rotation": 90,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "L3-f05",
+      "name": "阳台·盆栽",
+      "type": "plant",
+      "level": "L3",
+      "position": [8500, 6450],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L3-f06",
+      "name": "阳台·伸缩遮阳棚",
+      "type": "awning2",
+      "level": "L3",
+      "position": [8830, 4980],
+      "rotation": 0,
+      "size": {
+        "w": 1500,
+        "d": 3600,
+        "h": 400
+      },
+      "elevation": 2300
+    },
+    {
+      "id": "L3-f07",
+      "name": "卫生间·淋浴房",
+      "type": "shower",
+      "level": "L3",
+      "position": [13490, 760],
+      "rotation": 0,
+      "size": {
+        "w": 1000,
+        "d": 1100,
+        "h": 2000
+      }
+    },
+    {
+      "id": "L3-f08",
+      "name": "卫生间·马桶",
+      "type": "toilet",
+      "level": "L3",
+      "position": [13340, 1850],
+      "rotation": -90,
+      "size": {
+        "w": 400,
+        "d": 700,
+        "h": 750
+      }
+    },
+    {
+      "id": "L3-f09",
+      "name": "卫生间·洗手台",
+      "type": "basin",
+      "level": "L3",
+      "position": [13240, 2950],
+      "rotation": -90,
+      "size": {
+        "w": 900,
+        "d": 500,
+        "h": 850
+      }
+    },
+    {
+      "id": "L3-f10",
+      "name": "娱乐厅·电视柜",
+      "type": "tvstand",
+      "level": "L3",
+      "position": [12560, 1880],
+      "rotation": 90,
+      "size": {
+        "w": 2200,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L3-f11",
+      "name": "娱乐厅·三人沙发",
+      "type": "sofa3",
+      "level": "L3",
+      "position": [10150, 1880],
+      "rotation": -90,
+      "size": {
+        "w": 2200,
+        "d": 900,
+        "h": 800
+      }
+    },
+    {
+      "id": "L3-f12",
+      "name": "娱乐厅·茶几",
+      "type": "coffee",
+      "level": "L3",
+      "position": [11300, 1880],
+      "rotation": 90,
+      "size": {
+        "w": 1200,
+        "d": 600,
+        "h": 420
+      }
+    },
+    {
+      "id": "L3-f13",
+      "name": "娱乐厅·盆栽",
+      "type": "plant",
+      "level": "L3",
+      "position": [12500, 450],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L3-f14",
+      "name": "娱乐厅·盆栽（2）",
+      "type": "plant",
+      "level": "L3",
+      "position": [10450, 3250],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "L3-f15",
+      "name": "次卧三·双人床1.5",
+      "type": "bed15",
+      "level": "L3",
+      "position": [11865, 9260],
+      "rotation": 180,
+      "size": {
+        "w": 1500,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L3-f16",
+      "name": "次卧三·床头柜",
+      "type": "nightstand",
+      "level": "L3",
+      "position": [10865, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L3-f17",
+      "name": "次卧三·床头柜（2）",
+      "type": "nightstand",
+      "level": "L3",
+      "position": [12865, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L3-f18",
+      "name": "次卧三·衣柜",
+      "type": "wardrobe",
+      "level": "L3",
+      "position": [13760, 8300],
+      "rotation": 90,
+      "size": {
+        "w": 1600,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "L3-f19",
+      "name": "次卧四·双人床1.5",
+      "type": "bed15",
+      "level": "L3",
+      "position": [15735, 9260],
+      "rotation": 180,
+      "size": {
+        "w": 1500,
+        "d": 2000,
+        "h": 450
+      }
+    },
+    {
+      "id": "L3-f20",
+      "name": "次卧四·床头柜",
+      "type": "nightstand",
+      "level": "L3",
+      "position": [14735, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L3-f21",
+      "name": "次卧四·床头柜（2）",
+      "type": "nightstand",
+      "level": "L3",
+      "position": [16735, 9930],
+      "rotation": 180,
+      "size": {
+        "w": 500,
+        "d": 400,
+        "h": 500
+      }
+    },
+    {
+      "id": "L3-f22",
+      "name": "次卧四·衣柜",
+      "type": "wardrobe",
+      "level": "L3",
+      "position": [14480, 8200],
+      "rotation": -90,
+      "size": {
+        "w": 1400,
+        "d": 600,
+        "h": 2200
+      }
+    },
+    {
+      "id": "RF-f01",
+      "name": "屋顶平台·太阳能热水器",
+      "type": "solar",
+      "level": "RF",
+      "position": [12500, 8000],
+      "rotation": 0,
+      "size": {
+        "w": 2000,
+        "d": 1500,
+        "h": 1300
+      }
+    },
+    {
+      "id": "RF-f02",
+      "name": "屋顶平台·水塔",
+      "type": "watertank",
+      "level": "RF",
+      "position": [11200, 1200],
+      "rotation": 0,
+      "size": {
+        "w": 1000,
+        "d": 1000,
+        "h": 1400
+      }
+    },
+    {
+      "id": "RF-f03",
+      "name": "屋顶平台·晾衣架",
+      "type": "dryrack",
+      "level": "RF",
+      "position": [16000, 7600],
+      "rotation": 0,
+      "size": {
+        "w": 2400,
+        "d": 600,
+        "h": 1700
+      }
+    },
+    {
+      "id": "RF-f04",
+      "name": "屋顶平台·茶台",
+      "type": "teatable",
+      "level": "RF",
+      "position": [12000, 4700],
+      "rotation": 0,
+      "size": {
+        "w": 1400,
+        "d": 700,
+        "h": 650
+      }
+    },
+    {
+      "id": "RF-f05",
+      "name": "屋顶平台·单人椅",
+      "type": "armchair",
+      "level": "RF",
+      "position": [12000, 3800],
+      "rotation": 0,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "RF-f06",
+      "name": "屋顶平台·单人椅（2）",
+      "type": "armchair",
+      "level": "RF",
+      "position": [12000, 5600],
+      "rotation": 180,
+      "size": {
+        "w": 800,
+        "d": 800,
+        "h": 800
+      }
+    },
+    {
+      "id": "RF-f07",
+      "name": "屋顶平台·盆栽",
+      "type": "plant",
+      "level": "RF",
+      "position": [10500, 600],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    },
+    {
+      "id": "RF-f08",
+      "name": "屋顶平台·盆栽（2）",
+      "type": "plant",
+      "level": "RF",
+      "position": [16900, 9300],
+      "rotation": 0,
+      "size": {
+        "w": 500,
+        "d": 500,
+        "h": 1200
+      }
+    }
+  ],
+  "constraints": [],
+  "brief": {},
+  "decisions": [],
+  "library": {
+    "furniture": {
+      "armchair": {
+        "name": "单人椅",
+        "group": "客厅",
+        "size": {
+          "w": 800,
+          "d": 800,
+          "h": 800
+        }
+      },
+      "awning2": {
+        "name": "伸缩遮阳棚",
+        "group": "屋顶",
+        "size": {
+          "w": 1200,
+          "d": 2800,
+          "h": 400
+        }
+      },
+      "basin": {
+        "name": "洗手台",
+        "group": "卫浴",
+        "size": {
+          "w": 600,
+          "d": 450,
+          "h": 850
+        }
+      },
+      "bed": {
+        "name": "种植带",
+        "group": "庭院",
+        "size": {
+          "w": 3000,
+          "d": 600,
+          "h": 500
+        }
+      },
+      "bed15": {
+        "name": "双人床1.5",
+        "group": "卧室",
+        "size": {
+          "w": 1500,
+          "d": 2000,
+          "h": 450
+        }
+      },
+      "bed18": {
+        "name": "双人床1.8",
+        "group": "卧室",
+        "size": {
+          "w": 1800,
+          "d": 2000,
+          "h": 450
+        }
+      },
+      "chair": {
+        "name": "餐椅",
+        "group": "餐厨",
+        "size": {
+          "w": 450,
+          "d": 500,
+          "h": 850
+        }
+      },
+      "coffee": {
+        "name": "茶几",
+        "group": "客厅",
+        "size": {
+          "w": 1200,
+          "d": 600,
+          "h": 420
+        }
+      },
+      "counter": {
+        "name": "橱柜",
+        "group": "餐厨",
+        "size": {
+          "w": 2400,
+          "d": 600,
+          "h": 850
+        }
+      },
+      "dining": {
+        "name": "餐桌",
+        "group": "餐厨",
+        "size": {
+          "w": 1600,
+          "d": 900,
+          "h": 750
+        }
+      },
+      "dryrack": {
+        "name": "晾衣架",
+        "group": "屋顶",
+        "size": {
+          "w": 2400,
+          "d": 600,
+          "h": 1700
+        }
+      },
+      "foldseat": {
+        "name": "折叠淋浴凳",
+        "group": "卫浴",
+        "size": {
+          "w": 450,
+          "d": 380,
+          "h": 460
+        }
+      },
+      "fridge": {
+        "name": "冰箱",
+        "group": "餐厨",
+        "size": {
+          "w": 700,
+          "d": 700,
+          "h": 1800
+        }
+      },
+      "grab": {
+        "name": "安全扶手",
+        "group": "卫浴",
+        "size": {
+          "w": 700,
+          "d": 80,
+          "h": 40
+        }
+      },
+      "nightstand": {
+        "name": "床头柜",
+        "group": "卧室",
+        "size": {
+          "w": 500,
+          "d": 400,
+          "h": 500
+        }
+      },
+      "plant": {
+        "name": "盆栽",
+        "group": "客厅",
+        "size": {
+          "w": 500,
+          "d": 500,
+          "h": 1200
+        }
+      },
+      "rocker": {
+        "name": "摇椅",
+        "group": "庭院",
+        "size": {
+          "w": 650,
+          "d": 950,
+          "h": 900
+        }
+      },
+      "shower": {
+        "name": "淋浴房",
+        "group": "卫浴",
+        "size": {
+          "w": 900,
+          "d": 900,
+          "h": 2000
+        }
+      },
+      "shower5": {
+        "name": "钻石型淋浴房",
+        "group": "卫浴",
+        "size": {
+          "w": 1000,
+          "d": 1000,
+          "h": 2000
+        }
+      },
+      "shrine": {
+        "name": "神位",
+        "group": "客厅",
+        "size": {
+          "w": 2000,
+          "d": 500,
+          "h": 1250
+        }
+      },
+      "sidetable": {
+        "name": "边几",
+        "group": "客厅",
+        "size": {
+          "w": 500,
+          "d": 500,
+          "h": 550
+        }
+      },
+      "sink": {
+        "name": "洗衣池",
+        "group": "卫浴",
+        "size": {
+          "w": 600,
+          "d": 500,
+          "h": 800
+        }
+      },
+      "sofa3": {
+        "name": "三人沙发",
+        "group": "客厅",
+        "size": {
+          "w": 2100,
+          "d": 900,
+          "h": 800
+        }
+      },
+      "solar": {
+        "name": "太阳能热水器",
+        "group": "屋顶",
+        "size": {
+          "w": 2000,
+          "d": 1500,
+          "h": 1300
+        }
+      },
+      "sos": {
+        "name": "紧急呼叫按钮",
+        "group": "卫浴",
+        "size": {
+          "w": 100,
+          "d": 40,
+          "h": 100
+        }
+      },
+      "stonetable": {
+        "name": "石桌",
+        "group": "庭院",
+        "size": {
+          "w": 900,
+          "d": 900,
+          "h": 750
+        }
+      },
+      "stool": {
+        "name": "石凳",
+        "group": "庭院",
+        "size": {
+          "w": 400,
+          "d": 400,
+          "h": 450
+        }
+      },
+      "teatable": {
+        "name": "茶台",
+        "group": "客厅",
+        "size": {
+          "w": 1400,
+          "d": 700,
+          "h": 650
+        }
+      },
+      "toilet": {
+        "name": "马桶",
+        "group": "卫浴",
+        "size": {
+          "w": 400,
+          "d": 700,
+          "h": 750
+        }
+      },
+      "tvstand": {
+        "name": "电视柜",
+        "group": "客厅",
+        "size": {
+          "w": 1800,
+          "d": 400,
+          "h": 500
+        }
+      },
+      "wardrobe": {
+        "name": "衣柜",
+        "group": "卧室",
+        "size": {
+          "w": 1600,
+          "d": 600,
+          "h": 2200
+        }
+      },
+      "washer": {
+        "name": "洗衣机",
+        "group": "卫浴",
+        "size": {
+          "w": 600,
+          "d": 600,
+          "h": 850
+        }
+      },
+      "watertank": {
+        "name": "水塔",
+        "group": "屋顶",
+        "size": {
+          "w": 1000,
+          "d": 1000,
+          "h": 1400
+        }
+      }
+    },
+    "materials": {
+      "antislip": {
+        "name": "防滑砖",
+        "tileSize": 1200
+      },
+      "cement": {
+        "name": "微水泥",
+        "tileSize": 2000
+      },
+      "gravel": {
+        "name": "碎石",
+        "tileSize": 800
+      },
+      "oak": {
+        "name": "浅橡木地板",
+        "tileSize": 1200
+      },
+      "paver": {
+        "name": "透水砖",
+        "tileSize": 600
+      },
+      "redtile": {
+        "name": "红阶砖",
+        "tileSize": 1200
+      },
+      "terrazzo": {
+        "name": "水磨石",
+        "tileSize": 800
+      },
+      "tile": {
+        "name": "米白瓷砖",
+        "tileSize": 1600
+      },
+      "wood": {
+        "name": "柚木地板",
+        "tileSize": 1200
+      }
+    },
+    "elements": {
+      "legacy-stair": {
+        "name": "楼梯（旧页面参数）",
+        "version": 1,
+        "note": "参数照搬旧页面，第 5 步改写成正式的楼梯构件"
+      },
+      "pond": {
+        "name": "鱼池",
+        "version": 1,
+        "note": "四分之一圆，圆心在用地西南角，向东北展开"
+      },
+      "drain": {
+        "name": "排水沟",
+        "version": 1
+      }
+    }
+  },
+  "variants": [],
+  "extras": {
+    "legacy": {
+      "walk": [
+        [4.2, 8.6, -0.7853981633974483],
+        [12.2, 5, -1.5707963267948966],
+        [12.2, 5, -1.5707963267948966],
+        [15.5, 5.8, 3.141592653589793]
+      ],
+      "walkTo": [
+        [14.3, 4.5, -1.5707963267948966],
+        [14.3, 4.9, 1.5707963267948966],
+        [14.3, 4.9, 1.5707963267948966],
+        [15.5, 5.8, 3.141592653589793]
+      ]
+    }
+  }
+}

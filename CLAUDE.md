@@ -1,0 +1,33 @@
+# Plinth conventions
+
+Overall design and requirements: GitHub issue #1 (epic) and its sub-issues. Read the issue for the relevant phase before changing things.
+
+## Language
+- Everything in the repository and on GitHub is English: code, identifiers, comments, logs, docs, commit messages, issues, PRs, review comments.
+- Chinese appears only in what the running app shows its users (UI text, error messages shown in the UI, emails) and in data (sample projects, catalog names, generated room/wall names). Test locators that match that UI text stay Chinese too.
+- Text read only by the LLM (system prompt, capability descriptions) is English; the agent replies in the language the user writes in (falling back to the UI language) and writes project text in the language the project data uses.
+- Conversation with the project owner is in Chinese.
+
+## UI
+- `apps/web/src` is organized by feature. `routes/` only declares routes (path, search validation, redirects); each page and its components live in `features/<feature>/` (`editor`, `looks`, `projects`, `auth`, `settings`, `site`), reading params through `getRouteApi`. `graphics/` holds drawing shared across features: `plan/` (plan geometry and drawing, floor materials) and `three/` (the 3D scene layer `three/scene`, look geometry, stills, framing); the editor's own 3D view is `features/editor/model3d`. `server/` is the Worker API: `api.ts` wires it, `routes/` by resource, `repo/` by domain, `http.ts` for the context and middleware. `lib/` keeps cross-feature helpers. `components/ui` and `components/ai-elements` are generated shadcn code: leave them as generated.
+- Use shadcn/ui components only (Base UI primitives, Nova style): lists use `Item`, tables `Table`, notices `Alert`, cards `Card`, link-styled actions `Button variant="link"`, choices `Select` (or `Autocomplete` when any typed value is allowed). Don't hand-write `<button>`, `<table>`, a bordered `<div>` as a card, or a native `<select>` / `<datalist>`.
+- Theme: shadcn's Vercel theme. The website (`apps/web/src/styles.css`) follows the system light/dark setting.
+- The canvas (plan and 3D) renders in a same-origin iframe (`apps/web/src/canvas/CanvasFrame.tsx`) with its own stylesheet (`canvas/canvas.css`). It is light-only and unaffected by the website theme. Light theme variables live in `apps/web/src/theme/light.css`, shared by the website and the canvas.
+- Colors only reference theme variables: `var(--background)`, `text-muted-foreground`, `var(--chart-2)`, etc. No hex, `rgb()`/`oklch()`, or Tailwind palette colors (amber, blue…). When three.js needs a concrete color, read it from a theme variable with `apps/web/src/lib/theme.ts` (pass `useCanvasDocument()` inside the canvas).
+- Exception: materials (what furniture, walls and floors are made of) are library data with concrete colours (glTF `baseColorFactor` in `libraries/*.looklib.json`); the canvas, swatches and floor patterns draw them through `apps/web/src/lib/materials.ts`. Don't add theme variables for materials.
+- UI text goes through Paraglide: add the Chinese text to `apps/web/messages/zh.json` and call `m.key()` (from `@/lib/i18n`). Never hard-code user-visible strings in UI code. Chinese is the base locale and default; `messages/en.json` may lack keys (they fall back to Chinese). Tracking: #11.
+- Run `npm run check:theme -w @plinth/web` and `npm run check:i18n -w @plinth/web` before committing.
+
+## Data and capabilities
+- `packages/core/src` is grouped by domain, each folder with an `index.ts` that `src/index.ts` re-exports (apps import only `@plinth/core`): `model/` (schema, migrations, validation, names, derived data), `geometry/`, `rules/` (building rules, constraints), `looks/` (library files, scripts, recipes, materials), `session/` (transactions, undo), `capabilities/` (the registry and the built-in capabilities), `legacy/`. Tests mirror it under `packages/core/test`, reading repository files through `test/support.ts`.
+- Every mutation goes through the capability registry (`packages/core/src/capabilities/builtins.ts`) inside a transaction; the UI, the agent and `window.artifact.call` all share it.
+- When unsure about a schema field, put it in `extras`; schema changes bump `version` and add a migration in `packages/core/src/model/migrate.ts`.
+- User-facing text produced by the core package goes through `text(key, englishFallback, params)` (`packages/core/src/i18n.ts`); add the key as `core_<key>` to both `apps/web/messages/zh.json` and `en.json`. Capability titles are shown via `capabilityTitle(c)`.
+- What an object looks like (furniture, doors and windows, railings, elements) is a look in a look library file: `libraries/*.looklib.json` at the repository root, format in `libraries/looklib.schema.json` and `packages/core/src/looks/library.ts`. A look is a JSONata script (`packages/core/src/looks/script.ts`; the part format it returns is in `recipe.ts`) with parameters declared in JSON Schema keywords (`type` and `default` required; `format: "material"`, `enum`/`enumTitles`, `minimum`/`maximum`, `title`, `description`). Materials are glTF 2.0 materials in the same file. Furniture types come from the default library's looks (`newType`).
+- Every library file is loaded and shown the same way (`packages/core/src/looks/builtin.ts`, the library pages); only the configured `DEFAULT_LIBRARY_ID` makes one the fallback for objects without a look and for materials and groups. Don't special-case a library or a look in code: change the file. Scripts build asynchronously; the renderer and the plan read built results from `packages/core/src/looks/cache.ts`. Don't hand-code models in the renderer; the plan symbol comes from the same recipe.
+- Names written into project data (levels, walls, openings, catalog items) follow the project's `language` (`'zh' | 'en'`), not the UI language: use the vocabulary in `packages/core/src/model/names.ts`.
+
+## Verification
+- `npm run lint` (oxlint) and `npm run format:check` (oxfmt; `npm run format` writes) at the repository root
+- `npm test` (core contract tests), `npm run typecheck`, `npx tsc --noEmit -p apps/web`
+- End to end: see "Testing" in the README.

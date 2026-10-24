@@ -1,0 +1,1849 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`capability descriptions are stable 1`] = `
+[
+  {
+    "description": "Project name, levels, gross area per level, object counts, brief and constraint overview. Call this before starting work.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "project_summary",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Project overview",
+  },
+  {
+    "description": "Search walls, spaces, openings, furniture and elements by name keyword, type and level. Returns ID, name, type and level.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "level": {
+          "description": "Level ID or name",
+          "type": "string",
+        },
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "query": {
+          "description": "Name keyword in the language the project data uses, e.g. “Bedroom”, “north wall”, “Window” (or “老人房”, “北墙”, “窗”)",
+          "type": "string",
+        },
+        "type": {
+          "enum": [
+            "wall",
+            "space",
+            "opening",
+            "furniture",
+            "element",
+            "level",
+            "constraint",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "find_objects",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Find objects",
+  },
+  {
+    "description": "Get details of one object. Space: usable area, bounds, surrounding walls and their directions, neighboring spaces, furniture. Wall: endpoints, length, thickness, spaces on each side, openings. Opening: host wall, position, connected spaces.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "ref": {
+          "description": "Object ID or name",
+          "type": "string",
+        },
+      },
+      "required": [
+        "ref",
+      ],
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "get_object",
+    "permission": "read",
+    "runtime": "any",
+    "title": "View object",
+  },
+  {
+    "description": "Gross area per level and usable area per space (m²).",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "level": {
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "area_report",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Area report",
+  },
+  {
+    "description": "Check for overlapping rooms, openings beyond the wall or overlapping, rooms without an entrance, bedrooms without a window, door leaves hitting furniture, furniture outside any space, and whether constraints are satisfied.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "type": "object",
+    },
+    "kind": "verify",
+    "name": "check_rules",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Rule check",
+  },
+  {
+    "description": "List all constraints and whether each is satisfied.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "list_constraints",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Constraints",
+  },
+  {
+    "description": "Add a straight wall on the given level. Endpoints lie on the wall centreline.",
+    "examples": [
+      {
+        "input": {
+          "end": [
+            3000,
+            3600,
+          ],
+          "level": "L1",
+          "start": [
+            3000,
+            120,
+          ],
+          "thickness": 120,
+        },
+        "note": "Add a north-south partition on level 1",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "end": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "kind": {
+          "default": "partition",
+          "enum": [
+            "bearing",
+            "partition",
+            "fence",
+            "parapet",
+            "railing",
+          ],
+          "type": "string",
+        },
+        "level": {
+          "description": "ID or name of the level (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "name": {
+          "type": "string",
+        },
+        "start": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "thickness": {
+          "description": "Wall thickness; defaults to 120 for partitions, 240 for bearing walls",
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "level",
+        "start",
+        "end",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "wall_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add wall",
+  },
+  {
+    "description": "Translate a wall perpendicular to itself. Connected walls stretch to follow, the boundaries of spaces on both sides update, and openings keep their position on the wall.",
+    "examples": [
+      {
+        "input": {
+          "direction": "west",
+          "distance": 500,
+          "wall": "老人房一西墙",
+        },
+        "note": "Move 老人房一西墙 0.5 m west",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "direction": {
+          "description": "Direction: north / south / east / west",
+          "enum": [
+            "north",
+            "south",
+            "east",
+            "west",
+          ],
+          "type": "string",
+        },
+        "distance": {
+          "description": "Distance to move (mm)",
+          "type": "number",
+        },
+        "to": {
+          "description": "Move directly to a coordinate: y for east-west walls, x for north-south walls",
+          "type": "number",
+        },
+        "wall": {
+          "description": "ID or name of the wall (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "wall",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "wall_move",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Move wall",
+  },
+  {
+    "description": "Change a wall's thickness, kind, height, finish or name. The finish is a material of the design or the default library (paint, greybrick, redbrick, stonewall, woodcladding, concrete…); null goes back to white paint.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "finish": {
+          "description": "Material id of its faces, or null for white paint",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "height": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "kind": {
+          "enum": [
+            "bearing",
+            "partition",
+            "fence",
+            "parapet",
+            "railing",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "type": "string",
+        },
+        "thickness": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "wall": {
+          "description": "ID or name of the wall (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "wall",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "wall_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Edit wall",
+  },
+  {
+    "description": "Remove a wall (with its openings). Spaces on both sides are not merged automatically; use space_merge if needed.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "wall": {
+          "description": "ID or name of the wall (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "wall",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "wall_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Remove wall",
+  },
+  {
+    "description": "Add a door, window, sliding door or opening to a wall. Position it with at (distance from the opening centre to the wall start) or center_on (centred on the segment where a space meets this wall); with neither it goes at the wall midpoint.",
+    "examples": [
+      {
+        "input": {
+          "center_on": "主卧",
+          "kind": "window",
+          "wall": "主卧北墙",
+          "width": 1500,
+        },
+        "note": "Add a 1.5 m wide window centred on 主卧北墙",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "at": {
+          "type": "number",
+        },
+        "center_on": {
+          "description": "Space ID or name",
+          "type": "string",
+        },
+        "glass_block": {
+          "type": "boolean",
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "kind": {
+          "enum": [
+            "door",
+            "sliding-door",
+            "gate",
+            "window",
+            "opening",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "type": "string",
+        },
+        "sill": {
+          "description": "Sill height (mm)",
+          "minimum": 0,
+          "type": "number",
+        },
+        "swing": {
+          "description": "Hinge end and swing side of a swing door (looking from start → end)",
+          "properties": {
+            "hinge": {
+              "enum": [
+                "start",
+                "end",
+              ],
+              "type": "string",
+            },
+            "side": {
+              "enum": [
+                "left",
+                "right",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "hinge",
+            "side",
+          ],
+          "type": "object",
+        },
+        "wall": {
+          "description": "ID or name of the wall (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "wall",
+        "kind",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "opening_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add opening",
+  },
+  {
+    "description": "Change an opening's position, size, kind or swing.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "at": {
+          "type": "number",
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "kind": {
+          "enum": [
+            "door",
+            "sliding-door",
+            "gate",
+            "window",
+            "opening",
+          ],
+          "type": "string",
+        },
+        "move_by": {
+          "description": "Move along the wall (mm; positive toward the wall end)",
+          "type": "number",
+        },
+        "name": {
+          "type": "string",
+        },
+        "opening": {
+          "description": "ID or name of the opening (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "sill": {
+          "minimum": 0,
+          "type": "number",
+        },
+        "swing": {
+          "properties": {
+            "hinge": {
+              "enum": [
+                "start",
+                "end",
+              ],
+              "type": "string",
+            },
+            "side": {
+              "enum": [
+                "left",
+                "right",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "hinge",
+            "side",
+          ],
+          "type": "object",
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "opening",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "opening_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Edit opening",
+  },
+  {
+    "description": "Close up (remove) an opening.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "opening": {
+          "description": "ID or name of the opening (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "opening",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "opening_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Close opening",
+  },
+  {
+    "description": "Add a room: creates the space and adds walls wherever its edges have none (existing walls are reused). Can also add a door on one side. Use it to build a design room by room from scratch.",
+    "examples": [
+      {
+        "input": {
+          "door": {
+            "side": "south",
+          },
+          "level": "L2",
+          "name": "书房",
+          "rect": [
+            10000,
+            120,
+            3000,
+            3480,
+          ],
+        },
+        "note": "Add a 3 × 3.48 m study on level 2 with a door in the south wall",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "door": {
+          "description": "Which side's wall gets a centred door",
+          "properties": {
+            "side": {
+              "description": "Direction: north / south / east / west",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+              ],
+              "type": "string",
+            },
+            "width": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+          },
+          "required": [
+            "side",
+          ],
+          "type": "object",
+        },
+        "floor": {
+          "default": "oak",
+          "description": "Floor material category",
+          "type": "string",
+        },
+        "kind": {
+          "default": "indoor",
+          "enum": [
+            "indoor",
+            "semi-outdoor",
+            "outdoor",
+            "roof-terrace",
+            "void",
+          ],
+          "type": "string",
+        },
+        "level": {
+          "description": "ID or name of the level (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "name": {
+          "type": "string",
+        },
+        "polygon": {
+          "description": "Vertices of an arbitrary polygon (in order)",
+          "items": {
+            "description": "[x, y] in mm; x points east, y points south",
+            "items": false,
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number",
+              },
+              {
+                "type": "number",
+              },
+            ],
+            "type": "array",
+          },
+          "type": "array",
+        },
+        "rect": {
+          "description": "[x, y, width (east-west), depth (north-south)] in mm; x, y is the north-west corner",
+          "items": false,
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "wall_kind": {
+          "default": "partition",
+          "enum": [
+            "bearing",
+            "partition",
+            "fence",
+            "parapet",
+            "railing",
+          ],
+          "type": "string",
+        },
+        "wall_thickness": {
+          "default": 120,
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "level",
+        "name",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "room_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add room",
+  },
+  {
+    "description": "Define a space only (e.g. courtyard, terrace, corridor), without adding walls.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "floor": {
+          "default": "tile",
+          "type": "string",
+        },
+        "kind": {
+          "default": "indoor",
+          "enum": [
+            "indoor",
+            "semi-outdoor",
+            "outdoor",
+            "roof-terrace",
+            "void",
+          ],
+          "type": "string",
+        },
+        "level": {
+          "description": "ID or name of the level (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "name": {
+          "type": "string",
+        },
+        "polygon": {
+          "description": "Vertices of an arbitrary polygon (in order)",
+          "items": {
+            "description": "[x, y] in mm; x points east, y points south",
+            "items": false,
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number",
+              },
+              {
+                "type": "number",
+              },
+            ],
+            "type": "array",
+          },
+          "type": "array",
+        },
+        "rect": {
+          "description": "[x, y, width (east-west), depth (north-south)] in mm; x, y is the north-west corner",
+          "items": false,
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+      },
+      "required": [
+        "level",
+        "name",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "space_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Define space",
+  },
+  {
+    "description": "Change a space's name, kind or floor material, or redefine its extent with rect / polygon (walls are not moved).",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "floor": {
+          "type": "string",
+        },
+        "kind": {
+          "enum": [
+            "indoor",
+            "semi-outdoor",
+            "outdoor",
+            "roof-terrace",
+            "void",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "type": "string",
+        },
+        "polygon": {
+          "description": "Vertices of an arbitrary polygon (in order)",
+          "items": {
+            "description": "[x, y] in mm; x points east, y points south",
+            "items": false,
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number",
+              },
+              {
+                "type": "number",
+              },
+            ],
+            "type": "array",
+          },
+          "type": "array",
+        },
+        "rect": {
+          "description": "[x, y, width (east-west), depth (north-south)] in mm; x, y is the north-west corner",
+          "items": false,
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "space": {
+          "description": "ID or name of the space (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "space",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "space_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Edit space",
+  },
+  {
+    "description": "Delete a space. With walls=true, also removes partitions that belong only to this space (bearing walls are kept).",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "space": {
+          "description": "ID or name of the space (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "walls": {
+          "default": false,
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "space",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "space_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Delete space",
+  },
+  {
+    "description": "Merge several adjacent spaces into one (removing the partitions between them).",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "name": {
+          "type": "string",
+        },
+        "spaces": {
+          "items": {
+            "description": "ID or name of the space (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+            "type": "string",
+          },
+          "minItems": 2,
+          "type": "array",
+        },
+      },
+      "required": [
+        "spaces",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "space_merge",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Merge spaces",
+  },
+  {
+    "description": "Move one wall of a space so its usable area approaches the target (m²). Without a wall given, a partition is chosen automatically. Neighboring spaces shrink or grow accordingly.",
+    "examples": [
+      {
+        "input": {
+          "area": 12,
+          "space": "老人房一",
+        },
+        "note": "Resize 老人房一 to about 12 m²",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "area": {
+          "description": "Target usable area (m²)",
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "space": {
+          "description": "ID or name of the space (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "wall": {
+          "description": "Wall to move",
+          "type": "string",
+        },
+      },
+      "required": [
+        "space",
+        "area",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "space_set_area",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Set area",
+  },
+  {
+    "description": "Place a piece of furniture. type is a furniture category (see furnitureTypes in project_summary; a new category is allowed if size is given). Without position it goes at the centre of space.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "elevation": {
+          "type": "number",
+        },
+        "label": {
+          "description": "Display name of a new category, in the language the project data uses",
+          "type": "string",
+        },
+        "level": {
+          "description": "ID or name of the level (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "position": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "rotation": {
+          "default": 0,
+          "description": "Clockwise rotation (degrees)",
+          "type": "number",
+        },
+        "size": {
+          "properties": {
+            "d": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            "h": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            "w": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+          },
+          "required": [
+            "w",
+            "d",
+            "h",
+          ],
+          "type": "object",
+        },
+        "space": {
+          "type": "string",
+        },
+        "type": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "type",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "furniture_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Place furniture",
+  },
+  {
+    "description": "Move or rotate furniture: position for an absolute location or by for a relative offset; rotation for the new angle.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "by": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "furniture": {
+          "description": "ID or name of the furniture (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "position": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "rotation": {
+          "type": "number",
+        },
+      },
+      "required": [
+        "furniture",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "furniture_move",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Move furniture",
+  },
+  {
+    "description": "Remove a piece of furniture.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "furniture": {
+          "description": "ID or name of the furniture (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "furniture",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "furniture_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Remove furniture",
+  },
+  {
+    "description": "Add a level above the topmost non-roof level (the roof level moves up). With copy_from, copies that level's walls and spaces (not furniture).",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "copy_from": {
+          "type": "string",
+        },
+        "height": {
+          "default": 3000,
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "name": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "name",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "level_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add level",
+  },
+  {
+    "description": "Delete a level with all its walls, spaces and furniture. Levels above move down. Affects the main design and needs owner confirmation.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "level": {
+          "description": "ID or name of the level (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "level",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "level_remove",
+    "permission": "main",
+    "runtime": "any",
+    "title": "Delete level",
+  },
+  {
+    "description": "Store a relationship stated by the owner as a constraint, maintained automatically on later edits. Supported: align (targets: several parallel walls, kept collinear); center (targets: [opening, space]; the opening is centred on that space's segment of the wall); spacing (targets: [opening or wall, wall], params.distance in mm: clear distance from the opening edge to the wall face, or centre-to-centre distance of two parallel walls); size-target (targets: [space, optional wall], params.area in m², params.tolerance default 0.3). With hard=true, violating operations are rejected. source: user if the owner said it, agent if you inferred it.",
+    "examples": [
+      {
+        "input": {
+          "note": "门在房间中线上",
+          "targets": [
+            "主卧南墙·门",
+            "主卧",
+          ],
+          "type": "center",
+        },
+        "note": "Centre a door",
+      },
+      {
+        "input": {
+          "note": "老人房一约 12 平",
+          "params": {
+            "area": 12,
+          },
+          "targets": [
+            "老人房一",
+          ],
+          "type": "size-target",
+        },
+        "note": "Area target",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "hard": {
+          "default": false,
+          "type": "boolean",
+        },
+        "note": {
+          "description": "Record in the owner's own words",
+          "type": "string",
+        },
+        "params": {
+          "additionalProperties": {},
+          "default": {},
+          "propertyNames": {
+            "type": "string",
+          },
+          "type": "object",
+        },
+        "source": {
+          "default": "user",
+          "enum": [
+            "user",
+            "agent",
+            "default",
+          ],
+          "type": "string",
+        },
+        "targets": {
+          "description": "Object IDs or names",
+          "items": {
+            "type": "string",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "type": {
+          "enum": [
+            "align",
+            "center",
+            "spacing",
+            "size-target",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "type",
+        "targets",
+      ],
+      "type": "object",
+    },
+    "kind": "relation",
+    "name": "constraint_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add constraint",
+  },
+  {
+    "description": "Delete a constraint.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "constraint": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "constraint",
+      ],
+      "type": "object",
+    },
+    "kind": "relation",
+    "name": "constraint_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Delete constraint",
+  },
+  {
+    "description": "Record or update the owner's brief: household members, room list, preferences, budget, notes. Array fields are replaced wholesale.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "budget": {
+          "type": "string",
+        },
+        "household": {
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "notes": {
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "preferences": {
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "rooms": {
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "relation",
+    "name": "brief_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Record brief",
+  },
+  {
+    "description": "Write a trade-off to the decision log: what was done, why, and which options were rejected.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "reason": {
+          "type": "string",
+        },
+        "rejected": {
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "summary": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "kind": "relation",
+    "name": "decision_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Record decision",
+  },
+  {
+    "description": "Undo the last change.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "history_undo",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Undo",
+  },
+  {
+    "description": "Redo the change just undone.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "history_redo",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Redo",
+  },
+  {
+    "description": "Operation log for this session: who, when, what and why.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "limit": {
+          "default": 20,
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "history_log",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Operation log",
+  },
+  {
+    "description": "Read the recipe that draws a target in this design (its look, or the default one) or a look by ID or name, with the size it is usually built at and its parameters (what params_set can change per object). Start from it to change what something looks like.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "look": {
+          "description": "Look ID or name",
+          "type": "string",
+        },
+        "target": {
+          "description": "What a look draws: 'furniture:<type>' (a furniture type), 'opening:<door|sliding-door|gate|window|opening|glass-block>', 'element:<stair|pond|drain>' or 'wall:railing'",
+          "pattern": "^(furniture|opening|element|wall):[A-Za-z0-9_-]+$",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "look_get",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Read a look",
+  },
+  {
+    "description": "Add a look to the design: a recipe that draws furniture, doors and windows, or elements, like a font draws characters. Everyone who opens the design sees it. With use, every object of those targets switches to it; otherwise set it per object with look_set. Recipe format: { params?: {name: declaration}, seed?, script, materials? } where script is a JSONata expression (jsonata.org) returning a list of parts (nested lists are flattened), or { parts, plan } to draw its own plan symbol. Millimetres, angles in degrees. The script sees the object's size as $w, $d, $h and each parameter as $name (its default, or the value an object sets). Each parameter is declared with JSON Schema keywords: { type ("string" | "number" | "integer" | "boolean", or a list with "null" to let the script work it out), default (required; null only with "null" among the types), format? ("material" for a material id), enum? (the allowed values), enumTitles? ([{zh?, en?}] naming each enum value), minimum?, maximum?, title? ({zh?, en?}, shown to people; at least the project language), description? (English) }. Declare a parameter for whatever a person may want to change without a new look: materials of the main surfaces (format material with an enum of fitting materials), decoration on/off, a few shape choices (enum). Local frame: origin at the centre of the footprint on the floor (an opening: the centre of its sill; x along the wall, z across it), x across w, z across d with +z the front, y up. JSONata basics: ( $a := 1; $b := $a * 2; [ ... ] ) for local variables; [0..$n - 1].( $i := $; ... ) to repeat; cond ? a : b; = != < <= > >= and or $not(); + - * / %; $min([a, b]) $max([...]) $abs $floor $ceil $sqrt $power $round (half up) and our $sin $cos $tan $atan2 (degrees) $hypot $clamp(x, lo, hi) $lerp(a, b, t) $rnd(k) (pseudo-random 0..1, fixed per seed) $pi; $f := function($x) { ... } for helpers of your own. Always use $w, $d, $h and $variables: inside [list].( ... ) a bare name refers to the current item. Parts; mat is a material: one of the default library's (fabric cushion linen bedding canvas canvas2 wood woodDark birch white red cabinet countertop ceramic ceramicShade appliance plaster stone stoneDark terracotta soil iron dark glass book1 book2 book3 book4 flower tube bark leaf leaf2 carBody carGlass tyre metal headlight taillight frame glassBlock wall water grate oak teak tile antislip redtile paver terrazzo gravel cement marble slate grass paint greybrick redbrick stonewall woodcladding concrete) or one the recipe defines in materials: {id: glTF 2.0 material {name: {zh?, en?}, pbrMetallicRoughness: {baseColorFactor: [r, g, b, a] linear 0..1, metallicFactor, roughnessFactor}, alphaMode?: OPAQUE | BLEND}}: $box([w, h, d], [x, y, z] centre, mat, r? edge radius, [rx, ry, rz]?); $block([w, h, d], x, y0 bottom, z, mat, r?); $cylinder(r, h, [x, y, z] centre, mat, {r2? top radius, axis? x|y|z, seg?, scale?}?); $sphere(r, at, mat, scale?); $lathe([[r, y]...] from the axis out and back, [x, y, z] base, mat, {scale?, seg?}?); $rod(from, to, r, mat); $ring(R, r, at, mat, axis? y|z); $tube([[x, y, z]...], r, mat); $panel([x, z], [x, z], y, h, t, mat); $extrude(plane side (profile x,y across z) | plan (profile x,z upwards), [[x, y] | {"arc": [cx, cy, r, a0, a1, clockwise]} | {"curve": [cx, cy, x, y]}], depth, mat, bevel?, at?); $fourLegs(w, d, inset, h, r, mat, square?); $noplan(part or list) leaves parts out of the plan symbol; $base({structure, water, grate}) is an element's own geometry. The plan symbol is the parts seen from above. Keep parts inside the w × d footprint and under h. A part list ({ let, parts } from before scripts) is still accepted and converted.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "for": {
+          "items": {
+            "description": "What a look draws: 'furniture:<type>' (a furniture type), 'opening:<door|sliding-door|gate|window|opening|glass-block>', 'element:<stair|pond|drain>' or 'wall:railing'",
+            "pattern": "^(furniture|opening|element|wall):[A-Za-z0-9_-]+$",
+            "type": "string",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "name": {
+          "description": "Name of the look, in the language the project data uses",
+          "minLength": 1,
+          "type": "string",
+        },
+        "recipe": {
+          "description": "A recipe: { params?, seed?, script, materials? } with a JSONata script (see the recipe format in look_add)",
+        },
+        "use": {
+          "default": false,
+          "description": "Use it for every object of these targets",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "name",
+        "for",
+        "recipe",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "look_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add a look",
+  },
+  {
+    "description": "Change a look of the design: its name, the targets it fits or its recipe (format in look_add). Every object drawn with it changes.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "for": {
+          "items": {
+            "description": "What a look draws: 'furniture:<type>' (a furniture type), 'opening:<door|sliding-door|gate|window|opening|glass-block>', 'element:<stair|pond|drain>' or 'wall:railing'",
+            "pattern": "^(furniture|opening|element|wall):[A-Za-z0-9_-]+$",
+            "type": "string",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "look": {
+          "description": "Look ID or name",
+          "type": "string",
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "recipe": {
+          "description": "A recipe: { params?, seed?, script, materials? } with a JSONata script (see the recipe format in look_add)",
+        },
+      },
+      "required": [
+        "look",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "look_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Change a look",
+  },
+  {
+    "description": "Remove a look from the design; objects drawn with it go back to the default look.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "look": {
+          "description": "Look ID or name",
+          "type": "string",
+        },
+      },
+      "required": [
+        "look",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "look_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Remove a look",
+  },
+  {
+    "description": "Choose the look every object of a target uses in this design (like choosing the font of a whole text); look null goes back to the default. Objects with their own look keep it.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "look": {
+          "description": "Look ID or name, or null for the default",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "target": {
+          "description": "What a look draws: 'furniture:<type>' (a furniture type), 'opening:<door|sliding-door|gate|window|opening|glass-block>', 'element:<stair|pond|drain>' or 'wall:railing'",
+          "pattern": "^(furniture|opening|element|wall):[A-Za-z0-9_-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "target",
+        "look",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "look_use",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Use a look for a target",
+  },
+  {
+    "description": "Give one piece of furniture, door, window or element its own look (like setting one word in another font); look null goes back to the look of its target.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "look": {
+          "description": "Look ID or name, or null",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "object": {
+          "description": "ID or name of the furniture, opening or element",
+          "type": "string",
+        },
+      },
+      "required": [
+        "object",
+        "look",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "look_set",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Give an object its own look",
+  },
+  {
+    "description": "Copy a look from a look library into the design (or bring a copied look up to the library's newer version). The design keeps its own copy, so everyone who opens it sees the same thing. Get the look with library_look_get.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "for": {
+          "items": {
+            "description": "What a look draws: 'furniture:<type>' (a furniture type), 'opening:<door|sliding-door|gate|window|opening|glass-block>', 'element:<stair|pond|drain>' or 'wall:railing'",
+            "pattern": "^(furniture|opening|element|wall):[A-Za-z0-9_-]+$",
+            "type": "string",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "recipe": {
+          "description": "A recipe: { params?, seed?, script, materials? } with a JSONata script (see the recipe format in look_add)",
+        },
+        "replace": {
+          "description": "ID of a look of the design that this becomes (e.g. after saving it to a library)",
+          "type": "string",
+        },
+        "source": {
+          "properties": {
+            "library": {
+              "type": "string",
+            },
+            "look": {
+              "type": "string",
+            },
+            "version": {
+              "anyOf": [
+                {
+                  "type": "string",
+                },
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer",
+                },
+              ],
+            },
+          },
+          "required": [
+            "library",
+            "look",
+            "version",
+          ],
+          "type": "object",
+        },
+        "types": {
+          "additionalProperties": {
+            "properties": {
+              "group": {
+                "type": "string",
+              },
+              "name": {
+                "type": "string",
+              },
+              "size": {
+                "properties": {
+                  "d": {
+                    "exclusiveMinimum": 0,
+                    "type": "number",
+                  },
+                  "h": {
+                    "exclusiveMinimum": 0,
+                    "type": "number",
+                  },
+                  "w": {
+                    "exclusiveMinimum": 0,
+                    "type": "number",
+                  },
+                },
+                "required": [
+                  "w",
+                  "d",
+                  "h",
+                ],
+                "type": "object",
+              },
+            },
+            "required": [
+              "name",
+              "size",
+            ],
+            "type": "object",
+          },
+          "description": "Furniture types the look draws that the design may not have yet",
+          "propertyNames": {
+            "type": "string",
+          },
+          "type": "object",
+        },
+        "use": {
+          "default": false,
+          "description": "Use it for every object of these targets",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "name",
+        "for",
+        "recipe",
+        "source",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "look_import",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add a look from a library",
+  },
+  {
+    "description": "Customise one piece of furniture, door or window, or element without changing its look: set values for the parameters its look declares (materials of its main surfaces, decoration on/off, shape choices…; look_get with its target lists them with their defaults). null puts a parameter back to the look's default; reset clears all. Values are checked against the declarations (type, enum, range; a material must exist), then by building the object with them. To change many objects, call it for each one that should change.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "object": {
+          "description": "ID or name of a piece of furniture, door or window, or element",
+          "type": "string",
+        },
+        "params": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string",
+              },
+              {
+                "type": "number",
+              },
+              {
+                "type": "boolean",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "default": {},
+          "description": "Parameter → value (null: back to the default)",
+          "propertyNames": {
+            "type": "string",
+          },
+          "type": "object",
+        },
+        "reset": {
+          "default": false,
+          "description": "Clear all values first",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "object",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "params_set",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Set look parameters",
+  },
+  {
+    "description": "Add a new furniture type to the design (a fish tank, a mahjong table…), with its default size and, optionally, a recipe for its look (format in look_add). Then place it with furniture_add.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "group": {
+          "description": "Group name shown in the catalog, in the project language",
+          "type": "string",
+        },
+        "name": {
+          "description": "Display name, in the language the project data uses",
+          "minLength": 1,
+          "type": "string",
+        },
+        "recipe": {
+          "description": "A recipe: { params?, seed?, script, materials? } with a JSONata script (see the recipe format in look_add)",
+        },
+        "size": {
+          "properties": {
+            "d": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            "h": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            "w": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+          },
+          "required": [
+            "w",
+            "d",
+            "h",
+          ],
+          "type": "object",
+        },
+        "type": {
+          "description": "Type key, lowercase English (e.g. fish-tank)",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "type",
+        "name",
+        "size",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "furniture_type_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add a furniture type",
+  },
+  {
+    "description": "Run several edit capabilities as one step: all succeed or all roll back, and they undo together. Use for large changes or building a design from scratch.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "calls": {
+          "items": {
+            "properties": {
+              "input": {
+                "additionalProperties": {},
+                "default": {},
+                "propertyNames": {
+                  "type": "string",
+                },
+                "type": "object",
+              },
+              "name": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "name",
+            ],
+            "type": "object",
+          },
+          "maxItems": 60,
+          "minItems": 1,
+          "type": "array",
+        },
+        "label": {
+          "description": "One-sentence summary of this batch",
+          "type": "string",
+        },
+      },
+      "required": [
+        "label",
+        "calls",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "batch",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Batch edit",
+  },
+  {
+    "description": "Search available capabilities by keyword; returns name, description, input schema and examples.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "query": {
+          "default": "",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "search_capabilities",
+    "permission": "read",
+    "runtime": "any",
+    "title": "Search capabilities",
+  },
+]
+`;

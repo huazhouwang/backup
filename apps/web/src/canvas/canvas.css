@@ -1,0 +1,39 @@
+/* Canvas iframe styles: light only, independent of the page color scheme */
+@import 'tailwindcss';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '../theme/light.css';
+@import '../theme/tokens.css';
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  color-scheme: light;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Plan: outline what the pointer is over; changed objects get a tint that fades out (see Plan2D) */
+.plan-hit:hover {
+  stroke: var(--chart-2);
+  stroke-opacity: 0.6;
+  stroke-width: 1.5px;
+}
+@keyframes plan-changed {
+  from {
+    fill-opacity: 0.5;
+  }
+  to {
+    fill-opacity: 0;
+  }
+}
+.plan-changed {
+  fill-opacity: 0;
+  animation: plan-changed 2s ease-out;
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 160,
+  "singleQuote": true,
+  "arrowParens": "avoid",
+  "trailingComma": "all",
+  "ignorePatterns": [
+    "legacy/**",
+    "samples/**",
+    "libraries/*.json",
+    "apps/web/messages/**",
+    "apps/web/src/paraglide/**",
+    "apps/web/src/routeTree.gen.ts",
+    "apps/web/worker-configuration.d.ts",
+    "packages/core/test/fixtures/**",
+    "**/__snapshots__/**",
+    "**/*.md",
+    "package-lock.json"
+  ]
+}

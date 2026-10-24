@@ -1,0 +1,12 @@
+# Copy to .dev.vars (local); in production set the same names under Settings → Variables and Secrets in the Cloudflare dashboard
+APP_URL=http://localhost:3000
+# Session signing secret: openssl rand -base64 32
+BETTER_AUTH_SECRET=
+# Master key for encrypting model API keys (32 bytes, base64): openssl rand -base64 32
+KEY_ENCRYPTION_SECRET=
+# Google sign-in (optional; the Google button is hidden when unset)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# OTP emails (Resend). When unset locally, OTPs are printed to the terminal
+RESEND_API_KEY=
+MAIL_FROM=Plinth <noreply@example.com>

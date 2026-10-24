@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/looklib.schema.json",
+  "title": "Plinth look library",
+  "description": "A look library, like a font file: groups, materials (glTF 2.0) and looks (a JSONata script with JSON Schema parameters). See packages/core/src/looks/library.ts.",
+  "type": "object",
+  "required": ["format", "formatVersion", "id", "name", "version", "looks"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "format": { "const": "plinth-looks" },
+    "formatVersion": { "const": 1, "description": "A newer format version migrates older files" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "maxLength": 64, "description": "Recorded in designs as the source of the looks they copy" },
+    "name": { "$ref": "#/$defs/names" },
+    "description": { "$ref": "#/$defs/names" },
+    "version": { "$ref": "#/$defs/semver" },
+    "author": { "type": "string" },
+    "license": { "type": "string", "description": "SPDX identifier, e.g. CC-BY-4.0" },
+    "groups": {
+      "type": "object",
+      "description": "Groups looks are shown in, in display order. A look may also use the default library's groups",
+      "propertyNames": { "$ref": "#/$defs/key" },
+      "additionalProperties": {
+        "type": "object", "required": ["name"], "additionalProperties": false,
+        "properties": { "name": { "$ref": "#/$defs/names" } }
+      }
+    },
+    "materials": {
+      "type": "object",
+      "description": "Materials the looks use; a look also reaches the default library's materials",
+      "propertyNames": { "$ref": "#/$defs/key" },
+      "additionalProperties": { "$ref": "#/$defs/material" }
+    },
+    "looks": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/key" },
+      "additionalProperties": { "$ref": "#/$defs/look" }
+    }
+  },
+  "$defs": {
+    "key": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$", "maxLength": 64 },
+    "semver": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$" },
+    "names": {
+      "type": "object",
+      "description": "Text in several languages; at least one",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": { "zh": { "type": "string" }, "en": { "type": "string" } }
+    },
+    "rgba": {
+      "type": "array", "description": "Linear RGBA, 0..1 (glTF)",
+      "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 4, "maxItems": 4
+    },
+    "size": {
+      "type": "object", "required": ["w", "d", "h"], "additionalProperties": false,
+      "properties": { "w": { "type": "number", "exclusiveMinimum": 0 }, "d": { "type": "number", "exclusiveMinimum": 0 }, "h": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "material": {
+      "type": "object",
+      "description": "A glTF 2.0 material, with our procedural texture in extras",
+      "required": ["name", "pbrMetallicRoughness"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/names" },
+        "pbrMetallicRoughness": {
+          "type": "object", "required": ["baseColorFactor"], "additionalProperties": false,
+          "properties": {
+            "baseColorFactor": { "$ref": "#/$defs/rgba" },
+            "metallicFactor": { "type": "number", "minimum": 0, "maximum": 1 },
+            "roughnessFactor": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "alphaMode": { "enum": ["OPAQUE", "BLEND"] },
+        "extras": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "pattern": { "enum": ["planks", "tiles", "bricks", "speckled", "marble"] },
+            "size": { "oneOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 }], "description": "mm" },
+            "color2": { "$ref": "#/$defs/rgba" },
+            "color3": { "$ref": "#/$defs/rgba" },
+            "count": { "type": "integer", "minimum": 0, "maximum": 1000 },
+            "radius": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 },
+            "seed": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "param": {
+      "type": "object",
+      "description": "A parameter, in JSON Schema keywords",
+      "required": ["type", "default"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "oneOf": [
+            { "enum": ["string", "number", "integer", "boolean", "null"] },
+            { "type": "array", "items": { "enum": ["string", "number", "integer", "boolean", "null"] }, "minItems": 1 }
+          ]
+        },
+        "default": { "type": ["string", "number", "boolean", "null"], "description": "null: the script works it out (needs \"null\" among the types)" },
+        "format": { "const": "material", "description": "The value is a material id" },
+        "enum": { "type": "array", "items": { "type": ["string", "number", "boolean", "null"] }, "minItems": 1 },
+        "enumTitles": { "type": "array", "items": { "$ref": "#/$defs/names" }, "description": "Display names of the enum values, in the same order" },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" },
+        "title": { "$ref": "#/$defs/names" },
+        "description": { "type": "string", "description": "English, for the agent" }
+      }
+    },
+    "look": {
+      "type": "object",
+      "required": ["name", "for", "version", "script"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/names" },
+        "for": {
+          "type": "array", "minItems": 1,
+          "items": { "type": "string", "pattern": "^(furniture|opening|element|wall):[A-Za-z0-9_-]+$" },
+          "description": "Targets: furniture:<type>, opening:<kind> (or opening:glass-block), element:<type>, wall:railing"
+        },
+        "group": { "$ref": "#/$defs/key", "description": "The group it is shown in; by default its type's group" },
+        "newType": {
+          "type": "object", "description": "A furniture type this look brings: its name, group and default size",
+          "required": ["name", "size"], "additionalProperties": false,
+          "properties": { "name": { "$ref": "#/$defs/names" }, "group": { "$ref": "#/$defs/key" }, "size": { "$ref": "#/$defs/size" } }
+        },
+        "version": { "$ref": "#/$defs/semver" },
+        "params": {
+          "type": "object",
+          "propertyNames": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+          "additionalProperties": { "$ref": "#/$defs/param" }
+        },
+        "seed": { "type": "integer", "description": "Seed for $rnd" },
+        "script": { "type": "string", "description": "JSONata: $w, $d, $h (mm) and the parameters in; parts, or { parts, plan }, out" }
+      }
+    }
+  }
+}

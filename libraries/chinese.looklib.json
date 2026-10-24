@@ -1,0 +1,102 @@
+{
+  "$schema": "./looklib.schema.json",
+  "format": "plinth-looks",
+  "formatVersion": 1,
+  "id": "builtin-chinese",
+  "name": {"zh": "中式物品", "en": "Chinese pieces"},
+  "description": {
+    "zh": "功夫茶台、神位供桌、土灶、石桌和石鼓凳，带朱漆和金色两种材质",
+    "en": "A gongfu tea table, an ancestral altar, a brick wood-fired stove, a stone table and drum stools, with red lacquer and gold"
+  },
+  "version": "1.0.0",
+  "author": "Plinth",
+  "license": "CC-BY-4.0",
+  "materials": {
+    "lacquer": {
+      "name": {"zh": "朱漆", "en": "Red lacquer"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.1506, 0.0365, 0.0245, 1], "metallicFactor": 0, "roughnessFactor": 0.4}
+    },
+    "gold": {
+      "name": {"zh": "金色", "en": "Gold"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6842, 0.4445, 0.1168, 1], "metallicFactor": 0.7, "roughnessFactor": 0.35}
+    }
+  },
+  "looks": {
+    "teatable": {
+      "name": {"zh": "功夫茶台", "en": "Gongfu tea table"},
+      "for": ["furniture:teatable"],
+      "version": "2.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "woodDark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $tx := $w * 0.1;\n    [\n      $box([$w, 60, $d], [0, $h - 60 + 60 / 2, 0], $wood, 10),\n      $box([$w - 80, 80, $d - 80], [0, $h - 140 + 80 / 2, 0], $wood, 5),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([30 * 2, $h - 60, 30 * 2], [$sx * ($w / 2 - 50), ($h - 60) / 2, $sz * ($d / 2 - 50)], $wood, 30 * 0.3)\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w - 100, 30, 30], [0, 100 + 30 / 2, $s * ($d / 2 - 50)], $wood, 5)\n        ]\n      ),\n      $box([$min([600, $w * 0.45]), 30, $min([340, $d * 0.5])], [$tx, $h + 30 / 2, 0], 'stoneDark', 10),\n      ($decor ? [$lathe([[0, 0], [40, 0], [65, 40], [50, 85], [15, 95], [15, 110], [0, 110]], [$tx - 120, $h + 30, 0], 'ceramic')] : []),\n      [0..2].(\n        $i := $;\n        [\n          ($decor ? [$lathe([[0, 0], [18, 0], [26, 35], [0, 35]], [$tx + 40 + $i * 70, $h + 30, 60], 'ceramic')] : [])\n        ]\n      )\n    ]\n  )"
+    },
+    "shrine": {
+      "name": {"zh": "神位供桌", "en": "Ancestral altar"},
+      "for": ["furniture:shrine"],
+      "version": "2.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "lacquer",
+          "enum": ["lacquer", "woodDark", "wood", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "(\n    $ht := $min([850, $h * 0.68]);\n    $cw := $min([700, $w * 0.35]);\n    $cd := $min([320, $d * 0.65]);\n    $cz := -$d / 2 + $cd / 2 + 30;\n    $top := $h - $ht;\n    $fz := $d / 2 - 90;\n    [\n      $box([$w, 50, $d], [0, $ht - 50 + 50 / 2, 0], $wood, 10),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([140, 35, $d], [$s * ($w / 2 - 70), $ht + 35 / 2, 0], $wood, 10)\n        ]\n      ),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([35 * 2, $ht - 50, 35 * 2], [$sx * (($w - 100) / 2 - 50), ($ht - 50) / 2, $sz * ($d / 2 - 50)], $wood, 35 * 0.3)\n        ]\n      ),\n      $box([$w - 300, 100, 25], [0, $ht - 150 + 100 / 2, $d / 2 - 60], $wood, 5),\n      $box([$cw + 80, 40, $cd + 40], [0, $ht + 40 / 2, $cz], $wood, 8),\n      $box([$cw, $top - 90, $cd], [0, $ht + 40 + ($top - 90) / 2, $cz], $wood, 6),\n      $box([$cw + 160, 50, $cd + 120], [0, $h - 50 + 50 / 2, $cz], $wood, 10),\n      $box([$cw * 0.7, ($top - 90) * 0.75, 10], [0, $ht + 60 + ($top - 90) * 0.75 / 2, $cz + $cd / 2], 'gold', 3),\n      $lathe([[0, 0], [50, 0], [80, 30], [80, 70], [70, 80], [0, 80]], [0, $ht, $fz], 'gold'),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $cylinder(45, 60, [$s * $w * 0.3, $ht + 30, $fz], 'gold', {\"r2\": 30}),\n          $cylinder(25, 200, [$s * $w * 0.3, $ht + 160, $fz], 'red')\n        ]\n      )\n    ]\n  )"
+    },
+    "woodstove": {
+      "name": {"zh": "土灶", "en": "Brick wood-fired stove"},
+      "for": ["furniture:woodstove"],
+      "version": "2.0.0",
+      "script": "(\n    $r := $min([300, $d * 0.38, $w * 0.15]);\n    $fh := $min([240, $h * 0.32]);\n    [\n      $box([$w, $h - 50, $d], [0, 0 + ($h - 50) / 2, 0], 'plaster', 40),\n      $box([$w + 20, 50, $d + 20], [0, $h - 50 + 50 / 2, 0], 'countertop', 20),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $ring($r, 20, [$s * $w * 0.22, $h + 5, 0], 'iron'),\n          $cylinder($r, 4, [$s * $w * 0.22, $h, 0], 'iron', {\"seg\": 32}),\n          $box([260, $fh, 20], [$s * $w * 0.22, 120 + $fh / 2, $d / 2 + 2], 'dark', 60)\n        ]\n      ),\n      $lathe([[0, $r * 0.03], [$r * 0.65, $r * 0.03], [$r * 0.55, $r * 0.08], [$r * 0.35, $r * 0.14], [0, $r * 0.17]], [$w * 0.22, $h, 0], 'wood'),\n      $cylinder(30, 50, [$w * 0.22, $h + $r * 0.22 + 25, 0], 'wood')\n    ]\n  )"
+    },
+    "stonetable": {
+      "name": {"zh": "石桌", "en": "Stone table"},
+      "for": ["furniture:stonetable"],
+      "version": "2.0.0",
+      "params": {
+        "stone": {
+          "type": "string",
+          "format": "material",
+          "default": "stone",
+          "enum": ["stone", "stoneDark", "countertop", "plaster", "terracotta"],
+          "title": {"zh": "石材", "en": "Stone"},
+          "description": "Material of the stone"
+        }
+      },
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    [\n      $cylinder($r, 80, [0, $h - 40, 0], $stone, {\"r2\": $r * 0.98, \"seg\": 40}),\n      $lathe([[0, 0], [$r * 0.42, 0], [$r * 0.42, 60], [$r * 0.3, 140], [$r * 0.26, $h * 0.45], [$r * 0.34, $h - 140], [$r * 0.4, $h - 80], [0, $h - 80]], [0, 0, 0], $stone)\n    ]\n  )"
+    },
+    "stool": {
+      "name": {"zh": "石鼓凳", "en": "Stone drum stool"},
+      "for": ["furniture:stool"],
+      "version": "2.0.0",
+      "params": {
+        "stone": {
+          "type": "string",
+          "format": "material",
+          "default": "stone",
+          "enum": ["stone", "stoneDark", "countertop", "plaster", "terracotta"],
+          "title": {"zh": "石材", "en": "Stone"},
+          "description": "Material of the stone"
+        }
+      },
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    [\n      $lathe([[0, 0], [$r * 0.78, 0], [$r * 0.95, $h * 0.3], [$r, $h * 0.5], [$r * 0.95, $h * 0.7], [$r * 0.8, $h], [0, $h]], [0, 0, 0], $stone),\n      $ring($r * 0.99, 8, [0, $h * 0.5, 0], 'stoneDark')\n    ]\n  )"
+    }
+  }
+}

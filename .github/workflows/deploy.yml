@@ -1,0 +1,158 @@
+# Check + deploy to Cloudflare Workers
+# - Pull requests and pushes, in parallel: core (typecheck + tests), lint (oxlint, oxfmt, theme + i18n checks), web (build + typecheck + unit tests),
+#   api (permission matrix against a local Worker)
+# - Pushes to main: after checks pass, migrate the production D1, deploy, sync Worker secrets
+# Configure under the repo's Settings → Secrets and variables → Actions; see "Deployment" in the README
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Independent checks run as parallel jobs so wall-clock time is the slowest job, not the sum
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run check:theme -w @plinth/web
+      - run: npm run check:i18n -w @plinth/web
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The build generates the route tree routeTree.gen.ts (not committed); the web typecheck must run after it
+      - run: npm run build -w @plinth/web
+      - run: npx tsc --noEmit -p apps/web
+      - run: npm test -w @plinth/web
+
+  # API checks against a local Worker + D1 (no browser, no model): permission matrix, version history
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Start the local Worker
+        working-directory: apps/web
+        run: |
+          printf 'APP_URL=http://localhost:3000\nBETTER_AUTH_SECRET=%s\nKEY_ENCRYPTION_SECRET=%s\n' "$(openssl rand -base64 32)" "$(openssl rand -base64 32)" > .dev.vars
+          npm run db:migrate:local
+          nohup npm run dev > dev.log 2>&1 &
+          for i in $(seq 1 120); do curl -sf localhost:3000/api/me > /dev/null && exit 0; sleep 1; done
+          cat dev.log
+          exit 1
+      # Both tests use no browser and no model; the Worker started above is reused
+      - name: API permission matrix, version history (autosave merging)
+        working-directory: apps/web
+        run: npx playwright test permissions versions
+      - name: Worker log
+        if: failure()
+        working-directory: apps/web
+        run: cat dev.log
+
+  deploy:
+    needs: [core, lint, web, api]
+    timeout-minutes: 20
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Skip deployment (leaving only a warning) until Cloudflare is configured, so pushes don't fail.
+      # Pasted secrets often carry a trailing newline; trim them before wrangler sees them.
+      - name: Check deployment config
+        id: cfg
+        env:
+          RAW_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          RAW_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          CLOUDFLARE_API_TOKEN=$(printf '%s' "$RAW_TOKEN" | tr -d '[:space:]')
+          CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$RAW_ACCOUNT" | tr -d '[:space:]')
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning title=Not deployed::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID are not configured (repo Settings → Secrets and variables → Actions); skipping deployment. See \"Deployment\" in the README."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+            echo "::add-mask::$CLOUDFLARE_ACCOUNT_ID"
+            echo "CLOUDFLARE_API_TOKEN=$CLOUDFLARE_API_TOKEN" >> "$GITHUB_ENV"
+            echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.cfg.outputs.ready == 'true'
+      - uses: actions/setup-node@v5
+        if: steps.cfg.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.cfg.outputs.ready == 'true'
+      - run: npm run build -w @plinth/web
+        if: steps.cfg.outputs.ready == 'true'
+      - name: Migrate production database
+        if: steps.cfg.outputs.ready == 'true'
+        working-directory: apps/web
+        run: npx wrangler d1 migrations apply plinth --remote
+      - name: Deploy
+        if: steps.cfg.outputs.ready == 'true'
+        working-directory: apps/web
+        run: npx wrangler deploy
+      - name: Sync Worker secrets (only those that are set)
+        if: steps.cfg.outputs.ready == 'true'
+        working-directory: apps/web
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          KEY_ENCRYPTION_SECRET: ${{ secrets.KEY_ENCRYPTION_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          node -e '
+            const names = ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET", "RESEND_API_KEY", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "MAIL_FROM", "APP_URL"];
+            const out = Object.fromEntries(names.map(n => [n, (process.env[n] ?? "").trim()]).filter(([, v]) => v));
+            for (const n of ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET"]) if (!out[n]) { console.error(`Missing ${n}`); process.exit(1); }
+            require("fs").writeFileSync(process.env.RUNNER_TEMP + "/secrets.json", JSON.stringify(out));
+            console.log("Syncing: " + Object.keys(out).join(", "));
+          '
+          npx wrangler secret bulk "$RUNNER_TEMP/secrets.json"
+          rm "$RUNNER_TEMP/secrets.json"

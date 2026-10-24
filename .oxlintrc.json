@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "import", "vitest"],
+  "categories": { "correctness": "error", "suspicious": "error" },
+  "env": { "browser": true, "node": true, "es2024": true },
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true, "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "eslint/no-unused-expressions": ["error", { "allowShortCircuit": true, "allowTernary": true }],
+
+    // The JSX transform is automatic; React needn't be in scope
+    "react/react-in-jsx-scope": "off",
+    // The app doesn't use the React Compiler; these rules assume it (R3F mutates three.js objects and refs by design)
+    "react/set-state-in-effect": "off",
+    "react/immutability": "off",
+    "react/refs": "off",
+    "react/purity": "off",
+    "react/static-components": "off",
+    "react/memo-dependencies": "off",
+    "react/exhaustive-effect-dependencies": "off",
+    "react/hooks": "off",
+    // Effects deliberately key on serialized values (JSON keys) rather than listing every object they read
+    "react-hooks/exhaustive-deps": "off",
+    // Style choices the codebase doesn't follow
+    "eslint/no-shadow": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "import/no-unassigned-import": "off",
+    // Vitest takes a message as expect's second argument; tests check conditionally on purpose
+    "vitest/valid-expect": "off",
+    "vitest/no-conditional-expect": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/require-to-throw-message": "off",
+    // The method is a variable; GET requests are sent without a body
+    "unicorn/no-invalid-fetch-options": "off"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "apps/web/src/paraglide/**",
+    "apps/web/src/routeTree.gen.ts",
+    "apps/web/worker-configuration.d.ts",
+    "legacy/**"
+  ]
+}

@@ -1,0 +1,1175 @@
+{
+  "$schema": "./looklib.schema.json",
+  "format": "plinth-looks",
+  "formatVersion": 1,
+  "id": "builtin-default",
+  "name": {"zh": "默认物品", "en": "Default looks"},
+  "description": {
+    "zh": "没有指定外观的物品都用它来画：北欧风的家具、门窗和构件，以及墙面、地面和家具的全套材质",
+    "en": "What every object without a look of its own is drawn with: Scandinavian furniture, doors and windows, building elements, and the full set of wall, floor and furniture materials"
+  },
+  "version": "1.0.0",
+  "author": "Plinth",
+  "license": "CC-BY-4.0",
+  "groups": {
+    "living": {"name": {"zh": "客厅", "en": "Living room"}},
+    "kitchen": {"name": {"zh": "餐厨", "en": "Kitchen & dining"}},
+    "bedroom": {"name": {"zh": "卧室", "en": "Bedroom"}},
+    "study": {"name": {"zh": "书房", "en": "Study"}},
+    "bath": {"name": {"zh": "卫浴", "en": "Bathroom"}},
+    "yard": {"name": {"zh": "庭院", "en": "Courtyard"}},
+    "roof": {"name": {"zh": "屋顶", "en": "Roof"}},
+    "openings": {"name": {"zh": "门窗", "en": "Doors & windows"}},
+    "building": {"name": {"zh": "构件", "en": "Building elements"}}
+  },
+  "materials": {
+    "fabric": {
+      "name": {"zh": "浅灰布艺", "en": "Light grey fabric"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5564, 0.5048, 0.4413, 1], "metallicFactor": 0, "roughnessFactor": 0.95}
+    },
+    "cushion": {
+      "name": {"zh": "米色坐垫布", "en": "Beige cushion fabric"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6816, 0.6288, 0.563, 1], "metallicFactor": 0, "roughnessFactor": 0.95}
+    },
+    "linen": {
+      "name": {"zh": "白色亚麻", "en": "White linen"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.9235, 0.9119, 0.8884, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "bedding": {
+      "name": {"zh": "雾蓝床品", "en": "Misty blue bedding"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.3201, 0.4251, 0.499, 1], "metallicFactor": 0, "roughnessFactor": 0.95}
+    },
+    "canvas": {
+      "name": {"zh": "本白帆布", "en": "Natural canvas"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.8888, 0.855, 0.7884, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "canvas2": {
+      "name": {"zh": "陶土色帆布", "en": "Terracotta canvas"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5118, 0.2579, 0.1761, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "wood": {
+      "name": {"zh": "原木", "en": "Natural wood"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5161, 0.3423, 0.2028, 1], "metallicFactor": 0, "roughnessFactor": 0.7}
+    },
+    "woodDark": {
+      "name": {"zh": "深色木", "en": "Dark wood"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.1301, 0.081, 0.0559, 1], "metallicFactor": 0, "roughnessFactor": 0.6}
+    },
+    "birch": {
+      "name": {"zh": "桦木", "en": "Birch"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7027, 0.5771, 0.4027, 1], "metallicFactor": 0, "roughnessFactor": 0.65}
+    },
+    "white": {
+      "name": {"zh": "白色", "en": "White"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.9314, 0.9269, 0.9146, 1], "metallicFactor": 0, "roughnessFactor": 0.5}
+    },
+    "red": {
+      "name": {"zh": "红色", "en": "Red"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6536, 0.0447, 0.0329, 1], "metallicFactor": 0, "roughnessFactor": 0.5}
+    },
+    "cabinet": {
+      "name": {"zh": "柜体白", "en": "Cabinet white"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.8954, 0.884, 0.861, 1], "metallicFactor": 0, "roughnessFactor": 0.6}
+    },
+    "countertop": {
+      "name": {"zh": "浅色台面", "en": "Pale worktop"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7454, 0.7271, 0.698, 1], "metallicFactor": 0, "roughnessFactor": 0.4}
+    },
+    "ceramic": {
+      "name": {"zh": "白瓷", "en": "White ceramic"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.9481, 0.9412, 0.9226, 1], "metallicFactor": 0, "roughnessFactor": 0.2}
+    },
+    "ceramicShade": {
+      "name": {"zh": "灰白瓷", "en": "Grey-white ceramic"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7367, 0.729, 0.7081, 1], "metallicFactor": 0, "roughnessFactor": 0.25}
+    },
+    "appliance": {
+      "name": {"zh": "家电白", "en": "Appliance white"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.8459, 0.8594, 0.8742, 1], "metallicFactor": 0.1, "roughnessFactor": 0.35}
+    },
+    "plaster": {
+      "name": {"zh": "灰泥", "en": "Plaster"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.851, 0.8291, 0.7853, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "stone": {
+      "name": {"zh": "浅灰石", "en": "Light grey stone"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.491, 0.4726, 0.4437, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "stoneDark": {
+      "name": {"zh": "深灰石", "en": "Dark grey stone"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0683, 0.0635, 0.056, 1], "metallicFactor": 0, "roughnessFactor": 0.6}
+    },
+    "terracotta": {
+      "name": {"zh": "陶土", "en": "Terracotta"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4791, 0.1678, 0.084, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "soil": {
+      "name": {"zh": "泥土", "en": "Soil"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0888, 0.058, 0.0389, 1], "metallicFactor": 0, "roughnessFactor": 1}
+    },
+    "iron": {
+      "name": {"zh": "铸铁", "en": "Cast iron"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0439, 0.0471, 0.0507, 1], "metallicFactor": 0.5, "roughnessFactor": 0.5}
+    },
+    "dark": {
+      "name": {"zh": "黑色", "en": "Black"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0162, 0.0178, 0.0197, 1], "metallicFactor": 0.1, "roughnessFactor": 0.3}
+    },
+    "glass": {
+      "name": {"zh": "玻璃", "en": "Glass"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5902, 0.7662, 0.8485, 0.2], "metallicFactor": 0, "roughnessFactor": 0.05},
+      "alphaMode": "BLEND"
+    },
+    "book1": {
+      "name": {"zh": "书脊·蓝", "en": "Book spine, blue"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0833, 0.1771, 0.3196, 1], "metallicFactor": 0, "roughnessFactor": 0.8}
+    },
+    "book2": {
+      "name": {"zh": "书脊·橙", "en": "Book spine, orange"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.46, 0.1717, 0.1075, 1], "metallicFactor": 0, "roughnessFactor": 0.8}
+    },
+    "book3": {
+      "name": {"zh": "书脊·绿", "en": "Book spine, green"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2135, 0.4079, 0.2445, 1], "metallicFactor": 0, "roughnessFactor": 0.8}
+    },
+    "book4": {
+      "name": {"zh": "书脊·黄", "en": "Book spine, yellow"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6729, 0.538, 0.3144, 1], "metallicFactor": 0, "roughnessFactor": 0.8}
+    },
+    "flower": {
+      "name": {"zh": "花朵", "en": "Flowers"},
+      "pbrMetallicRoughness": {"baseColorFactor": [1, 0.3394, 0.3398, 1], "metallicFactor": 0, "roughnessFactor": 0.8}
+    },
+    "tube": {
+      "name": {"zh": "灯管", "en": "Tube"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0319, 0.0581, 0.0956, 1], "metallicFactor": 0.3, "roughnessFactor": 0.15}
+    },
+    "bark": {
+      "name": {"zh": "树皮", "en": "Bark"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.1701, 0.1141, 0.0789, 1], "metallicFactor": 0, "roughnessFactor": 0.95}
+    },
+    "leaf": {
+      "name": {"zh": "树叶", "en": "Leaves"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.1351, 0.3345, 0.1046, 1], "metallicFactor": 0, "roughnessFactor": 0.85}
+    },
+    "leaf2": {
+      "name": {"zh": "嫩叶", "en": "Young leaves"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2891, 0.4382, 0.1487, 1], "metallicFactor": 0, "roughnessFactor": 0.85}
+    },
+    "carBody": {
+      "name": {"zh": "车漆", "en": "Car paint"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7129, 0.7326, 0.7477, 1], "metallicFactor": 0.1, "roughnessFactor": 0.35}
+    },
+    "carGlass": {
+      "name": {"zh": "车窗", "en": "Car glass"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0488, 0.0793, 0.1071, 1], "metallicFactor": 0.2, "roughnessFactor": 0.15}
+    },
+    "tyre": {
+      "name": {"zh": "轮胎", "en": "Tyre"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0182, 0.0199, 0.022, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "metal": {
+      "name": {"zh": "金属", "en": "Metal"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5778, 0.5954, 0.6147, 1], "metallicFactor": 0.25, "roughnessFactor": 0.35}
+    },
+    "headlight": {
+      "name": {"zh": "车灯", "en": "Headlight"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.9483, 0.9157, 0.7947, 1], "metallicFactor": 0, "roughnessFactor": 0.2}
+    },
+    "taillight": {
+      "name": {"zh": "尾灯", "en": "Tail light"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5299, 0.0583, 0.0538, 1], "metallicFactor": 0, "roughnessFactor": 0.3}
+    },
+    "frame": {
+      "name": {"zh": "窗框", "en": "Window frame"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0606, 0.0646, 0.069, 1], "metallicFactor": 0, "roughnessFactor": 0.6}
+    },
+    "glassBlock": {
+      "name": {"zh": "玻璃砖", "en": "Glass block"},
+      "pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, 0.8], "metallicFactor": 0, "roughnessFactor": 0.9},
+      "alphaMode": "BLEND"
+    },
+    "wall": {
+      "name": {"zh": "墙体白", "en": "Wall white"},
+      "pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "water": {
+      "name": {"zh": "水面", "en": "Water"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.9127, 0.9127, 0.9127, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "grate": {
+      "name": {"zh": "篦子", "en": "Grate"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.0852, 0.0852, 0.0852, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "oak": {
+      "name": {"zh": "浅橡木地板", "en": "Light oak flooring"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.722, 0.5723, 0.3844, 1], "metallicFactor": 0, "roughnessFactor": 0.7},
+      "extras": {"pattern": "planks", "size": [150, 1200], "color2": [0.4733, 0.3157, 0.1807, 1]}
+    },
+    "teak": {
+      "name": {"zh": "柚木地板", "en": "Teak flooring"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4404, 0.216, 0.1038, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
+      "extras": {"pattern": "planks", "size": [150, 1200], "color2": [0.2293, 0.0958, 0.0484, 1]}
+    },
+    "tile": {
+      "name": {"zh": "米白瓷砖", "en": "Off-white tile"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.8835, 0.8554, 0.7997, 1], "metallicFactor": 0, "roughnessFactor": 0.3},
+      "extras": {"pattern": "tiles", "size": 800, "color2": [0.6132, 0.5912, 0.5477, 1]}
+    },
+    "antislip": {
+      "name": {"zh": "防滑砖", "en": "Anti-slip tile"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5717, 0.5974, 0.6172, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "extras": {"pattern": "tiles", "size": 300, "color2": [0.3578, 0.3767, 0.3913, 1]}
+    },
+    "redtile": {
+      "name": {"zh": "红阶砖", "en": "Red clay tile"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5831, 0.1645, 0.0839, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "extras": {"pattern": "tiles", "size": 300, "color2": [0.6537, 0.5274, 0.4407, 1]}
+    },
+    "paver": {
+      "name": {"zh": "透水砖", "en": "Permeable paver"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4522, 0.3963, 0.3399, 1], "metallicFactor": 0, "roughnessFactor": 0.9},
+      "extras": {"pattern": "bricks", "size": [200, 100], "color2": [0.2714, 0.232, 0.1928, 1]}
+    },
+    "terrazzo": {
+      "name": {"zh": "水磨石", "en": "Terrazzo"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7949, 0.7786, 0.7353, 1], "metallicFactor": 0, "roughnessFactor": 0.4},
+      "extras": {
+        "pattern": "speckled",
+        "size": 800,
+        "color2": [0.3548, 0.3429, 0.3118, 1],
+        "color3": [0.5989, 0.445, 0.3434, 1],
+        "count": 140,
+        "radius": [6, 16],
+        "seed": 7
+      }
+    },
+    "gravel": {
+      "name": {"zh": "碎石", "en": "Gravel"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.538, 0.5088, 0.4636, 1], "metallicFactor": 0, "roughnessFactor": 1},
+      "extras": {
+        "pattern": "speckled",
+        "size": 600,
+        "color2": [0.3332, 0.3121, 0.2796, 1],
+        "color3": [0.7509, 0.7264, 0.6878, 1],
+        "count": 260,
+        "radius": [10, 24],
+        "seed": 11
+      }
+    },
+    "cement": {
+      "name": {"zh": "微水泥", "en": "Microcement"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6657, 0.6585, 0.639, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "extras": {"pattern": "speckled", "size": 2000, "color2": [0.5994, 0.5927, 0.5745, 1], "count": 18, "radius": [120, 320], "seed": 3}
+    },
+    "marble": {
+      "name": {"zh": "大理石", "en": "Marble"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.866, 0.8574, 0.8341, 1], "metallicFactor": 0, "roughnessFactor": 0.25},
+      "extras": {"pattern": "marble", "size": 800, "color2": [0.6174, 0.6394, 0.6637, 1], "color3": [0.6889, 0.6814, 0.6615, 1], "seed": 5}
+    },
+    "slate": {
+      "name": {"zh": "青石板", "en": "Bluestone slab"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2007, 0.2465, 0.2842, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
+      "extras": {"pattern": "bricks", "size": [600, 400], "color2": [0.1142, 0.1463, 0.1731, 1]}
+    },
+    "grass": {
+      "name": {"zh": "草坪", "en": "Lawn"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2061, 0.4287, 0.1189, 1], "metallicFactor": 0, "roughnessFactor": 1},
+      "extras": {
+        "pattern": "speckled",
+        "size": 600,
+        "color2": [0.0987, 0.3174, 0.0687, 1],
+        "color3": [0.3519, 0.5628, 0.1926, 1],
+        "count": 320,
+        "radius": [8, 18],
+        "seed": 13
+      }
+    },
+    "paint": {
+      "name": {"zh": "白色涂料", "en": "White paint"},
+      "pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, 1], "metallicFactor": 0, "roughnessFactor": 0.9}
+    },
+    "greybrick": {
+      "name": {"zh": "清水青砖", "en": "Fair-faced grey brick"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2674, 0.2845, 0.3021, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
+      "extras": {"pattern": "bricks", "size": [240, 53], "color2": [0.5234, 0.5234, 0.4995, 1]}
+    },
+    "redbrick": {
+      "name": {"zh": "红砖", "en": "Red brick"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.3489, 0.0824, 0.0446, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
+      "extras": {"pattern": "bricks", "size": [240, 53], "color2": [0.6187, 0.5605, 0.4762, 1]}
+    },
+    "stonewall": {
+      "name": {"zh": "毛石", "en": "Rubble stone"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.3112, 0.2845, 0.2349, 1], "metallicFactor": 0, "roughnessFactor": 1},
+      "extras": {
+        "pattern": "speckled",
+        "size": 900,
+        "color2": [0.1905, 0.1701, 0.139, 1],
+        "color3": [0.4423, 0.4098, 0.3489, 1],
+        "count": 40,
+        "radius": [60, 140],
+        "seed": 17
+      }
+    },
+    "woodcladding": {
+      "name": {"zh": "木饰面", "en": "Wood cladding"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4423, 0.2349, 0.1062, 1], "metallicFactor": 0, "roughnessFactor": 0.7},
+      "extras": {"pattern": "planks", "size": [120, 2400], "color2": [0.2674, 0.1275, 0.0511, 1]}
+    },
+    "concrete": {
+      "name": {"zh": "清水混凝土", "en": "Fair-faced concrete"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4535, 0.4535, 0.4205, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
+      "extras": {"pattern": "tiles", "size": 1200, "color2": [0.3587, 0.3587, 0.3297, 1]}
+    }
+  },
+  "looks": {
+    "sofa": {
+      "name": {"zh": "沙发", "en": "Sofa"},
+      "for": ["furniture:sofa"],
+      "newType": {"name": {"zh": "沙发", "en": "Sofa"}, "group": "living", "size": {"w": 2100, "d": 900, "h": 800}},
+      "version": "1.0.0",
+      "params": {
+        "fabric": {
+          "type": "string",
+          "format": "material",
+          "default": "fabric",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "布面", "en": "Fabric"},
+          "description": "Material of the frame, arms and back"
+        },
+        "cushion": {
+          "type": "string",
+          "format": "material",
+          "default": "cushion",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "坐垫", "en": "Cushions"},
+          "description": "Material of the seat and back cushions"
+        },
+        "legs": {
+          "type": "string",
+          "format": "material",
+          "default": "dark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "腿", "en": "Legs"},
+          "description": "Material of the legs"
+        }
+      },
+      "script": "(\n    $leg := 50;\n    $arm := $min([240, $max([140, $w * 0.11])]);\n    $back := $min([200, $d * 0.22]);\n    $baseTop := $leg + $min([220, $h * 0.27]);\n    $seatTop := $max([$baseTop + 40, $min([$h * 0.55, 450])]);\n    $armTop := $min([$h * 0.76, 630]);\n    $inner := $w - 2 * $arm;\n    $n := $max([1, $round($inner / 650)]);\n    $cw := $inner / $n;\n    $seatD := $d - $back - 30;\n    [\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([20 * 2, $leg, 20 * 2], [$sx * ($w / 2 - 60), $leg / 2, $sz * ($d / 2 - 60)], $legs, 20 * 0.3)\n        ]\n      ),\n      $box([$w - 20, $baseTop - $leg, $d - 20], [0, $leg + ($baseTop - $leg) / 2, 0], $fabric, 40),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$arm, $armTop - $leg, $d], [$s * ($w - $arm) / 2, $leg + ($armTop - $leg) / 2, 0], $fabric, 90)\n        ]\n      ),\n      $box([$inner + 40, $h - $baseTop - 40, $back], [0, $baseTop + ($h - $baseTop - 40) / 2, -($d - $back) / 2], $fabric, 60),\n      [0..$floor($n) - 1].(\n        $i := $;\n        $x := -$inner / 2 + $cw * ($i + 0.5);\n        [\n          $box([$cw - 10, $seatTop - $baseTop, $seatD], [$x, $baseTop + ($seatTop - $baseTop) / 2, ($d - $seatD) / 2 - 15], $cushion, 70),\n          $box([$cw - 10, ($h - $seatTop) * 0.98, 200], [$x, $seatTop + ($h - $seatTop) * 0.49, -$d / 2 + $back + 80], $cushion, 90, [-9, 0, 0])\n        ]\n      )\n    ]\n  )"
+    },
+    "armchair": {
+      "name": {"zh": "单人椅", "en": "Armchair"},
+      "for": ["furniture:armchair"],
+      "newType": {"name": {"zh": "单人椅", "en": "Armchair"}, "group": "living", "size": {"w": 800, "d": 800, "h": 800}},
+      "version": "1.0.0",
+      "params": {
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "框架", "en": "Frame"},
+          "description": "Material of the frame"
+        },
+        "cushion": {
+          "type": "string",
+          "format": "material",
+          "default": "cushion",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "坐垫", "en": "Cushions"},
+          "description": "Material of the seat and back cushions"
+        }
+      },
+      "script": "(\n    $cw := $w - 150;\n    $fx := $cw / 2 + 25;\n    $zf := $d / 2 - 110;\n    $yf := $h * 0.43;\n    $zb := -$d / 2 + 230;\n    $yb := $h * 0.32;\n    $zt := -$d / 2 + 60;\n    $yt := $h - 30;\n    $a1 := $atan2($yf - $yb, $zf - $zb);\n    $l1 := $hypot($yf - $yb, $zf - $zb);\n    $a2 := $atan2($zb - $zt, $yt - $yb);\n    $l2 := $hypot($zb - $zt, $yt - $yb);\n    [\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $tube([[$s * $fx, 16, -$d / 2 + 100], [$s * $fx, 16, $d / 2 - 160], [$s * $fx, 60, $d / 2 - 40], [$s * $fx, $h * 0.3, $d / 2 - 30], [$s * $fx, $h * 0.56, $d / 2 - 80], [$s * $fx, $h * 0.6, $d / 2 - 260], [$s * $fx, $h * 0.5, -$d / 2 + 250], [$s * $fx, $yb - 20, $zb - 20]], 16, $frame),\n          $tube([[$s * ($cw / 2 - 10), $yf - 50, $zf], [$s * ($cw / 2 - 10), $yb - 50, $zb], [$s * ($cw / 2 - 10), $yt - 40, $zt + 20]], 14, $frame)\n        ]\n      ),\n      $rod([-$fx, 16, -$d / 2 + 100], [$fx, 16, -$d / 2 + 100], 14, $frame),\n      $rod([-$fx, $yf - 60, $zf], [$fx, $yf - 60, $zf], 14, $frame),\n      $box([$cw, 100, $l1 + 60], [0, ($yf + $yb) / 2, ($zf + $zb) / 2], $cushion, 45, [-$a1, 0, 0]),\n      $box([$cw, $l2 + 40, 90], [0, ($yb + $yt) / 2, ($zb + $zt) / 2], $cushion, 40, [-$a2, 0, 0])\n    ]\n  )"
+    },
+    "coffee": {
+      "name": {"zh": "茶几", "en": "Coffee table"},
+      "for": ["furniture:coffee"],
+      "newType": {"name": {"zh": "茶几", "en": "Coffee table"}, "group": "living", "size": {"w": 1200, "d": 600, "h": 420}},
+      "version": "1.0.0",
+      "params": {
+        "top": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "台面", "en": "Top"},
+          "description": "Material of the top"
+        },
+        "legs": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "腿", "en": "Legs"},
+          "description": "Material of the legs"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $t := 50;\n    $l := 50;\n    [\n      $box([$w, $t, $d], [0, $h - $t + $t / 2, 0], $top, 4),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([$l / 2 * 2, $h - $t, $l / 2 * 2], [$sx * ($w / 2 - $l / 2), ($h - $t) / 2, $sz * ($d / 2 - $l / 2)], $legs, $l / 2 * 0.3)\n        ]\n      ),\n      $box([$w - 2 * $l, 18, $d - 2 * $l], [0, 90 + 18 / 2, 0], $legs, 2),\n      ($decor ? [$box([260, 30, 190], [-$w * 0.22, $h + 15, 20], 'book2', 4, [0, 11.5, 0])] : []),\n      ($decor ? [$box([220, 25, 160], [-$w * 0.22, $h + 43, 20], 'book4', 4, [0, -5.7, 0])] : []),\n      ($decor ? [$lathe([[0, 0], [50, 0], [90, 50], [90, 55], [0, 55]], [$w * 0.2, $h, -20], 'ceramic')] : []),\n      ($decor ? [$noplan($box([300, 22, 220], [-$w * 0.18, 108 + 22 / 2, 0], 'book1', 3))] : []),\n      ($decor ? [$noplan($box([280, 18, 200], [-$w * 0.18, 130 + 18 / 2, 0], 'book3', 3))] : [])\n    ]\n  )"
+    },
+    "teatable": {
+      "name": {"zh": "茶台", "en": "Tea table"},
+      "for": ["furniture:teatable"],
+      "newType": {"name": {"zh": "茶台", "en": "Tea table"}, "group": "living", "size": {"w": 1400, "d": 700, "h": 650}},
+      "version": "1.0.0",
+      "params": {
+        "top": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "台面", "en": "Top"},
+          "description": "Material of the top"
+        },
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "框架", "en": "Frame"},
+          "description": "Material of the frame"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $tx := $w * 0.12;\n    $ty := $min([560, $w * 0.4]);\n    $tz := $min([320, $d * 0.5]);\n    [\n      $box([$w, 30, $d], [0, $h - 30 + 30 / 2, 0], $top, 6),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([22 * 2, $h - 30, 22 * 2], [$sx * ($w / 2 - 40), ($h - 30) / 2, $sz * ($d / 2 - 40)], $frame, 22 * 0.3)\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w - 80, 60, 20], [0, $h - 90 + 60 / 2, $s * ($d / 2 - 40)], $frame, 3)\n        ]\n      ),\n      [0..$floor($max([3, $floor(($d - 120) / 90)])) - 1].(\n        $i := $;\n        $n := $max([3, $floor(($d - 120) / 90)]);\n        [\n          $box([$w - 80, 18, ($d - 120) / $n - 20], [0, 140 + 18 / 2, -($d - 120) / 2 + ($d - 120) / $n * ($i + 0.5)], $top, 3)\n        ]\n      ),\n      $box([$ty, 18, $tz], [$tx, $h + 18 / 2, 0], $top, 6),\n      ($decor ? [$lathe([[0, 0], [45, 0], [70, 45], [55, 90], [18, 100], [18, 115], [0, 115]], [$tx - $ty * 0.25, $h + 18, 0], 'ceramic')] : []),\n      [0..2].(\n        $i := $;\n        [\n          ($decor ? [$lathe([[0, 0], [20, 0], [28, 40], [0, 40]], [$tx + $ty * 0.05 + $i * 70, $h + 18, $tz * 0.2], 'ceramic')] : [])\n        ]\n      )\n    ]\n  )"
+    },
+    "tvstand": {
+      "name": {"zh": "电视柜", "en": "TV stand"},
+      "for": ["furniture:tvstand"],
+      "newType": {"name": {"zh": "电视柜", "en": "TV stand"}, "group": "living", "size": {"w": 1800, "d": 400, "h": 500}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        },
+        "legs": {
+          "type": "string",
+          "format": "material",
+          "default": "metal",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "腿", "en": "Legs"},
+          "description": "Material of the legs"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $leg := 110;\n    $n := $max([1, $round($w / 600)]);\n    $dw := $w / $n;\n    [\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $cylinder(12 * 0.8, $leg, [$sx * ($w / 2 - 40), $leg / 2, $sz * ($d / 2 - 40)], $legs, {\"r2\": 12, \"seg\": 12})\n        ]\n      ),\n      $box([$w, $h - $leg, $d - 16], [0, $leg + ($h - $leg) / 2, -8], $body, 6),\n      [0..$floor($n) - 1].(\n        $i := $;\n        $x := -$w / 2 + $dw * ($i + 0.5);\n        [\n          $box([$dw - 4, $h - $leg - 4, 16], [$x, $leg + 2 + ($h - $leg - 4) / 2, $d / 2 - 8], $body, 3)\n        ]\n      ),\n      ($decor ? [$lathe([[0, 0], [60, 0], [80, 100], [40, 220], [35, 260], [0, 260]], [-$w * 0.32, $h, 0], 'ceramic')] : []),\n      ($decor ? [$box([300, 40, 220], [$w * 0.3, $h + 40 / 2, 0], 'book1', 4)] : []),\n      ($decor ? [$box([260, 35, 200], [$w * 0.3, $h + 40 + 35 / 2, 0], 'book3', 4)] : [])\n    ]\n  )"
+    },
+    "sidetable": {
+      "name": {"zh": "边几", "en": "Side table"},
+      "for": ["furniture:sidetable"],
+      "newType": {"name": {"zh": "边几", "en": "Side table"}, "group": "living", "size": {"w": 500, "d": 500, "h": 550}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $t := 50;\n    $l := 50;\n    [\n      $box([$w, $t, $d], [0, $h - $t + $t / 2, 0], $body, 4),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([$l / 2 * 2, $h - $t, $l / 2 * 2], [$sx * ($w / 2 - $l / 2), ($h - $t) / 2, $sz * ($d / 2 - $l / 2)], $body, $l / 2 * 0.3)\n        ]\n      ),\n      ($decor ? [$lathe([[0, 0], [45, 0], [60, 60], [35, 150], [28, 180], [0, 180]], [$w * 0.15, $h, -$d * 0.1], 'ceramicShade')] : [])\n    ]\n  )"
+    },
+    "plant": {
+      "name": {"zh": "盆栽", "en": "Potted plant"},
+      "for": ["furniture:plant"],
+      "newType": {"name": {"zh": "盆栽", "en": "Potted plant"}, "group": "living", "size": {"w": 500, "d": 500, "h": 1200}},
+      "version": "1.0.0",
+      "params": {
+        "pot": {
+          "type": "string",
+          "format": "material",
+          "default": "ceramic",
+          "enum": ["ceramic", "ceramicShade", "terracotta", "white", "dark"],
+          "title": {"zh": "花盆", "en": "Pot"},
+          "description": "Material of the pot"
+        }
+      },
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $ph := $min([340, $h * 0.3]);\n    [\n      $lathe([[0, 0], [$r * 0.66, 0], [$r * 0.72, $ph * 0.08], [$r * 0.76, $ph], [$r * 0.7, $ph], [0, $ph - 20]], [0, 0, 0], $pot),\n      $cylinder($r * 0.7, 10, [0, $ph - 25, 0], 'soil'),\n      $rod([0, $ph - 30, 0], [$cos(0) * 120, $h * 0.72, $sin(0) * 120], 12, 'bark', 6),\n      $rod([0, $ph - 30, 0], [$cos(120) * 200, $h * 0.72, $sin(120) * 200], 12, 'bark', 6),\n      $rod([0, $ph - 30, 0], [$cos(240) * 160, $h * 0.72, $sin(240) * 160], 12, 'bark', 6),\n      $sphere($r * 0.5 * 1.9, [0 * $r * 2.4, $min([$h - $r * 0.5, 0.78 * $h]), 0 * $r * 2.2], 'leaf', [1, 0.85, 1]),\n      $sphere($r * 0.4 * 1.9, [0.16 * $r * 2.4, $min([$h - $r * 0.4, 0.66 * $h]), 0.08 * $r * 2.2], 'leaf2', [1, 0.85, 1]),\n      $sphere($r * 0.38 * 1.9, [-0.14 * $r * 2.4, $min([$h - $r * 0.38, 0.7 * $h]), 0.1 * $r * 2.2], 'leaf', [1, 0.85, 1]),\n      $sphere($r * 0.4 * 1.9, [0.05 * $r * 2.4, $min([$h - $r * 0.4, 0.62 * $h]), -0.16 * $r * 2.2], 'leaf2', [1, 0.85, 1]),\n      $sphere($r * 0.36 * 1.9, [-0.08 * $r * 2.4, $min([$h - $r * 0.36, 0.88 * $h]), -0.06 * $r * 2.2], 'leaf', [1, 0.85, 1]),\n      $sphere($r * 0.3 * 1.9, [0.1 * $r * 2.4, $min([$h - $r * 0.3, 0.9 * $h]), 0.1 * $r * 2.2], 'leaf2', [1, 0.85, 1])\n    ]\n  )"
+    },
+    "shrine": {
+      "name": {"zh": "神位", "en": "Ancestral shrine"},
+      "for": ["furniture:shrine"],
+      "newType": {"name": {"zh": "神位", "en": "Ancestral shrine"}, "group": "living", "size": {"w": 2000, "d": 500, "h": 1250}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        },
+        "legs": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "腿", "en": "Legs"},
+          "description": "Material of the legs"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $leg := 120;\n    $ht := $min([800, $h * 0.62]);\n    $n := $max([2, $round($w / 500)]);\n    $dw := $w / $n;\n    $cw := $min([600, $w * 0.32]);\n    $cd := $min([300, $d * 0.6]);\n    $cz := -$d / 2 + $cd / 2 + 20;\n    $top := $h - $ht;\n    [\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $cylinder(20 * 0.8, $leg, [$sx * ($w / 2 - 60), $leg / 2, $sz * ($d / 2 - 60)], $legs, {\"r2\": 20, \"seg\": 12})\n        ]\n      ),\n      $box([$w, $ht - $leg, $d - 16], [0, $leg + ($ht - $leg) / 2, -8], $body, 6),\n      [0..$floor($n) - 1].(\n        $i := $;\n        [\n          $box([$dw - 4, $ht - $leg - 4, 16], [-$w / 2 + $dw * ($i + 0.5), $leg + 2 + ($ht - $leg - 4) / 2, $d / 2 - 8], $body, 3)\n        ]\n      ),\n      $box([$cw, $top, $cd], [0, $ht + $top / 2, $cz], $body, 4),\n      $box([$cw - 40, $top - 40, 6], [0, $ht + $top / 2, $cz + $cd / 2 + 3], 'glass', 2),\n      $box([$cw - 60, 20, $cd - 40], [0, $ht + $top * 0.45 + 20 / 2, $cz], $legs, 2),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          ($decor ? [$cylinder(35, 30, [$s * $w * 0.3, $ht + 15, $d / 2 - 110], 'ceramic')] : []),\n          ($decor ? [$cylinder(25, 180, [$s * $w * 0.3, $ht + 120, $d / 2 - 110], 'linen')] : [])\n        ]\n      ),\n      ($decor ? [$lathe([[0, 0], [60, 0], [70, 40], [55, 90], [0, 90]], [0, $ht, $d / 2 - 90], 'ceramicShade')] : [])\n    ]\n  )"
+    },
+    "dining": {
+      "name": {"zh": "餐桌", "en": "Dining table"},
+      "for": ["furniture:dining"],
+      "newType": {"name": {"zh": "餐桌", "en": "Dining table"}, "group": "kitchen", "size": {"w": 1600, "d": 900, "h": 750}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "[\n    $box([$w, 28, $d], [0, $h - 28 + 28 / 2, 0], $wood, 8),\n    $box([$w - 200, 60, $d - 200], [0, $h - 88 + 60 / 2, 0], $wood, 3),\n    [0..3].(\n      $i := $;\n      $sx := $i % 2 * 2 - 1;\n      $sz := $floor($i / 2) * 2 - 1;\n      [\n        $cylinder(26 * 0.8, $h - 28, [$sx * ($w / 2 - 90), ($h - 28) / 2, $sz * ($d / 2 - 90)], $wood, {\"r2\": 26, \"seg\": 12})\n      ]\n    )\n  ]"
+    },
+    "chair": {
+      "name": {"zh": "餐椅", "en": "Dining chair"},
+      "for": ["furniture:chair"],
+      "newType": {"name": {"zh": "餐椅", "en": "Dining chair"}, "group": "kitchen", "size": {"w": 450, "d": 500, "h": 850}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $seat := $min([450, $h * 0.53]);\n    $bz := -$d / 2 + 30;\n    $tilt := 50;\n    [\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $cylinder(16 * 0.8, $seat - 30, [$sx * ($w / 2 - 30), ($seat - 30) / 2, $sz * ($d / 2 - 30)], $body, {\"r2\": 16, \"seg\": 12})\n        ]\n      ),\n      $box([$w - 20, 22, $d - 40], [0, $seat - 52 + 22 / 2, 0], $body, 4),\n      $box([$w, 30, $d], [0, $seat - 30 + 30 / 2, 10], $body, 12),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * ($w / 2 - 30), $seat - 30, $bz], [$s * ($w / 2 - 34), $h - 20, $bz - $tilt], 15, $body, 10)\n        ]\n      ),\n      $box([$w - 30, 90, 24], [0, $h - 55, $bz - $tilt + 2], $body, 10, [-8, 0, 0]),\n      [0..4].(\n        $i := $;\n        $x := ($i - 2) * ($w - 120) / 4;\n        [\n          $rod([$x, $seat, $bz + 6], [$x, $h - 95, $bz - $tilt + 8], 8, $body, 8)\n        ]\n      )\n    ]\n  )"
+    },
+    "counter": {
+      "name": {"zh": "橱柜", "en": "Kitchen counter"},
+      "for": ["furniture:counter"],
+      "newType": {"name": {"zh": "橱柜", "en": "Kitchen counter"}, "group": "kitchen", "size": {"w": 2400, "d": 600, "h": 850}},
+      "version": "1.0.0",
+      "params": {
+        "fronts": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "门板", "en": "Fronts"},
+          "description": "Material of the doors and drawer fronts"
+        },
+        "top": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "台面", "en": "Top"},
+          "description": "Material of the top"
+        }
+      },
+      "script": "(\n    $sx := -$w * 0.22;\n    $cx := $w * 0.24;\n    [\n      $box([$w - 20, 100, $d - 80], [0, 0 + 100 / 2, 0 - 30], $fronts, 3),\n      $box([$w, $h - 40 - 100, $d - 30], [0, 100 + ($h - 40 - 100) / 2, 0 - 15], $fronts, 4),\n      [0..$floor($max([1, $round($w / 600)])) - 1].(\n        $i := $;\n        $dw := $w / $max([1, $round($w / 600)]);\n        $x := -$w / 2 + $dw * ($i + 0.5);\n        $dh := 160;\n        [\n          $box([$dw - 4, $h - 40 - 108 - $dh, 18], [$x, 102 + ($h - 40 - 108 - $dh) / 2, 0 + 1 * ($d / 2 - 20)], $fronts, 2),\n          $box([$dw - 4, $dh - 4, 18], [$x, $h - 40 - 4 - $dh + ($dh - 4) / 2, 0 + 1 * ($d / 2 - 20)], $fronts, 2),\n          $box([$min([240, $dw * 0.45]), 10, 16], [$x, $h - 40 - 40, 0 + 1 * ($d / 2 - 4)], 'metal', 4)\n        ]\n      ),\n      $box([$w, 40, $d], [0, $h - 40 + 40 / 2, 0], $top, 4),\n      $box([$min([550, $w * 0.3]), 4, $d * 0.62], [$sx, $h + 4 / 2, 20], 'metal', 20),\n      $rod([$sx, $h, -$d / 2 + 80], [$sx, $h + 300, -$d / 2 + 80], 13, 'metal'),\n      $rod([$sx, $h + 300, -$d / 2 + 80], [$sx, $h + 280, -$d / 2 + 240], 11, 'metal'),\n      $box([$min([600, $w * 0.3]), 6, $d * 0.75], [$cx, $h + 6 / 2, 20], 'dark', 10),\n      $ring(80, 6, [$cx + -140, $h + 8, -80], 'metal'),\n      $ring(60, 6, [$cx + 140, $h + 8, -80], 'metal'),\n      $ring(60, 6, [$cx + -140, $h + 8, 140], 'metal'),\n      $ring(80, 6, [$cx + 140, $h + 8, 140], 'metal')\n    ]\n  )"
+    },
+    "woodstove": {
+      "name": {"zh": "柴火灶", "en": "Wood-fired stove"},
+      "for": ["furniture:woodstove"],
+      "newType": {"name": {"zh": "柴火灶", "en": "Wood-fired stove"}, "group": "kitchen", "size": {"w": 1800, "d": 800, "h": 800}},
+      "version": "1.0.0",
+      "params": {
+        "fronts": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "门板", "en": "Fronts"},
+          "description": "Material of the doors and drawer fronts"
+        },
+        "top": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "台面", "en": "Top"},
+          "description": "Material of the top"
+        }
+      },
+      "script": "(\n    $r := $min([300, $d * 0.38, $w * 0.15]);\n    $fh := $min([240, $h * 0.32]);\n    [\n      $box([$w - 20, 100, $d - 80], [0, 0 + 100 / 2, 0 - 30], $fronts, 3),\n      $box([$w, $h - 40 - 100, $d - 30], [0, 100 + ($h - 40 - 100) / 2, 0 - 15], $fronts, 4),\n      [0..$floor($max([1, $round($w / 600)])) - 1].(\n        $i := $;\n        $dw := $w / $max([1, $round($w / 600)]);\n        $x := -$w / 2 + $dw * ($i + 0.5);\n        $dh := 160;\n        [\n          $box([$dw - 4, $h - 40 - 108 - $dh, 18], [$x, 102 + ($h - 40 - 108 - $dh) / 2, 0 + 1 * ($d / 2 - 20)], $fronts, 2),\n          $box([$dw - 4, $dh - 4, 18], [$x, $h - 40 - 4 - $dh + ($dh - 4) / 2, 0 + 1 * ($d / 2 - 20)], $fronts, 2),\n          $box([$min([240, $dw * 0.45]), 10, 16], [$x, $h - 40 - 40, 0 + 1 * ($d / 2 - 4)], 'metal', 4)\n        ]\n      ),\n      $box([$w, 40, $d], [0, $h - 40 + 40 / 2, 0], $top, 4),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $ring($r, 18, [$s * $w * 0.22, $h + 5, 0], 'dark'),\n          $cylinder($r, 4, [$s * $w * 0.22, $h, 0], 'iron', {\"seg\": 32}),\n          $box([300, $fh, 8], [$s * $w * 0.22, 140 + $fh / 2, $d / 2 + 2], 'dark', 6)\n        ]\n      ),\n      $lathe([[0, $r * 0.03], [$r * 0.65, $r * 0.03], [$r * 0.55, $r * 0.08], [$r * 0.35, $r * 0.14], [0, $r * 0.17]], [$w * 0.22, $h, 0], $top),\n      $cylinder(30, 50, [$w * 0.22, $h + $r * 0.22 + 25, 0], $top)\n    ]\n  )"
+    },
+    "island": {
+      "name": {"zh": "中岛", "en": "Kitchen island"},
+      "for": ["furniture:island"],
+      "newType": {"name": {"zh": "中岛", "en": "Kitchen island"}, "group": "kitchen", "size": {"w": 1600, "d": 900, "h": 900}},
+      "version": "1.0.0",
+      "params": {
+        "fronts": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "门板", "en": "Fronts"},
+          "description": "Material of the doors and drawer fronts"
+        },
+        "top": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "台面", "en": "Top"},
+          "description": "Material of the top"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $over := $min([300, $d * 0.3]);\n    [\n      $box([$w - 20, 100, $d - $over - 80], [0, 0 + 100 / 2, -$over / 2 - -30], $fronts, 3),\n      $box([$w, $h - 40 - 100, $d - $over - 30], [0, 100 + ($h - 40 - 100) / 2, -$over / 2 - -15], $fronts, 4),\n      [0..$floor($max([1, $round($w / 600)])) - 1].(\n        $i := $;\n        $dw := $w / $max([1, $round($w / 600)]);\n        $x := -$w / 2 + $dw * ($i + 0.5);\n        $dh := 160;\n        [\n          $box([$dw - 4, $h - 40 - 108 - $dh, 18], [$x, 102 + ($h - 40 - 108 - $dh) / 2, -$over / 2 + -1 * (($d - $over) / 2 - 20)], $fronts, 2),\n          $box([$dw - 4, $dh - 4, 18], [$x, $h - 40 - 4 - $dh + ($dh - 4) / 2, -$over / 2 + -1 * (($d - $over) / 2 - 20)], $fronts, 2),\n          $box([$min([240, $dw * 0.45]), 10, 16], [$x, $h - 40 - 40, -$over / 2 + -1 * (($d - $over) / 2 - 4)], 'metal', 4)\n        ]\n      ),\n      $box([$w, 40, $d], [0, $h - 40 + 40 / 2, 0], $top, 4),\n      ($decor ? [$lathe([[0, 0], [60, 0], [130, 80], [125, 85], [0, 30]], [$w * 0.2, $h, 0], 'ceramic')] : [])\n    ]\n  )"
+    },
+    "bar": {
+      "name": {"zh": "台面吧台", "en": "Bar counter"},
+      "for": ["furniture:bar"],
+      "newType": {"name": {"zh": "台面吧台", "en": "Bar counter"}, "group": "kitchen", "size": {"w": 2400, "d": 450, "h": 1000}},
+      "version": "1.0.0",
+      "params": {
+        "fronts": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "门板", "en": "Fronts"},
+          "description": "Material of the doors and drawer fronts"
+        },
+        "top": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "台面", "en": "Top"},
+          "description": "Material of the top"
+        }
+      },
+      "script": "(\n    $n := $max([1, $round($w / 600)]);\n    [\n      $box([$w, $h - 40, $d - 120], [0, 0 + ($h - 40) / 2, -60], $fronts, 4),\n      [0..$floor($n) - 1].(\n        $i := $;\n        [\n          $box([$w / $n - 4, $h - 50, 14], [-$w / 2 + $w / $n * ($i + 0.5), 4 + ($h - 50) / 2, $d / 2 - 113], $fronts, 2)\n        ]\n      ),\n      $box([$w, 40, $d], [0, $h - 40 + 40 / 2, 0], $top, 4),\n      $rod([-$w / 2 + 100, 220, $d / 2 - 60], [$w / 2 - 100, 220, $d / 2 - 60], 14, 'metal'),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * ($w / 2 - 150), 220, $d / 2 - 60], [$s * ($w / 2 - 150), 220, $d / 2 - 106], 9, 'metal')\n        ]\n      )\n    ]\n  )"
+    },
+    "barstool": {
+      "name": {"zh": "吧椅", "en": "Bar stool"},
+      "for": ["furniture:barstool"],
+      "newType": {"name": {"zh": "吧椅", "en": "Bar stool"}, "group": "kitchen", "size": {"w": 400, "d": 400, "h": 750}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $top := $r * 0.42;\n    $foot := $r * 0.82;\n    $fy := $h * 0.32;\n    [\n      $cylinder($r * 0.82, 30, [0, $h - 15, 0], $wood, {\"seg\": 36}),\n      [0..3].(\n        $i := $;\n        $a := $i * 90 + 45;\n        [\n          $rod([$cos($a) * $top, $h - 30, $sin($a) * $top], [$cos($a) * $foot, 0, $sin($a) * $foot], 15, $wood, 10)\n        ]\n      ),\n      $ring($top + ($foot - $top) * (1 - $fy / ($h - 30)), 10, [0, $fy, 0], $wood)\n    ]\n  )"
+    },
+    "fridge": {
+      "name": {"zh": "冰箱", "en": "Fridge"},
+      "for": ["furniture:fridge"],
+      "newType": {"name": {"zh": "冰箱", "en": "Fridge"}, "group": "kitchen", "size": {"w": 700, "d": 700, "h": 1800}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $split := $h * 0.36;\n    $fz := $d / 2 - 25;\n    $hx := $w / 2 - 50;\n    [\n      $box([$w, $h - 20, $d - 60], [0, 20 + ($h - 20) / 2, -30], $body, 12),\n      $box([$w - 4, $split - 24, 50], [0, 22 + ($split - 24) / 2, $fz], $body, 8),\n      $box([$w - 4, $h - $split - 24, 50], [0, $split + 2 + ($h - $split - 24) / 2, $fz], $body, 8),\n      $box([16, 260, 20], [$hx, $split - 170, $fz + 35], 'metal', 6),\n      $box([16, 520, 20], [$hx, $split + 360, $fz + 35], 'metal', 6),\n      $box([$w - 100, 20, $d - 100], [0, 0 + 20 / 2, -30], 'dark', 5)\n    ]\n  )"
+    },
+    "bed": {
+      "name": {"zh": "床", "en": "Bed"},
+      "for": ["furniture:bed"],
+      "newType": {"name": {"zh": "床", "en": "Bed"}, "group": "bedroom", "size": {"w": 1800, "d": 2000, "h": 450}},
+      "version": "1.0.0",
+      "params": {
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "框架", "en": "Frame"},
+          "description": "Material of the frame"
+        },
+        "bedding": {
+          "type": "string",
+          "format": "material",
+          "default": "linen",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "床单", "en": "Sheets"},
+          "description": "Material of the mattress cover and pillows"
+        },
+        "blanket": {
+          "type": "string",
+          "format": "material",
+          "default": "bedding",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "盖毯", "en": "Blanket"},
+          "description": "Material of the blanket"
+        }
+      },
+      "script": "(\n    $t := 30;\n    $mattress := $min([200, $h * 0.45]);\n    $side := $h - $mattress + 70;\n    $head := 40;\n    $headTop := $max([$h + 520, 950]);\n    $md := $d - $head - 2 * $t;\n    $duvet := $md * 0.68;\n    $throw := $min([450, $duvet * 0.35]);\n    $n := $w >= 1200 ? 2 : 1;\n    $pw := ($w - 160) / $n - 40;\n    [\n      $box([$w - 80, 30, $d - $head - 80], [0, 0 + 30 / 2, $head / 2], 'dark', 2),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$t, $side - 30, $d - $head], [$s * ($w - $t) / 2, 30 + ($side - 30) / 2, $head / 2], $frame, 4)\n        ]\n      ),\n      $box([$w, $side - 30, $t], [0, 30 + ($side - 30) / 2, $d / 2 - $t / 2], $frame, 4),\n      $box([$w - 2 * $t, 30, $md], [0, $h - $mattress - 30 + 30 / 2, $head / 2], $frame, 2),\n      $box([$w, $headTop, $head], [0, 0 + $headTop / 2, -$d / 2 + $head / 2], $frame, 6),\n      $box([$w - 2 * $t - 10, $mattress, $md - 10], [0, $h - $mattress + $mattress / 2, $head / 2], $bedding, 50),\n      $box([$w - 2 * $t + 20, 60, $duvet], [0, $h - 10 + 60 / 2, $d / 2 - $t - $duvet / 2 - 10], $bedding, 30),\n      $box([$w - 2 * $t + 30, 45, $throw], [0, $h + 42.5 + 45 / 2, $d / 2 - $t - $throw / 2 - 20], $blanket, 20),\n      [0..$floor($n) - 1].(\n        $i := $;\n        [\n          $box([$pw, 130, 420], [-($w - 160) / 2 + ($w - 160) / $n * ($i + 0.5), $h + 70, -$d / 2 + $head + $t + 230], $bedding, 65, [-14.3, 0, 0])\n        ]\n      )\n    ]\n  )"
+    },
+    "nightstand": {
+      "name": {"zh": "床头柜", "en": "Nightstand"},
+      "for": ["furniture:nightstand"],
+      "newType": {"name": {"zh": "床头柜", "en": "Nightstand"}, "group": "bedroom", "size": {"w": 500, "d": 400, "h": 500}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $base_ := 30;\n    $dh := ($h - $base_ - 30) / 2;\n    [\n      $box([$w - 20, $base_, $d - 30], [0, 0 + $base_ / 2, -15], $body, 2),\n      $box([$w, $h - $base_, $d - 18], [0, $base_ + ($h - $base_) / 2, -9], $body, 4),\n      [0..1].(\n        $i := $;\n        $y := $base_ + 4 + $i * ($dh + 6);\n        [\n          $box([$w - 8, $dh, 18], [0, $y + $dh / 2, $d / 2 - 9], $body, 2),\n          $noplan($box([$w * 0.4, 8, 4], [0, $y + $dh - 22 + 8 / 2, $d / 2 + 0.5], 'woodDark', 2))\n        ]\n      )\n    ]\n  )"
+    },
+    "wardrobe": {
+      "name": {"zh": "衣柜", "en": "Wardrobe"},
+      "for": ["furniture:wardrobe"],
+      "newType": {"name": {"zh": "衣柜", "en": "Wardrobe"}, "group": "bedroom", "size": {"w": 1600, "d": 600, "h": 2200}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $n := $max([1, $round($w / 500)]);\n    $dw := $w / $n;\n    [\n      $box([$w - 40, 80, $d - 50], [0, 0 + 80 / 2, -10], $body, 3),\n      $box([$w, $h - 80, $d - 20], [0, 80 + ($h - 80) / 2, -10], $body, 4),\n      [0..$floor($n) - 1].(\n        $i := $;\n        $x := -$w / 2 + $dw * ($i + 0.5);\n        $hx := $x + ($i % 2 ? -1 : 1) * ($dw / 2 - 45);\n        [\n          $box([$dw - 4, $h - 84, 18], [$x, 82 + ($h - 84) / 2, $d / 2 - 10], $body, 2),\n          $rod([$hx, $h * 0.4, $d / 2 + 14], [$hx, $h * 0.58, $d / 2 + 14], 6, 'metal', 8)\n        ]\n      )\n    ]\n  )"
+    },
+    "desk": {
+      "name": {"zh": "书桌", "en": "Desk"},
+      "for": ["furniture:desk"],
+      "newType": {"name": {"zh": "书桌", "en": "Desk"}, "group": "study", "size": {"w": 1200, "d": 600, "h": 750}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "script": "(\n    $dw := $min([360, $w * 0.32]);\n    $dx := -$w / 2 + $dw / 2 + 20;\n    $nd := 5;\n    $dh := ($h - 50) / $nd;\n    $lx := $w * 0.06;\n    $lz := 20;\n    $ax := $w / 2 - 140;\n    $az := -$d / 2 + 110;\n    [\n      $box([$w, 36, $d], [0, $h - 36 + 36 / 2, 0], $body, 4),\n      $box([$dw, $h - 36, $d - 40], [$dx, 0 + ($h - 36) / 2, -10], $body, 3),\n      [0..$floor($nd) - 1].(\n        $i := $;\n        [\n          $box([$dw - 6, $dh - 6, 14], [$dx, 14 + $i * $dh + ($dh - 6) / 2, $d / 2 - 23], $body, 2)\n        ]\n      ),\n      [0..$floor($nd) - 1].(\n        $i := $;\n        [\n          $noplan($box([$dw * 0.4, 10, 4], [$dx, 14 + $i * $dh + $dh - 26 + 10 / 2, $d / 2 - 14], 'dark', 2))\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $cylinder(25, $h - 36, [$w / 2 - 60, ($h - 36) / 2, $s * ($d / 2 - 60)], $body)\n        ]\n      ),\n      ($decor ? [$box([330, 14, 230], [$lx, $h + 14 / 2, $lz], 'metal', 5)] : []),\n      ($decor ? [$box([330, 220, 8], [$lx, $h + 115, $lz - 130], 'metal', 4, [-16, 0, 0])] : []),\n      ($decor ? [$box([300, 190, 2], [$lx, $h + 117, $lz - 124], 'dark', 1, [-16, 0, 0])] : []),\n      ($decor ? [$cylinder(40, 90, [-$w * 0.25, $h + 45, -100], 'ceramic')] : []),\n      ($decor ? [$noplan($cylinder(70, 18, [$ax, $h + 9, $az], 'dark', {\"seg\": 28}))] : []),\n      ($decor ? [$noplan($rod([$ax, $h + 18, $az], [$ax - 60, $h + 380, $az + 20], 8, 'dark'))] : []),\n      ($decor ? [$noplan($rod([$ax - 60, $h + 380, $az + 20], [$ax - 230, $h + 330, $az + 90], 7, 'dark'))] : []),\n      ($decor ? [$noplan($lathe([[0, 0], [75, 0], [70, 20], [35, 120], [0, 130]], [$ax - 250, $h + 210, $az + 100], 'dark'))] : [])\n    ]\n  )"
+    },
+    "bookcase": {
+      "name": {"zh": "书柜", "en": "Bookcase"},
+      "for": ["furniture:bookcase"],
+      "newType": {"name": {"zh": "书柜", "en": "Bookcase"}, "group": "study", "size": {"w": 1200, "d": 350, "h": 2000}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        },
+        "decor": {
+          "type": "boolean",
+          "default": true,
+          "title": {"zh": "装饰", "en": "Decoration"},
+          "description": "Show the decoration: cushions, books, plants, tableware and the like"
+        }
+      },
+      "seed": 7,
+      "script": "(\n    $t := 18;\n    $kick := 60;\n    $nu := $max([1, $round($w / 800)]);\n    $uw := $w / $nu;\n    $n := $max([2, $round(($h - $kick) / 360)]);\n    $gap := ($h - $kick - $t) / $n;\n    [\n      [0..$floor($nu) - 1].(\n        $u := $;\n        $ux := -$w / 2 + $uw * ($u + 0.5);\n        [\n          $box([$t, $h, $d], [$ux - $uw / 2 + $t / 2, 0 + $h / 2, 0], $body, 2),\n          $box([$t, $h, $d], [$ux + $uw / 2 - $t / 2, 0 + $h / 2, 0], $body, 2),\n          $box([$uw - 4, $h, 6], [$ux, 0 + $h / 2, -$d / 2 + 3], $body, 1),\n          $box([$uw - 2 * $t, $kick, 18], [$ux, 0 + $kick / 2, $d / 2 - 30], $body, 1),\n          [0..$floor($n + 1) - 1].(\n            $i := $;\n            [\n              $box([$uw - 2 * $t, $t, $d - 10], [$ux, $kick + $i * $gap + $t / 2, 5], $body, 2)\n            ]\n          ),\n          [0..$floor($n) - 1].(\n            $s := $;\n            $y0 := $kick + $s * $gap + $t;\n            $room := $gap - $t - 30;\n            $vase := (($s + $u) % 3 = 1 ? 1 : 0);\n            $start := $ux - $uw / 2 + $t + 10;\n            $end := $ux + $uw / 2 - $t - ($vase ? 190 : 10);\n            $nb := $floor(($end - $start) / 35);\n            $bw := ($end - $start) / $nb;\n            [\n              [0..$floor($nb) - 1].(\n                $k := $;\n                $key := $u * 1000 + $s * 100 + $k;\n                $bh := $room * (0.7 + $rnd($key) * 0.3);\n                $bd := $d * (0.7 + $rnd($key + 0.5) * 0.15);\n                $bwk := $bw * (0.6 + $rnd($key + 0.25) * 0.38);\n                $c := $floor($rnd($key + 0.75) * 5);\n                [\n                  $rnd($key + 0.9) >= 0.08 ? [\n                      $c = 0 ? [\n                          $noplan($box([$bwk, $bh, $bd], [$start + $bw * ($k + 0.5), $y0 + $bh / 2, $d / 2 - $bd / 2 - 20], 'book1', 3))\n                        ] : [],\n                      $c = 1 ? [\n                          $noplan($box([$bwk, $bh, $bd], [$start + $bw * ($k + 0.5), $y0 + $bh / 2, $d / 2 - $bd / 2 - 20], 'book2', 3))\n                        ] : [],\n                      $c = 2 ? [\n                          $noplan($box([$bwk, $bh, $bd], [$start + $bw * ($k + 0.5), $y0 + $bh / 2, $d / 2 - $bd / 2 - 20], 'book3', 3))\n                        ] : [],\n                      $c = 3 ? [\n                          $noplan($box([$bwk, $bh, $bd], [$start + $bw * ($k + 0.5), $y0 + $bh / 2, $d / 2 - $bd / 2 - 20], 'book4', 3))\n                        ] : [],\n                      $c = 4 ? [\n                          $noplan($box([$bwk, $bh, $bd], [$start + $bw * ($k + 0.5), $y0 + $bh / 2, $d / 2 - $bd / 2 - 20], 'linen', 3))\n                        ] : []\n                    ] : []\n                ]\n              ),\n              $vase ? [\n                  ($decor ? [$cylinder(50, $min([220, $room * 0.8]), [$ux + $uw / 2 - $t - 95, $y0 + $min([220, $room * 0.8]) / 2, 0], 'ceramic', {\"r2\": 60})] : [])\n                ] : []\n            ]\n          )\n        ]\n      )\n    ]\n  )"
+    },
+    "toilet": {
+      "name": {"zh": "马桶", "en": "Toilet"},
+      "for": ["furniture:toilet"],
+      "newType": {"name": {"zh": "马桶", "en": "Toilet"}, "group": "bath", "size": {"w": 400, "d": 700, "h": 750}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $tank := $min([140, $d * 0.2]);\n    $seat := $min([420, $h * 0.56]);\n    $r := $min([$w / 2, 190]);\n    $k := $min([1.45, ($d - $tank + 20) / (2 * $r)]);\n    $bz := $d / 2 - $r * $k;\n    $lift := $min([160, $seat * 0.38]);\n    [\n      $box([$w, $h, $tank], [0, 0 + $h / 2, -$d / 2 + $tank / 2], $body, 6),\n      $box([160, 110, 8], [0, $h - 120, -$d / 2 + $tank + 4], 'metal', 6),\n      $lathe([[0, $lift], [$r * 0.6, $lift], [$r * 0.85, $lift + ($seat - $lift) * 0.55], [$r * 0.95, $seat - 30], [0, $seat - 30]], [0, 0, $bz], 'ceramic', {\"scale\": [1, 1, $k]}),\n      $box([$r * 1.2, $seat - $lift - 30, $tank], [0, $lift + ($seat - $lift - 30) / 2, -$d / 2 + $tank * 1.5], 'ceramic', 20),\n      $cylinder($r, 30, [0, $seat - 15, $bz], 'ceramic', {\"seg\": 32, \"scale\": [1, 1, $k]}),\n      $cylinder($r * 0.96, 20, [0, $seat + 10, $bz], 'ceramic', {\"seg\": 32, \"scale\": [1, 1, $k]})\n    ]\n  )"
+    },
+    "basin": {
+      "name": {"zh": "洗手台", "en": "Washbasin"},
+      "for": ["furniture:basin"],
+      "newType": {"name": {"zh": "洗手台", "en": "Washbasin"}, "group": "bath", "size": {"w": 600, "d": 450, "h": 850}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $top := $h - 40;\n    $ch := $min([500, $top - 200]);\n    $dh := ($ch - 12) / 2;\n    $br := $min([$w * 0.32, 200]);\n    [\n      $box([$w, $ch, $d - 20], [0, $top - $ch + $ch / 2, -10], $body, 4),\n      [0..1].(\n        $i := $;\n        $y := $top - $ch + 4 + $i * ($dh + 4);\n        [\n          $box([$w - 8, $dh, 16], [0, $y + $dh / 2, $d / 2 - 10], $body, 2),\n          $noplan($box([$min([260, $w * 0.5]), 8, 6], [0, $y + $dh - 20 + 8 / 2, $d / 2 + 1], 'metal', 3))\n        ]\n      ),\n      $box([$w, 40, $d], [0, $top + 40 / 2, 0], 'ceramic', 12),\n      $cylinder($br, 4, [0, $h + 2, 30.5], 'ceramicShade', {\"seg\": 36, \"scale\": [1, 1, 0.75]}),\n      $cylinder(20, 180, [0, $h + 90, -$d / 2 + 60], 'metal'),\n      $rod([0, $h + 170, -$d / 2 + 60], [0, $h + 150, -$d / 2 + 180], 12, 'metal')\n    ]\n  )"
+    },
+    "shower": {
+      "name": {"zh": "淋浴房", "en": "Shower"},
+      "for": ["furniture:shower"],
+      "newType": {"name": {"zh": "淋浴房", "en": "Shower"}, "group": "bath", "size": {"w": 900, "d": 900, "h": 2000}},
+      "version": "1.0.0",
+      "params": {
+        "shape": {
+          "type": "string",
+          "enum": ["square", "diamond"],
+          "enumTitles": [{"zh": "方形", "en": "Square"}, {"zh": "钻石形", "en": "Diamond"}],
+          "default": "square",
+          "title": {"zh": "形状", "en": "Shape"},
+          "description": "Square enclosure along two walls, or a five-sided diamond enclosure for a corner"
+        },
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "default": "dark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "框架", "en": "Frame"},
+          "description": "Material of the frame"
+        }
+      },
+      "script": "$shape = 'diamond' ? (\n    $c := $min([$w, $d]) * 0.45;\n    [\n      $extrude('plan', [[-$w / 2, -$d / 2], [$w / 2, -$d / 2], [$w / 2, $d / 2 - $c], [$w / 2 - $c, $d / 2], [-$w / 2, $d / 2]], 50, 'white'),\n      $panel([-$w / 2, $d / 2], [$w / 2 - $c, $d / 2], 50, $h - 50, 8, 'glass'),\n      $rod([-$w / 2, $h, $d / 2], [$w / 2 - $c, $h, $d / 2], 10, $frame, 8),\n      $panel([$w / 2 - $c, $d / 2], [$w / 2, $d / 2 - $c], 50, $h - 50, 8, 'glass'),\n      $rod([$w / 2 - $c, $h, $d / 2], [$w / 2, $h, $d / 2 - $c], 10, $frame, 8),\n      $panel([$w / 2, $d / 2 - $c], [$w / 2, -$d / 2], 50, $h - 50, 8, 'glass'),\n      $rod([$w / 2, $h, $d / 2 - $c], [$w / 2, $h, -$d / 2], 10, $frame, 8),\n      $rod([-$w / 2, 50, $d / 2], [-$w / 2, $h, $d / 2], 10, $frame, 8),\n      $rod([$w / 2 - $c, 50, $d / 2], [$w / 2 - $c, $h, $d / 2], 10, $frame, 8),\n      $rod([$w / 2, 50, $d / 2 - $c], [$w / 2, $h, $d / 2 - $c], 10, $frame, 8),\n      $rod([$w / 2, 50, -$d / 2], [$w / 2, $h, -$d / 2], 10, $frame, 8),\n      $rod([-$w * 0.15, $min([900, $h * 0.45]), -$d / 2 + 30], [-$w * 0.15, $h - 100, -$d / 2 + 30], 12, $frame),\n      $rod([-$w * 0.15, $h - 100, -$d / 2 + 30], [-$w * 0.15, $h - 120, -$d / 2 + 230], 10, $frame),\n      $cylinder(90, 15, [-$w * 0.15, $h - 127.5, -$d / 2 + 250], $frame, {\"seg\": 28}),\n      $cylinder(30, 6, [0, 53, 50], $frame)\n    ]\n  ) : [\n    $box([$w, 50, $d], [0, 0 + 50 / 2, 0], 'white', 10),\n    $panel([-$w / 2, $d / 2], [$w / 2, $d / 2], 50, $h - 50, 8, 'glass'),\n    $rod([-$w / 2, $h, $d / 2], [$w / 2, $h, $d / 2], 10, $frame, 8),\n    $panel([$w / 2, $d / 2], [$w / 2, -$d / 2], 50, $h - 50, 8, 'glass'),\n    $rod([$w / 2, $h, $d / 2], [$w / 2, $h, -$d / 2], 10, $frame, 8),\n    $rod([-$w / 2, 50, $d / 2], [-$w / 2, $h, $d / 2], 10, $frame, 8),\n    $rod([$w / 2, 50, $d / 2], [$w / 2, $h, $d / 2], 10, $frame, 8),\n    $rod([$w / 2, 50, -$d / 2], [$w / 2, $h, -$d / 2], 10, $frame, 8),\n    $rod([-$w * 0.15, $min([900, $h * 0.45]), -$d / 2 + 30], [-$w * 0.15, $h - 100, -$d / 2 + 30], 12, $frame),\n    $rod([-$w * 0.15, $h - 100, -$d / 2 + 30], [-$w * 0.15, $h - 120, -$d / 2 + 230], 10, $frame),\n    $cylinder(90, 15, [-$w * 0.15, $h - 127.5, -$d / 2 + 250], $frame, {\"seg\": 28}),\n    $cylinder(30, 6, [0, 53, 50], $frame)\n  ]"
+    },
+    "grab": {
+      "name": {"zh": "安全扶手", "en": "Grab bar"},
+      "for": ["furniture:grab"],
+      "newType": {"name": {"zh": "安全扶手", "en": "Grab bar"}, "group": "bath", "size": {"w": 700, "d": 80, "h": 40}},
+      "version": "1.0.0",
+      "script": "(\n    $y := $h / 2;\n    $z := $d / 2 - 20;\n    $x := $w / 2 - 40;\n    [\n      $rod([-$x, $y, $z], [$x, $y, $z], 16, 'metal', 14),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * $x, $y, $z], [$s * $x, $y, -$d / 2 + 10], 12, 'metal'),\n          $cylinder(35, 10, [$s * $x, $y, -$d / 2 + 5], 'metal', {\"axis\": 'z', \"seg\": 28})\n        ]\n      )\n    ]\n  )"
+    },
+    "sos": {
+      "name": {"zh": "紧急呼叫按钮", "en": "Emergency call button"},
+      "for": ["furniture:sos"],
+      "newType": {"name": {"zh": "紧急呼叫按钮", "en": "Emergency call button"}, "group": "bath", "size": {"w": 100, "d": 40, "h": 100}},
+      "version": "1.0.0",
+      "script": "[\n    $box([$w, $h, 15], [0, $h / 2, -$d / 2 + 7.5], 'appliance', 8),\n    $cylinder($min([$w, $h]) * 0.28, 18, [0, $h / 2, -$d / 2 + 24], 'red', {\"axis\": 'z', \"seg\": 28})\n  ]"
+    },
+    "foldseat": {
+      "name": {"zh": "折叠淋浴凳", "en": "Folding shower seat"},
+      "for": ["furniture:foldseat"],
+      "newType": {"name": {"zh": "折叠淋浴凳", "en": "Folding shower seat"}, "group": "bath", "size": {"w": 450, "d": 380, "h": 460}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "birch",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "(\n    $sd := ($d - 30) / 4;\n    [\n      $box([$w - 40, 140, 20], [0, $h - 160 + 140 / 2, -$d / 2 + 10], 'white', 6),\n      [0..3].(\n        $i := $;\n        [\n          $box([$w, 25, $sd - 12], [0, $h - 25 + 25 / 2, -$d / 2 + 25 + $sd * ($i + 0.5)], $wood, 6)\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * ($w / 2 - 30), $h - 30, $d / 2 - 50], [$s * ($w / 2 - 30), $h - 300, -$d / 2 + 20], 10, 'metal'),\n          $rod([$s * ($w / 2 - 30), $h - 30, -$d / 2 + 20], [$s * ($w / 2 - 30), $h - 30, $d / 2 - 30], 10, 'metal')\n        ]\n      )\n    ]\n  )"
+    },
+    "washer": {
+      "name": {"zh": "洗衣机", "en": "Washing machine"},
+      "for": ["furniture:washer"],
+      "newType": {"name": {"zh": "洗衣机", "en": "Washing machine"}, "group": "bath", "size": {"w": 600, "d": 600, "h": 850}},
+      "version": "1.0.0",
+      "script": "(\n    $z := $d / 2;\n    $dr := $min([$w, $h]);\n    [\n      $box([$w, $h, $d - 10], [0, 0 + $h / 2, -5], 'white', 25),\n      $box([$w * 0.4, 50, 4], [-$w * 0.15, $h - 65, $z - 8], 'dark', 4),\n      $cylinder(30, 20, [$w * 0.3, $h - 65, $z], 'metal', {\"axis\": 'z', \"seg\": 28}),\n      $ring($dr * 0.27, 25, [0, $h * 0.45, $z], 'dark', 'z'),\n      $cylinder($dr * 0.25, 10, [0, $h * 0.45, $z - 5], 'carGlass', {\"axis\": 'z', \"seg\": 28})\n    ]\n  )"
+    },
+    "sink": {
+      "name": {"zh": "洗衣池", "en": "Laundry sink"},
+      "for": ["furniture:sink"],
+      "newType": {"name": {"zh": "洗衣池", "en": "Laundry sink"}, "group": "bath", "size": {"w": 600, "d": 500, "h": 800}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $tub := $min([260, $h * 0.33]);\n    $t := 30;\n    $y := $h - $tub;\n    $leg := 100;\n    [\n      $box([$w - 20, $leg, $d - 80], [0, 0 + $leg / 2, -30], $body, 3),\n      $box([$w, $y - $leg, $d - 20], [0, $leg + ($y - $leg) / 2, -10], $body, 4),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w / 2 - 4, $y - $leg - 6, 16], [$s * $w / 4, $leg + 3 + ($y - $leg - 6) / 2, $d / 2 - 10], $body, 2)\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $noplan($box([12, 120, 14], [$s * 40, $y - 180 + 120 / 2, $d / 2 + 4], 'metal', 4))\n        ]\n      ),\n      $box([$w, $t, $d], [0, $y + $t / 2, 0], 'ceramic', 10),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w, $tub, $t], [0, $y + $tub / 2, $s * ($d / 2 - $t / 2)], 'ceramic', 12),\n          $box([$t, $tub, $d], [$s * ($w / 2 - $t / 2), $y + $tub / 2, 0], 'ceramic', 12)\n        ]\n      ),\n      $rod([0, $h + 250, -$d / 2 + 5], [0, $h + 250, -$d / 2 + 120], 12, 'metal'),\n      $rod([0, $h + 250, -$d / 2 + 120], [0, $h + 180, -$d / 2 + 130], 10, 'metal')\n    ]\n  )"
+    },
+    "tree": {
+      "name": {"zh": "庭院树", "en": "Courtyard tree"},
+      "for": ["furniture:tree"],
+      "newType": {"name": {"zh": "庭院树", "en": "Courtyard tree"}, "group": "yard", "size": {"w": 3000, "d": 3000, "h": 4500}},
+      "version": "1.0.0",
+      "seed": 5,
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $trunkH := $h * 0.42;\n    $tr := $max([90, $r * 0.06]);\n    $cy := $h * 0.68;\n    $ry := $min([$h * 0.22, $h - $cy - $r * 0.25]);\n    [\n      $cylinder($tr * 1.1, $trunkH, [0, $trunkH / 2, 0], 'white', {\"r2\": $tr * 0.8, \"seg\": 12}),\n      [0..5].(\n        $i := $;\n        [\n          $noplan($cylinder($tr * 1.06, 25, [0, $trunkH * (0.15 + $i * 0.13), 0], 'dark', {\"seg\": 12, \"scale\": [1, 1, 0.98]}))\n        ]\n      ),\n      $rod([0, $trunkH * 0.95, 0], [-$h * 0.34 * $sin(18) * $cos(30), $trunkH * 0.95 + $h * 0.34 * $cos(18), $h * 0.34 * $sin(18) * $sin(30)], $tr * 0.55, 'white', 8),\n      $rod([0, $trunkH * 0.95, 0], [-$h * 0.32 * $sin(22) * $cos(200), $trunkH * 0.95 + $h * 0.32 * $cos(22), $h * 0.32 * $sin(22) * $sin(200)], $tr * 0.55, 'white', 8),\n      [0..21].(\n        $i := $;\n        $t := ($i + 0.5) / 22;\n        $yy := 1 - 2 * $t;\n        $ring_ := $sqrt(1 - $yy * $yy);\n        $a := $i * 137.508;\n        $rr := $r * (0.27 + 0.08 * $rnd($i));\n        [\n          $i % 3 ? [\n              $sphere($rr, [$cos($a) * $ring_ * $r * 0.72, $cy + $yy * $ry, $sin($a) * $ring_ * $r * 0.72], 'leaf2', [1, 0.85, 1])\n            ] : [\n              $sphere($rr, [$cos($a) * $ring_ * $r * 0.72, $cy + $yy * $ry, $sin($a) * $ring_ * $r * 0.72], 'leaf', [1, 0.85, 1])\n            ]\n        ]\n      )\n    ]\n  )"
+    },
+    "car": {
+      "name": {"zh": "汽车", "en": "Car"},
+      "for": ["furniture:car"],
+      "newType": {"name": {"zh": "汽车", "en": "Car"}, "group": "yard", "size": {"w": 5220, "d": 2000, "h": 1800}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "carBody",
+          "enum": ["carBody", "white", "dark", "red", "metal"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $L := $w / 2;\n    $R := $min([360, $h * 0.2]);\n    $clear := $R * 0.55;\n    $belt := $h * 0.52;\n    $b := 60;\n    $wx := $L * 0.62;\n    $arch := $R * 1.18;\n    $bl := $L - $b;\n    $top := $belt - $b;\n    $bot := $clear + $b;\n    $roof := $h - 50;\n    $wsBase := $L * 0.32;\n    $wsTop := -$L * 0.08;\n    $rwTop := -$L * 0.58;\n    $rwBase := -$L * 0.8;\n    [\n      $extrude('side', [[-$bl + 120, $bot], [-$wx - $arch, $bot], [-$wx - $arch, $R], {\"arc\": [-$wx, $R, $arch, 180, 0, true]}, [-$wx + $arch, $bot], [$wx - $arch, $bot], [$wx - $arch, $R], {\"arc\": [$wx, $R, $arch, 180, 0, true]}, [$wx + $arch, $bot], [$bl - 120, $bot], {\"curve\": [$bl, $bot, $bl, $bot + 120]}, [$bl, $top - 200], {\"curve\": [$bl - 100, $top - 20, $bl - 600, $top]}, [-$bl + 200, $top], {\"curve\": [-$bl, $top, -$bl, $top - 150]}, [-$bl, $bot + 120], {\"curve\": [-$bl, $bot, -$bl + 120, $bot]}], $d - 2 * $b, $body, $b),\n      $extrude('side', [[$rwBase, $belt - 40], [$wsBase, $belt - 40], [$wsTop + 120, $roof - 120], {\"curve\": [$wsTop, $roof - 70, $wsTop - 150, $roof - 70]}, [$rwTop + 150, $roof - 70], {\"curve\": [$rwTop, $roof - 70, $rwTop - 80, $roof - 140]}], $d - 340, 'carGlass', 40),\n      $box([$wsTop - $rwTop + 120, 50, $d - 200], [($wsTop + $rwTop) / 2, $roof - 30, 0], $body, 25),\n      $noplan($box([100, $roof - $belt, $d - 220], [($wsTop + $rwTop) / 2 + 50, ($belt + $roof) / 2 - 20, 0], $body, 20)),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $cylinder($R, 220, [$sx * $wx, $R, $sz * ($d / 2 - 150)], 'tyre', {\"axis\": 'z', \"seg\": 28}),\n          $cylinder($R * 0.6, 20, [$sx * $wx, $R, $sz * ($d / 2 - 150) + $sz * 110], 'metal', {\"axis\": 'z', \"seg\": 24})\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([80, 90, 380], [$L - 30, $top - 240, $s * ($d / 2 - 320)], 'headlight', 30),\n          $box([80, 100, 340], [-$L + 20, $top - 100, $s * ($d / 2 - 300)], 'taillight', 30)\n        ]\n      )\n    ]\n  )"
+    },
+    "rocker": {
+      "name": {"zh": "摇椅", "en": "Rocking chair"},
+      "for": ["furniture:rocker"],
+      "newType": {"name": {"zh": "摇椅", "en": "Rocking chair"}, "group": "yard", "size": {"w": 650, "d": 950, "h": 900}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "woodDark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "(\n    $R := $d * 1.4;\n    $seat := $min([420, $h * 0.46]);\n    $sx := $w / 2 - 40;\n    $sd := $d * 0.46;\n    $lean := 20;\n    $bl := $h - $seat;\n    $bz := $d * 0.2 - $sd;\n    [\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $tube([[$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 0 / 12) * (-$d / 2 + $d * 0 / 12)), -$d / 2 + $d * 0 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 1 / 12) * (-$d / 2 + $d * 1 / 12)), -$d / 2 + $d * 1 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 2 / 12) * (-$d / 2 + $d * 2 / 12)), -$d / 2 + $d * 2 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 3 / 12) * (-$d / 2 + $d * 3 / 12)), -$d / 2 + $d * 3 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 4 / 12) * (-$d / 2 + $d * 4 / 12)), -$d / 2 + $d * 4 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 5 / 12) * (-$d / 2 + $d * 5 / 12)), -$d / 2 + $d * 5 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 6 / 12) * (-$d / 2 + $d * 6 / 12)), -$d / 2 + $d * 6 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 7 / 12) * (-$d / 2 + $d * 7 / 12)), -$d / 2 + $d * 7 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 8 / 12) * (-$d / 2 + $d * 8 / 12)), -$d / 2 + $d * 8 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 9 / 12) * (-$d / 2 + $d * 9 / 12)), -$d / 2 + $d * 9 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 10 / 12) * (-$d / 2 + $d * 10 / 12)), -$d / 2 + $d * 10 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 11 / 12) * (-$d / 2 + $d * 11 / 12)), -$d / 2 + $d * 11 / 12], [$s * $sx, 25 + $R - $sqrt($R * $R - (-$d / 2 + $d * 12 / 12) * (-$d / 2 + $d * 12 / 12)), -$d / 2 + $d * 12 / 12]], 22, $wood),\n          $rod([$s * $sx, 60, $d * 0.22], [$s * $sx, $seat, $d * 0.2], 18, $wood),\n          $rod([$s * $sx, 60, -$d * 0.22], [$s * $sx, $seat - 30, -$d * 0.18], 18, $wood),\n          $rod([$s * $sx, $seat, $d * 0.2], [$s * $sx, $seat + 220, $d * 0.2], 15, $wood),\n          $box([60, 30, $d * 0.5], [$s * $sx, $seat + 230, 0], $wood, 10)\n        ]\n      ),\n      [0..5].(\n        $i := $;\n        [\n          $box([$w - 60, 20, $sd / 6 - 10], [0, $seat - $i / 5 * 40, $d * 0.2 - $sd / 6 * ($i + 0.5)], $wood, 5)\n        ]\n      ),\n      [0..4].(\n        $i := $;\n        [\n          $box([60, $bl, 20], [-$w / 2 + 80 + ($w - 160) / 4 * $i, $seat - 40 + $bl / 2 * $cos($lean), $bz - $bl / 2 * $sin($lean)], $wood, 8, [-$lean, 0, 0])\n        ]\n      ),\n      $box([$w - 40, 60, 30], [0, $seat - 70 + $bl * $cos($lean), $bz - $bl * $sin($lean) + 10], $wood, 10, [-$lean, 0, 0])\n    ]\n  )"
+    },
+    "stonetable": {
+      "name": {"zh": "石桌", "en": "Stone table"},
+      "for": ["furniture:stonetable"],
+      "newType": {"name": {"zh": "石桌", "en": "Stone table"}, "group": "yard", "size": {"w": 900, "d": 900, "h": 750}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "woodDark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $n := $max([5, $round($r * 2 / 90)]);\n    $sw := $r * 2 / $n;\n    [\n      $ring($r - 25, 25, [0, $h - 25, 0], $wood),\n      [0..$floor($n) - 1].(\n        $i := $;\n        $x := -$r + $sw * ($i + 0.5);\n        $len := 2 * $sqrt($max([0, ($r - 45) * ($r - 45) - ($abs($x) + $sw / 2) * ($abs($x) + $sw / 2)]));\n        [\n          $len > 40 ? [\n              $box([$sw - 12, 24, $len], [$x, $h - 12, 0], $wood, 4)\n            ] : []\n        ]\n      ),\n      $cylinder($r * 0.82, 70, [0, $h - 60, 0], $wood, {\"seg\": 36}),\n      [0..3].(\n        $i := $;\n        $a := $i * 90 + 45;\n        [\n          $box([50, $h - 30, 50], [$cos($a) * $r * 0.6, ($h - 30) / 2, $sin($a) * $r * 0.6], $wood, 6)\n        ]\n      )\n    ]\n  )"
+    },
+    "stool": {
+      "name": {"zh": "石凳", "en": "Stone stool"},
+      "for": ["furniture:stool"],
+      "newType": {"name": {"zh": "石凳", "en": "Stone stool"}, "group": "yard", "size": {"w": 400, "d": 400, "h": 450}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "woodDark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "script": "(\n    $n := 4;\n    $sw := $d / $n;\n    [\n      [0..$floor($n) - 1].(\n        $i := $;\n        [\n          $box([$w, 24, $sw - 12], [0, $h - 24 + 24 / 2, -$d / 2 + $sw * ($i + 0.5)], $wood, 4)\n        ]\n      ),\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $box([22 * 2, $h - 24, 22 * 2], [$sx * ($w / 2 - 30), ($h - 24) / 2, $sz * ($d / 2 - 30)], $wood, 22 * 0.3)\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w - 60, 40, 22], [0, $h * 0.25 + 40 / 2, $s * ($d / 2 - 30)], $wood, 3)\n        ]\n      )\n    ]\n  )"
+    },
+    "solar": {
+      "name": {"zh": "太阳能热水器", "en": "Solar water heater"},
+      "for": ["furniture:solar"],
+      "newType": {"name": {"zh": "太阳能热水器", "en": "Solar water heater"}, "group": "roof", "size": {"w": 2000, "d": 1500, "h": 1300}},
+      "version": "1.0.0",
+      "script": "(\n    $tr := $min([220, $h * 0.17]);\n    $ty := $h - $tr;\n    $tz := -$d / 2 + $tr;\n    $n := $max([4, $floor(($w - 160) / 75)]);\n    $fz := $d / 2 - 50;\n    [\n      $cylinder($tr, $w, [0, $ty, $tz], 'metal', {\"axis\": 'x', \"seg\": 28}),\n      [0..$floor($n) - 1].(\n        $i := $;\n        [\n          $rod([-$w / 2 + 80 + ($w - 160) / ($n - 1) * $i, $ty - $tr * 0.6, $tz + $tr * 0.6], [-$w / 2 + 80 + ($w - 160) / ($n - 1) * $i, 200, $fz], 26, 'tube', 10)\n        ]\n      ),\n      $rod([-$w / 2 + 40, 200, $fz], [$w / 2 - 40, 200, $fz], 25, 'metal'),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * ($w / 2 - 40), 170, $fz], [$s * ($w / 2 - 40), $ty - 50, $tz + 50], 15, 'metal'),\n          $rod([$s * ($w / 2 - 40), 0, $fz], [$s * ($w / 2 - 40), 200, $fz], 15, 'metal'),\n          $rod([$s * ($w / 2 - 40), 0, $tz], [$s * ($w / 2 - 40), $ty - $tr, $tz], 15, 'metal'),\n          $rod([$s * ($w / 2 - 40), 20, $fz], [$s * ($w / 2 - 40), 20, $tz], 12, 'metal')\n        ]\n      )\n    ]\n  )"
+    },
+    "watertank": {
+      "name": {"zh": "水塔", "en": "Water tank"},
+      "for": ["furniture:watertank"],
+      "newType": {"name": {"zh": "水塔", "en": "Water tank"}, "group": "roof", "size": {"w": 1000, "d": 1000, "h": 1400}},
+      "version": "1.0.0",
+      "params": {
+        "body": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "主体", "en": "Body"},
+          "description": "Material of the main body"
+        }
+      },
+      "script": "(\n    $r := $min([$w, $d]) / 2 - 20;\n    $stand := $min([400, $h * 0.28]);\n    $top := $h - 60;\n    [\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        [\n          $cylinder(25 * 0.8, $stand, [$sx * ($r * 1.5 / 2 - 20), $stand / 2, $sz * ($r * 1.5 / 2 - 20)], 'iron', {\"r2\": 25, \"seg\": 12})\n        ]\n      ),\n      $ring($r * 0.72, 20, [0, $stand, 0], 'iron'),\n      $lathe([[0, $stand], [$r, $stand], [$r, $top - $r * 0.25], [$r * 0.85, $top - $r * 0.08], [$r * 0.3, $top], [0, $top]], [0, 0, 0], $body),\n      $cylinder(120, 60, [0, $top + 25, 0], $body),\n      $ring($r + 5, 12, [0, $stand + ($top - $stand) * 0.33, 0], $body),\n      $ring($r + 5, 12, [0, $stand + ($top - $stand) * 0.62, 0], $body)\n    ]\n  )"
+    },
+    "dryrack": {
+      "name": {"zh": "晾衣架", "en": "Drying rack"},
+      "for": ["furniture:dryrack"],
+      "newType": {"name": {"zh": "晾衣架", "en": "Drying rack"}, "group": "roof", "size": {"w": 2400, "d": 600, "h": 1700}},
+      "version": "1.0.0",
+      "params": {
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "default": "white",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "框架", "en": "Frame"},
+          "description": "Material of the frame"
+        }
+      },
+      "script": "(\n    $x := $w / 2 - 30;\n    $z := $d / 2 - 40;\n    [\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * $x, 0, -$z], [$s * $x, $h, -$z * 0.3], 16, $frame),\n          $rod([$s * $x, 0, $z], [$s * $x, $h, $z * 0.3], 16, $frame),\n          $rod([$s * $x, $h, -$z * 0.5], [$s * $x, $h, $z * 0.5], 14, $frame),\n          $rod([$s * $x, 20, -$z], [$s * $x, 20, $z], 14, $frame)\n        ]\n      ),\n      $rod([-$x, $h - 10, -$z * 0.5], [$x, $h - 10, -$z * 0.5], 11, $frame),\n      $rod([-$x, $h - 10, 0], [$x, $h - 10, 0], 11, $frame),\n      $rod([-$x, $h - 10, $z * 0.5], [$x, $h - 10, $z * 0.5], 11, $frame),\n      $box([$w * 0.22, $min([750, $h * 0.6]), 12], [-$w * 0.3, $h - 20 - $min([750, $h * 0.6]) / 2, -$z * 0.5], 'bedding', 4),\n      $box([$w * 0.16, $min([500, $h * 0.6]), 12], [-$w * 0.02, $h - 20 - $min([500, $h * 0.6]) / 2, 0], 'linen', 4),\n      $box([$w * 0.2, $min([620, $h * 0.6]), 12], [$w * 0.22, $h - 20 - $min([620, $h * 0.6]) / 2, $z * 0.5], 'canvas2', 4),\n      $box([$w * 0.1, $min([400, $h * 0.6]), 12], [$w * 0.36, $h - 20 - $min([400, $h * 0.6]) / 2, -$z * 0.5], 'fabric', 4)\n    ]\n  )"
+    },
+    "canopy": {
+      "name": {"zh": "遮阳棚", "en": "Canopy"},
+      "for": ["furniture:canopy"],
+      "newType": {"name": {"zh": "遮阳棚", "en": "Canopy"}, "group": "roof", "size": {"w": 3000, "d": 2800, "h": 2500}},
+      "version": "1.0.0",
+      "params": {
+        "fabric": {
+          "type": "string",
+          "format": "material",
+          "default": "canvas",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "布面", "en": "Fabric"},
+          "description": "Material of the frame, arms and back"
+        },
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "default": "iron",
+          "enum": ["birch", "wood", "woodDark", "white", "dark", "metal", "iron"],
+          "title": {"zh": "框架", "en": "Frame"},
+          "description": "Material of the frame"
+        }
+      },
+      "script": "(\n    $fall := $min([250, $h * 0.1]);\n    $post := 60;\n    $slope := $atan2($fall, $d);\n    $len := $hypot($d, $fall);\n    [\n      [0..3].(\n        $i := $;\n        $sx := $i % 2 * 2 - 1;\n        $sz := $floor($i / 2) * 2 - 1;\n        $ph := $h - ($sz > 0 ? $fall : 0) - 60;\n        [\n          $box([$post, $ph, $post], [$sx * ($w / 2 - $post / 2), 0 + $ph / 2, $sz * ($d / 2 - $post / 2)], $frame, 10)\n        ]\n      ),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([60, 100, $len], [$s * ($w / 2 - $post / 2), $h - $fall / 2 - 90, 0], $frame, 10, [$slope, 0, 0]),\n          $box([$w, 100, 60], [0, $h - 90 - ($s > 0 ? $fall : 0), $s * ($d / 2 - $post / 2)], $frame, 10)\n        ]\n      ),\n      $box([$w + 100, 30, $len + 100], [0, $h - $fall / 2 - 20, 0], $fabric, 10, [$slope, 0, 0])\n    ]\n  )"
+    },
+    "awning2": {
+      "name": {"zh": "伸缩遮阳棚", "en": "Retractable awning"},
+      "for": ["furniture:awning2"],
+      "newType": {"name": {"zh": "伸缩遮阳棚", "en": "Retractable awning"}, "group": "roof", "size": {"w": 1200, "d": 2800, "h": 400}},
+      "version": "1.0.0",
+      "params": {
+        "fabric": {
+          "type": "string",
+          "format": "material",
+          "default": "fabric",
+          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "title": {"zh": "布面", "en": "Fabric"},
+          "description": "Material of the frame, arms and back"
+        }
+      },
+      "script": "(\n    $y0 := $h - 80;\n    $z0 := -$d / 2 + 140;\n    $y1 := 60;\n    $z1 := $d / 2 - 30;\n    $len := $hypot($z1 - $z0, $y0 - $y1);\n    $slope := $atan2($y0 - $y1, $z1 - $z0);\n    [\n      $box([$w, 140, 160], [0, $h - 140 + 140 / 2, -$d / 2 + 80], 'white', 30),\n      $box([$w - 20, 8, $len], [0, ($y0 + $y1) / 2, ($z0 + $z1) / 2], $fabric, 2, [$slope, 0, 0]),\n      $box([$w - 20, 100, 8], [0, $y1 - 100 + 100 / 2, $z1], $fabric, 2),\n      $box([$w, 40, 50], [0, $y1, $z1 - 10], 'white', 10),\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $rod([$s * ($w / 2 - 80), $y0 - 40, $z0], [$s * ($w / 2 - 150), ($y0 + $y1) / 2 - 50, ($z0 + $z1) / 2], 15, 'metal'),\n          $rod([$s * ($w / 2 - 150), ($y0 + $y1) / 2 - 50, ($z0 + $z1) / 2], [$s * ($w / 2 - 80), $y1 - 10, $z1 - 30], 15, 'metal')\n        ]\n      )\n    ]\n  )"
+    },
+    "planter": {
+      "name": {"zh": "种植池", "en": "Planter"},
+      "for": ["furniture:planter"],
+      "newType": {"name": {"zh": "种植池", "en": "Planter"}, "group": "yard", "size": {"w": 1000, "d": 1000, "h": 450}},
+      "version": "1.0.0",
+      "params": {
+        "wood": {
+          "type": "string",
+          "format": "material",
+          "default": "woodDark",
+          "enum": ["birch", "wood", "woodDark", "white", "dark"],
+          "title": {"zh": "木材", "en": "Wood"},
+          "description": "Material of the wooden parts"
+        }
+      },
+      "seed": 7,
+      "script": "(\n    $t := 40;\n    $n := $max([1, $round(($w - 2 * $t) * ($d - 2 * $t) / 120000)]);\n    [\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w, $h, $t], [0, 0 + $h / 2, $s * ($d / 2 - $t / 2)], $wood, 4),\n          $box([$t, $h, $d], [$s * ($w / 2 - $t / 2), 0 + $h / 2, 0], $wood, 4)\n        ]\n      ),\n      [0..$floor($max([1, $floor($h / 120)])) - 1].(\n        $i := $;\n        [\n          [0..1].(\n            $i := $;\n            $s := $i * 2 - 1;\n            [\n              $noplan($box([$w + 2, 6, $t + 2], [0, ($i + 1) * $h / ($floor($h / 120) + 1) + 6 / 2, $s * ($d / 2 - $t / 2)], 'dark', 2))\n            ]\n          )\n        ]\n      ),\n      $box([$w - 2 * $t, $h - 60, $d - 2 * $t], [0, 0 + ($h - 60) / 2, 0], 'soil', 5),\n      [0..$floor($n) - 1].(\n        $i := $;\n        $r := $min([120 + $rnd($i + 0.6) * 100, ($min([$w, $d]) - 2 * $t) / 2]);\n        $x := ($rnd($i) - 0.5) * $max([0, $w - 2 * $t - 2.8 * $r]);\n        $z := ($rnd($i + 0.3) - 0.5) * $max([0, $d - 2 * $t - 2.8 * $r]);\n        [\n          $rnd($i + 0.1) < 0.5 ? [\n              $sphere($r, [$x, $h - 60 + $r * 0.6, $z], 'leaf', [1, 0.85, 1])\n            ] : [\n              $sphere($r, [$x, $h - 60 + $r * 0.6, $z], 'leaf2', [1, 0.85, 1])\n            ],\n          $rnd($i + 0.8) < 0.5 ? [\n              $sphere(35, [$x + $r * 0.4, $h - 60 + $r * 1.2, $z + $r * 0.3], 'flower')\n            ] : []\n        ]\n      )\n    ]\n  )"
+    },
+    "window": {
+      "name": {"zh": "窗", "en": "Window"},
+      "for": ["opening:window", "opening:sliding-door"],
+      "group": "openings",
+      "version": "1.0.0",
+      "script": "(\n    $fw := 40;\n    $fd := 50;\n    [\n      $box([$w, $h, $min([30, $d])], [0, $h / 2, 0], 'glass'),\n      $box([$w, $fw, $fd], [0, 0 + $fw / 2, 0], 'frame', 0),\n      $box([$w, $fw, $fd], [0, $h - $fw + $fw / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [-$w / 2 + $fw / 2, 0 + $h / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [$w / 2 - $fw / 2, 0 + $h / 2, 0], 'frame', 0)\n    ]\n  )"
+    },
+    "glass-block": {
+      "name": {"zh": "玻璃砖窗", "en": "Glass-block window"},
+      "for": ["opening:glass-block"],
+      "group": "openings",
+      "version": "1.0.0",
+      "script": "[\n    $box([$w, $h, $min([80, $d])], [0, $h / 2, 0], 'glassBlock')\n  ]"
+    },
+    "railing": {
+      "name": {"zh": "栏杆", "en": "Railing"},
+      "for": ["wall:railing"],
+      "group": "building",
+      "version": "1.0.0",
+      "params": {
+        "infill": {
+          "type": "string",
+          "enum": ["glass", "bars"],
+          "enumTitles": [{"zh": "玻璃", "en": "Glass"}, {"zh": "竖杆", "en": "Bars"}],
+          "default": "glass",
+          "title": {"zh": "栏板", "en": "Infill"},
+          "description": "A glass panel, or vertical bars about 110 mm apart"
+        },
+        "frame": {
+          "type": "string",
+          "format": "material",
+          "enum": ["dark", "metal", "white", "wood", "woodDark"],
+          "default": "dark",
+          "title": {"zh": "扶手立柱", "en": "Rail and posts"},
+          "description": "Material of the handrail and posts"
+        }
+      },
+      "script": "(\n  $post := 50;\n  $n := $max([1, $ceil($w / 1200)]);\n  $step := ($w - $post) / $n;\n  $rail := $max([$d, 50]);\n  [\n    [0..$n].(\n      $i := $;\n      $box([$post, $h - 40, $post], [-$w / 2 + $post / 2 + $i * $step, ($h - 40) / 2, 0], $frame, 4)\n    ),\n    $box([$w, 40, $rail], [0, $h - 20, 0], $frame, 10),\n    $infill = 'glass'\n      ? [$box([$w - $post, $h - 200, 12], [0, 100 + ($h - 200) / 2, 0], 'glass')]\n      : [\n          $box([$w, 30, 30], [0, 100, 0], $frame, 4),\n          [0..$max([0, $floor(($w - $post) / 110) - 1])].(\n            $j := $;\n            $box([16, $h - 140, 16], [-$w / 2 + $post / 2 + 110 * ($j + 1), 100 + ($h - 140) / 2, 0], $frame, 3)\n          )\n        ]\n  ]\n)"
+    },
+    "element": {
+      "name": {"zh": "楼梯 · 水池 · 地漏", "en": "Stairs, ponds and drains"},
+      "for": ["element:stair", "element:pond", "element:drain"],
+      "group": "building",
+      "version": "1.0.0",
+      "script": "[\n    $base({\"structure\":\"wall\",\"water\":\"water\",\"grate\":\"grate\"})\n  ]"
+    }
+  }
+}

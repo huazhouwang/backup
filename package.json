@@ -1,0 +1,29 @@
+{
+  "name": "plinth",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "extract": "node scripts/extract-legacy.mjs",
+    "convert": "tsx scripts/convert-legacy.ts",
+    "test": "vitest run --dir packages/core",
+    "typecheck": "tsc -p packages/core --noEmit",
+    "bench": "tsx packages/core/bench/transactions.ts",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.0.0",
+    "oxfmt": "0.74.0",
+    "oxlint": "1.89.0",
+    "playwright": "1.56.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.5"
+  }
+}
