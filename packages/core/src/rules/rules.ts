@@ -4,6 +4,7 @@ import { openingSpaces, overlapArea, spaceWalls } from '../geometry/topology.js'
 import { text } from '../i18n.js';
 import { BEDROOM_NAME } from '../model/names.js';
 import type { Id, Polygon, Project, Space, Wall } from '../model/schema.js';
+import { checkIntegrity } from './integrity.js';
 
 export interface Issue {
   code: string;
@@ -134,5 +135,6 @@ export function checkRules(p: Project): Issue[] {
       });
   }
 
+  out.push(...checkIntegrity(p));
   return out;
 }

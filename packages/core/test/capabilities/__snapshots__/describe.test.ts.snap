@@ -1114,6 +1114,44 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Add level",
   },
   {
+    "description": "Rename a level or change its storey height. Levels are a stack, so the levels above move up or down with it; walls attached to the level above (no height of their own) follow the new height, and the change is refused if something would no longer fit (a window above its wall, furniture above the ceiling). The roof level has no storey height.",
+    "examples": [
+      {
+        "input": {
+          "height": 3000,
+          "level": "L2",
+        },
+        "note": "The second floor 3 m high; the floors above move down to suit",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number",
+        },
+        "level": {
+          "description": "ID or name of the level (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "level",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "level_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Change level",
+  },
+  {
     "description": "Delete a level with all its walls, spaces and furniture. Levels above move down. Affects the main design and needs owner confirmation.",
     "examples": [],
     "input": {

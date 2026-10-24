@@ -3,6 +3,7 @@ import { upgradeLegacyStairs } from '../legacy/stairs.js';
 import { nameIn } from '../looks/material.js';
 import { DEFAULT_MATERIALS, DEFAULT_TYPES } from '../looks/builtin.js';
 import { normalizeRecipe } from '../looks/recipe-convert.js';
+import { heightsFromElevations } from './levels.js';
 import { SCHEMA, SCHEMA_VERSION, type Project } from './schema.js';
 
 /**
@@ -31,6 +32,9 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   5: doc => doc,
   // v7: look libraries as files (#93)
   6: doc => toV7(doc),
+  // v8: levels are a stack (each elevation is the one below's plus its storey height); storeys reach the next level, so
+  // nothing moves
+  7: doc => ({ ...doc, levels: heightsFromElevations(doc.levels ?? []) }),
 };
 
 /** Furniture types merged in v7: the same design at another size or shape (the planting bed "bed" frees its key for the bed) */

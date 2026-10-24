@@ -1,5 +1,6 @@
 /** The project data model: its schema, migrations from older versions, validation, the names it writes, and what is derived from it */
 export * from './schema.js';
+export * from './levels.js';
 export * from './migrate.js';
 export * from './validate.js';
 export * from './catalog.js';

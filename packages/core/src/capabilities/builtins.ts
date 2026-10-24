@@ -5,7 +5,7 @@ import { wallAdd, wallMove, wallRemove, wallUpdate } from './wall.js';
 import { openingAdd, openingRemove, openingUpdate } from './opening.js';
 import { roomAdd, spaceAdd, spaceMerge, spaceRemove, spaceSetArea, spaceUpdate } from './space.js';
 import { furnitureAdd, furnitureMove, furnitureRemove } from './furniture.js';
-import { levelAdd, levelRemove } from './level.js';
+import { levelAdd, levelRemove, levelUpdate } from './level.js';
 import { briefUpdate, constraintAdd, constraintRemove, decisionAdd } from './relation.js';
 import { historyLog, historyRedo, historyUndo } from './history.js';
 import { batchCapability, searchCapabilitiesFor } from './meta.js';
@@ -48,6 +48,7 @@ export const BUILTIN: Capability[] = [
   furnitureMove,
   furnitureRemove,
   levelAdd,
+  levelUpdate,
   levelRemove,
   constraintAdd,
   constraintRemove,

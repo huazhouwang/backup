@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { defineEdit } from './capability.js';
 import { TxError } from '../session/session.js';
 import { text } from '../i18n.js';
+import { restackLevels } from '../model/levels.js';
 import type { Level } from '../model/schema.js';
 import { resolveLevel } from '../model/refs.js';
 import { addOpening, addSpace, addWall } from './edit-helpers.js';
@@ -37,6 +38,26 @@ export const levelAdd = defineEdit({
   },
 });
 
+export const levelUpdate = defineEdit({
+  name: 'level_update',
+  title: 'Change level',
+  description:
+    'Rename a level or change its storey height. Levels are a stack, so the levels above move up or down with it; walls attached to the level above (no height of their own) follow the new height, and the change is refused if something would no longer fit (a window above its wall, furniture above the ceiling). The roof level has no storey height.',
+  input: z.object({ level: zRef('level'), name: z.string().min(1).optional(), height: z.number().positive().optional() }),
+  label: (i, p) => text('log_level_update', 'Change {level}', { level: resolveLevel(p, i.level).name }),
+  apply: (p, i) => {
+    const lv = resolveLevel(p, i.level);
+    if (i.name) lv.name = i.name;
+    if (i.height != null) {
+      if (lv.roof) throw new TxError('invalid-input', text('err_roof_height', 'The roof level has no storey height; give its walls their own height'));
+      lv.height = i.height;
+      restackLevels(p);
+    }
+    return { id: lv.id, name: lv.name, elevation: lv.elevation, height: lv.height };
+  },
+  examples: [{ input: { level: 'L2', height: 3000 }, note: 'The second floor 3 m high; the floors above move down to suit' }],
+});
+
 export const levelRemove = defineEdit({
   name: 'level_remove',
   title: 'Delete level',
@@ -49,6 +70,7 @@ export const levelRemove = defineEdit({
     if (p.levels.filter(l => !l.roof).length <= 1 && !lv.roof) throw new TxError('invalid-input', text('err_last_level', 'At least one level must remain'));
     p.levels = p.levels.filter(l => l.id !== lv.id);
     for (const l of p.levels) if (l.elevation > lv.elevation) l.elevation -= lv.height;
+    restackLevels(p);
     p.walls = p.walls.filter(x => x.level !== lv.id);
     p.spaces = p.spaces.filter(x => x.level !== lv.id);
     p.furniture = p.furniture.filter(x => x.level !== lv.id);

@@ -13,7 +13,7 @@ import type { Material } from '../looks/material.js';
 import type { Recipe } from '../looks/script.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 7 as const;
+export const SCHEMA_VERSION = 8 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -68,9 +68,9 @@ export interface Site {
 export interface Level {
   id: Id;
   name: string;
-  /** Base elevation */
+  /** Base elevation. Levels are a stack (see levels.ts): each level's elevation is the one below's plus its storey height. */
   elevation: Mm;
-  /** Storey height; 0 for the roof level, whose walls must specify height */
+  /** Storey height, up to the next level; 0 for the roof level, whose walls must specify height */
   height: Mm;
   roof?: boolean;
 }
@@ -93,7 +93,10 @@ export interface Wall {
   look?: Id;
   /** Values for a railing's look parameters. Added in v7. */
   lookParams?: Record<string, string | number | boolean | null>;
-  /** Wall height; defaults to the level's storey height */
+  /**
+   * Wall height of its own (BIM's "unconnected height"); without it the wall is attached to the level above, as tall as its
+   * storey. A bearing or partition wall may be lower than its storey, but not rise through a slab above it.
+   */
   height?: Mm;
   openings: Opening[];
   extras?: Extras;

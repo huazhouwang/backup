@@ -1,5 +1,5 @@
 /** Units and sizes shared by everything drawn in 3D. Data is in millimetres, scenes in metres. */
-import type { Space } from '@plinth/core';
+import { SLAB_THICKNESS, type Space } from '@plinth/core';
 
 /** Millimetres to metres */
 export const M = 0.001;
@@ -22,5 +22,5 @@ export const footing = (elevation: number, groundLevel: number) => (elevation ==
 export function slabLevel(s: Space, elevation: number, groundLevel: number) {
   const outdoor = s.kind === 'outdoor';
   if (outdoor) return { y: elevation === 0 ? groundLevel + 20 : elevation, thickness: 20 };
-  return { y: elevation, thickness: Math.max(120, footing(elevation, groundLevel)) };
+  return { y: elevation, thickness: Math.max(SLAB_THICKNESS, footing(elevation, groundLevel)) };
 }

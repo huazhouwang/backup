@@ -1,6 +1,7 @@
 import { area } from '../geometry/geometry.js';
 import { text } from '../i18n.js';
 import { materialOf } from '../looks/builtin.js';
+import { levelsStacked } from './levels.js';
 import type { Project } from './schema.js';
 
 export interface ValidationIssue {
@@ -22,6 +23,11 @@ export function validate(p: Project): ValidationIssue[] {
   if (p.language !== 'zh' && p.language !== 'en')
     issues.push({ path: 'language', message: text('validate_language', 'Invalid project language {language}', { language: String(p.language) }) });
   p.levels.forEach((l, i) => claim(l.id, `levels[${i}]`));
+  if (!levelsStacked(p))
+    issues.push({
+      path: 'levels',
+      message: text('validate_level_stack', "Levels don't stack: a level's elevation must be the one below's plus its storey height"),
+    });
   p.walls.forEach((w, i) => {
     const at = `walls[${i}] (${w.name})`;
     claim(w.id, at);
