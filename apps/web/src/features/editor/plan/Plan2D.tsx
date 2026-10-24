@@ -6,8 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { wallBody, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
+import { holdAxis, snapMeasure } from './plan-measure';
 import { placeCall, type PlaceResult } from './plan-place';
-import { exteriorDimensions, selectionDimensions } from '@/graphics/plan/dimensions';
+import { exteriorDimensions, selectionDimensions, type DimChain } from '@/graphics/plan/dimensions';
 import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
 import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
@@ -126,6 +127,36 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(ref.current!.getScreenCTM()!.inverse());
     return [q.x, q.y];
   };
+  // The tape measure: two clicks give a distance; measurements stay until the tool is put away
+  const measuring = useEditor(s => s.measuring);
+  const [measures, setMeasures] = useState<[Point, Point][]>([]);
+  const [from, setFrom] = useState<Point | null>(null);
+  const [hover, setHover] = useState<{ point: Point; snapped: string | null } | null>(null);
+  useEffect(() => {
+    setMeasures([]);
+    setFrom(null);
+    setHover(null);
+  }, [measuring, view.level]);
+  const measurePoint = (e: React.MouseEvent) => {
+    const s = snapMeasure(project, view.level, pointMm(e), SNAP_PX * pxMm);
+    return from && e.shiftKey ? { point: holdAxis(from, s.point), snapped: s.snapped } : s;
+  };
+  const measureClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { point } = measurePoint(e);
+    if (!from) return setFrom(point);
+    if (Math.hypot(point[0] - from[0], point[1] - from[1]) > 1) setMeasures(ms => [...ms, [from, point]]);
+    setFrom(null);
+  };
+  const tape = (a: Point, b: Point): DimChain => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const dir: Point = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+    return { origin: a, dir, normal: [dir[1], -dir[0]], marks: [0, len], ext: 0 };
+  };
+  const tapes = [...measures, ...(from && hover ? [[from, hover.point] as [Point, Point]] : [])]
+    .filter(([a, b]) => Math.hypot(b[0] - a[0], b[1] - a[1]) > 1)
+    .map(([a, b]) => tape(a, b));
+
   const place = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!placing) return;
@@ -284,6 +315,38 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           {temporary.length > 0 && (
             <g data-feedback>
               <PlanDimensions chains={temporary} size={scale.size} line={screenLine} />
+            </g>
+          )}
+          {/* The tape measure: a sheet over the drawing takes the clicks; the snapped point shows as a dot */}
+          {measuring && (
+            <g data-feedback>
+              <PlanDimensions chains={tapes} size={scale.size} line={screenLine} color="var(--chart-2)" />
+              {[...measures.flat(), ...(from ? [from] : [])].map((q, i) => (
+                <circle key={i} cx={q[0]} cy={q[1]} r={3 * pxMm} fill="var(--chart-2)" pointerEvents="none" />
+              ))}
+              {hover && (
+                <circle
+                  cx={hover.point[0]}
+                  cy={hover.point[1]}
+                  r={(hover.snapped ? 6 : 4) * pxMm}
+                  fill={hover.snapped === 'corner' ? 'var(--chart-2)' : 'none'}
+                  stroke="var(--chart-2)"
+                  strokeWidth={2}
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+              )}
+              <rect
+                x={frame.x - frame.w}
+                y={frame.y - frame.h}
+                width={frame.w * 3}
+                height={frame.h * 3}
+                fill="transparent"
+                className="cursor-crosshair"
+                onPointerMove={e => setHover(measurePoint(e))}
+                onPointerLeave={() => setHover(null)}
+                onClick={measureClick}
+              />
             </g>
           )}
           {/* Place mode: a sheet over the drawing takes the pointer, and the ghost shows where it would go */}

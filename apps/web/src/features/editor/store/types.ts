@@ -65,6 +65,8 @@ export interface EditorState {
   planUntil3D: boolean;
   /** Place mode (see Placing); null when not placing */
   placing: Placing | null;
+  /** The tape measure is out: clicks in the plan or the 3D view measure instead of selecting */
+  measuring: boolean;
 }
 
 export interface EditorActions {
@@ -76,6 +78,7 @@ export interface EditorActions {
   setLeave3D(fn: (() => Promise<void>) | null): void;
   setPlanUntil3D(on: boolean): void;
   setPlacing(p: Placing | null): void;
+  setMeasuring(on: boolean): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

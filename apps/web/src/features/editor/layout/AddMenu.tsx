@@ -1,6 +1,6 @@
 /**
  * The add palette, as SketchUp's component browser: doors and windows, and the design's furniture types by group. Picking one
- * enters place mode (the plan shows where it goes; a click puts it down).
+ * enters place mode (the plan shows where it goes; a click puts it down). And the hint shown while placing or measuring.
  */
 import type { OpeningKind } from '@plinth/core';
 import { PlusIcon } from 'lucide-react';
@@ -63,19 +63,33 @@ export function AddMenu() {
   );
 }
 
-/** While placing: what to do, and a way out */
-export function PlaceHint({ className }: { className?: string }) {
+/** While placing or measuring: what to do, and a way out */
+export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
+  const measuring = useEditor(s => s.measuring);
+  const setMeasuring = useEditor(s => s.setMeasuring);
+  const mode = useEditor(s => s.view.mode);
   const furniture = useEditor(s => s.project.library.furniture);
-  if (!placing) return null;
-  const name = placing.kind === 'furniture' ? (furniture[placing.type]?.name ?? placing.type) : kindLabel(placing.opening);
+  let text: string | null = null;
+  if (placing && mode === '2d') {
+    const name = placing.kind === 'furniture' ? (furniture[placing.type]?.name ?? placing.type) : kindLabel(placing.opening);
+    text = placing.kind === 'opening' ? m.add_hint_opening({ name }) : m.add_hint_furniture({ name });
+  } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
+  if (!text) return null;
   return (
     <div className={className}>
       <div className="flex items-center gap-2 rounded-lg bg-background px-3 py-1.5 text-sm shadow-md ring-1 ring-foreground/10">
-        <span>{placing.kind === 'opening' ? m.add_hint_opening({ name }) : m.add_hint_furniture({ name })}</span>
-        <Button size="xs" variant="outline" onClick={() => setPlacing(null)}>
-          {m.add_cancel()}
+        <span>{text}</span>
+        <Button
+          size="xs"
+          variant="outline"
+          onClick={() => {
+            setPlacing(null);
+            setMeasuring(false);
+          }}
+        >
+          {placing ? m.add_cancel() : m.measure_done()}
         </Button>
       </div>
     </div>

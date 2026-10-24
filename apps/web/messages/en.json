@@ -779,5 +779,9 @@
   "add_hint_furniture": "Click the plan to place the {name}",
   "add_cancel": "Cancel",
   "plan_rotate_handle": "Drag to rotate",
-  "editor_delete_label": "Delete {count} objects"
+  "editor_delete_label": "Delete {count} objects",
+  "measure_tool": "Tape measure",
+  "measure_hint_plan": "Click two points to measure; hold Shift to keep it straight",
+  "measure_hint_3d": "Tap two points on the model to measure",
+  "measure_done": "Done"
 }

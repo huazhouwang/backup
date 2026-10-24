@@ -1,4 +1,4 @@
-import { BoxIcon, CrosshairIcon, LayersIcon, SquareIcon } from 'lucide-react';
+import { BoxIcon, CrosshairIcon, LayersIcon, RulerIcon, SquareIcon } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,8 @@ import { useEditor } from '../store';
 import { AddMenu } from './AddMenu';
 
 /**
- * View tools, floating over the canvas top-right: in the plan the add palette, in 3D the cutaway toggle, fit all, and the
- * view switch (showing the view you are in; pressing it goes to the other one).
+ * View tools, floating over the canvas top-right: in the plan the add palette, in 3D the cutaway toggle, the tape measure, fit
+ * all, and the view switch (showing the view you are in; pressing it goes to the other one).
  */
 export function CanvasTools({ className }: { className?: string }) {
   const view = useEditor(s => s.view);
@@ -19,6 +19,8 @@ export function CanvasTools({ className }: { className?: string }) {
   const leave3D = useEditor(s => s.leave3D);
   const setPlanUntil3D = useEditor(s => s.setPlanUntil3D);
   const setPlacing = useEditor(s => s.setPlacing);
+  const measuring = useEditor(s => s.measuring);
+  const setMeasuring = useEditor(s => s.setMeasuring);
   const canEdit = useEditor(s => s.canEdit());
   const [switching, setSwitching] = useState(false);
   const to = view.mode === '2d' ? '3d' : '2d';
@@ -57,6 +59,23 @@ export function CanvasTools({ className }: { className?: string }) {
           <TooltipContent>{cutaway ? m.model3d_whole() : m.model3d_cutaway()}</TooltipContent>
         </Tooltip>
       )}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Toggle
+              size="sm"
+              variant="outline"
+              className="bg-background aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+              pressed={measuring}
+              onPressedChange={setMeasuring}
+              aria-label={m.measure_tool()}
+            />
+          }
+        >
+          <RulerIcon />
+        </TooltipTrigger>
+        <TooltipContent>{m.measure_tool()}</TooltipContent>
+      </Tooltip>
       <Tooltip>
         <TooltipTrigger render={<Button size="icon-sm" variant="outline" className="bg-background" onClick={fitView} aria-label={m.canvas_fit()} />}>
           <CrosshairIcon />

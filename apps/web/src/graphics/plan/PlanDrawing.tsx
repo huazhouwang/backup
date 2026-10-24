@@ -160,10 +160,10 @@ export function PlanLabels({ shapes, pick }: { shapes: LevelShapes; pick?: Pick 
  * Architectural dimensions (see dimensions.ts): a thin line, extension lines, 45° ticks at the marks and each segment's length in
  * millimetres beside the line; a value too long for its segment moves farther out, alternating, so neighbours don't collide
  */
-export function PlanDimensions({ chains, size, line }: { chains: DimChain[]; size: number; line: Line }) {
+export function PlanDimensions({ chains, size, line, color = 'var(--foreground)' }: { chains: DimChain[]; size: number; line: Line; color?: string }) {
   const tick = size * 0.45;
   return (
-    <g pointerEvents="none" fontFamily="var(--font-mono)" fontSize={size} fill="var(--foreground)" textAnchor="middle">
+    <g pointerEvents="none" fontFamily="var(--font-mono)" fontSize={size} fill={color} textAnchor="middle">
       {chains.map((c, k) => {
         const at = (t: number, off = 0): [number, number] => [c.origin[0] + c.dir[0] * t + c.normal[0] * off, c.origin[1] + c.dir[1] * t + c.normal[1] * off];
         const a = at(c.marks[0]),
@@ -177,7 +177,7 @@ export function PlanDimensions({ chains, size, line }: { chains: DimChain[]; siz
         let out = 0;
         return (
           <g key={k}>
-            <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="var(--foreground)" {...line(0.6)} />
+            <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={color} {...line(0.6)} />
             {c.marks.map((t, i) => {
               const [x, y] = at(t);
               const [ex, ey] = at(t, -c.ext);
@@ -186,8 +186,8 @@ export function PlanDimensions({ chains, size, line }: { chains: DimChain[]; siz
               const d: [number, number] = [(c.dir[0] + c.normal[0]) * tick * 0.7, (c.dir[1] + c.normal[1]) * tick * 0.7];
               return (
                 <g key={i}>
-                  <line x1={ex} y1={ey} x2={fx} y2={fy} stroke="var(--foreground)" {...line(0.6)} />
-                  <line x1={x - d[0]} y1={y - d[1]} x2={x + d[0]} y2={y + d[1]} stroke="var(--foreground)" {...line(1.4)} />
+                  <line x1={ex} y1={ey} x2={fx} y2={fy} stroke={color} {...line(0.6)} />
+                  <line x1={x - d[0]} y1={y - d[1]} x2={x + d[0]} y2={y + d[1]} stroke={color} {...line(1.4)} />
                 </g>
               );
             })}

@@ -1,12 +1,12 @@
 /**
  * Editor UI state the canvas and the panels share: the before/after comparison, the screenshot, messages for the agent, the 2D/3D
- * switch, place mode
+ * switch, place mode, the tape measure
  */
 import type { StoreContext } from './create';
 import type { EditorActions, EditorState } from './types';
 
-type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing'> &
-  Pick<EditorActions, 'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing'>;
+type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring'> &
+  Pick<EditorActions, 'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing' | 'setMeasuring'>;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
   compare: false,
@@ -16,6 +16,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   leave3D: null,
   planUntil3D: false,
   placing: null,
+  measuring: false,
 
   setCompare(on) {
     set({ compare: on });
@@ -38,6 +39,10 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   },
 
   setPlacing(placing) {
-    set({ placing });
+    set({ placing, ...(placing ? { measuring: false } : {}) });
+  },
+
+  setMeasuring(measuring) {
+    set({ measuring, ...(measuring ? { placing: null } : {}) });
   },
 });

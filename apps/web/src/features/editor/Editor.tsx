@@ -76,6 +76,7 @@ export function Editor({ initial, search }: { initial: InitialProject; search: {
         else s.undo();
       } else if (e.key === 'Escape') {
         if (s.placing) s.setPlacing(null);
+        else if (s.measuring) s.setMeasuring(false);
         else s.select([]);
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && s.canEdit() && s.view.selection.length) {
         // Delete the selection as one edit, by the same rules as the panel's buttons (bearing walls stay)

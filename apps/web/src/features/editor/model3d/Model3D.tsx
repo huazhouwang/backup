@@ -37,6 +37,7 @@ import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
+import { Measure3D } from './Measure3D';
 import { ElementExtras, Furniture, OpeningLook, RailingLook, RoofMesh, Slab, SolidMesh, WallMesh } from './meshes';
 import { detectQuality, isTouchDevice, Renderer, type Quality } from './Renderer';
 import { Reveal } from './Reveal';
@@ -271,6 +272,7 @@ export function Model3D() {
           <CameraRig box={box} levels={levels} current={current?.id ?? ''} growing={growing} drawings={drawings} growth={growth} projectId={projectId} />
           <SafariPinch />
           <Picker />
+          <Measure3D />
           <Reveal ownerOf={ownerOf} />
           <Renderer draw={draw} edges={style.edges} edgeColor={c.edge} growth={growth} />
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
