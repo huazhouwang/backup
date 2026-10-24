@@ -25,7 +25,7 @@ import { themeColor } from '@/lib/theme';
 import { modelStyle } from '../model-style';
 import { materialPattern } from '../plan/floor-materials';
 import { floorTexture } from './floor-textures';
-import { BIRD, FOV, framed } from './framing';
+import { BIRD, FOV, framed, nearPlane } from './framing';
 import { withStillRenderer } from './look-preview';
 import { lookMaterial, partsGeometry } from './looks';
 import {
@@ -180,8 +180,8 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, W: number, H: num
   const sun = sunLight(color('--canvas-sun'), center, radius);
   scene.add(sun, sun.target);
 
-  const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.05, radius * 40);
   const pose = framed(box, W / H, BIRD);
+  const camera = new THREE.PerspectiveCamera(FOV, W / H, nearPlane(pose.pos.distanceTo(pose.target)), radius * 40);
   camera.position.copy(pose.pos);
   camera.lookAt(pose.target);
 

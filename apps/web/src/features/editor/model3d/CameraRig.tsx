@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { hops } from '@/canvas/hop';
 import { planFrame } from '@/graphics/plan/plan-geometry';
 import { useEditor } from '../store';
-import { BIRD, FOV, framed, type Pose } from '@/graphics/three/framing';
+import { BIRD, FOV, framed, nearPlane, type Pose } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
 
 export type Orbit = { target: THREE.Vector3; enabled: boolean; update(): void };
@@ -141,6 +141,16 @@ export function CameraRig({
     const dir = direction();
     run(framed(box, size.width / size.height, dir.y > 0.99 ? BIRD : dir), 600);
   }, [fitRequest]);
+
+  // The near plane follows the distance, so depth stays precise however far the camera zooms out
+  useFrame(() => {
+    if (!orbit || !(camera instanceof THREE.PerspectiveCamera)) return;
+    const near = nearPlane(camera.position.distanceTo(orbit.target));
+    if (Math.abs(near - camera.near) > near * 0.05) {
+      camera.near = near;
+      camera.updateProjectionMatrix();
+    }
+  });
 
   useFrame(({ invalidate }, dt) => {
     const a = anim.current;

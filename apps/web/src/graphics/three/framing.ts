@@ -8,6 +8,12 @@ export type Pose = { pos: THREE.Vector3; target: THREE.Vector3 };
 export const FOV = 40;
 /** How much of the view the framed model fills (in its tighter direction) */
 const FILL = 0.86;
+/**
+ * The near plane for a camera this far from what it looks at (metres). Depth precision falls with the square of the distance over
+ * the near plane: with a fixed 0.1 m, a phone framing a whole house from 60 m away resolves only about 2 mm, and floors flicker
+ * against the tops of the walls below them. At 2% of the distance it stays a fraction of a millimetre.
+ */
+export const nearPlane = (distance: number) => Math.max(0.05, distance * 0.02);
 /** Default viewing direction: from the south-east, looking down at about 45°, steep enough to see into the rooms */
 export const BIRD = new THREE.Vector3(0.9, 1.4, 1.1).normalize();
 
