@@ -1,6 +1,6 @@
 /**
  * A still of a whole house in 3D, for the design list: the same model as the editor's 3D view, built from the same scene layer
- * (./scene): walls in their finish, floors in their material, doors, windows, railings and furniture drawn by their looks,
+ * (./scene): walls in their finish, floors in their material, roofs over rooms with nothing above, doors, windows, railings and furniture drawn by their looks,
  * elements, standing on the ground under the same sky, seen from the 3D view's default direction, with its sun and shadows, in
  * the canvas's light theme. Drawn offscreen on the one renderer the look stills share (look-preview.ts), as a JPEG data URL.
  */
@@ -13,6 +13,8 @@ import {
   projectBoxes,
   projectElements,
   requestBuild,
+  roofs,
+  SLAB_THICKNESS,
   wallTarget,
   type Project,
   type Recipe,
@@ -103,6 +105,13 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, W: number, H: num
     const mesh = add(house, slabGeometry(s.shape, thickness), material);
     mesh.position.y = (y + 2 - thickness) * M;
     mesh.receiveShadow = true;
+  }
+
+  // Roofs over rooms with nothing above them
+  for (const r of roofs(p)) {
+    const mesh = add(house, slabGeometry(r.shape, SLAB_THICKNESS), standardMaterial(plain(white, 0.9)));
+    mesh.position.y = ((elev.get(r.level) ?? 0) + r.top + 2 - SLAB_THICKNESS) * M;
+    mesh.castShadow = mesh.receiveShadow = true;
   }
 
   // Walls in their finish, one solid each (glass is drawn by the openings' looks); railings by their look, piece by piece

@@ -1,10 +1,11 @@
 /**
  * Physical integrity, the way BIM tools keep a model buildable: walls attached to their storey don't rise through the slab above,
- * openings stay inside their host wall, furniture fits under the ceiling. Each is an error: the transaction pipeline rolls back a
+ * openings stay inside their host wall, furniture fits under the ceiling (a floor above, or a room's roof). Each is an error: the transaction pipeline rolls back a
  * change that introduces one, and tells the caller why.
  */
 import { pointAt, pointInPolygon, wallLength } from '../geometry/geometry.js';
 import { wallHeight } from '../geometry/mesh.js';
+import { roofs } from '../geometry/roofs.js';
 import { text } from '../i18n.js';
 import { levelAbove, SLAB_THICKNESS } from '../model/levels.js';
 import type { Id, Point, Project, Wall } from '../model/schema.js';
@@ -62,13 +63,15 @@ export function checkIntegrity(p: Project): Issue[] {
         });
   }
 
-  // Furniture fits under the ceiling: the storey less the slab of the floor above, where there is one
+  // Furniture fits under the ceiling: the slab of the floor above, or the roof of a room with nothing above it
+  const roofed = roofs(p);
   for (const f of p.furniture) {
     const lv = level.get(f.level);
-    if (!lv || lv.roof) continue;
-    const top = (f.elevation ?? 0) + f.size.h,
-      clear = lv.height - SLAB_THICKNESS;
-    if (top > clear + 1 && slabAbove(p, f.level, f.position))
+    if (!lv) continue;
+    const roof = roofed.find(r => r.level === f.level && r.shape.some(poly => pointInPolygon(f.position, poly)));
+    const clear = roof ? roof.top - SLAB_THICKNESS : !lv.roof && slabAbove(p, f.level, f.position) ? lv.height - SLAB_THICKNESS : undefined;
+    const top = (f.elevation ?? 0) + f.size.h;
+    if (clear !== undefined && top > clear + 1)
       out.push({
         code: 'furniture-above-ceiling',
         severity: 'error',

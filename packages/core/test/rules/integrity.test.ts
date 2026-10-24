@@ -146,10 +146,12 @@ describe('furniture fits under the ceiling', () => {
     await h.ok('furniture_add', { space: 'Living', type: 'wardrobe', size: { w: 1200, d: 600, h: 2400 } });
   });
 
-  it('on the top floor under the roof without a slab, there is no ceiling to hit', async () => {
+  it('a room with nothing above it has its roof for a ceiling', async () => {
     const h = harness(createProject({ id: 't', name: 'test' }));
     await h.ok('room_add', { level: 'L1', name: 'Hall', rect: [0, 0, 6000, 5000], wall_thickness: 240, wall_kind: 'bearing' });
-    await h.ok('furniture_add', { space: 'Hall', type: 'wardrobe', size: { w: 1200, d: 600, h: 2950 } });
+    const tall = await h.call('furniture_add', { space: 'Hall', type: 'wardrobe', size: { w: 1200, d: 600, h: 2950 } });
+    expect(codes(tall)).toContain('furniture-above-ceiling');
+    await h.ok('furniture_add', { space: 'Hall', type: 'wardrobe', size: { w: 1200, d: 600, h: 2400 } });
     expect(checkIntegrity(h.session.project)).toEqual([]);
   });
 });

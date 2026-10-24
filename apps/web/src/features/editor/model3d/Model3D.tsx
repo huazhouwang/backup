@@ -16,6 +16,7 @@ import {
   openingTarget,
   projectBoxes,
   projectElements,
+  roofs,
   type Solid,
   type Wall,
 } from '@plinth/core';
@@ -36,7 +37,7 @@ import { FloorDrawing, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
-import { ElementExtras, Furniture, OpeningLook, RailingLook, Slab, SolidMesh, WallMesh } from './meshes';
+import { ElementExtras, Furniture, OpeningLook, RailingLook, RoofMesh, Slab, SolidMesh, WallMesh } from './meshes';
 import { detectQuality, isTouchDevice, Renderer, type Quality } from './Renderer';
 import { Reveal } from './Reveal';
 import {
@@ -96,6 +97,7 @@ export function Model3D() {
   const boxes = useMemo(() => projectBoxes(project), [project]);
   const solids = useMemo(() => projectElements(project).flatMap(g => g.solids), [project]);
   const openings = useMemo(() => openingFrames(project), [project]);
+  const roofed = useMemo(() => roofs(project), [project]);
   const elementBuilt = (e: (typeof project.elements)[number]) => {
     const look = elementLook(project, e);
     return look.recipe ? getBuild(look.recipe, look.size, look.params) : undefined;
@@ -181,6 +183,12 @@ export function Model3D() {
                             materials={project.library.materials}
                             sel={sel.has(s.id) ? c.sel : undefined}
                           />
+                        ))}
+                      {/* Roofs over rooms with nothing above; the cutaway lifts the current floor's off, as it does the floors above */}
+                      {roofed
+                        .filter(r => r.level === l.id && !(view.layers.cutaway && l.id === current?.id))
+                        .map(r => (
+                          <RoofMesh key={`roof-${r.space}`} r={r} base={base} color={c.wall} sel={sel.has(r.space) ? c.sel : undefined} />
                         ))}
                       {project.walls
                         .filter(w => w.level === l.id)

@@ -1,6 +1,7 @@
-/** Plan geometry: polygons and areas, how walls, rooms and openings connect, wall meshes, and elements' solids */
+/** Plan geometry: polygons and areas, how walls, rooms and openings connect, wall meshes, elements' solids, and roofs */
 export * from './geometry.js';
 export * from './area.js';
 export * from './topology.js';
 export * from './mesh.js';
 export * from './elements.js';
+export * from './roofs.js';

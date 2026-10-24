@@ -1,11 +1,11 @@
 /**
  * The parts of a house in the 3D view, as react-three-fiber components over the shared scene layer (./scene): walls, floor slabs,
- * doors and windows, railings, elements and furniture. Each answers selection with a tint and an outline (see feedback.ts) and
+ * roofs, doors and windows, railings, elements and furniture. Each answers selection with a tint and an outline (see feedback.ts) and
  * records its id in userData for picking.
  */
 import { Edges } from '@react-three/drei';
-import type { Element, OpeningFrame, Project, Recipe, RecipeMaterial, Solid, Space, Wall } from '@plinth/core';
-import { footing, lookRecipe, materialOf, wallTarget, type Material } from '@plinth/core';
+import type { Element, OpeningFrame, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@plinth/core';
+import { footing, lookRecipe, materialOf, SLAB_THICKNESS, wallTarget, type Material } from '@plinth/core';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
@@ -63,6 +63,20 @@ export function Slab({
     <mesh ref={ref} geometry={geo} position={[0, bottom, 0]} receiveShadow userData={{ id: s.id, restY: bottom }}>
       {/* Remounted when the texture arrives: a material compiles once for having a map or not */}
       <meshStandardMaterial key={map ? 'map' : 'plain'} color={color} map={map} roughness={1} />
+      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+    </mesh>
+  );
+}
+
+/** A flat roof over a room with nothing above it (see roofs in @plinth/core), its top on the room's walls; picking it picks the room */
+export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: number; color: string }) {
+  const ref = useFeedback<THREE.Mesh>(r.space, color, !!o.sel);
+  const geo = useDisposed(useMemo(() => slabGeometry(r.shape, SLAB_THICKNESS), [r.shape]));
+  // Two millimetres up, like a floor: the walls end exactly at its top
+  const y = (base + r.top + 2 - SLAB_THICKNESS) * M;
+  return (
+    <mesh ref={ref} geometry={geo} position={[0, y, 0]} castShadow receiveShadow userData={{ id: r.space, restY: y }}>
+      <meshStandardMaterial color={color} roughness={0.9} />
       {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
     </mesh>
   );
