@@ -6,7 +6,7 @@ import { levelShapes } from './plan-geometry';
 
 const p: Project = migrate(sampleJson);
 const STEP = 600;
-const chains = (q: Project, level: string) => exteriorDimensions(q, level, levelShapes(q, level).bounds, STEP);
+const chains = (q: Project, level: string, size = 100) => exteriorDimensions(q, level, levelShapes(q, level).bounds, { size, step: STEP });
 const side = (cs: DimChain[], normal: [number, number]) =>
   cs.filter(c => c.normal[0] === normal[0] && c.normal[1] === normal[1]).map(c => c.marks.map(Math.round));
 
@@ -53,6 +53,14 @@ describe('exterior dimension chains', () => {
     const west = side(cs, [-1, 0]);
     expect(west.at(-2)).toEqual([30, 10490]);
     expect(west.at(-1)).toEqual([30, 13400]);
+  });
+
+  it('at a small scale (large values), crowded detail chains are left out; axes and overall stay', () => {
+    const north = side(chains(p, 'L1', 400), [0, -1]);
+    expect(north).toEqual([
+      [2120, 9580, 12900, 14900, 17380],
+      [2030, 17470],
+    ]);
   });
 
   it('chains sit outside the drawing, farther out in order', () => {

@@ -63,33 +63,49 @@ export const isGroundLevel = (p: Project, level: string) => p.levels.find(l => l
 
 /** Label size for a level, in millimetres */
 export const labelSize = ([x0, , x1]: LevelShapes['bounds']) => Math.max(220, Math.min(420, (x1 - x0) / 45));
-/** Size of dimension values for a level's label size (millimetres) */
-export const dimensionSize = (font: number) => font * 0.7;
-/** Distance between dimension chains for a level's label size (millimetres) */
-export const dimensionStep = (font: number) => font * 2.2;
+/** Dimension values are never drawn smaller than this on screen (pixels) */
+export const MIN_DIMENSION_PX = 9;
 
-/**
- * What the plan shows of a level, in millimetres: its drawing (and on the lowest floor the site boundary) plus a margin, wide
- * enough for the dimension chains around it when they are shown
- */
-/** Dimension values smaller than this on screen (pixels) can't be read */
-export const MIN_DIMENSION_PX = 7;
-
-/**
- * Whether the plan, fitted to a view of this size (pixels), makes room for the dimension chains: only when their values are
- * readable at that fit. On a phone they are not, and the drawing keeps the room; the chains show once zoomed in.
- */
-export function frameDimensions(p: Project, level: string, width: number, height: number) {
-  const f = planFrame(p, level, true);
-  return dimensionSize(labelSize(levelShapes(p, level).bounds)) * Math.min(width / f.w, height / f.h) >= MIN_DIMENSION_PX;
+/** How dimensions are sized (millimetres): their values' size and the distance between chains */
+export interface DimensionScale {
+  size: number;
+  step: number;
 }
 
-export function planFrame(p: Project, level: string, dimensions = false) {
-  const { bounds } = levelShapes(p, level);
-  let [x0, y0, x1, y1] = bounds;
+/**
+ * Dimension sizes for a level shown at a scale (screen pixels per millimetre): the plan's own size (a little smaller than its
+ * labels), grown where that would be too small to read, as CAD annotation keeps a readable size on screen. On a phone they grow.
+ */
+export function dimensionScale(bounds: LevelShapes['bounds'], pxPerMm = Infinity): DimensionScale {
+  const size = Math.max(labelSize(bounds) * 0.7, MIN_DIMENSION_PX / pxPerMm);
+  return { size, step: size * 2.6 };
+}
+
+/** The level's drawing extent: its shapes, and on the lowest floor the site boundary */
+function drawingExtent(p: Project, level: string) {
+  let [x0, y0, x1, y1] = levelShapes(p, level).bounds;
   if (isGroundLevel(p, level)) for (const [x, y] of p.site.boundary) [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
-  const pad = dimensions ? Math.max(PLAN_PAD, dimensionStep(labelSize(bounds)) * EXTERIOR_REACH) : PLAN_PAD;
-  return { x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad };
+  return [x0, y0, x1, y1] as const;
+}
+
+/**
+ * What the plan shows of a level, in millimetres: its drawing plus a margin. With `view` (the size it is fitted to, in pixels)
+ * the margin holds the dimension chains, sized to read at that fit, and their scale comes with the frame; 3D starts from the same.
+ */
+export function planFrame(p: Project, level: string, view?: { width: number; height: number } | false) {
+  const [x0, y0, x1, y1] = drawingExtent(p, level);
+  const framed = (pad: number) => ({ x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad });
+  let frame = framed(PLAN_PAD);
+  let dims: DimensionScale | undefined;
+  if (view && view.width > 0 && view.height > 0) {
+    const bounds = levelShapes(p, level).bounds;
+    // The chains' size depends on the scale, which depends on the margin they need: a few rounds settle it
+    for (let i = 0; i < 3; i++) {
+      dims = dimensionScale(bounds, Math.min(view.width / frame.w, view.height / frame.h));
+      frame = framed(Math.max(PLAN_PAD, dims.step * EXTERIOR_REACH));
+    }
+  }
+  return { ...frame, dims };
 }
 
 export const polyPath = (polys: Polygon[]) =>

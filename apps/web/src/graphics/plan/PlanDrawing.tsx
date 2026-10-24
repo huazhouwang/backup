@@ -8,7 +8,7 @@
 import type { Project } from '@plinth/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
-import { dimensionSize, isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
+import { isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
 import type { DimChain } from './dimensions';
 
 const pts = (p: [number, number][]) => p.map(([x, y]) => `${x},${y}`).join(' ');
@@ -160,9 +160,8 @@ export function PlanLabels({ shapes, pick }: { shapes: LevelShapes; pick?: Pick 
  * Architectural dimensions (see dimensions.ts): a thin line, extension lines, 45° ticks at the marks and each segment's length in
  * millimetres beside the line; a value too long for its segment moves farther out, alternating, so neighbours don't collide
  */
-export function PlanDimensions({ chains, font, line }: { chains: DimChain[]; font: number; line: Line }) {
-  const size = dimensionSize(font),
-    tick = size * 0.45;
+export function PlanDimensions({ chains, size, line }: { chains: DimChain[]; size: number; line: Line }) {
+  const tick = size * 0.45;
   return (
     <g pointerEvents="none" fontFamily="var(--font-mono)" fontSize={size} fill="var(--foreground)" textAnchor="middle">
       {chains.map((c, k) => {

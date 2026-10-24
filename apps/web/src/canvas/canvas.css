@@ -37,8 +37,3 @@ body {
   fill-opacity: 0;
   animation: plan-changed 2s ease-out;
 }
-
-/* Exterior dimensions hide on screen while too small to read (see Plan2D); exports don't carry this stylesheet */
-.plan-dims[data-hidden] {
-  display: none;
-}

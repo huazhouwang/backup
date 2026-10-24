@@ -131,9 +131,10 @@ export function Model3D() {
   // How far the house has grown out of the plan (0 flat, 1 built); the plan's paper fades with it
   const growth = useRef({ g: 1 });
   const sheet = useMemo(() => {
-    const { x, y, w, h } = planFrame(project, current?.id ?? levels[0]?.id ?? '', view.layers.dimensions);
+    // The margin around the drawing is even, so the centre is the same with or without dimensions
+    const { x, y, w, h } = planFrame(project, current?.id ?? levels[0]?.id ?? '');
     return { center: [(x + w / 2) * M, (y + h / 2) * M] as [number, number] };
-  }, [project, current?.id, view.layers.dimensions]);
+  }, [project, current?.id]);
 
   return (
     <div className="relative size-full">

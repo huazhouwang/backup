@@ -117,11 +117,15 @@ function openingEdges(front: Wall[], axis: 'x' | 'y') {
   });
 }
 
+/** Whether most of a chain's values fit their segments at this text size (a value is about 2.5 sizes wide) */
+const readable = (m: number[], size: number) => m.slice(1).filter((t, i) => t - m[i] < size * 2.5).length <= (m.length - 1) * 0.3;
+
 /**
- * The dimension chains around a level, outside its drawing's bounds. `step` is the distance between chains (the first sits one
- * and a half steps out).
+ * The dimension chains around a level, outside its drawing's bounds, sized by `scale` (the first chain sits one and a half steps
+ * out). A detail or axis chain too crowded to read at that size is left out, as a drawing at a smaller scale leaves out detail.
  */
-export function exteriorDimensions(p: Project, level: string, bounds: [number, number, number, number], step: number): DimChain[] {
+export function exteriorDimensions(p: Project, level: string, bounds: [number, number, number, number], scale: { size: number; step: number }): DimChain[] {
+  const { size, step } = scale;
   const onLevel = p.walls.filter(w => w.level === level && orientation(w));
   const storey = onLevel.filter(w => STOREY.has(w.kind)),
     enclosure = onLevel.filter(w => ENCLOSURE.has(w.kind));
@@ -133,8 +137,8 @@ export function exteriorDimensions(p: Project, level: string, bounds: [number, n
     if (front.length) {
       const axes = axesOf(storey, front, axis);
       const detail = marks([...axes, ...openingEdges(front, axis)]);
-      if (detail.length > axes.length) chains.push(detail);
-      chains.push(axes);
+      if (detail.length > axes.length && readable(detail, size)) chains.push(detail);
+      if (readable(axes, size)) chains.push(axes);
       const all = extent(storey, axis)!;
       chains.push(all);
       // The site or terrace: building and enclosure together, when the enclosure reaches beyond the building
@@ -156,7 +160,7 @@ export function exteriorDimensions(p: Project, level: string, bounds: [number, n
   return out;
 }
 
-/** How far the exterior chains reach beyond the drawing's bounds, at most, for framing (in steps) */
+/** How far the exterior chains reach beyond the drawing's bounds, at most, for framing (in steps, values included) */
 export const EXTERIOR_REACH = 5.5;
 
 /** Distance to the nearest wall face of the level in one direction from a box, within 10 m; null when none */

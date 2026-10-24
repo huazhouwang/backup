@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { exteriorDimensions } from '@/graphics/plan/dimensions';
-import { dimensionStep, labelSize, levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
+import { levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
 import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, scaledLine, type Line } from '@/graphics/plan/PlanDrawing';
 import type { Quality } from './Renderer';
 import { useBuildsVersion } from '@/lib/builds';
@@ -71,7 +71,8 @@ export function FloorDrawing({
   const size = useThree(s => s.size);
   const builds = useBuildsVersion();
   const shapes = useMemo(() => levelShapes(project, level), [project, level, builds]);
-  const frame = planFrame(project, level, dimensions);
+  // The plan's framing for this view, so the flat house matches it, dimensions sized as the plan sizes them
+  const frame = planFrame(project, level, dimensions && size);
   // The plan's scale on screen (it fits the framing to the view), for line widths
   const mmPerPx = Math.max(frame.w / size.width, frame.h / size.height);
   const [textures, setTextures] = useState<{ paper: THREE.Texture; ink: THREE.Texture } | null>(null);
@@ -100,12 +101,8 @@ export function FloorDrawing({
           <>
             <PlanDefs project={project} />
             <PlanPaper project={project} level={level} shapes={shapes} line={line} />
-            {dimensions && current && (
-              <PlanDimensions
-                chains={exteriorDimensions(project, level, shapes.bounds, dimensionStep(labelSize(shapes.bounds)))}
-                font={labelSize(shapes.bounds)}
-                line={line}
-              />
+            {current && frame.dims && (
+              <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, frame.dims)} size={frame.dims.size} line={line} />
             )}
           </>,
           pw,
@@ -226,7 +223,7 @@ export function GroundDimensions({
   const size = useThree(s => s.size);
   const builds = useBuildsVersion();
   const shapes = useMemo(() => levelShapes(project, level), [project, level, builds]);
-  const frame = planFrame(project, level, true);
+  const frame = planFrame(project, level, size);
   const mmPerPx = Math.max(frame.w / size.width, frame.h / size.height);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
@@ -236,10 +233,10 @@ export function GroundDimensions({
     const [w, h] = [Math.round(frame.w * k), Math.round(frame.h * k)];
     const texel = 1 / k;
     const line: Line = (width, dash) => ({ strokeWidth: Math.max(width * mmPerPx, texel * 1.5), strokeDasharray: dash?.map(d => d * mmPerPx).join(' ') });
-    const font = labelSize(shapes.bounds);
+    const dims = frame.dims!;
     const svg = markup(
       <svg xmlns="http://www.w3.org/2000/svg" viewBox={`${frame.x} ${frame.y} ${frame.w} ${frame.h}`} width={w} height={h}>
-        <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, dimensionStep(font))} font={font} line={line} />
+        <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, dims)} size={dims.size} line={line} />
       </svg>,
       doc,
     );
