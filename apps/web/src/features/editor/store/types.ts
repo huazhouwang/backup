@@ -16,8 +16,15 @@ export interface LastChange {
 /** What the user is placing from the add palette: it follows the pointer in the plan until a click puts it down */
 export type Placing = { kind: 'furniture'; type: string } | { kind: 'opening'; opening: OpeningKind };
 
-/** What the 3D view shows: the perspective model, an orthographic elevation (named by true north), or a section across a line */
-export type View3D = { kind: 'perspective' } | { kind: 'elevation'; side: 'north' | 'south' | 'east' | 'west' } | { kind: 'section'; a: Point; b: Point };
+/**
+ * What the 3D view shows: the perspective model, walking through it at eye height, an orthographic elevation (named by true
+ * north), or a section across a line
+ */
+export type View3D =
+  | { kind: 'perspective' }
+  | { kind: 'walk' }
+  | { kind: 'elevation'; side: 'north' | 'south' | 'east' | 'west' }
+  | { kind: 'section'; a: Point; b: Point };
 
 export interface ModelOption {
   id: string;

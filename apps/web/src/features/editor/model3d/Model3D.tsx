@@ -39,6 +39,7 @@ import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
 import { OrthoView } from './OrthoView';
+import { WalkView } from './WalkView';
 import { ElementExtras, Furniture, OpeningLook, RailingLook, RoofMesh, Slab, SolidMesh, WallMesh } from './meshes';
 import { detectQuality, isTouchDevice, Renderer, type Quality } from './Renderer';
 import { Reveal } from './Reveal';
@@ -95,7 +96,7 @@ export function Model3D() {
   const current = project.levels.find(l => l.id === view.level);
   // The whole house by default; the cutaway shows the current level and below, to look into it
   const view3d = useEditor(s => s.view3d);
-  // Elevations and sections show the whole house
+  // Walking, elevations and sections show the whole house
   const shown = project.levels.filter(l => view3d.kind !== 'perspective' || !view.layers.cutaway || !current || l.elevation <= current.elevation);
   const elev = new Map(project.levels.map(l => [l.id, l.elevation]));
   const boxes = useMemo(() => projectBoxes(project), [project]);
@@ -187,6 +188,7 @@ export function Model3D() {
                             s={s}
                             {...slabLevel(s, l.elevation, project.site.groundLevel)}
                             color={c.wall}
+                            ceiling={c.wall}
                             materials={project.library.materials}
                             sel={sel.has(s.id) ? c.sel : undefined}
                           />
@@ -276,6 +278,8 @@ export function Model3D() {
               />
               <CameraRig box={box} levels={levels} current={current?.id ?? ''} growing={growing} drawings={drawings} growth={growth} projectId={projectId} />
             </>
+          ) : view3d.kind === 'walk' ? (
+            <WalkView />
           ) : (
             <OrthoView key={JSON.stringify(view3d)} view3d={view3d} box={box} />
           )}
@@ -284,7 +288,7 @@ export function Model3D() {
           <Measure3D />
           <Reveal ownerOf={ownerOf} />
           {/* Elevations and sections read as drawings: always with edges */}
-          <Renderer draw={draw} edges={style.edges || view3d.kind !== 'perspective'} edgeColor={c.edge} growth={growth} />
+          <Renderer draw={draw} edges={style.edges || view3d.kind === 'elevation' || view3d.kind === 'section'} edgeColor={c.edge} growth={growth} />
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
           {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
           <Wake on={[view.selection, view.highlight]} />
@@ -292,7 +296,7 @@ export function Model3D() {
         </Canvas>
       </TintColors.Provider>
       <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground max-md:hidden">
-        {view3d.kind === 'perspective' ? m.model3d_hint() : m.model3d_hint_ortho()}
+        {view3d.kind === 'perspective' ? m.model3d_hint() : view3d.kind === 'walk' ? m.model3d_hint_walk() : m.model3d_hint_ortho()}
       </p>
     </div>
   );

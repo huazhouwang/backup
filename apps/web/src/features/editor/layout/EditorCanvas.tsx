@@ -51,7 +51,8 @@ export function EditorCanvas({ svgRef }: { svgRef?: React.RefObject<SVGSVGElemen
         <LevelSwitcher className="bg-background shadow-xs" />
       </div>
       <CanvasTools className="absolute top-2 right-2" />
-      <ToolHint className="absolute bottom-3 left-1/2 -translate-x-1/2" />
+      {/* Bottom centre; on a phone below the tools, clear of the tab bar */}
+      <ToolHint className="absolute bottom-3 left-1/2 w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 max-md:top-12 max-md:bottom-auto" />
     </>
   );
 }

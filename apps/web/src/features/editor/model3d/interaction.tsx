@@ -55,8 +55,8 @@ export function Picker() {
     const onUp = (e: PointerEvent) => {
       const d = down;
       down = null;
-      // The tape measure takes the taps while it is out (see Measure3D)
-      if (store.getState().measuring) return;
+      // The tape measure takes the taps while it is out (see Measure3D), and walking takes them to walk (see WalkView)
+      if (store.getState().measuring || store.getState().view3d.kind === 'walk') return;
       if (!d || d.id !== e.pointerId || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return;
       const r = el.getBoundingClientRect();
       raycaster.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);

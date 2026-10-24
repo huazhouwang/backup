@@ -42,21 +42,23 @@ export function WallMesh({ w, project, base, finish, ...o }: Outline & { w: Wall
   );
 }
 
-/** A space's floor slab with its top at `y` (millimetres) */
+/** A space's floor slab with its top at `y` (millimetres), in its floor material, with a white ceiling underneath */
 export function Slab({
   s,
   y,
   thickness,
   color,
   materials,
+  ceiling: ceilingColor,
   ...o
-}: Outline & { s: Space; y: number; thickness: number; color: string; materials: Record<string, Material> }) {
+}: Outline & { s: Space; y: number; thickness: number; color: string; materials: Record<string, Material>; ceiling: string }) {
   // The floor's material, as on the plan: its pattern, else its colour (white with a style that draws plain floors)
   const floor = modelStyle().floors === 'material' ? materialOf(s.floor, null, materials) : undefined;
   const map = useFloorTexture(useCanvasDocument(), s.floor, floor);
   if (floor && !map) color = materialStyle(floor).color;
   const ref = useFeedback<THREE.Mesh>(s.id, color, !!o.sel);
   const geo = useDisposed(useMemo(() => slabGeometry(s.shape, thickness), [s.shape, thickness]));
+  const ceiling = useDisposed(useMemo(() => slabGeometry(s.shape, 1), [s.shape]));
   // Two millimetres up: the walls of the floor below end exactly at this floor's level, and their tops would flicker through it
   const bottom = (y + 2 - thickness) * M;
   return (
@@ -64,6 +66,10 @@ export function Slab({
       {/* Remounted when the texture arrives: a material compiles once for having a map or not */}
       <meshStandardMaterial key={map ? 'map' : 'plain'} color={color} map={map} roughness={1} />
       {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+      {/* Its underside is the ceiling of the room below: painted white, a millimetre under the slab */}
+      <mesh geometry={ceiling} position={[0, -0.001, 0]} receiveShadow raycast={() => null} userData={{ noEdges: true }}>
+        <meshStandardMaterial color={ceilingColor} roughness={1} />
+      </mesh>
     </mesh>
   );
 }

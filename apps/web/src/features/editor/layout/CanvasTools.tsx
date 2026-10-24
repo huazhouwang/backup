@@ -19,6 +19,7 @@ import { AddMenu } from './AddMenu';
 
 const VIEW_LABEL: Record<string, () => string> = {
   perspective: m.view_perspective,
+  walk: m.view_walk,
   north: m.view_north,
   south: m.view_south,
   east: m.view_east,
@@ -28,7 +29,7 @@ const VIEW_LABEL: Record<string, () => string> = {
 
 /**
  * View tools, floating over the canvas top-right: in the plan the add palette and the section tool, in 3D the view menu
- * (perspective, elevations, the section) and the cutaway toggle, the tape measure, fit all, and the view switch (showing the view you are in; pressing it goes to the other one).
+ * (perspective, walking, elevations, the section) and the cutaway toggle, the tape measure, fit all, and the view switch (showing the view you are in; pressing it goes to the other one).
  */
 export function CanvasTools({ className }: { className?: string }) {
   const view = useEditor(s => s.view);
@@ -96,15 +97,15 @@ export function CanvasTools({ className }: { className?: string }) {
               value={viewValue}
               onValueChange={v =>
                 setView3d(
-                  v === 'perspective'
-                    ? { kind: 'perspective' }
+                  v === 'perspective' || v === 'walk'
+                    ? { kind: v }
                     : v === 'section'
                       ? view3d
                       : { kind: 'elevation', side: v as 'north' | 'south' | 'east' | 'west' },
                 )
               }
             >
-              {(['perspective', 'north', 'south', 'east', 'west'] as const).map(k => (
+              {(['perspective', 'walk', 'north', 'south', 'east', 'west'] as const).map(k => (
                 <DropdownMenuRadioItem key={k} value={k} closeOnClick>
                   {VIEW_LABEL[k]()}
                 </DropdownMenuRadioItem>

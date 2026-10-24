@@ -795,5 +795,7 @@
   "view_west": "西立面",
   "view_section": "剖面",
   "view_section_flip": "反方向看",
-  "model3d_hint_ortho": "拖动平移，双指或滚轮缩放"
+  "model3d_hint_ortho": "拖动平移，双指或滚轮缩放",
+  "view_walk": "漫游",
+  "model3d_hint_walk": "拖动环顾，点地面走过去，滚轮前后走，WASD 或方向键移动，Esc 退出"
 }

@@ -17,7 +17,7 @@ import type { View3D } from '../store/types';
 import { resumeOrbit } from './CameraRig';
 
 /** The viewer's side, in plan millimetres (unit vector from the house towards the camera) */
-function viewSide(v: Exclude<View3D, { kind: 'perspective' }>, northAngle: number): Point {
+function viewSide(v: Extract<View3D, { kind: 'elevation' | 'section' }>, northAngle: number): Point {
   if (v.kind === 'section') return sectionAxes(v).n;
   // True north on the drawing, turned clockwise from up (-y) by the site's north angle
   const r = (northAngle * Math.PI) / 180;
@@ -27,7 +27,7 @@ function viewSide(v: Exclude<View3D, { kind: 'perspective' }>, northAngle: numbe
   return [north[0] * Math.cos(t) - north[1] * Math.sin(t), north[0] * Math.sin(t) + north[1] * Math.cos(t)];
 }
 
-export function OrthoView({ view3d, box }: { view3d: Exclude<View3D, { kind: 'perspective' }>; box: THREE.Box3 }) {
+export function OrthoView({ view3d, box }: { view3d: Extract<View3D, { kind: 'elevation' | 'section' }>; box: THREE.Box3 }) {
   const project = useEditor(s => s.project);
   const projectId = useEditor(s => s.projectId);
   const setPlanUntil3D = useEditor(s => s.setPlanUntil3D);
@@ -49,7 +49,7 @@ export function OrthoView({ view3d, box }: { view3d: Exclude<View3D, { kind: 'pe
   const across = corners.map(c => c.clone().sub(center).dot(right));
   const width = Math.max(...across) - Math.min(...across),
     height = box.max.y - box.min.y;
-  const zoom = Math.min(size.width / (width * 1.25), size.height / (height * 1.6));
+  const zoom = Math.min(size.width / (width * 1.3), size.height / (height * 1.6));
   const distance = Math.max(width, height) * 3 + 20;
   const position = center.clone().add(v.clone().multiplyScalar(distance));
 
@@ -74,10 +74,10 @@ export function OrthoView({ view3d, box }: { view3d: Exclude<View3D, { kind: 'pe
     };
   }, [view3d, gl]);
 
-  // Datums run across the view just in front of the house (a section's on its plane), labels at the left end
+  // Datums run across the view just in front of the house (a section's on its plane), labels on their left ends
   const front = view3d.kind === 'section' ? -0.002 : Math.max(...corners.map(c => c.clone().sub(center).dot(v))) + 0.05;
-  const left = Math.min(...across) - 1.5,
-    rightEnd = Math.max(...across) + 1.5;
+  const left = Math.min(...across) - 0.5,
+    rightEnd = Math.max(...across) + 0.5;
   const at = (s: number, y: number, off = front) => center.clone().add(right.clone().multiplyScalar(s)).setY(y).add(v.clone().multiplyScalar(off));
   const sectionOrigin = view3d.kind === 'section' ? new THREE.Vector3(view3d.a[0] * M, 0, view3d.a[1] * M) : null;
   const d = view3d.kind === 'section' ? sectionAxes(view3d).d : null;
@@ -123,8 +123,9 @@ export function OrthoView({ view3d, box }: { view3d: Exclude<View3D, { kind: 'pe
         return (
           <group key={l.id}>
             <Line points={[at(left, y), at(rightEnd, y)]} color={ink} lineWidth={1} dashed dashSize={0.3} gapSize={0.15} userData={{ noEdges: true }} />
-            <Html position={at(left, y)} zIndexRange={[20, 10]} style={{ transform: 'translate(-100%, -100%)', pointerEvents: 'none' }}>
-              <div style={{ font: '11px var(--font-mono)', color: 'var(--foreground)', whiteSpace: 'nowrap', paddingRight: 4 }}>
+            {/* The label sits on the line's left end, above it, so it stays on screen on a narrow phone */}
+            <Html position={at(left, y)} zIndexRange={[20, 10]} style={{ transform: 'translate(0, -100%)', pointerEvents: 'none' }}>
+              <div style={{ font: '11px var(--font-mono)', color: 'var(--foreground)', whiteSpace: 'nowrap', paddingBottom: 2 }}>
                 {elevationLabel(l.elevation)} {l.name}
               </div>
             </Html>

@@ -795,5 +795,7 @@
   "view_west": "West elevation",
   "view_section": "Section",
   "view_section_flip": "Look the other way",
-  "model3d_hint_ortho": "Drag to pan, pinch or scroll to zoom"
+  "model3d_hint_ortho": "Drag to pan, pinch or scroll to zoom",
+  "view_walk": "Walk through",
+  "model3d_hint_walk": "Drag to look around, tap a floor to walk there, scroll to step, WASD or arrow keys to walk, Esc to leave"
 }
