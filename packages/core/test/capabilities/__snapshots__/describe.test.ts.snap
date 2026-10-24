@@ -1063,6 +1063,49 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Move furniture",
   },
   {
+    "description": "Change a piece of furniture's size (any of width, depth, height in mm) or its height above the floor (elevation; 0 stands on the floor).",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "elevation": {
+          "minimum": 0,
+          "type": "number",
+        },
+        "furniture": {
+          "description": "ID or name of the furniture (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+        "size": {
+          "properties": {
+            "d": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            "h": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+            "w": {
+              "exclusiveMinimum": 0,
+              "type": "number",
+            },
+          },
+          "type": "object",
+        },
+      },
+      "required": [
+        "furniture",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "furniture_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Resize furniture",
+  },
+  {
     "description": "Remove a piece of furniture.",
     "examples": [],
     "input": {

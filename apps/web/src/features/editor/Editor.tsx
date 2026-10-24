@@ -5,6 +5,9 @@
 import { describe } from '@plinth/core';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
+import { m } from '@/lib/i18n';
+import { removeCall } from './remove';
 import { registry } from './agent/registry';
 import { createEditorStore, EditorContext, type InitialProject } from './store';
 import { Workspace } from './layout/Workspace';
@@ -71,7 +74,25 @@ export function Editor({ initial, search }: { initial: InitialProject; search: {
         if (!s.canEdit()) return;
         if (e.shiftKey) s.redo();
         else s.undo();
-      } else if (e.key === 'Escape') s.select([]);
+      } else if (e.key === 'Escape') {
+        if (s.placing) s.setPlacing(null);
+        else s.select([]);
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && s.canEdit() && s.view.selection.length) {
+        // Delete the selection as one edit, by the same rules as the panel's buttons (bearing walls stay)
+        const calls = s.view.selection.map(id => removeCall(s.project, id)).filter(c => c !== null);
+        if (!calls.length) return;
+        e.preventDefault();
+        void (
+          calls.length === 1 ? s.call(calls[0].name, calls[0].input) : s.call('batch', { label: m.editor_delete_label({ count: calls.length }), calls })
+        ).then(r => {
+          if (r.ok) s.select([]);
+          else toast.error(r.error?.message ?? m.panels_action_failed());
+        });
+      } else if (e.key.toLowerCase() === 'r' && !e.metaKey && !e.ctrlKey && s.canEdit()) {
+        // R turns the selected furniture a quarter turn
+        const f = s.view.selection.length === 1 ? s.project.furniture.find(x => x.id === s.view.selection[0]) : undefined;
+        if (f) void s.call('furniture_move', { furniture: f.id, rotation: (f.rotation + 90) % 360 });
+      }
     };
     const onHide = () => {
       if (document.visibilityState === 'hidden') void store.getState().save();

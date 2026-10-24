@@ -162,3 +162,31 @@ function dragFurniture(p: Project, f: Project['furniture'][number], delta: Point
   if (Math.abs(pos[0] - f.position[0]) < 1 && Math.abs(pos[1] - f.position[1]) < 1) return null;
   return { name: 'furniture_move', input: { furniture: f.id, position: [Math.round(pos[0]), Math.round(pos[1])] }, guides, readout: null };
 }
+
+/** Rotation steps for furniture turned with its handle (degrees) */
+const TURN_STEP = 15;
+
+/**
+ * Turning a piece of furniture with its handle (which stands off its back edge, the side its depth faces away from): the
+ * rotation that points the handle at the pointer, in 15° steps
+ */
+export function rotateCall(p: Project, id: string, at: Point): DragResult | null {
+  const f = p.furniture.find(x => x.id === id);
+  if (!f) return null;
+  const v = [at[0] - f.position[0], at[1] - f.position[1]];
+  if (Math.hypot(v[0], v[1]) < 1) return null;
+  // The back edge's outward direction at rotation r is (sin r, -cos r): r = atan2(vx, -vy)
+  const deg = (Math.atan2(v[0], -v[1]) * 180) / Math.PI;
+  const rotation = (((Math.round(deg / TURN_STEP) * TURN_STEP) % 360) + 360) % 360;
+  return { name: 'furniture_move', input: { furniture: id, rotation }, guides: [], readout: `${rotation}°` };
+}
+
+/** Where a piece of furniture's rotation handle stands: off its back edge by `gap` (mm) */
+export function rotateHandle(p: Project, id: string, gap: number): { edge: Point; handle: Point } | null {
+  const f = p.furniture.find(x => x.id === id);
+  if (!f) return null;
+  const r = (f.rotation * Math.PI) / 180;
+  const u: Point = [Math.sin(r), -Math.cos(r)];
+  const edge: Point = [f.position[0] + (u[0] * f.size.d) / 2, f.position[1] + (u[1] * f.size.d) / 2];
+  return { edge, handle: [edge[0] + u[0] * gap, edge[1] + u[1] * gap] };
+}

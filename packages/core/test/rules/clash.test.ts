@@ -115,3 +115,21 @@ describe('elements and walls', () => {
     expect(found).toContain('e2');
   });
 });
+
+describe('resizing furniture', () => {
+  it('changes any of its dimensions and its height above the floor, checked like any change', async () => {
+    const h = await room();
+    const r = await h.ok('furniture_add', { level: 'L1', type: 'cabinet', position: [3000, 2500], size: { w: 1000, d: 600, h: 900 } });
+    const id = (r.result as { id: string }).id;
+    await h.ok('furniture_update', { furniture: id, size: { w: 1200 }, elevation: 300 });
+    const f = h.session.project.furniture.find(x => x.id === id)!;
+    expect(f.size).toEqual({ w: 1200, d: 600, h: 900 });
+    expect(f.elevation).toBe(300);
+    await h.ok('furniture_update', { furniture: id, elevation: 0 });
+    expect(h.session.project.furniture.find(x => x.id === id)!.elevation).toBeUndefined();
+    // So deep it reaches into the wall: refused
+    const deep = await h.call('furniture_update', { furniture: id, size: { d: 5200 } });
+    expect(deep.ok).toBe(false);
+    expect(codes(deep)).toContain('furniture-in-wall');
+  });
+});

@@ -4,6 +4,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { HopDriver } from '@/canvas/HopDriver';
 import { Plan2D } from '../plan/Plan2D';
 import { useEditor } from '../store';
+import { PlaceHint } from './AddMenu';
 import { CanvasTools } from './CanvasTools';
 import { LevelSwitcher } from './LevelSwitcher';
 
@@ -50,6 +51,7 @@ export function EditorCanvas({ svgRef }: { svgRef?: React.RefObject<SVGSVGElemen
         <LevelSwitcher className="bg-background shadow-xs" />
       </div>
       <CanvasTools className="absolute top-2 right-2" />
+      {view.mode === '2d' && <PlaceHint className="absolute bottom-3 left-1/2 -translate-x-1/2" />}
     </>
   );
 }

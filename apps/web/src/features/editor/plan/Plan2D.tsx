@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { wallBody, type Point, type Project } from '@plinth/core';
-import { dragCall, draggable, type DragResult } from './plan-drag';
+import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
+import { placeCall, type PlaceResult } from './plan-place';
 import { exteriorDimensions, selectionDimensions } from '@/graphics/plan/dimensions';
 import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
 import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
@@ -111,6 +112,31 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     return () => ro.disconnect();
   }, [ref]);
   const handle = canEdit && !compare && view.selection.length === 1 && draggable(project, view.selection[0]) ? view.selection[0] : null;
+  // Screen pixels to millimetres at the current zoom, for handles drawn at a fixed screen size
+  const pxMm = size.width ? 1 / (zoom * Math.min(size.width / frame.w, size.height / frame.h)) : 10;
+  const turn = handle ? rotateHandle(project, handle, 26 * pxMm) : null;
+
+  // Place mode: what is being placed follows the pointer; a click puts it down and selects it
+  const placing = useEditor(s => s.placing);
+  const setPlacing = useEditor(s => s.setPlacing);
+  const run = useRun();
+  const [ghost, setGhost] = useState<PlaceResult | null>(null);
+  useEffect(() => setGhost(null), [placing, view.level]);
+  const pointMm = (e: React.MouseEvent): Point => {
+    const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(ref.current!.getScreenCTM()!.inverse());
+    return [q.x, q.y];
+  };
+  const place = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!placing) return;
+    const r = placeCall(project, view.level, placing, pointMm(e), SNAP_PX * pxMm);
+    if (!r) return;
+    const done = await run(r.name, r.input);
+    if (!done.ok) return;
+    setPlacing(null);
+    const id = (done.result as { id?: string } | undefined)?.id;
+    if (id) select([id]);
+  };
 
   return (
     <TransformWrapper
@@ -191,6 +217,37 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               }}
             />
           )}
+          {/* Furniture turns by a round handle off its back edge, in 15° steps */}
+          {turn && (
+            <g data-feedback>
+              <line
+                x1={turn.edge[0]}
+                y1={turn.edge[1]}
+                x2={turn.handle[0]}
+                y2={turn.handle[1]}
+                stroke="var(--chart-2)"
+                strokeWidth={1.5}
+                vectorEffect="non-scaling-stroke"
+              />
+              <circle
+                cx={turn.handle[0]}
+                cy={turn.handle[1]}
+                r={8 * pxMm}
+                fill="var(--background)"
+                stroke="var(--chart-2)"
+                strokeWidth={2}
+                vectorEffect="non-scaling-stroke"
+                className="plan-drag cursor-grab"
+                style={{ touchAction: 'none' }}
+                aria-label={m.plan_rotate_handle()}
+                onPointerDown={e => drag.start(e, handle!, ref.current, true)}
+                onPointerMove={drag.move}
+                onPointerUp={drag.end}
+                onPointerCancel={drag.cancel}
+                onClick={e => e.stopPropagation()}
+              />
+            </g>
+          )}
           {drag.result && (
             <g pointerEvents="none">
               {drag.result.guides.map(([a, b], i) => (
@@ -229,6 +286,33 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               <PlanDimensions chains={temporary} size={scale.size} line={screenLine} />
             </g>
           )}
+          {/* Place mode: a sheet over the drawing takes the pointer, and the ghost shows where it would go */}
+          {placing && (
+            <g data-feedback>
+              {ghost && (
+                <polygon
+                  points={pts(ghost.ghost)}
+                  fill="var(--chart-2)"
+                  fillOpacity={0.3}
+                  stroke="var(--chart-2)"
+                  strokeWidth={2}
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+              )}
+              <rect
+                x={frame.x - frame.w}
+                y={frame.y - frame.h}
+                width={frame.w * 3}
+                height={frame.h * 3}
+                fill="transparent"
+                className="cursor-crosshair"
+                onPointerMove={e => setGhost(placeCall(project, view.level, placing, pointMm(e), SNAP_PX * pxMm))}
+                onPointerLeave={() => setGhost(null)}
+                onClick={place}
+              />
+            </g>
+          )}
         </svg>
       </TransformComponent>
     </TransformWrapper>
@@ -252,7 +336,16 @@ function useDrag() {
     pointer: null,
     mmPerPx: 1,
   });
-  const active = useRef<{ id: string; origin: Point; svg: SVGSVGElement; pointerId: number; key: string; moved: boolean; frame: number } | null>(null);
+  const active = useRef<{
+    id: string;
+    origin: Point;
+    svg: SVGSVGElement;
+    pointerId: number;
+    key: string;
+    moved: boolean;
+    frame: number;
+    rotate: boolean;
+  } | null>(null);
   const latest = useRef<DragResult | null>(null);
 
   const toMm = (svg: SVGSVGElement, e: React.PointerEvent): { at: Point; mmPerPx: number } => {
@@ -271,11 +364,12 @@ function useDrag() {
   return {
     ...state,
     moved: () => !!active.current?.moved,
-    start(e: React.PointerEvent, id: string, svg: SVGSVGElement | null) {
+    /** Start dragging an object (`rotate`: turning furniture by its handle) */
+    start(e: React.PointerEvent, id: string, svg: SVGSVGElement | null, rotate = false) {
       if (!svg || e.button !== 0) return;
       e.stopPropagation();
       (e.target as Element).setPointerCapture(e.pointerId);
-      active.current = { id, origin: toMm(svg, e).at, svg, pointerId: e.pointerId, key: '', moved: false, frame: 0 };
+      active.current = { id, origin: toMm(svg, e).at, svg, pointerId: e.pointerId, key: '', moved: false, frame: 0, rotate };
     },
     move(e: React.PointerEvent) {
       const a = active.current;
@@ -285,7 +379,7 @@ function useDrag() {
       // A small wobble on press is a click, not a drag
       if (!a.moved && Math.hypot(delta[0], delta[1]) < 4 * mmPerPx) return;
       a.moved = true;
-      const r = dragCall(project, a.id, delta, SNAP_PX * mmPerPx);
+      const r = a.rotate ? rotateCall(project, a.id, at) : dragCall(project, a.id, delta, SNAP_PX * mmPerPx);
       latest.current = r;
       setState(s => ({ ...s, result: r, pointer: at, mmPerPx }));
       const key = r ? JSON.stringify(r.input) : '';

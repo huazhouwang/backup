@@ -1,5 +1,5 @@
 /** The editor store's state and actions, and what a project page opens it with */
-import type { Actor, CallResult, Project, Session, TxResult } from '@plinth/core';
+import type { Actor, CallResult, OpeningKind, Project, Session, TxResult } from '@plinth/core';
 import type { ViewHost, ViewState } from '../agent/view-capabilities';
 import type { Role } from '@/shared/roles';
 
@@ -12,6 +12,9 @@ export interface LastChange {
   warnings: NonNullable<CallResult['warnings']>;
   at: number;
 }
+
+/** What the user is placing from the add palette: it follows the pointer in the plan until a click puts it down */
+export type Placing = { kind: 'furniture'; type: string } | { kind: 'opening'; opening: OpeningKind };
 
 export interface ModelOption {
   id: string;
@@ -60,6 +63,8 @@ export interface EditorState {
    * That frame is the same picture as the plan, so the plan then goes away without a visible change.
    */
   planUntil3D: boolean;
+  /** Place mode (see Placing); null when not placing */
+  placing: Placing | null;
 }
 
 export interface EditorActions {
@@ -70,6 +75,7 @@ export interface EditorActions {
   fitView(): void;
   setLeave3D(fn: (() => Promise<void>) | null): void;
   setPlanUntil3D(on: boolean): void;
+  setPlacing(p: Placing | null): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

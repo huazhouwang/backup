@@ -5,7 +5,7 @@ import { MaterialSelect } from '@/features/looks/ParamControls';
 import { m, uiName } from '@/lib/i18n';
 import { fmtArea } from '@/lib/query';
 import { useEditor } from '../../store';
-import { kindLabel, Row, useRun } from '../common';
+import { kindLabel, NumberRow, Row, useRun } from '../common';
 import { type Info } from './shared';
 
 export function SpaceProps({ info }: { info: Info<'space'> }) {
@@ -17,6 +17,15 @@ export function SpaceProps({ info }: { info: Info<'space'> }) {
     <div>
       <p className="text-lg font-medium">{fmtArea(info.netArea)}</p>
       <Row k={m.panels_row_kind()} v={kindLabel(info.kind)} />
+      {canEdit && info.kind !== 'void' && (
+        <NumberRow
+          k={m.panels_row_target_area()}
+          value={Math.round(info.netArea * 10) / 10}
+          unit="m²"
+          step={0.1}
+          onCommit={area => run('space_set_area', { space: info.id, area })}
+        />
+      )}
       <Row k={m.panels_row_bay_depth()} v={`${(info.bounds.width / 1000).toFixed(2)} × ${(info.bounds.depth / 1000).toFixed(2)} m`} />
       {canEdit ? (
         <div className="space-y-1 py-1">
@@ -80,7 +89,21 @@ export function WallProps({ info }: { info: Info<'wall'> }) {
           <Row k={m.panels_row_finish()} v={uiName(materialOf(finish, null, project.library.materials)?.name) || finish} />
         ))}
       <Row k={m.panels_row_length()} v={`${(info.length / 1000).toFixed(2)} m`} />
-      <Row k={m.panels_row_thickness()} v={`${info.thickness} mm`} />
+      <NumberRow
+        k={m.panels_row_thickness()}
+        value={info.thickness}
+        unit="mm"
+        readOnly={!canEdit}
+        onCommit={thickness => run('wall_update', { wall: info.id, thickness })}
+      />
+      <NumberRow
+        k={m.panels_row_wall_height()}
+        value={info.height}
+        unit="mm"
+        readOnly={!canEdit}
+        empty={m.panels_wall_height_storey()}
+        onCommit={height => run('wall_update', { wall: info.id, height })}
+      />
       <Row k={m.panels_row_sides()} v={info.spaces.map(s => s.space).join(' / ') || '—'} />
       {info.openings.length > 0 && <Row k={m.panels_row_openings()} v={info.openings.map(o => kindLabel(o.kind)).join(m.panels_list_separator())} />}
       {info.kind === 'bearing' && <p className="mt-2 text-xs text-muted-foreground">{m.panels_bearing_note()}</p>}
@@ -89,11 +112,16 @@ export function WallProps({ info }: { info: Info<'wall'> }) {
 }
 
 export function OpeningProps({ info }: { info: Info<'opening'> }) {
+  const canEdit = useEditor(s => s.canEdit());
+  const run = useRun();
+  const set = (patch: Record<string, number | null>) => run('opening_update', { opening: info.id, ...patch });
   return (
     <div>
       <Row k={m.panels_row_kind()} v={kindLabel(info.kind)} />
-      <Row k={m.panels_row_width_height()} v={`${info.width} × ${info.height} mm`} />
-      {info.sill > 0 && <Row k={m.panels_row_sill()} v={`${info.sill} mm`} />}
+      <NumberRow k={m.panels_row_width()} value={info.width} unit="mm" readOnly={!canEdit} onCommit={width => set({ width })} />
+      <NumberRow k={m.panels_row_height()} value={info.height} unit="mm" readOnly={!canEdit} onCommit={height => set({ height })} />
+      <NumberRow k={m.panels_row_sill()} value={info.sill} unit="mm" readOnly={!canEdit} onCommit={sill => set({ sill })} />
+      <NumberRow k={m.panels_row_position()} value={Math.round(info.at)} unit="mm" readOnly={!canEdit} onCommit={at => set({ at })} />
       <Row k={m.panels_row_host_wall()} v={info.wall.name} />
       <Row k={m.panels_row_connects()} v={info.connects.map(s => s.name).join(' ↔ ') || '—'} />
     </div>
@@ -112,11 +140,29 @@ export function ElementProps({ info }: { info: Info<'element'> }) {
 }
 
 export function FurnitureProps({ info }: { info: Info<'furniture'> }) {
+  const canEdit = useEditor(s => s.canEdit());
+  const run = useRun();
+  const size = (patch: Partial<typeof info.size>) => run('furniture_update', { furniture: info.id, size: patch });
   return (
     <div>
       <Row k={m.panels_row_category()} v={info.label ?? info.type} />
-      <Row k={m.panels_row_size()} v={`${info.size.w} × ${info.size.d} × ${info.size.h} mm`} />
-      <Row k={m.panels_row_rotation()} v={`${info.rotation}°`} />
+      <NumberRow k={m.panels_row_width()} value={info.size.w} unit="mm" readOnly={!canEdit} onCommit={w => size({ w: w! })} />
+      <NumberRow k={m.panels_row_depth()} value={info.size.d} unit="mm" readOnly={!canEdit} onCommit={d => size({ d: d! })} />
+      <NumberRow k={m.panels_row_height()} value={info.size.h} unit="mm" readOnly={!canEdit} onCommit={h => size({ h: h! })} />
+      <NumberRow
+        k={m.panels_row_elevation()}
+        value={info.elevation ?? 0}
+        unit="mm"
+        readOnly={!canEdit}
+        onCommit={elevation => run('furniture_update', { furniture: info.id, elevation })}
+      />
+      <NumberRow
+        k={m.panels_row_rotation()}
+        value={info.rotation}
+        unit="°"
+        readOnly={!canEdit}
+        onCommit={r => run('furniture_move', { furniture: info.id, rotation: (((r ?? 0) % 360) + 360) % 360 })}
+      />
     </div>
   );
 }

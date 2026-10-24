@@ -4,7 +4,7 @@ import { areaReportCap, checkRulesCap, findObjects, getObject, listConstraints, 
 import { wallAdd, wallMove, wallRemove, wallUpdate } from './wall.js';
 import { openingAdd, openingRemove, openingUpdate } from './opening.js';
 import { roomAdd, spaceAdd, spaceMerge, spaceRemove, spaceSetArea, spaceUpdate } from './space.js';
-import { furnitureAdd, furnitureMove, furnitureRemove } from './furniture.js';
+import { furnitureAdd, furnitureMove, furnitureRemove, furnitureUpdate } from './furniture.js';
 import { levelAdd, levelRemove, levelUpdate } from './level.js';
 import { briefUpdate, constraintAdd, constraintRemove, decisionAdd } from './relation.js';
 import { historyLog, historyRedo, historyUndo } from './history.js';
@@ -46,6 +46,7 @@ export const BUILTIN: Capability[] = [
   spaceSetArea,
   furnitureAdd,
   furnitureMove,
+  furnitureUpdate,
   furnitureRemove,
   levelAdd,
   levelUpdate,

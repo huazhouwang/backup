@@ -6,10 +6,11 @@ import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { m } from '@/lib/i18n';
 import { useEditor } from '../store';
+import { AddMenu } from './AddMenu';
 
 /**
- * View tools, floating over the canvas top-right: fit all, the view switch (showing the view you are in; pressing it goes to
- * the other one), and in 3D the cutaway toggle.
+ * View tools, floating over the canvas top-right: in the plan the add palette, in 3D the cutaway toggle, fit all, and the
+ * view switch (showing the view you are in; pressing it goes to the other one).
  */
 export function CanvasTools({ className }: { className?: string }) {
   const view = useEditor(s => s.view);
@@ -17,11 +18,14 @@ export function CanvasTools({ className }: { className?: string }) {
   const fitView = useEditor(s => s.fitView);
   const leave3D = useEditor(s => s.leave3D);
   const setPlanUntil3D = useEditor(s => s.setPlanUntil3D);
+  const setPlacing = useEditor(s => s.setPlacing);
+  const canEdit = useEditor(s => s.canEdit());
   const [switching, setSwitching] = useState(false);
   const to = view.mode === '2d' ? '3d' : '2d';
   // Leaving 3D lets the house sink back into the plan first
   const switchView = async () => {
     setSwitching(true);
+    setPlacing(null);
     try {
       if (to === '2d' && leave3D) await leave3D();
       else if (to === '3d') setPlanUntil3D(true);
@@ -33,6 +37,7 @@ export function CanvasTools({ className }: { className?: string }) {
   const cutaway = view.layers.cutaway;
   return (
     <div className={cn('flex gap-1', className)}>
+      {view.mode === '2d' && canEdit && <AddMenu />}
       {view.mode === '3d' && (
         <Tooltip>
           <TooltipTrigger

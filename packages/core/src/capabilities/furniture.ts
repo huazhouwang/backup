@@ -82,6 +82,27 @@ export const furnitureMove = defineEdit({
   },
 });
 
+export const furnitureUpdate = defineEdit({
+  name: 'furniture_update',
+  title: 'Resize furniture',
+  description: "Change a piece of furniture's size (any of width, depth, height in mm) or its height above the floor (elevation; 0 stands on the floor).",
+  input: z.object({
+    furniture: zRef('furniture'),
+    size: z.object({ w: z.number().positive().optional(), d: z.number().positive().optional(), h: z.number().positive().optional() }).optional(),
+    elevation: z.number().min(0).optional(),
+  }),
+  label: (i, p) => text('log_furniture_update', 'Resize {furniture}', { furniture: resolve(p, 'furniture', i.furniture).name }),
+  apply: (p, i) => {
+    const f = getFurniture(p, i.furniture);
+    if (i.size) f.size = { w: Math.round(i.size.w ?? f.size.w), d: Math.round(i.size.d ?? f.size.d), h: Math.round(i.size.h ?? f.size.h) };
+    if (i.elevation != null) {
+      if (i.elevation > 0) f.elevation = Math.round(i.elevation);
+      else delete f.elevation;
+    }
+    return { id: f.id, size: f.size, elevation: f.elevation ?? 0 };
+  },
+});
+
 export const furnitureRemove = defineEdit({
   name: 'furniture_remove',
   title: 'Remove furniture',

@@ -1,9 +1,12 @@
-/** Editor UI state the canvas and the panels share: the before/after comparison, the screenshot, messages for the agent, the 2D/3D switch */
+/**
+ * Editor UI state the canvas and the panels share: the before/after comparison, the screenshot, messages for the agent, the 2D/3D
+ * switch, place mode
+ */
 import type { StoreContext } from './create';
 import type { EditorActions, EditorState } from './types';
 
-type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D'> &
-  Pick<EditorActions, 'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D'>;
+type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing'> &
+  Pick<EditorActions, 'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing'>;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
   compare: false,
@@ -12,6 +15,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   fitRequest: 0,
   leave3D: null,
   planUntil3D: false,
+  placing: null,
 
   setCompare(on) {
     set({ compare: on });
@@ -31,5 +35,9 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   setPlanUntil3D(planUntil3D) {
     set({ planUntil3D });
+  },
+
+  setPlacing(placing) {
+    set({ placing });
   },
 });
