@@ -7,6 +7,7 @@ import {
   bbox,
   cross,
   dot,
+  furnitureFootprint,
   MIN_SHARED_EDGE,
   onWall,
   openingCenter,
@@ -20,6 +21,7 @@ import {
   toPc,
   TOL,
   union,
+  wallBody,
   wallDir,
   wallLength,
   wallNormal,
@@ -188,6 +190,8 @@ export function moveWall(p: Project, wallId: Id, v: Point) {
   const w = p.walls.find(x => x.id === wallId)!;
   const old = { start: w.start, end: w.end };
   const oldWall: Wall = { ...w, ...old };
+  // Furniture against the wall, or mounted on it, moves with it (BIM's "moves with nearby elements")
+  for (const f of furnitureAgainst(p, oldWall)) f.position = round(add(f.position, v));
   const d = wallDir(oldWall);
   const others = p.walls.filter(o => o.level === w.level && o.id !== w.id);
 
@@ -236,6 +240,15 @@ export function moveWall(p: Project, wallId: Id, v: Point) {
     // Only tidy spaces that moved, so the whole level isn't recorded as "changed"
     if (moved) s.shape = union(s.shape);
   }
+}
+
+/** How close furniture must be to a wall face to count as standing against it (mm) */
+const AGAINST = 30;
+
+/** Furniture on a wall's level standing against it or mounted on it: its footprint within a few centimetres of the wall body */
+export function furnitureAgainst(p: Project, w: Wall): Project['furniture'] {
+  const zone = toPc(wallBody({ ...w, thickness: w.thickness + 2 * AGAINST }));
+  return p.furniture.filter(f => f.level === w.level && pc.intersection([zone], [toPc(furnitureFootprint(f))]).length > 0);
 }
 
 /** Usable area of a space (m²); see area.ts */

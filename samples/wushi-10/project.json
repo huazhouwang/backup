@@ -2935,7 +2935,7 @@
    "level": "L1",
    "position": [
     9100,
-    6860
+    6930
    ],
    "rotation": 0,
    "size": {
@@ -2951,7 +2951,7 @@
    "level": "L1",
    "position": [
     3400,
-    6860
+    6930
    ],
    "rotation": 0,
    "size": {
@@ -3288,7 +3288,7 @@
    "level": "L1",
    "position": [
     16960,
-    11480
+    11575
    ],
    "rotation": 90,
    "size": {
@@ -3722,7 +3722,7 @@
    "type": "plant",
    "level": "L2",
    "position": [
-    9400,
+    9235,
     700
    ],
    "rotation": 0,
@@ -3754,7 +3754,7 @@
    "type": "plant",
    "level": "L2",
    "position": [
-    9400,
+    9235,
     6900
    ],
    "rotation": 0,

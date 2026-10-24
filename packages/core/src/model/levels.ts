@@ -8,6 +8,12 @@ import type { Id, Level, Project } from './schema.js';
 /** Thickness of a floor slab (mm): the clear height of a storey is its height less the slab of the floor above */
 export const SLAB_THICKNESS = 120;
 
+/**
+ * How far below a level its walls and floors reach down to the site's ground (mm): the ground floor (elevation 0) stands on
+ * the ground, so where the ground is lower its walls and floors continue down to it
+ */
+export const footing = (elevation: number, groundLevel: number) => (elevation === 0 && groundLevel < 0 ? -groundLevel : 0);
+
 /** The levels from the lowest up */
 export const levelStack = (p: Pick<Project, 'levels'>) => [...p.levels].sort((a, b) => a.elevation - b.elevation);
 

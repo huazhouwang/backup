@@ -5,7 +5,7 @@
  */
 import { Edges } from '@react-three/drei';
 import type { Element, OpeningFrame, Project, Recipe, RecipeMaterial, Solid, Space, Wall } from '@plinth/core';
-import { lookRecipe, materialOf, wallTarget, type Material } from '@plinth/core';
+import { footing, lookRecipe, materialOf, wallTarget, type Material } from '@plinth/core';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
@@ -15,17 +15,7 @@ import { useEditor } from '../store';
 import { useFeedback } from './feedback';
 import { useFloorTexture } from '@/graphics/three/floor-textures';
 import { lookMaterial, partsGeometry, useBuild } from '@/graphics/three/looks';
-import {
-  castsShadow,
-  elementExtent,
-  footing,
-  M,
-  railingPieces,
-  slabGeometry,
-  solidGeometry,
-  standardMaterialProps,
-  wallGeometry,
-} from '@/graphics/three/scene';
+import { castsShadow, elementExtent, M, railingPieces, slabGeometry, solidGeometry, standardMaterialProps, wallGeometry } from '@/graphics/three/scene';
 
 const unitBox = new THREE.BoxGeometry(1, 1, 1);
 

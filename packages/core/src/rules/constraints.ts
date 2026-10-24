@@ -49,13 +49,15 @@ export function solveAreaMove(p: Project, spaceId: Id, target: number, wallId?: 
   const w = wallId ? findWall(p, wallId) : pickResizeWall(p, s);
   if (!w) return null;
   const out = scale(wallNormal(w), -sideOf(w, s)); // away from the space
-  // Trial moves only touch this level's walls and spaces, so copy just those instead of the whole project
+  // Trial moves only touch this level's walls, spaces and the furniture moving with the walls, so copy just those instead of
+  // the whole project
   const src = isDraft(p) ? current(p) : p;
   const walls = src.walls.filter(x => x.level === s.level),
-    spaces = src.spaces.filter(x => x.level === s.level);
+    spaces = src.spaces.filter(x => x.level === s.level),
+    furniture = src.furniture.filter(x => x.level === s.level);
   const areaAt = (d: number) => {
     if (!d) return spaceNetArea(src, findSpace(src, spaceId)!);
-    const q: Project = { ...src, walls: structuredClone(walls), spaces: structuredClone(spaces) };
+    const q: Project = { ...src, walls: structuredClone(walls), spaces: structuredClone(spaces), furniture: structuredClone(furniture) };
     moveWall(q, w.id, scale(out, d));
     return spaceNetArea(q, findSpace(q, spaceId)!);
   };

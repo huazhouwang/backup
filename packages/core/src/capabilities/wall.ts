@@ -37,7 +37,7 @@ export const wallMove = defineEdit({
   name: 'wall_move',
   title: 'Move wall',
   description:
-    'Translate a wall perpendicular to itself. Connected walls stretch to follow, the boundaries of spaces on both sides update, and openings keep their position on the wall.',
+    'Translate a wall perpendicular to itself. Connected walls stretch to follow, the boundaries of spaces on both sides update, openings keep their position on the wall, and furniture standing against the wall (or mounted on it) moves with it.',
   input: z.object({
     wall: zRef('wall'),
     direction: zDirection.optional(),

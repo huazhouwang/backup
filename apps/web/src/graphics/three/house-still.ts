@@ -5,6 +5,7 @@
  * the canvas's light theme. Drawn offscreen on the one renderer the look stills share (look-preview.ts), as a JPEG data URL.
  */
 import {
+  footing,
   furnitureTarget,
   lookRecipe,
   openingFrames,
@@ -35,7 +36,6 @@ import {
   hasSlab,
   houseBox,
   M,
-  footing,
   railingPieces,
   shadowGround,
   SKYLIGHT_INTENSITY,
