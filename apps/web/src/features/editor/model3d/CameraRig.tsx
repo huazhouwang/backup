@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { hops } from '@/canvas/hop';
-import { planFrame } from '@/graphics/plan/plan-geometry';
+import { frameDimensions, planFrame } from '@/graphics/plan/plan-geometry';
 import { useEditor } from '../store';
 import { BIRD, FOV, framed, nearPlane, type Pose } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
@@ -55,6 +55,7 @@ export function CameraRig({
 }) {
   const { camera, controls, size, invalidate } = useThree();
   const project = useEditor(s => s.project);
+  const dimensions = useEditor(s => s.view.layers.dimensions);
   const setLeave3D = useEditor(s => s.setLeave3D);
   const setPlanUntil3D = useEditor(s => s.setPlanUntil3D);
   const orbit = controls as unknown as Orbit | null;
@@ -87,7 +88,7 @@ export function CameraRig({
 
   /** Straight down at the current floor, framed like the plan (which fits the floor's drawing plus a margin to the view) */
   const planPose = (): Pose => {
-    const { x, y, w, h } = planFrame(project, current);
+    const { x, y, w, h } = planFrame(project, current, dimensions && frameDimensions(project, current, size.width, size.height));
     const visibleH = (w / h > size.width / size.height ? (w * size.height) / size.width : h) * M;
     // The drawing lies just above the floor
     const floor = (levels.find(l => l.id === current)?.elevation ?? 0) * M + 0.006;

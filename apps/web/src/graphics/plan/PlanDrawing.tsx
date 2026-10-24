@@ -7,7 +7,8 @@
 import type { Project } from '@plinth/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
-import { isGroundLevel, type LevelShapes } from './plan-geometry';
+import { dimensionSize, isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
+import type { DimChain } from './dimensions';
 
 const pts = (p: [number, number][]) => p.map(([x, y]) => `${x},${y}`).join(' ');
 
@@ -25,9 +26,6 @@ export const screenLine: Line = (width, dash) => ({ strokeWidth: width, strokeDa
 export const scaledLine =
   (mmPerPx: number): Line =>
   (width, dash) => ({ strokeWidth: width * mmPerPx, strokeDasharray: dash?.map(d => d * mmPerPx).join(' ') });
-
-/** Label size for a level, in millimetres */
-export const labelSize = ([x0, , x1]: LevelShapes['bounds']) => Math.max(220, Math.min(420, (x1 - x0) / 45));
 
 type Pick = (id: string) => (e: React.MouseEvent) => void;
 const hit = (pick: Pick | undefined, id: string) => (pick ? { onClick: pick(id), className: 'plan-hit cursor-pointer', 'data-id': id } : {});
@@ -154,5 +152,70 @@ export function PlanLabels({ shapes, pick }: { shapes: LevelShapes; pick?: Pick 
         </g>
       ))}
     </>
+  );
+}
+
+/**
+ * Architectural dimensions (see dimensions.ts): a thin line, extension lines, 45° ticks at the marks and each segment's length in
+ * millimetres beside the line; a value too long for its segment moves farther out, alternating, so neighbours don't collide
+ */
+export function PlanDimensions({ chains, font, line }: { chains: DimChain[]; font: number; line: Line }) {
+  const size = dimensionSize(font),
+    tick = size * 0.45;
+  return (
+    <g pointerEvents="none" fontFamily="var(--font-mono)" fontSize={size} fill="var(--foreground)" textAnchor="middle">
+      {chains.map((c, k) => {
+        const at = (t: number, off = 0): [number, number] => [c.origin[0] + c.dir[0] * t + c.normal[0] * off, c.origin[1] + c.dir[1] * t + c.normal[1] * off];
+        const a = at(c.marks[0]),
+          b = at(c.marks[c.marks.length - 1]);
+        // Values read left to right, or bottom to top
+        const flip = c.dir[0] < -1e-6 || (Math.abs(c.dir[0]) < 1e-6 && c.dir[1] > 0);
+        const angle = (Math.atan2(c.dir[1], c.dir[0]) * 180) / Math.PI + (flip ? 180 : 0);
+        // The text's up direction on the page; values sit on the normal side
+        const up: [number, number] = flip ? [-c.dir[1], c.dir[0]] : [c.dir[1], -c.dir[0]];
+        const above = up[0] * c.normal[0] + up[1] * c.normal[1] > 0;
+        let out = 0;
+        return (
+          <g key={k}>
+            <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="var(--foreground)" {...line(0.6)} />
+            {c.marks.map((t, i) => {
+              const [x, y] = at(t);
+              const [ex, ey] = at(t, -c.ext);
+              const [fx, fy] = at(t, tick);
+              // A 45° tick: across the line, turned an eighth
+              const d: [number, number] = [(c.dir[0] + c.normal[0]) * tick * 0.7, (c.dir[1] + c.normal[1]) * tick * 0.7];
+              return (
+                <g key={i}>
+                  <line x1={ex} y1={ey} x2={fx} y2={fy} stroke="var(--foreground)" {...line(0.6)} />
+                  <line x1={x - d[0]} y1={y - d[1]} x2={x + d[0]} y2={y + d[1]} stroke="var(--foreground)" {...line(1.4)} />
+                </g>
+              );
+            })}
+            {c.marks.slice(1).map((t, i) => {
+              const len = t - c.marks[i];
+              const text = String(Math.round(len));
+              // Too long for its segment: alternate farther out
+              const fits = len > text.length * size * 0.62 + size * 0.4;
+              out = fits ? 0 : out === 1 ? 2 : 1;
+              const [x, y] = at((t + c.marks[i]) / 2, size * (0.35 + out * 1.05));
+              return (
+                <text
+                  key={i}
+                  x={x}
+                  y={y}
+                  transform={`rotate(${angle} ${x} ${y})`}
+                  dominantBaseline={above ? 'alphabetic' : 'hanging'}
+                  paintOrder="stroke"
+                  stroke="var(--canvas-backdrop)"
+                  strokeWidth={size / 5}
+                >
+                  {text}
+                </text>
+              );
+            })}
+          </g>
+        );
+      })}
+    </g>
   );
 }

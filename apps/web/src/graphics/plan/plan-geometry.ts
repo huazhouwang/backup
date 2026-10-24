@@ -23,6 +23,7 @@ import {
   type Wall,
 } from '@plinth/core';
 import polylabel from 'polylabel';
+import { EXTERIOR_REACH } from './dimensions';
 
 export interface OpeningShape {
   id: string;
@@ -60,11 +61,35 @@ export const PLAN_PAD = 1500;
 /** Whether this is the lowest floor, the one standing on the site */
 export const isGroundLevel = (p: Project, level: string) => p.levels.find(l => l.id === level)?.elevation === Math.min(...p.levels.map(l => l.elevation));
 
-/** What the plan shows of a level, in millimetres: its drawing (and on the lowest floor the site boundary) plus a margin */
-export function planFrame(p: Project, level: string) {
-  let [x0, y0, x1, y1] = levelShapes(p, level).bounds;
+/** Label size for a level, in millimetres */
+export const labelSize = ([x0, , x1]: LevelShapes['bounds']) => Math.max(220, Math.min(420, (x1 - x0) / 45));
+/** Size of dimension values for a level's label size (millimetres) */
+export const dimensionSize = (font: number) => font * 0.7;
+/** Distance between dimension chains for a level's label size (millimetres) */
+export const dimensionStep = (font: number) => font * 2.2;
+
+/**
+ * What the plan shows of a level, in millimetres: its drawing (and on the lowest floor the site boundary) plus a margin, wide
+ * enough for the dimension chains around it when they are shown
+ */
+/** Dimension values smaller than this on screen (pixels) can't be read */
+export const MIN_DIMENSION_PX = 7;
+
+/**
+ * Whether the plan, fitted to a view of this size (pixels), makes room for the dimension chains: only when their values are
+ * readable at that fit. On a phone they are not, and the drawing keeps the room; the chains show once zoomed in.
+ */
+export function frameDimensions(p: Project, level: string, width: number, height: number) {
+  const f = planFrame(p, level, true);
+  return dimensionSize(labelSize(levelShapes(p, level).bounds)) * Math.min(width / f.w, height / f.h) >= MIN_DIMENSION_PX;
+}
+
+export function planFrame(p: Project, level: string, dimensions = false) {
+  const { bounds } = levelShapes(p, level);
+  let [x0, y0, x1, y1] = bounds;
   if (isGroundLevel(p, level)) for (const [x, y] of p.site.boundary) [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
-  return { x: x0 - PLAN_PAD, y: y0 - PLAN_PAD, w: x1 - x0 + 2 * PLAN_PAD, h: y1 - y0 + 2 * PLAN_PAD };
+  const pad = dimensions ? Math.max(PLAN_PAD, dimensionStep(labelSize(bounds)) * EXTERIOR_REACH) : PLAN_PAD;
+  return { x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad };
 }
 
 export const polyPath = (polys: Polygon[]) =>

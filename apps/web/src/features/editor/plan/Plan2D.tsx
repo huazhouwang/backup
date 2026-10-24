@@ -1,13 +1,14 @@
 /**
- * Floor plan: SVG in millimetres. Picking, zoom/pan, selection and change highlights, compare with before, and dragging the
- * selected wall, door or window, or piece of furniture (see plan-drag.ts).
+ * Floor plan: SVG in millimetres. Picking, zoom/pan, selection and change highlights, compare with before, dimensions (see
+ * dimensions.ts), and dragging the selected wall, door or window, or piece of furniture (see plan-drag.ts).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { wallBody, wallLength, type Point, type Project } from '@plinth/core';
+import { wallBody, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, type DragResult } from './plan-drag';
-import { levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
-import { labelSize, PlanDefs, PlanInk, PlanLabels, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
+import { exteriorDimensions, selectionDimensions } from '@/graphics/plan/dimensions';
+import { dimensionSize, dimensionStep, frameDimensions, labelSize, levelShapes, MIN_DIMENSION_PX, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
+import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
 import { useEditor } from '../store';
 import { m } from '@/lib/i18n';
@@ -18,10 +19,12 @@ const pts = (p: Point[]) => p.map(([x, y]) => `${x},${y}`).join(' ');
 
 /** Render the SVG to PNG (screenshots, image export) */
 export async function svgToPng(svg: SVGSVGElement, width = 2000) {
-  const vb = svg.viewBox.baseVal;
-  const height = Math.round((width * vb.height) / vb.width);
+  // The whole drawing with its dimensions, even where the screen's frame leaves them out (see frameDimensions)
+  const viewBox = svg.dataset.exportViewbox ?? svg.getAttribute('viewBox')!;
+  const [, , vw, vh] = viewBox.split(' ').map(Number);
+  const height = Math.round((width * vh) / vw);
   const cs = svg.ownerDocument.defaultView!.getComputedStyle(svg);
-  const data = standaloneSvg(svg, { width: String(width), height: String(height) });
+  const data = standaloneSvg(svg, { width: String(width), height: String(height), viewBox });
   const img = new Image();
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data)}`;
   await img.decode();
@@ -54,9 +57,22 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   }, [compare, lastChange, view.level]);
   const zoomRef = useRef<ReactZoomPanPinchRef>(null);
 
-  const frame = planFrame(project, view.level);
+  // The svg's size on screen: the frame makes room for the dimensions only where they read at the fit
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const roomForDimensions = view.layers.dimensions && size.width > 0 && frameDimensions(project, view.level, size.width, size.height);
+  const frame = planFrame(project, view.level, roomForDimensions);
   const vb = `${frame.x} ${frame.y} ${frame.w} ${frame.h}`;
+  const full = planFrame(project, view.level, view.layers.dimensions);
+  const exportVb = `${full.x} ${full.y} ${full.w} ${full.h}`;
   const font = labelSize(shapes.bounds);
+  // Dimensions follow the drawing, the dragged preview included
+  const exterior = useMemo(
+    () => (view.layers.dimensions ? exteriorDimensions(drag.preview ?? project, view.level, shapes.bounds, dimensionStep(font)) : []),
+    [view.layers.dimensions, drag.preview, project, view.level, shapes.bounds, font],
+  );
+  const temporary = view.layers.dimensions ? selectionDimensions(drag.preview ?? project, view.selection, dimensionStep(font)) : [];
+  // On screen, the exterior chains hide while their values would be too small to read (exports and screenshots keep them)
+  const [zoom, setZoom] = useState(1);
 
   const sel = new Set(view.selection);
   const localRef = useRef<SVGSVGElement>(null);
@@ -92,17 +108,35 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     if (fitRequest) zoomRef.current?.resetTransform(300);
   }, [fitRequest]);
 
-  const selWall = shapes.walls.find(x => sel.has(x.w.id));
   const canEdit = useEditor(s => s.canEdit());
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setSize({ width: el.clientWidth, height: el.clientHeight }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  const readable = !size.width || dimensionSize(font) * zoom * Math.min(size.width / frame.w, size.height / frame.h) >= MIN_DIMENSION_PX;
   const handle = canEdit && !compare && view.selection.length === 1 && draggable(project, view.selection[0]) ? view.selection[0] : null;
 
   return (
-    <TransformWrapper ref={zoomRef} minScale={0.5} maxScale={20} doubleClick={{ disabled: true }} wheel={{ step: 0.15 }} panning={{ excluded: ['plan-drag'] }}>
+    <TransformWrapper
+      ref={zoomRef}
+      onTransform={(_, t) => setZoom(t.scale)}
+      minScale={0.5}
+      maxScale={20}
+      doubleClick={{ disabled: true }}
+      wheel={{ step: 0.15 }}
+      panning={{ excluded: ['plan-drag'] }}
+    >
       <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full">
         <svg
           ref={ref}
           viewBox={vb}
+          data-export-viewbox={exportVb}
           className="h-full w-full select-none"
+          // Dimension chains may reach past the frame (see frameDimensions): they show when zoomed in
+          overflow="visible"
           style={{ background: 'var(--canvas-backdrop)' }}
           onClick={() => select([])}
           role="img"
@@ -193,22 +227,15 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             </g>
           )}
 
-          {/* Dimension: length of the selected wall */}
-          {view.layers.dimensions && selWall && (
-            <text
-              x={(selWall.w.start[0] + selWall.w.end[0]) / 2}
-              y={(selWall.w.start[1] + selWall.w.end[1]) / 2 - selWall.w.thickness}
-              fontSize={font * 0.85}
-              textAnchor="middle"
-              fill="var(--foreground)"
-              fontFamily="var(--font-mono)"
-              pointerEvents="none"
-              paintOrder="stroke"
-              stroke="var(--background)"
-              strokeWidth={font / 6}
-            >
-              {(wallLength(selWall.w) / 1000).toFixed(2)} m
-            </text>
+          {exterior.length > 0 && (
+            <g className="plan-dims" data-hidden={readable ? undefined : ''}>
+              <PlanDimensions chains={exterior} font={font} line={screenLine} />
+            </g>
+          )}
+          {temporary.length > 0 && (
+            <g data-feedback>
+              <PlanDimensions chains={temporary} font={font} line={screenLine} />
+            </g>
           )}
         </svg>
       </TransformComponent>

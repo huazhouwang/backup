@@ -1,7 +1,7 @@
 /**
  * The plan printed on a floor in 3D, drawn by the plan's own code (PlanDrawing), so on entering 3D the flat house is exactly the
- * plan and grows out of it. Two layers: paper (site boundary, room floors; and with it a sheet of the plan's background around the
- * drawing) fades out first as the house rises, then ink (walls, furniture, doors, labels): the built house shows its own floors,
+ * plan and grows out of it. Two layers: paper (site boundary, room floors, the current floor's dimensions; and with it a sheet of
+ * the plan's background around the drawing) fades out first as the house rises, then ink (walls, furniture, doors, labels): the built house shows its own floors,
  * furniture and walls. Both are unlit, so their colors are the plan's. Line widths are the plan's screen widths at the scale the plan
  * is shown, converted to millimetres.
  */
@@ -10,8 +10,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
-import { levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
-import { PlanDefs, PlanInk, PlanLabels, PlanPaper, scaledLine } from '@/graphics/plan/PlanDrawing';
+import { exteriorDimensions } from '@/graphics/plan/dimensions';
+import { dimensionStep, labelSize, levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
+import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, scaledLine } from '@/graphics/plan/PlanDrawing';
 import type { Quality } from './Renderer';
 import { useBuildsVersion } from '@/lib/builds';
 import { M } from '@/graphics/three/scene';
@@ -53,6 +54,7 @@ export function FloorDrawing({
   current,
   furniture,
   labels,
+  dimensions,
   quality,
   growth,
 }: {
@@ -61,6 +63,7 @@ export function FloorDrawing({
   current: boolean;
   furniture: boolean;
   labels: boolean;
+  dimensions: boolean;
   quality: Quality;
   growth: React.RefObject<{ g: number }>;
 }) {
@@ -68,7 +71,7 @@ export function FloorDrawing({
   const size = useThree(s => s.size);
   const builds = useBuildsVersion();
   const shapes = useMemo(() => levelShapes(project, level), [project, level, builds]);
-  const frame = planFrame(project, level);
+  const frame = planFrame(project, level, dimensions);
   // The plan's scale on screen (it fits the framing to the view), for line widths
   const mmPerPx = Math.max(frame.w / size.width, frame.h / size.height);
   const [textures, setTextures] = useState<{ paper: THREE.Texture; ink: THREE.Texture } | null>(null);
@@ -97,6 +100,13 @@ export function FloorDrawing({
           <>
             <PlanDefs project={project} />
             <PlanPaper project={project} level={level} shapes={shapes} line={line} />
+            {dimensions && current && (
+              <PlanDimensions
+                chains={exteriorDimensions(project, level, shapes.bounds, dimensionStep(labelSize(shapes.bounds)))}
+                font={labelSize(shapes.bounds)}
+                line={line}
+              />
+            )}
           </>,
           pw,
           ph,
@@ -132,7 +142,7 @@ export function FloorDrawing({
       made?.paper.dispose();
       made?.ink.dispose();
     };
-  }, [shapes, furniture, labels, quality, current, mmPerPx, doc]);
+  }, [shapes, furniture, labels, dimensions, quality, current, mmPerPx, doc]);
 
   const paper = useRef<THREE.MeshBasicMaterial>(null);
   const paperMesh = useRef<THREE.Mesh>(null);

@@ -131,9 +131,9 @@ export function Model3D() {
   // How far the house has grown out of the plan (0 flat, 1 built); the plan's paper fades with it
   const growth = useRef({ g: 1 });
   const sheet = useMemo(() => {
-    const { x, y, w, h } = planFrame(project, current?.id ?? levels[0]?.id ?? '');
+    const { x, y, w, h } = planFrame(project, current?.id ?? levels[0]?.id ?? '', view.layers.dimensions);
     return { center: [(x + w / 2) * M, (y + h / 2) * M] as [number, number] };
-  }, [project, current?.id]);
+  }, [project, current?.id, view.layers.dimensions]);
 
   return (
     <div className="relative size-full">
@@ -248,6 +248,7 @@ export function Model3D() {
                       current={l.id === current?.id}
                       furniture={view.layers.furniture}
                       labels={view.layers.labels}
+                      dimensions={view.layers.dimensions}
                       quality={q}
                       growth={growth}
                     />
