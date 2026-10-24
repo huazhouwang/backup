@@ -2,4 +2,5 @@
 export * from './rules.js';
 export * from './integrity.js';
 export * from './clash.js';
+export * from './structure.js';
 export * from './constraints.js';

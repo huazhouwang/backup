@@ -6,6 +6,7 @@ import { BEDROOM_NAME } from '../model/names.js';
 import type { Id, Polygon, Project, Space, Wall } from '../model/schema.js';
 import { checkClashes } from './clash.js';
 import { checkIntegrity } from './integrity.js';
+import { checkStructure } from './structure.js';
 
 export interface Issue {
   code: string;
@@ -136,6 +137,6 @@ export function checkRules(p: Project): Issue[] {
       });
   }
 
-  out.push(...checkIntegrity(p), ...checkClashes(p));
+  out.push(...checkIntegrity(p), ...checkClashes(p), ...checkStructure(p));
   return out;
 }
