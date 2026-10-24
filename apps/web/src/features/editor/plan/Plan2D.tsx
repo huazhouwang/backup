@@ -146,12 +146,15 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           <PlanPaper project={project} level={view.level} shapes={shapes} line={screenLine} pick={pick} />
           <PlanInk shapes={shapes} furniture={view.layers.furniture} line={screenLine} pick={pick} />
 
-          {/* Just changed (or pointed at by the agent): a tint that fades out. Selected: tinted with an outline until deselected */}
+          {/*
+            The plan's only colour is SketchUp's selection blue. Just changed (or pointed at by the agent): a blue tint that fades
+            out (SketchUp has no such hint, so it borrows the selection colour). Selected: tinted with an outline until deselected
+          */}
           <g pointerEvents="none" data-feedback>
             {view.highlight
               .filter(id => outlines.has(id) && !sel.has(id))
               .map(id => (
-                <path key={`${id}-${changeToken}`} d={outlines.get(id)} fill="var(--chart-1)" className="plan-changed" />
+                <path key={`${id}-${changeToken}`} d={outlines.get(id)} fill="var(--chart-2)" className="plan-changed" />
               ))}
             {view.selection
               .filter(id => outlines.has(id))
