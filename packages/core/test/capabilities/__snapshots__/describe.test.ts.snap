@@ -98,7 +98,7 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Area report",
   },
   {
-    "description": "Check for overlapping rooms, openings beyond the wall or overlapping, rooms without an entrance, bedrooms without a window, door leaves hitting furniture, furniture outside any space, and whether constraints are satisfied.",
+    "description": "Check for overlapping rooms, openings beyond the wall or overlapping, rooms without an entrance, bedrooms without a window, door leaves hitting furniture, furniture outside any space, model integrity (walls through the slab above, openings above their wall, furniture above the ceiling, furniture or elements in walls, furniture in the same place, stairs without a slab opening, unguarded openings, unsupported bearing walls, long cantilevers), and whether constraints are satisfied.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

@@ -57,28 +57,13 @@ export interface LevelShapes {
 /** Margin the plan leaves around a level's drawing, in millimetres (3D starts from the same framing) */
 export const PLAN_PAD = 1500;
 
-/** Whether this is the lowest floor, the one standing on the site's plinth */
+/** Whether this is the lowest floor, the one standing on the site */
 export const isGroundLevel = (p: Project, level: string) => p.levels.find(l => l.id === level)?.elevation === Math.min(...p.levels.map(l => l.elevation));
 
-/**
- * The white board the house stands on, like a model's base: the site's bounding rectangle with a margin of 8% of its longer side,
- * between 1.5 and 4 m. Drawn on the lowest floor of the plan and as the 3D plinth.
- */
-export function plinthRect(p: Project): [number, number, number, number] {
-  const xs = p.site.boundary.map(q => q[0]),
-    ys = p.site.boundary.map(q => q[1]);
-  const [x0, y0, x1, y1] = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
-  const m = Math.min(4000, Math.max(1500, 0.08 * Math.max(x1 - x0, y1 - y0)));
-  return [x0 - m, y0 - m, x1 + m, y1 + m];
-}
-
-/** What the plan shows of a level, in millimetres: its drawing (and on the lowest floor the plinth) plus a margin */
+/** What the plan shows of a level, in millimetres: its drawing (and on the lowest floor the site boundary) plus a margin */
 export function planFrame(p: Project, level: string) {
   let [x0, y0, x1, y1] = levelShapes(p, level).bounds;
-  if (isGroundLevel(p, level)) {
-    const [a, b, c, d] = plinthRect(p);
-    [x0, y0, x1, y1] = [Math.min(x0, a), Math.min(y0, b), Math.max(x1, c), Math.max(y1, d)];
-  }
+  if (isGroundLevel(p, level)) for (const [x, y] of p.site.boundary) [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
   return { x: x0 - PLAN_PAD, y: y0 - PLAN_PAD, w: x1 - x0 + 2 * PLAN_PAD, h: y1 - y0 + 2 * PLAN_PAD };
 }
 

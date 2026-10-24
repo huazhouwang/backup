@@ -1,13 +1,13 @@
 /**
- * The plan's drawing, shared by the plan view and the 3D floors (so 3D grows out of exactly the plan): paper (the site's white
- * plinth, room floors in their material), ink (walls, furniture, doors and windows) and labels. The model seen from above
+ * The plan's drawing, shared by the plan view and the 3D floors (so 3D grows out of exactly the plan): paper (the site boundary,
+ * room floors in their material), ink (walls, furniture, doors and windows) and labels. The model seen from above
  * through a section cut: walls cut solid black, floors in their material (see floor-materials.tsx), furniture and fittings white
- * with thin black edges, the plinth outlined. Coordinates in millimetres. Interaction (picking) is optional.
+ * with thin black edges. Coordinates in millimetres. Interaction (picking) is optional.
  */
 import type { Project } from '@plinth/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
-import { isGroundLevel, plinthRect, type LevelShapes } from './plan-geometry';
+import { isGroundLevel, type LevelShapes } from './plan-geometry';
 
 const pts = (p: [number, number][]) => p.map(([x, y]) => `${x},${y}`).join(' ');
 
@@ -46,20 +46,11 @@ export function PlanDefs({ project }: { project: Project }) {
   );
 }
 
-/**
- * The white board the house stands on with the site boundary on it (on the lowest floor only: upper floors stand above it), and
- * the room fills
- */
+/** The site boundary (on the lowest floor only: upper floors stand above it) and the room fills */
 export function PlanPaper({ project, level, shapes, line, pick }: { project: Project; level: string; shapes: LevelShapes; line: Line; pick?: Pick }) {
-  const [x0, y0, x1, y1] = plinthRect(project);
   return (
     <>
-      {isGroundLevel(project, level) && (
-        <>
-          <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} fill="var(--card)" stroke="var(--foreground)" {...line(2)} />
-          <polygon points={pts(project.site.boundary)} fill="none" stroke="var(--chart-3)" {...line(0.8, [6, 4])} />
-        </>
-      )}
+      {isGroundLevel(project, level) && <polygon points={pts(project.site.boundary)} fill="none" stroke="var(--chart-3)" {...line(0.8, [6, 4])} />}
       {shapes.spaces.map(({ s, d }) => (
         <path key={s.id} d={d} fill={spaceFill(project, s.kind, s.floor)} {...hit(pick, s.id)} />
       ))}

@@ -99,7 +99,7 @@ export const checkRulesCap = defineRead({
   title: 'Rule check',
   kind: 'verify',
   description:
-    'Check for overlapping rooms, openings beyond the wall or overlapping, rooms without an entrance, bedrooms without a window, door leaves hitting furniture, furniture outside any space, and whether constraints are satisfied.',
+    'Check for overlapping rooms, openings beyond the wall or overlapping, rooms without an entrance, bedrooms without a window, door leaves hitting furniture, furniture outside any space, model integrity (walls through the slab above, openings above their wall, furniture above the ceiling, furniture or elements in walls, furniture in the same place, stairs without a slab opening, unguarded openings, unsupported bearing walls, long cantilevers), and whether constraints are satisfied.',
   input: z.object({}),
   run: (_, { session }) => ({
     issues: derived(session.project).rules,
