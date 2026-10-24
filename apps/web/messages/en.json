@@ -783,5 +783,6 @@
   "measure_tool": "Tape measure",
   "measure_hint_plan": "Click two points to measure; hold Shift to keep it straight",
   "measure_hint_3d": "Tap two points on the model to measure",
-  "measure_done": "Done"
+  "measure_done": "Done",
+  "plan_north": "N"
 }

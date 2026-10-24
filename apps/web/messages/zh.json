@@ -783,5 +783,6 @@
   "measure_tool": "卷尺",
   "measure_hint_plan": "点两点量距离，按住 Shift 保持水平或竖直",
   "measure_hint_3d": "在模型表面点两点量距离",
-  "measure_done": "完成"
+  "measure_done": "完成",
+  "plan_north": "北"
 }

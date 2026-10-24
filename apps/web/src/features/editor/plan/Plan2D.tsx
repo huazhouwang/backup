@@ -10,7 +10,7 @@ import { holdAxis, snapMeasure } from './plan-measure';
 import { placeCall, type PlaceResult } from './plan-place';
 import { exteriorDimensions, selectionDimensions, type DimChain } from '@/graphics/plan/dimensions';
 import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
-import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
+import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanMarks, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
 import { useEditor } from '../store';
 import { m } from '@/lib/i18n';
@@ -230,6 +230,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           )}
 
           {view.layers.labels && <PlanLabels shapes={shapes} pick={pick} />}
+          <PlanMarks frame={frame} northAngle={project.site.northAngle} size={scale.size} line={screenLine} />
 
           {/* The selected object can be dragged: a handle over it, then snapping guides and the distance while dragging */}
           {handle && outlines.has(handle) && (

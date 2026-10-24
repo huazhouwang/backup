@@ -1,6 +1,6 @@
 /**
  * The plan printed on a floor in 3D, drawn by the plan's own code (PlanDrawing), so on entering 3D the flat house is exactly the
- * plan and grows out of it. Two layers: paper (site boundary, room floors, the current floor's dimensions; and with it a sheet of
+ * plan and grows out of it. Two layers: paper (site boundary, room floors, the current floor's dimensions, north arrow and scale bar; and with it a sheet of
  * the plan's background around the drawing) fades out first as the house rises, then ink (walls, furniture, doors, labels): the built house shows its own floors,
  * furniture and walls. Both are unlit, so their colors are the plan's. Line widths are the plan's screen widths at the scale the plan
  * is shown, converted to millimetres.
@@ -11,8 +11,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { exteriorDimensions } from '@/graphics/plan/dimensions';
-import { levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
-import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanPaper, scaledLine, type Line } from '@/graphics/plan/PlanDrawing';
+import { dimensionScale, levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
+import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanMarks, PlanPaper, scaledLine, type Line } from '@/graphics/plan/PlanDrawing';
 import type { Quality } from './Renderer';
 import { useBuildsVersion } from '@/lib/builds';
 import { M } from '@/graphics/three/scene';
@@ -104,6 +104,7 @@ export function FloorDrawing({
             {current && frame.dims && (
               <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, frame.dims)} size={frame.dims.size} line={line} />
             )}
+            {current && <PlanMarks frame={frame} northAngle={project.site.northAngle} size={(frame.dims ?? dimensionScale(shapes.bounds)).size} line={line} />}
           </>,
           pw,
           ph,

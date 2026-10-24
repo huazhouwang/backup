@@ -89,23 +89,26 @@ function drawingExtent(p: Project, level: string) {
 }
 
 /**
- * What the plan shows of a level, in millimetres: its drawing plus a margin. With `view` (the size it is fitted to, in pixels)
- * the margin holds the dimension chains, sized to read at that fit, and their scale comes with the frame; 3D starts from the same.
+ * What the plan shows of a level, in millimetres: its drawing plus a margin (`pad`). With `view` (the size it is fitted to, in
+ * pixels) the margin holds the dimension chains, sized to read at that fit, and their scale comes with the frame; 3D starts from
+ * the same. The margin's corners stay free: the north arrow and the scale bar go there.
  */
 export function planFrame(p: Project, level: string, view?: { width: number; height: number } | false) {
   const [x0, y0, x1, y1] = drawingExtent(p, level);
   const framed = (pad: number) => ({ x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad });
-  let frame = framed(PLAN_PAD);
+  let pad = PLAN_PAD;
+  let frame = framed(pad);
   let dims: DimensionScale | undefined;
   if (view && view.width > 0 && view.height > 0) {
     const bounds = levelShapes(p, level).bounds;
     // The chains' size depends on the scale, which depends on the margin they need: a few rounds settle it
     for (let i = 0; i < 3; i++) {
       dims = dimensionScale(bounds, Math.min(view.width / frame.w, view.height / frame.h));
-      frame = framed(Math.max(PLAN_PAD, dims.step * EXTERIOR_REACH));
+      pad = Math.max(PLAN_PAD, dims.step * EXTERIOR_REACH);
+      frame = framed(pad);
     }
   }
-  return { ...frame, dims };
+  return { ...frame, pad, dims };
 }
 
 export const polyPath = (polys: Polygon[]) =>
