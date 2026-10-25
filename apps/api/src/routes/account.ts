@@ -40,6 +40,12 @@ export const accountRoutes = new Hono<AppEnv>()
 
     await db.batch([
       db.prepare(`delete from events where family_id in (${soleFamilies})`).bind(userId),
+      db
+        .prepare(
+          `delete from observations where baby_id in
+           (select id from babies where family_id in (${soleFamilies}))`,
+        )
+        .bind(userId),
       db.prepare(`delete from babies where family_id in (${soleFamilies})`).bind(userId),
       db.prepare(`delete from families where id in (${soleFamilies})`).bind(userId),
       // Shared families the user owned: promote the longest-standing other member.

@@ -23,6 +23,8 @@ import { Route as SettingsDisplayRouteImport } from './routes/settings.display'
 import { Route as SettingsExportRouteImport } from './routes/settings.export'
 import { Route as SettingsRemindersRouteImport } from './routes/settings.reminders'
 import { Route as SettingsVoiceRouteImport } from './routes/settings.voice'
+import { Route as TipsIndexRouteImport } from './routes/tips.index'
+import { Route as TipsTipIdRouteImport } from './routes/tips.$tipId'
 import { Route as SettingsFamilyFamilyIdRouteImport } from './routes/settings.family.$familyId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -95,6 +97,16 @@ const SettingsVoiceRoute = SettingsVoiceRouteImport.update({
   path: '/settings/voice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TipsIndexRoute = TipsIndexRouteImport.update({
+  id: '/tips/',
+  path: '/tips/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TipsTipIdRoute = TipsTipIdRouteImport.update({
+  id: '/tips/$tipId',
+  path: '/tips/$tipId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsFamilyFamilyIdRoute = SettingsFamilyFamilyIdRouteImport.update({
   id: '/settings/family/$familyId',
   path: '/settings/family/$familyId',
@@ -115,7 +127,9 @@ export interface FileRoutesByFullPath {
   '/settings/export': typeof SettingsExportRoute
   '/settings/reminders': typeof SettingsRemindersRoute
   '/settings/voice': typeof SettingsVoiceRoute
+  '/tips/$tipId': typeof TipsTipIdRoute
   '/settings/': typeof SettingsIndexRoute
+  '/tips/': typeof TipsIndexRoute
   '/settings/family/$familyId': typeof SettingsFamilyFamilyIdRoute
 }
 export interface FileRoutesByTo {
@@ -132,7 +146,9 @@ export interface FileRoutesByTo {
   '/settings/export': typeof SettingsExportRoute
   '/settings/reminders': typeof SettingsRemindersRoute
   '/settings/voice': typeof SettingsVoiceRoute
+  '/tips/$tipId': typeof TipsTipIdRoute
   '/settings': typeof SettingsIndexRoute
+  '/tips': typeof TipsIndexRoute
   '/settings/family/$familyId': typeof SettingsFamilyFamilyIdRoute
 }
 export interface FileRoutesById {
@@ -150,7 +166,9 @@ export interface FileRoutesById {
   '/settings/export': typeof SettingsExportRoute
   '/settings/reminders': typeof SettingsRemindersRoute
   '/settings/voice': typeof SettingsVoiceRoute
+  '/tips/$tipId': typeof TipsTipIdRoute
   '/settings/': typeof SettingsIndexRoute
+  '/tips/': typeof TipsIndexRoute
   '/settings/family/$familyId': typeof SettingsFamilyFamilyIdRoute
 }
 export interface FileRouteTypes {
@@ -169,7 +187,9 @@ export interface FileRouteTypes {
     | '/settings/export'
     | '/settings/reminders'
     | '/settings/voice'
+    | '/tips/$tipId'
     | '/settings/'
+    | '/tips/'
     | '/settings/family/$familyId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -186,7 +206,9 @@ export interface FileRouteTypes {
     | '/settings/export'
     | '/settings/reminders'
     | '/settings/voice'
+    | '/tips/$tipId'
     | '/settings'
+    | '/tips'
     | '/settings/family/$familyId'
   id:
     | '__root__'
@@ -203,7 +225,9 @@ export interface FileRouteTypes {
     | '/settings/export'
     | '/settings/reminders'
     | '/settings/voice'
+    | '/tips/$tipId'
     | '/settings/'
+    | '/tips/'
     | '/settings/family/$familyId'
   fileRoutesById: FileRoutesById
 }
@@ -221,7 +245,9 @@ export interface RootRouteChildren {
   SettingsExportRoute: typeof SettingsExportRoute
   SettingsRemindersRoute: typeof SettingsRemindersRoute
   SettingsVoiceRoute: typeof SettingsVoiceRoute
+  TipsTipIdRoute: typeof TipsTipIdRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  TipsIndexRoute: typeof TipsIndexRoute
   SettingsFamilyFamilyIdRoute: typeof SettingsFamilyFamilyIdRoute
 }
 
@@ -325,6 +351,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsVoiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tips/': {
+      id: '/tips/'
+      path: '/tips'
+      fullPath: '/tips/'
+      preLoaderRoute: typeof TipsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tips/$tipId': {
+      id: '/tips/$tipId'
+      path: '/tips/$tipId'
+      fullPath: '/tips/$tipId'
+      preLoaderRoute: typeof TipsTipIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/family/$familyId': {
       id: '/settings/family/$familyId'
       path: '/settings/family/$familyId'
@@ -349,7 +389,9 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsExportRoute: SettingsExportRoute,
   SettingsRemindersRoute: SettingsRemindersRoute,
   SettingsVoiceRoute: SettingsVoiceRoute,
+  TipsTipIdRoute: TipsTipIdRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  TipsIndexRoute: TipsIndexRoute,
   SettingsFamilyFamilyIdRoute: SettingsFamilyFamilyIdRoute,
 }
 export const routeTree = rootRouteImport

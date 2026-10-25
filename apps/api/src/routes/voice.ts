@@ -97,13 +97,13 @@ const REPLIES = {
 
 const stop = (reply: string): AgentTurn => ({ reply, done: true, confirming: false })
 
-interface Settings {
+export interface Settings {
   phrase: string
   timeZone: string
   locale: string
 }
 
-async function readSettings(db: D1Database, userId: string): Promise<Settings> {
+export async function readSettings(db: D1Database, userId: string): Promise<Settings> {
   const row = await db
     .prepare('select phrase, time_zone as timeZone, locale from voice_settings where user_id = ?')
     .bind(userId)
@@ -249,7 +249,12 @@ async function transcript(db: D1Database, userId: string, now: number, before?: 
 }
 
 /** Counts a message to the model; returns the user's count for the day. */
-async function countMessage(db: D1Database, userId: string, settings: Settings, now: number) {
+export async function countMessage(
+  db: D1Database,
+  userId: string,
+  settings: Settings,
+  now: number,
+) {
   const day = new Date(now).toISOString().slice(0, 10)
   const row = await db
     .prepare(

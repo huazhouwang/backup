@@ -40,9 +40,12 @@ function startedLabel(at: number) {
  */
 export function ChatPage({
   focus,
+  draft = '',
 }: {
   /** Opened to say something: the keyboard comes up. */
   focus: boolean
+  /** Text the field starts with. */
+  draft?: string
 }) {
   const page = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
@@ -76,7 +79,7 @@ export function ChatPage({
     list,
   } = useChatHistory(true)
   useBounce(scroller, { axes: ['y'], content: list })
-  const [text, setText] = useState('')
+  const [text, setText] = useState(draft)
   const [confirming, setConfirming] = useState(false)
   const [unheard, setUnheard] = useState(false)
   // The page renders only in the browser, so this can be asked right away.

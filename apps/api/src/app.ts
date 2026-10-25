@@ -15,6 +15,7 @@ import { familyRoutes } from './routes/families'
 import { familyInviteRoutes, inviteAcceptRoutes, invitePreviewRoutes } from './routes/invites'
 import { pushRoutes, reminderRoutes } from './routes/notifications'
 import { syncRoutes } from './routes/sync'
+import { tipsRoutes } from './routes/tips'
 import { type AdapterFor, siriRoutes, voiceRoutes } from './routes/voice'
 import type { AppEnv, AuthFor } from './types'
 import { decryptKey, aiAdapter } from './voice/ai'
@@ -104,6 +105,7 @@ export function createApp(options: AppOptions = {}) {
   app.route('/sync', syncRoutes)
   app.route('/push', pushRoutes)
   app.route('/reminders', reminderRoutes)
+  app.route('/tips', tipsRoutes(voiceAdapter))
   app.route('/voice/siri', siriRoutes(voiceAdapter))
   app.route('/voice', voiceRoutes(voiceAdapter))
 

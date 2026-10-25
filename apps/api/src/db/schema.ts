@@ -327,3 +327,18 @@ export const chatInterrupts = sqliteTable(
 )
 
 export * from './auth-schema'
+
+/**
+ * Bobo's observation on a baby's week, written by the family's AI at most once a day (the
+ * family's local `day`) and kept for everyone who opens the Tips tab that day.
+ */
+export const observations = sqliteTable(
+  'observations',
+  {
+    babyId: text('baby_id').notNull(),
+    day: text('day').notNull(),
+    text: text('text').notNull(),
+    createdAt: integer('created_at').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.babyId, table.day] })],
+)

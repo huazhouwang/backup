@@ -2,11 +2,13 @@ import { Link, useHydrated, useLocation } from '@tanstack/react-router'
 
 import { m } from '../paraglide/messages.js'
 import { refreshToday } from './PullToRefresh'
+import { SettingsIcon, StatsIcon, TipsIcon, TodayIcon } from './ui/TabIcons'
 
 const tabs = [
-  { to: '/', label: m.tabToday },
-  { to: '/stats', label: m.tabStats },
-  { to: '/settings', label: m.tabSettings },
+  { to: '/', label: m.tabToday, Icon: TodayIcon },
+  { to: '/stats', label: m.tabStats, Icon: StatsIcon },
+  { to: '/tips', label: m.tabTips, Icon: TipsIcon },
+  { to: '/settings', label: m.tabSettings, Icon: SettingsIcon },
 ] as const
 
 export function TabBar() {
@@ -31,8 +33,9 @@ export function TabBar() {
           activeOptions={{ exact: tab.to === '/' }}
           // Tapping Today again refreshes it, like a pull.
           onClick={tab.to === '/' && pathname === '/' ? refreshToday : undefined}
-          className="flex min-h-touch flex-1 items-center justify-center font-extrabold text-fg-muted aria-[current=page]:text-primary-text"
+          className="flex min-h-touch flex-1 flex-col items-center justify-center gap-0.5 text-caption font-extrabold text-fg-muted aria-[current=page]:text-primary-text"
         >
+          <tab.Icon />
           {tab.label()}
         </Link>
       ))}

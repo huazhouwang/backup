@@ -7,6 +7,8 @@ import { useAccess } from '../sync/use-access'
 const searchSchema = z.object({
   /** Opened to say something: the field takes the focus, and the keyboard comes up. */
   say: z.boolean().optional().catch(undefined),
+  /** Text to start from, such as a tip's topic. */
+  draft: z.string().max(100).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/chat')({
@@ -16,8 +18,8 @@ export const Route = createFileRoute('/chat')({
 
 /** Talking to the assistant: signed-in users only, as what it records goes to the server. */
 function Chat() {
-  const { say } = Route.useSearch()
+  const { say, draft } = Route.useSearch()
   const { userId } = useAccess()
   if (!userId) return <Navigate to="/" replace />
-  return <ChatPage focus={say === true} />
+  return <ChatPage focus={say === true} draft={draft} />
 }

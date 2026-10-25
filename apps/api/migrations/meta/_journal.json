@@ -85,6 +85,13 @@
       "when": 1792900000000,
       "tag": "0011_duration_records",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1792962705613,
+      "tag": "0012_observations",
+      "breakpoints": true
     }
   ]
 }
