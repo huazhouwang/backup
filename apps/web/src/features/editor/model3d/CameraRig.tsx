@@ -7,6 +7,8 @@ import { planFrame } from '@/graphics/plan/plan-geometry';
 import { useEditor } from '../store';
 import { BIRD, FOV, framed, nearPlane, type Pose } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
+import { northOnPlan } from '@/lib/solar';
+import { publishHeading } from '../compass/heading';
 
 export type Orbit = { target: THREE.Vector3; enabled: boolean; update(): void };
 /** The last 3D camera per project, so coming back from the plan returns to it */
@@ -183,8 +185,21 @@ export function CameraRig({
     turnTo(framed(box, size.width / size.height, new THREE.Vector3(-(sec.b[1] - sec.a[1]) / len, 0, (sec.b[0] - sec.a[0]) / len)), 700);
   }, [camera3d.section, orbit]);
 
-  // The near plane follows the distance, so depth stays precise however far the camera zooms out
+  // The compass: tapped, turn to look north from where the camera is, at the same height and distance
+  const northRequest = useEditor(s => s.northRequest);
+  useEffect(() => {
+    if (!northRequest || !orbit) return;
+    const d = direction();
+    const el = Math.min(Math.asin(THREE.MathUtils.clamp(d.y, -1, 1)), THREE.MathUtils.degToRad(89.9));
+    const [nx, ny] = northOnPlan(project.site.northAngle);
+    const toward = new THREE.Vector3(-nx * Math.cos(el), Math.sin(el), -ny * Math.cos(el));
+    const target = orbit.target.clone();
+    turnTo({ target, pos: target.clone().addScaledVector(toward, camera.position.distanceTo(target)) }, 700);
+  }, [northRequest]);
+
+  // The near plane follows the distance, so depth stays precise however far the camera zooms out; the compass follows the view
   useFrame(() => {
+    publishHeading(camera, project.site.northAngle);
     if (!orbit || !(camera instanceof THREE.PerspectiveCamera)) return;
     const near = nearPlane(camera.position.distanceTo(orbit.target));
     if (Math.abs(near - camera.near) > near * 0.05) {

@@ -1,14 +1,28 @@
 /**
  * Editor UI state the canvas and the panels share: the before/after comparison, the screenshot, messages for the agent, the 2D/3D
- * switch, place mode, the tape measure, the section tool and what the 3D view shows
+ * switch, place mode, the tape measure, the section tool, what the 3D view shows and where the sun stands
  */
+import { dayOfYear } from '@/lib/solar';
 import type { StoreContext } from './create';
 import type { EditorActions, EditorState } from './types';
 
-type Ui = Pick<EditorState, 'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring' | 'sectioning' | 'camera3d'> &
+type Ui = Pick<
+  EditorState,
+  'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring' | 'sectioning' | 'camera3d' | 'sun' | 'northRequest'
+> &
   Pick<
     EditorActions,
-    'setCompare' | 'setCapture' | 'askAgent' | 'setLeave3D' | 'setPlanUntil3D' | 'setPlacing' | 'setMeasuring' | 'setSectioning' | 'setCamera3d'
+    | 'setCompare'
+    | 'setCapture'
+    | 'askAgent'
+    | 'setLeave3D'
+    | 'setPlanUntil3D'
+    | 'setPlacing'
+    | 'setMeasuring'
+    | 'setSectioning'
+    | 'setCamera3d'
+    | 'setSun'
+    | 'faceNorth'
   >;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
@@ -22,6 +36,9 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   measuring: false,
   sectioning: false,
   camera3d: { walking: false, section: null },
+  // Today at three in the afternoon
+  sun: { day: dayOfYear(new Date()), minutes: 15 * 60 },
+  northRequest: 0,
 
   setCompare(on) {
     set({ compare: on });
@@ -58,5 +75,13 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   setCamera3d(patch) {
     set(s => ({ camera3d: { ...s.camera3d, ...patch } }));
+  },
+
+  setSun(patch) {
+    set(s => ({ sun: { ...s.sun, ...patch } }));
+  },
+
+  faceNorth() {
+    set({ northRequest: Date.now() });
   },
 });

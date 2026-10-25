@@ -2,7 +2,8 @@
 import type { Project } from '@plinth/core';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { M, shadowGround, siteBounds, SKYLIGHT_INTENSITY, sunLight, type ShadowQuality } from '@/graphics/three/scene';
+import { useThree } from '@react-three/fiber';
+import { M, shadowGround, siteBounds, SKYLIGHT_INTENSITY, SUN_INTENSITY, sunLight, sunSetup, type ShadowQuality } from '@/graphics/three/scene';
 
 export function HouseStage({
   project,
@@ -11,6 +12,8 @@ export function HouseStage({
   span,
   quality,
   colors,
+  toward,
+  strength = 1,
 }: {
   project: Project;
   center: THREE.Vector3;
@@ -19,10 +22,20 @@ export function HouseStage({
   span: number;
   quality: ShadowQuality;
   colors: { skylight: string; wall: string; sun: string; shadow: string };
+  /** Toward the sun (see lib/solar.ts), and how strong it shines (0–1, low near the horizon) */
+  toward?: THREE.Vector3;
+  strength?: number;
 }) {
   // A shadow map keeps its size once created: a new sun when the quality changes
   const sun = useMemo(() => sunLight(colors.sun, center, radius, quality), [colors.sun, center.x, center.y, center.z, radius, quality]);
   useEffect(() => () => sun.shadow.map?.dispose(), [sun]);
+  // The sun moves with the chosen day and time
+  const invalidate = useThree(s => s.invalidate);
+  useEffect(() => {
+    sun.position.copy(sunSetup(center, radius, quality, toward).position);
+    sun.intensity = SUN_INTENSITY * strength;
+    invalidate();
+  }, [sun, toward?.x, toward?.y, toward?.z, strength]);
   const [cx, cz] = useMemo(() => {
     const [x0, y0, x1, y1] = siteBounds(project);
     return [((x0 + x1) / 2) * M, ((y0 + y1) / 2) * M];

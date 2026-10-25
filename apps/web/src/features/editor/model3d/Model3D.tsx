@@ -36,6 +36,7 @@ import { Capture, Wake } from './Capture';
 import { TintColors } from './feedback';
 import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
+import { sunDirection, sunPosition } from '@/lib/solar';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
@@ -106,6 +107,14 @@ export function Model3D() {
   const solids = useMemo(() => projectElements(project).flatMap(g => g.solids), [project]);
   const openings = useMemo(() => openingFrames(project), [project]);
   const roofed = useMemo(() => roofs(project), [project]);
+  // The sun at the chosen day and time: kept a little above the horizon for the light, weaker as it sinks
+  const sunTime = useEditor(s => s.sun);
+  const { site } = project;
+  const [sunToward, sunStrength] = useMemo(() => {
+    const at = sunPosition(site.location, sunTime.day, sunTime.minutes);
+    const v = new THREE.Vector3(...sunDirection(site.northAngle, { ...at, elevation: Math.max(at.elevation, 6) }));
+    return [v, THREE.MathUtils.clamp((at.elevation + 2) / 14, 0.15, 1)] as const;
+  }, [sunTime.day, sunTime.minutes, site.location, site.northAngle]);
   // Floors less the slab openings that cut them
   const slabShapes = useMemo(() => new Map(project.spaces.map(s => [s.id, slabShape(project, s)])), [project.spaces]);
   const elementBuilt = (e: (typeof project.elements)[number]) => {
@@ -169,7 +178,7 @@ export function Model3D() {
             setQuality(detectQuality(doc.defaultView!, gl.getContext()));
           }}
         >
-          <HouseStage project={project} center={center} radius={radius} span={span} quality={q} colors={c} />
+          <HouseStage project={project} center={center} radius={radius} span={span} quality={q} colors={c} toward={sunToward} strength={sunStrength} />
 
           {/* The plan's page around the drawing at the current floor, while the house lies flat */}
           <group position={[0, (current?.elevation ?? 0) * M, 0]}>

@@ -15,6 +15,8 @@ import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { FOV } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
 import { useEditor, useEditorStore } from '../store';
+import { northOnPlan } from '@/lib/solar';
+import { publishHeading } from '../compass/heading';
 import { resumeOrbit } from './CameraRig';
 import { buildWorld, collide, EYE, groundAt, type Role, type World } from './walk-world';
 
@@ -144,6 +146,15 @@ export function WalkView() {
     };
     return () => void delete win.walkProbe;
   }, [doc]);
+
+  // The compass: tapped, look north
+  const northRequest = useEditor(s => s.northRequest);
+  useEffect(() => {
+    if (!northRequest) return;
+    const [nx, ny] = northOnPlan(project.site.northAngle);
+    Object.assign(me.current, { yaw: Math.atan2(-nx, -ny), pitch: 0 });
+    invalidate();
+  }, [northRequest]);
 
   // The level switcher: go to that level's start
   useEffect(() => {
@@ -328,6 +339,8 @@ export function WalkView() {
     if (m.foot < project.site.groundLevel * M - 10) goTo(standing.current ?? level);
     camera.position.set(m.x, m.eye!, m.z);
     camera.rotation.set(m.pitch, m.yaw, 0, 'YXZ');
+    camera.updateMatrixWorld();
+    publishHeading(camera, project.site.northAngle);
     // The level follows the feet
     const on = [...project.levels]
       .sort((a, b) => a.elevation - b.elevation)

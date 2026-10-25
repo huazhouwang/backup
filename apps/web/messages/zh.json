@@ -784,7 +784,6 @@
   "measure_hint_plan": "点两点量距离，按住 Shift 保持水平或竖直",
   "measure_hint_3d": "点一点起，线跟着走；靠近红、绿、蓝轴自动锁定，Shift 锁住；手机上单指拖出终点",
   "measure_done": "完成",
-  "plan_north": "北",
   "section_tool": "剖切",
   "section_hint": "在平面图上点两点画剖切线，从线的右侧往对面看；按住 Shift 保持水平或竖直",
   "view_section_flip": "反方向看",
@@ -796,5 +795,14 @@
   "section_on": "剖切中",
   "section_clear": "取消剖切",
   "model3d_hint_walk_touch": "左侧拖动行走，右侧拖动环顾，楼梯可以直接走上去",
-  "core_rule_stair_arrival_no_floor": "{element}到达{level}的地方是楼板洞口，没有楼板可以踩"
+  "core_rule_stair_arrival_no_floor": "{element}到达{level}的地方是楼板洞口，没有楼板可以踩",
+  "compass": "指北针",
+  "compass_north": "朝北看",
+  "sun_open": "调整日照",
+  "sun_title": "日照",
+  "sun_date": "日期",
+  "sun_time": "时间",
+  "sun_now": "现在",
+  "sun_position": "太阳高度 {elevation}°，方位 {azimuth}°",
+  "sun_below": "太阳在地平线下"
 }

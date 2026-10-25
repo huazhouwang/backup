@@ -1,5 +1,6 @@
 /**
- * The 3D view's light and backdrop, shared by the editor and the house stills: a warm white sun from the south-west casting soft
+ * The 3D view's light and backdrop, shared by the editor and the house stills: a warm white sun (from the south-west, or where the
+ * editor's sun stands) casting soft
  * shadows, a sky light, SketchUp's sky and ground split at the horizon, and a plane at ground level that catches the shadows.
  * three.js divides diffuse light by π, hence the strong intensities.
  */
@@ -10,6 +11,9 @@ export const SUN_INTENSITY = 1.4;
 /** How dark the shadows are on the ground around the house */
 export const GROUND_SHADOW_OPACITY = 0.35;
 
+/** Toward the sun when no time is given: from the south-west, high */
+export const DEFAULT_SUN = new THREE.Vector3(-1.2, 2, 0.9).normalize();
+
 /** Shadow quality: the editor drops to 'low' on devices that can't keep up */
 export type ShadowQuality = 'high' | 'low';
 
@@ -18,15 +22,15 @@ export type ShadowQuality = 'high' | 'low';
  * shadow-map texels: less, and large flat floors shadow themselves in a fine pattern that the soft filter blurs into an even
  * darkening (one terrace darker than another of the same material).
  */
-export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQuality = 'high') {
+export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQuality = 'high', toward: THREE.Vector3 = DEFAULT_SUN) {
   const mapSize = quality === 'high' ? 2048 : 1024;
   return {
-    position: new THREE.Vector3(center.x - radius * 1.2, center.y + radius * 2, center.z + radius * 0.9),
+    position: center.clone().addScaledVector(toward, radius * 2.5),
     mapSize,
     shadowRadius: quality === 'high' ? 6 : 3,
     bias: -0.0004,
     normalBias: ((radius * 2.8) / mapSize) * 2,
-    camera: { left: -radius * 1.4, right: radius * 1.4, top: radius * 1.4, bottom: -radius * 1.4, near: 0.5, far: radius * 6 },
+    camera: { left: -radius * 1.4, right: radius * 1.4, top: radius * 1.4, bottom: -radius * 1.4, near: 0.5, far: radius * 10 },
   };
 }
 

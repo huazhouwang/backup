@@ -36,6 +36,10 @@
     // The method is a variable; GET requests are sent without a body
     "unicorn/no-invalid-fetch-options": "off"
   },
+  "overrides": [
+    // Generated shadcn code stays as generated
+    { "files": ["apps/web/src/components/ui/**"], "rules": { "eslint/no-underscore-dangle": "off" } }
+  ],
   "ignorePatterns": [
     "**/node_modules/**",
     "**/dist/**",

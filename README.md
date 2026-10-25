@@ -39,7 +39,7 @@ cd apps/web
 npm test                               # web unit tests: editor store (autosave, conflicts, versions, read-only)
 npm run fake-llm &                     # fake model (OpenAI-compatible API, scripted tool calls)
 npm run dev > dev.log &
-npm run e2e                            # end to end (Playwright Test, e2e/*.spec.mjs): agent chat and approvals, the agent making looks, shared look libraries, sharing and comments, email/password sign-in (OTP codes read from dev.log), the English UI, dragging in the plan, placing and editing directly (the add palette, props panel numbers, rotating, Delete), the tape measure (axis locking in 3D, one-finger drag on a phone), section planes, walking through (keys and pointer lock, walls and stairs, two thumbs on a phone), the API permission matrix, version history
+npm run e2e                            # end to end (Playwright Test, e2e/*.spec.mjs): agent chat and approvals, the agent making looks, shared look libraries, sharing and comments, email/password sign-in (OTP codes read from dev.log), the English UI, dragging in the plan, placing and editing directly (the add palette, props panel numbers, rotating, Delete), the tape measure (axis locking in 3D, one-finger drag on a phone), the compass and the sun, section planes, walking through (keys and pointer lock, walls and stairs, two thumbs on a phone), the API permission matrix, version history
 npx playwright test permissions        # one file; the servers above are reused, or started by the config when not running
 ```
 

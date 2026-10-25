@@ -77,6 +77,10 @@ export interface EditorState {
   sectioning: boolean;
   /** The 3D camera (see Camera3D) */
   camera3d: Camera3D;
+  /** Where the sun stands, as SketchUp's shadow settings: a day of the year and a local time (minutes after midnight); view state, not saved */
+  sun: { day: number; minutes: number };
+  /** Asks the 3D view to turn to look north (the time of the request) */
+  northRequest: number;
 }
 
 export interface EditorActions {
@@ -91,6 +95,8 @@ export interface EditorActions {
   setMeasuring(on: boolean): void;
   setSectioning(on: boolean): void;
   setCamera3d(patch: Partial<Camera3D>): void;
+  setSun(patch: Partial<EditorState['sun']>): void;
+  faceNorth(): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

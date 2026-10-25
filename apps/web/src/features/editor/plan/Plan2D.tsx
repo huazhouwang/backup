@@ -256,7 +256,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           )}
 
           {view.layers.labels && <PlanLabels shapes={shapes} pick={pick} />}
-          <PlanMarks frame={frame} northAngle={project.site.northAngle} size={scale.size} line={screenLine} />
+          <PlanMarks frame={frame} size={scale.size} line={screenLine} />
 
           {/* The selected object can be dragged: a handle over it, then snapping guides and the distance while dragging */}
           {handle && outlines.has(handle) && (

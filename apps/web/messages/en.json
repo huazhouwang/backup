@@ -784,7 +784,6 @@
   "measure_hint_plan": "Click two points to measure; hold Shift to keep it straight",
   "measure_hint_3d": "Tap a start point and the tape follows; it locks onto the red, green and blue axes (Shift holds one); on a phone drag one finger to the end",
   "measure_done": "Done",
-  "plan_north": "N",
   "section_tool": "Section",
   "section_hint": "Click two points to draw a section line; it looks across from the right-hand side. Hold Shift to keep it straight",
   "view_section_flip": "Look the other way",
@@ -796,5 +795,14 @@
   "section_on": "Section",
   "section_clear": "Clear section",
   "model3d_hint_walk_touch": "Drag on the left to walk, on the right to look around; stairs lead up",
-  "core_rule_stair_arrival_no_floor": "{element} arrives over the opening in the floor of {level}, with no floor to step onto"
+  "core_rule_stair_arrival_no_floor": "{element} arrives over the opening in the floor of {level}, with no floor to step onto",
+  "compass": "Compass",
+  "compass_north": "Look north",
+  "sun_open": "Set the sun",
+  "sun_title": "Sunlight",
+  "sun_date": "Date",
+  "sun_time": "Time",
+  "sun_now": "Now",
+  "sun_position": "Sun {elevation}° high, bearing {azimuth}°",
+  "sun_below": "The sun is below the horizon"
 }

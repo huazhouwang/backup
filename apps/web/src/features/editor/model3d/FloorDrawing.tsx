@@ -104,7 +104,7 @@ export function FloorDrawing({
             {current && frame.dims && (
               <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, frame.dims)} size={frame.dims.size} line={line} />
             )}
-            {current && <PlanMarks frame={frame} northAngle={project.site.northAngle} size={(frame.dims ?? dimensionScale(shapes.bounds)).size} line={line} />}
+            {current && <PlanMarks frame={frame} size={(frame.dims ?? dimensionScale(shapes.bounds)).size} line={line} />}
           </>,
           pw,
           ph,

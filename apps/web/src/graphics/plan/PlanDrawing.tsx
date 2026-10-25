@@ -6,7 +6,6 @@
  * is optional.
  */
 import type { Project } from '@plinth/core';
-import { m } from '@/lib/i18n';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
 import { isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
@@ -225,24 +224,11 @@ export function PlanDimensions({ chains, size, line, color = 'var(--foreground)'
 const SCALE_LENGTHS = [0.5, 1, 2, 5, 10, 20];
 
 /**
- * The drawing's north arrow and scale bar, in the frame's free corners: the arrow top-right, turned to the site's north; the bar
- * bottom-left, a round length in metres in alternating blocks. Sized like the dimensions.
+ * The drawing's scale bar, in the frame's bottom-left corner: a round length in metres in alternating blocks, sized like the
+ * dimensions. (North is on the compass over the canvas.)
  */
-export function PlanMarks({
-  frame,
-  northAngle,
-  size,
-  line,
-}: {
-  frame: { x: number; y: number; w: number; h: number; pad: number };
-  northAngle: number;
-  size: number;
-  line: Line;
-}) {
+export function PlanMarks({ frame, size, line }: { frame: { x: number; y: number; w: number; h: number; pad: number }; size: number; line: Line }) {
   const c = frame.pad / 2;
-  // North arrow: a circle with a half-filled arrow, and the letter beyond its tip
-  const r = Math.min(size * 1.6, c * 0.6);
-  const [nx, ny] = [frame.x + frame.w - c, frame.y + c];
   // The bar: the longest round length that fits the corner
   const room = (frame.pad * 0.8) / 1000;
   const length = [...SCALE_LENGTHS].reverse().find(l => l <= room) ?? SCALE_LENGTHS[0];
@@ -252,14 +238,6 @@ export function PlanMarks({
   const [bx, by] = [frame.x + c - (length * 1000) / 2, frame.y + frame.h - c];
   return (
     <g pointerEvents="none" fontFamily="var(--font-mono)" fontSize={size} fill="var(--foreground)">
-      <g transform={`translate(${nx} ${ny}) rotate(${northAngle})`}>
-        <circle r={r} fill="none" stroke="var(--foreground)" {...line(0.8)} />
-        <polygon points={`0,${-r} ${r * 0.4},${r * 0.6} 0,${r * 0.3}`} fill="var(--foreground)" />
-        <polygon points={`0,${-r} ${-r * 0.4},${r * 0.6} 0,${r * 0.3}`} fill="none" stroke="var(--foreground)" {...line(0.8)} />
-        <text y={-r - size * 0.35} textAnchor="middle" fontFamily="var(--font-sans)" fontWeight={600} transform={`rotate(${-northAngle} 0 ${-r - size * 0.7})`}>
-          {m.plan_north()}
-        </text>
-      </g>
       {Array.from({ length: parts }, (_, i) => (
         <rect
           key={i}
