@@ -46,18 +46,6 @@ export function DurationTimesFields({
           onSelect={(minutes) => dispatch({ type: 'endedAgo', minutes })}
         />
       )}
-      <div className="flex flex-col gap-1">
-        <TimeRow
-          label={m.eventStart()}
-          at={startAt}
-          onChange={(at) => dispatch({ type: 'start', at })}
-          now={now}
-          error={errors.start}
-        />
-        {times.startAt === null && (
-          <p className="m-0 text-caption text-fg-muted">{m.durationStartDerived()}</p>
-        )}
-      </div>
       {times.kind === 'breast' ? (
         (['left', 'right'] as const).map((side) => (
           <DurationField
@@ -81,13 +69,26 @@ export function DurationTimesFields({
         />
       )}
       {times.kind === 'breast' && errors.duration && <FormError>{errors.duration}</FormError>}
-      <TimeRow
-        label={m.eventEnd()}
-        at={endAt}
-        onChange={(at) => dispatch({ type: 'end', at, now: Date.now() })}
-        now={now}
-        error={errors.end}
-      />
+      {/* Start and end together, after how long: what they add up to, either can be changed. */}
+      <div className="flex flex-col gap-2">
+        <TimeRow
+          label={m.eventStart()}
+          at={startAt}
+          onChange={(at) => dispatch({ type: 'start', at })}
+          now={now}
+          error={errors.start}
+        />
+        <TimeRow
+          label={m.eventEnd()}
+          at={endAt}
+          onChange={(at) => dispatch({ type: 'end', at, now: Date.now() })}
+          now={now}
+          error={errors.end}
+        />
+        {times.startAt === null && (
+          <p className="m-0 text-caption text-fg-muted">{m.durationStartDerived()}</p>
+        )}
+      </div>
     </div>
   )
 }
