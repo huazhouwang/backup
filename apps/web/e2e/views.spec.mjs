@@ -1,5 +1,5 @@
 // E2E: section planes → a section line drawn in the plan cuts the 3D model and the model still orbits → the section bar flips it and
-// clears it
+// clears it → going back to the plan from 3D shows it at its final framing from the first frame
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
@@ -58,6 +58,23 @@ test('views', async ({ browser: b }) => {
   await page.waitForTimeout(800);
   check((await datums()) === 0 && !(await page.getByText('剖切中').count()), 'the section bar clears the section');
   check(!(await page.getByRole('button', { name: '相机' }).count()), 'there is no camera menu');
+
+  // Back to the plan: it appears at its final framing, not at some other scale for a frame first
+  await frame.evaluate(() => {
+    window.viewBoxes = [];
+    const seen = () => {
+      const svg = document.querySelector('svg[role="img"]');
+      const vb = svg?.getAttribute('viewBox');
+      if (vb && window.viewBoxes.at(-1) !== vb) window.viewBoxes.push(vb);
+    };
+    new MutationObserver(seen).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['viewBox'] });
+  });
+  // The section left the view in 3D
+  check(!(await frame.locator('svg[role="img"]').count()), 'the plan is gone in 3D');
+  await page.getByRole('button', { name: '切换到平面' }).click({ timeout: 5000 });
+  await page.waitForTimeout(5000);
+  const boxes = await frame.evaluate(() => window.viewBoxes);
+  check(boxes.length === 1, `leaving 3D, the plan shows at one framing (${boxes.join(' | ')})`);
 
   check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 });

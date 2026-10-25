@@ -2,7 +2,7 @@
  * Floor plan: SVG in millimetres. Picking, zoom/pan, selection and change highlights, compare with before, dimensions (see
  * dimensions.ts), and dragging the selected wall, door or window, or piece of furniture (see plan-drag.ts).
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { wallBody, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
@@ -104,10 +104,13 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   }, [fitRequest]);
 
   const canEdit = useEditor(s => s.canEdit());
-  useEffect(() => {
+  // Measured before the first paint: drawn at no size first, the plan would flash at the wrong scale (leaving 3D shows it)
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setSize({ width: el.clientWidth, height: el.clientHeight }));
+    const measure = () => setSize({ width: el.clientWidth, height: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, [ref]);
