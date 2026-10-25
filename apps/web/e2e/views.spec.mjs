@@ -1,6 +1,6 @@
 // E2E: section planes → a section line drawn in the plan cuts the 3D model and the model still orbits → the section bar flips it and
 // clears it → going back to the plan from 3D shows it at its final framing from the first frame → 3D shows vertical dimensions
-// that stay put as the view turns, which the dimensions layer hides
+// on each façade that stay put as the view turns, which the dimensions layer hides
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
@@ -88,12 +88,15 @@ test('views', async ({ browser: b }) => {
     `3D stands vertical dimensions beside the house (${heights.join(' ')} | ${levels.join(' ')})`,
   );
   await page.screenshot({ path: `${OUT}/views-height-dims.png` });
-  // They stay put as the view turns
-  const sheet = () => frame.evaluate(() => document.querySelector('[data-height-sheet]')?.getAttribute('data-height-sheet'));
+  // One on each façade, and they stay put as the view turns
+  const sheet = () =>
+    frame.evaluate(() =>
+      [...document.querySelectorAll('[data-height-sheet]')].map(e => `${e.getAttribute('data-height-sheet')}@${e.getAttribute('data-at')}`).join(' '),
+    );
   const standing = await sheet();
   await drag(300, 0);
   await drag(300, 0);
-  check(!!standing && (await sheet()) === standing, `turning the view leaves them where they stand (${standing} → ${await sheet()})`);
+  check(standing.split(' ').length === 4 && (await sheet()) === standing, `turning the view leaves them where they stand (${standing} → ${await sheet()})`);
   await page.getByRole('button', { name: '更多' }).click();
   await page.getByRole('menuitem', { name: '隐藏尺寸' }).click();
   await page.waitForTimeout(800);

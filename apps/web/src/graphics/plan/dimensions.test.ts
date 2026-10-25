@@ -1,7 +1,7 @@
 import { createProject, migrate, type Project } from '@plinth/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../samples/wushi-10/project.json';
-import { elevationDimensions, elevationText, exteriorDimensions, heightDimensions, selectionDimensions, type DimChain } from './dimensions';
+import { elevationDimensions, elevationText, exteriorDimensions, heightDimensions, selectionDimensions, type DimChain, type Side } from './dimensions';
 import { levelShapes } from './plan-geometry';
 
 const p: Project = migrate(sampleJson);
@@ -122,19 +122,34 @@ describe('vertical dimensions for 3D', () => {
   });
 });
 
-describe('vertical dimensions on the south elevation', () => {
+describe('vertical dimensions on the elevations', () => {
   const all = p.levels.map(l => l.id);
+  const bounds: [number, number, number, number] = [0, 0, 10000, 8000];
+  const fineScale = { size: 100, step: 260 };
 
-  it("stand on the right side chains' lines, heights pointing down, crowded chains left out", () => {
-    const fine = elevationDimensions(p, all, 0, { size: 100, step: 260 });
-    expect(fine.chains.map(c => c.origin[0])).toEqual([390, 650, 910].slice(0, fine.chains.length));
+  it("stand on the ground chains' lines, heights pointing down, crowded chains left out", () => {
+    const fine = elevationDimensions(p, all, 'bottom', bounds, fineScale);
+    expect(fine.chains.map(c => c.origin[0])).toEqual([10390, 10650, 10910].slice(0, fine.chains.length));
     const storeys = fine.chains.find(c => c.marks.length === 5)!;
     expect(storeys.marks).toEqual([-13000, -10200, -6900, -3600, 0]);
     expect(fine.chains.at(-1)!.marks).toEqual([-13000, 200]);
     expect(fine.top).toBe(13000);
     // At a large type size the detail chain no longer fits and is dropped; the overall height always stays
-    const coarse = elevationDimensions(p, all, 0, { size: 600, step: 1560 });
+    const coarse = elevationDimensions(p, all, 'bottom', bounds, { size: 600, step: 1560 });
     expect(coarse.chains.length).toBeLessThan(fine.chains.length);
     expect(coarse.chains.at(-1)!.marks).toEqual([-13000, 200]);
+  });
+
+  it('one per façade, each at its north-east end, in its own plane, read from outside', () => {
+    const at = (side: Side) => {
+      const e = elevationDimensions(p, all, side, bounds, fineScale);
+      return { out: e.out, first: e.plane(e.chains[0].origin[0]) };
+    };
+    // Bottom and top: east of the top-right corner, in the façade's line; seen from the north, east is on the left
+    expect(at('bottom')).toEqual({ out: 1, first: [10390, 8000] });
+    expect(at('top')).toEqual({ out: -1, first: [10390, 0] });
+    // The sides: north of it; seen from the east, north is on the right
+    expect(at('right')).toEqual({ out: 1, first: [10000, -390] });
+    expect(at('left')).toEqual({ out: -1, first: [0, -390] });
   });
 });

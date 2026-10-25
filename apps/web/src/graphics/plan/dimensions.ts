@@ -298,23 +298,36 @@ export function heightDimensions(p: Project, shown: string[], side: Side): Heigh
 /** An elevation in metres as drawings write it: ±0.000, 3.000, -0.150 */
 export const elevationText = (mm: number) => (Math.abs(mm) < 0.5 ? '±0.000' : (mm / 1000).toFixed(3));
 
+/** Looking at a façade from outside, the plan direction to the viewer's right */
+const RIGHT: Record<Side, Point> = { bottom: [1, 0], top: [-1, 0], right: [0, -1], left: [0, 1] };
+
 /**
- * The vertical chains drawn on an upright sheet in the plane of the drawing's bottom façade (see HeightDims3D): x is the plan's x,
- * y is the height in mm pointing down (so -height), as an SVG elevation. They stand where the right side's ground chains run,
- * beyond `x1` (the drawing's right edge) at the same spacing, so they read as those chains turning up at the bottom-right corner,
- * the one the default view looks at. A detail or storey chain too crowded to read at this size is left out, as on the ground.
+ * The vertical chains for one façade, drawn on an upright sheet in that façade's plane (see HeightDims3D), as an SVG elevation seen
+ * from outside: x runs to the viewer's right (`right`, a plan direction; 0 where it crosses the plan's origin), y is the height
+ * in mm pointing down (so -height). They stand at the façade's north-east end (the drawing's top-right corner, `bounds`), beyond
+ * it on the lines of the ground chains on that side at the same spacing, so they read as those chains turning up; `out` says
+ * which way that is on the sheet (1 right, -1 left). The detail chain comes from that façade's doors and windows; a detail or
+ * storey chain too crowded to read at this size is left out, as on the ground. `plane` maps a sheet x back to the plan.
  */
-export function elevationDimensions(p: Project, shown: string[], x1: number, scale: { size: number; step: number }) {
+export function elevationDimensions(p: Project, shown: string[], side: Side, bounds: [number, number, number, number], scale: { size: number; step: number }) {
   const { size, step } = scale;
-  const d = heightDimensions(p, shown, 'bottom');
+  const [x0, y0, x1, y1] = bounds;
+  const right = RIGHT[side];
+  // Beyond the north-east end: east along the top and bottom façades, north along the sides
+  const along: Point = side === 'top' || side === 'bottom' ? [1, 0] : [0, -1];
+  const out = along[0] * right[0] + along[1] * right[1];
+  const corner = x1 * right[0] + y0 * right[1];
+  const d = heightDimensions(p, shown, side);
   const kept = d.chains.filter((m, k) => k === d.chains.length - 1 || readable(m, size));
   const chains: DimChain[] = kept.map((m, k) => ({
-    origin: [x1 + step * (1.5 + k), 0],
+    origin: [corner + out * step * (1.5 + k), 0],
     dir: [0, 1],
-    normal: [1, 0],
+    normal: [out, 0],
     // 0 - h, not -h: the floor stays 0 rather than -0
     marks: m.map(h => 0 - h).reverse(),
     ext: step * 0.6,
   }));
-  return { chains, levels: d.levels, grade: d.grade, top: d.chains.length ? d.chains[d.chains.length - 1][1] : 0 };
+  const at = { top: y0, bottom: y1, left: x0, right: x1 }[side];
+  const plane = (x: number): Point => (right[0] !== 0 ? [right[0] * x, at] : [at, right[1] * x]);
+  return { chains, levels: d.levels, grade: d.grade, top: d.chains.length ? d.chains[d.chains.length - 1][1] : 0, right, corner, out, plane };
 }

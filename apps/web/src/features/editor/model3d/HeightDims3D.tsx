@@ -1,9 +1,10 @@
 /**
- * The 3D view's vertical dimensions, as on an elevation drawing (see elevationDimensions): the chains stand upright at the drawing's
- * bottom-right corner (the one the default view looks at), in the plane of the bottom façade, on the lines of the right side's
- * ground chains, so they read as those chains turning up. Drawn by the plan's own code on a sheet, rasterized like the ground chains (GroundDimensions): the same lines, ticks
- * and type, scaling with the model; the floor levels and the grade carry the drawing elevation mark. They stay put as the view
- * turns, and are seen from the front (from behind, the house hides them).
+ * The 3D view's vertical dimensions, as on elevation drawings (see elevationDimensions): one upright sheet per façade, at the
+ * façade's north-east end (the drawing's top-right corner), in its plane, on the lines of the ground chains on that side, so they
+ * read as those chains turning up. Drawn by the plan's own code, rasterized like the ground chains (GroundDimensions): the same
+ * lines, ticks and type, scaling with the model; the floor levels and the grade carry the drawing elevation mark. Each sheet faces
+ * out of its façade and is one-sided: the façades turned to the camera show theirs, those behind are culled (and hidden by the
+ * house). Nothing moves as the view turns.
  */
 import type { Project } from '@plinth/core';
 import { Html } from '@react-three/drei';
@@ -11,7 +12,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
-import { elevationDimensions, elevationText } from '@/graphics/plan/dimensions';
+import { elevationDimensions, elevationText, type Side } from '@/graphics/plan/dimensions';
 import { levelShapes, planFrame } from '@/graphics/plan/plan-geometry';
 import { PlanDimensions, type Line } from '@/graphics/plan/PlanDrawing';
 import { markup } from '@/graphics/plan/markup';
@@ -20,14 +21,16 @@ import { useBuildsVersion } from '@/lib/builds';
 import { paperOpacity, rasterize, TEXTURE_PX } from './FloorDrawing';
 import type { Quality } from './Renderer';
 
+const SIDES: Side[] = ['top', 'right', 'bottom', 'left'];
+
 /**
- * A floor level's elevation as drawings mark it: a right-angled triangle with its tip on the level, a tail out to the right, the
- * elevation on the tail. The outdoor grade's triangle is filled and hangs below its line, clear of the ground floor's just above it.
+ * A floor level's elevation as drawings mark it: a right-angled triangle with its tip on the level, a tail out (`dir`, 1 to the
+ * right, -1 to the left), the elevation on the tail. The outdoor grade's triangle is filled and hangs below its line, clear of the
+ * ground floor's just above it.
  */
-function ElevationMark({ x, y, size, text, grade, line }: { x: number; y: number; size: number; text: string; grade?: boolean; line: Line }) {
+function ElevationMark({ x, y, dir, size, text, grade, line }: { x: number; y: number; dir: number; size: number; text: string; grade?: boolean; line: Line }) {
   const t = size * 0.5;
   const s = grade ? 1 : -1;
-  const tail = x + t + size * 4.6;
   return (
     <g>
       <path
@@ -36,10 +39,11 @@ function ElevationMark({ x, y, size, text, grade, line }: { x: number; y: number
         stroke="var(--foreground)"
         {...line(0.6)}
       />
-      <line x1={x - t} y1={y + s * t} x2={tail} y2={y + s * t} stroke="var(--foreground)" {...line(0.6)} />
+      <line x1={x - dir * t} y1={y + s * t} x2={x + dir * (t + size * 4.6)} y2={y + s * t} stroke="var(--foreground)" {...line(0.6)} />
       <text
-        x={x + t + size * 0.3}
+        x={x + dir * (t + size * 0.3)}
         y={y + s * (t + size * 0.2)}
+        textAnchor={dir > 0 ? 'start' : 'end'}
         dominantBaseline={grade ? 'hanging' : 'alphabetic'}
         fontFamily="var(--font-mono)"
         fontSize={size}
@@ -51,15 +55,27 @@ function ElevationMark({ x, y, size, text, grade, line }: { x: number; y: number
   );
 }
 
-export function HeightDims3D({
+export function HeightDims3D(props: {
+  project: Project;
+  /** The current floor, whose chains lie on the ground: these stand on their lines */
+  level: string;
+  shown: string[];
+  quality: Quality;
+  growth: React.RefObject<{ g: number }>;
+}) {
+  return SIDES.map(side => <ElevationSheet key={side} side={side} {...props} />);
+}
+
+function ElevationSheet({
+  side,
   project,
   level,
   shown,
   quality,
   growth,
 }: {
+  side: Side;
   project: Project;
-  /** The current floor, whose chains lie on the ground: these stand on their lines */
   level: string;
   shown: string[];
   quality: Quality;
@@ -73,16 +89,21 @@ export function HeightDims3D({
   const mmPerPx = Math.max(frame.w / size.width, frame.h / size.height);
   const key = shown.join();
   const { size: textSize, step } = frame.dims!;
-  const [, , x1, bottom] = shapes.bounds;
-  const dims = useMemo(() => elevationDimensions(project, key.split(','), x1, { size: textSize, step }), [project, key, x1, textSize, step]);
+  const [x0, y0, x1, y1] = shapes.bounds;
+  const dims = useMemo(
+    () => elevationDimensions(project, key.split(','), side, [x0, y0, x1, y1], { size: textSize, step }),
+    [project, key, side, x0, y0, x1, y1, textSize, step],
+  );
 
-  // The sheet: from the drawing's right edge to beyond the elevation marks, from below the grade to above the top
-  const outer = dims.chains.length ? dims.chains[dims.chains.length - 1].origin[0] : x1;
-  const markAt = outer + step * 0.6;
+  // The sheet: from the corner to beyond the elevation marks, from below the grade to above the top
+  const { out, corner } = dims;
+  const outer = dims.chains.length ? dims.chains[dims.chains.length - 1].origin[0] : corner;
+  const markAt = outer + out * step * 0.6;
+  const far = markAt + out * textSize * 6;
   const sheet = {
-    x: x1,
+    x: Math.min(corner, far),
     y: -dims.top - textSize * 2,
-    w: markAt + textSize * 6 - x1,
+    w: Math.abs(far - corner),
     h: dims.top - dims.grade + textSize * 4.5,
   };
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -99,9 +120,9 @@ export function HeightDims3D({
       <svg xmlns="http://www.w3.org/2000/svg" viewBox={`${sheet.x} ${sheet.y} ${sheet.w} ${sheet.h}`} width={w} height={h}>
         <PlanDimensions chains={dims.chains} size={textSize} line={line} halo={false} />
         {dims.levels.map(l => (
-          <ElevationMark key={l.at} x={markAt} y={0 - l.at} size={textSize} text={elevationText(l.at)} line={line} />
+          <ElevationMark key={l.at} x={markAt} y={0 - l.at} dir={out} size={textSize} text={elevationText(l.at)} line={line} />
         ))}
-        <ElevationMark x={markAt} y={0 - dims.grade} size={textSize} text={elevationText(dims.grade)} grade line={line} />
+        <ElevationMark x={markAt} y={0 - dims.grade} dir={out} size={textSize} text={elevationText(dims.grade)} grade line={line} />
       </svg>,
       doc,
     );
@@ -116,7 +137,7 @@ export function HeightDims3D({
       live = false;
       made?.dispose();
     };
-  }, [dims, quality, mmPerPx, doc, sheet.x, sheet.y, sheet.w, sheet.h, markAt, textSize]);
+  }, [dims, quality, mmPerPx, doc, sheet.x, sheet.y, sheet.w, sheet.h, markAt, out, textSize]);
 
   const material = useRef<THREE.MeshBasicMaterial>(null);
   const mesh = useRef<THREE.Mesh>(null);
@@ -128,12 +149,14 @@ export function HeightDims3D({
   });
 
   if (!texture || !dims.chains.length) return null;
+  const [px, py] = dims.plane(sheet.x + sheet.w / 2);
   return (
     <>
       <mesh
         ref={mesh}
-        // In the plane of the bottom façade, facing out of it; the sheet's y is the height pointing down
-        position={[(sheet.x + sheet.w / 2) * M, -(sheet.y + sheet.h / 2) * M, bottom * M]}
+        // In the façade's plane, facing out of it (the sheet's x turned to the viewer's right); its y is the height pointing down
+        position={[px * M, -(sheet.y + sheet.h / 2) * M, py * M]}
+        rotation={[0, Math.atan2(-dims.right[1], dims.right[0]), 0]}
         raycast={() => null}
         userData={{ mark: true, noEdges: true }}
         renderOrder={1}
@@ -143,7 +166,7 @@ export function HeightDims3D({
       </mesh>
       {/* What the sheet shows, for tests: the drawing is a texture */}
       <Html>
-        <div hidden data-height-sheet={`${Math.round(sheet.x)},${Math.round(bottom)}`}>
+        <div hidden data-height-sheet={side} data-at={`${Math.round(px)},${Math.round(py)}`}>
           {dims.chains.flatMap((c, k) => c.marks.slice(1).map((t, i) => <span key={`${k}-${i}`} data-height-dim={Math.round(t - c.marks[i])} />))}
           {[...dims.levels.map(l => l.at), dims.grade].map(mm => (
             <span key={mm} data-elevation={elevationText(mm)} />
