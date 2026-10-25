@@ -10,7 +10,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import * as THREE from 'three';
-import { area, findObject, openingFrames, pointInPolygon, type Point, type Project } from '@plinth/core';
+import { area, findObject, lookRecipe, openingFrames, openingTarget, pointInPolygon, type Point, type Project } from '@plinth/core';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { FOV } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
@@ -18,13 +18,10 @@ import { useEditor, useEditorStore } from '../store';
 import { northOnPlan } from '@/lib/solar';
 import { publishHeading } from '../compass/heading';
 import { resumeOrbit } from './CameraRig';
-import { closeAllDoors, passableDoors, setDoorOpen } from './doors';
+import { passable, restAll, setMoving } from './doors';
 import { buildWorld, collide, EYE, groundAt, type Role, type World } from './walk-world';
 
 const WALK_FOV = 70;
-/** How near a sliding door opens (m) and how fast (fully open in 1 / DOOR_SPEED s) */
-const DOOR_REACH = 2;
-const DOOR_SPEED = 1.6;
 /** Walking and running speeds (m/s), turning speed with Q/E (rad/s) */
 const WALK = 1.4;
 const RUN = 3;
@@ -89,9 +86,12 @@ export function walkRole(p: Project, id: string | undefined): Role {
   if (!o) return { block: false, ground: true };
   if (o.kind === 'furniture') return { block: false, ground: false };
   if (o.kind === 'wall') return { block: true, ground: true };
-  // Doors, gates and bare openings are walked through; a sliding glass door stops you until it opens (see the doors below); a
-  // window stops you, even down to the floor
-  if (o.kind === 'opening') return o.obj.kind === 'window' || o.obj.kind === 'sliding-door' ? { block: true, ground: false } : { block: false, ground: false };
+  // A window stops you, even down to the floor; so does an opening whose look opens as you come near, until it has (see the
+  // movers below); other doors, gates and bare openings are walked through
+  if (o.kind === 'opening') {
+    const opens = lookRecipe(p, openingTarget(o.obj), o.obj.look)?.interaction?.approach.passable !== undefined;
+    return o.obj.kind === 'window' || opens ? { block: true, ground: false } : { block: false, ground: false };
+  }
   return { block: false, ground: true };
 }
 
@@ -106,16 +106,19 @@ export function WalkView() {
   const keys = useRef(new Set<string>());
   const joy = useRef<{ id: number; ox: number; oy: number; dx: number; dy: number } | null>(null);
   const world = useRef<{ project: Project; world: World; at: number } | null>(null);
-  // The sliding glass doors (their middle, m) and how far each has opened
-  const slidingDoors = useMemo(
+  // The openings whose look moves as you come near (their middle, m, and how: see Interaction), and how far each has moved
+  const movers = useMemo(
     () =>
-      openingFrames(project)
-        .filter(f => f.opening.kind === 'sliding-door')
-        .map(f => ({ id: f.id, x: f.center[0] * M, z: f.center[1] * M, floor: (project.levels.find(l => l.id === f.level)?.elevation ?? 0) * M })),
+      openingFrames(project).flatMap(f => {
+        const a = lookRecipe(project, openingTarget(f.opening), f.opening.look)?.interaction?.approach;
+        if (!a) return [];
+        const floor = (project.levels.find(l => l.id === f.level)?.elevation ?? 0) * M;
+        return [{ id: f.id, x: f.center[0] * M, z: f.center[1] * M, floor, reach: a.reach * M, seconds: a.seconds, passable: a.passable }];
+      }),
     [project],
   );
-  const doorMotion = useRef(new Map<string, number>());
-  useEffect(() => closeAllDoors, []);
+  const motion = useRef(new Map<string, number>());
+  useEffect(() => restAll, []);
   // The level the walker stands on, so a change from the switcher (not from walking) goes to that level's start
   const standing = useRef<string | null>(null);
 
@@ -182,6 +185,10 @@ export function WalkView() {
     const before = el.style.touchAction;
     // Touch gestures are ours, not the page's (scrolling, zooming): the orbit controls that claimed them are gone while walking
     el.style.touchAction = 'none';
+    // Dragging to look around or walk never selects text, in the canvas or on the page around it
+    const bodies = [...new Set([doc.body, document.body])];
+    const selects = bodies.map(b => b.style.userSelect);
+    for (const b of bodies) b.style.userSelect = 'none';
     const looks = new Map<number, { x: number; y: number }>();
     const turn = (dx: number, dy: number, k: number) => {
       me.current.yaw -= dx * k;
@@ -189,6 +196,8 @@ export function WalkView() {
       aim();
     };
     const onDown = (e: PointerEvent) => {
+      // No text selection, no long-press menu
+      e.preventDefault();
       el.setPointerCapture(e.pointerId);
       const r = el.getBoundingClientRect();
       if (e.pointerType === 'mouse') {
@@ -243,6 +252,7 @@ export function WalkView() {
     doc.addEventListener('mousemove', onLocked);
     return () => {
       el.style.touchAction = before;
+      bodies.forEach((b, i) => (b.style.userSelect = selects[i]));
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
@@ -318,20 +328,20 @@ export function WalkView() {
       fwd -= joy.current.dy;
       side += joy.current.dx;
     }
-    // Sliding glass doors open as you come near, and close behind you
-    const through = passableDoors();
+    // What opens as you come near does, as its look declares (doors), and closes behind you
+    const through = passable();
     let doorsMoving = false;
-    for (const d of slidingDoors) {
-      const near = Math.abs(m.foot - d.floor) < 1.2 && Math.hypot(m.x - d.x, m.z - d.z) < DOOR_REACH;
-      const v = doorMotion.current.get(d.id) ?? 0;
-      const next = THREE.MathUtils.clamp(v + (near ? 1 : -1) * Math.min(0.15, delta) * DOOR_SPEED, 0, 1);
+    for (const d of movers) {
+      const near = Math.abs(m.foot - d.floor) < 1.2 && Math.hypot(m.x - d.x, m.z - d.z) < d.reach;
+      const v = motion.current.get(d.id) ?? 0;
+      const next = THREE.MathUtils.clamp(v + ((near ? 1 : -1) * Math.min(0.15, delta)) / d.seconds, 0, 1);
       if (next === v) continue;
       doorsMoving = true;
-      doorMotion.current.set(d.id, next);
-      const was = through.has(d.id);
-      setDoorOpen(d.id, Math.round(next * 10) / 10);
-      // Its leaves are built anew as it moves: look at the scene again once they are in place
-      if (was !== passableDoors().has(d.id) && world.current) world.current.at = performance.now() - 700;
+      motion.current.set(d.id, next);
+      const open = d.passable !== undefined && next >= d.passable;
+      setMoving(d.id, Math.round(next * 10) / 10, open);
+      // Its parts are built anew as it moves: look at the scene again once they are in place
+      if (open !== through.has(d.id) && world.current) world.current.at = performance.now() - 700;
     }
     // A slow frame still walks at full speed, in short steps so the body never skips through a wall
     const total = Math.min(0.15, delta);

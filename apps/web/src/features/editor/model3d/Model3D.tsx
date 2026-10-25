@@ -19,6 +19,7 @@ import {
   roofs,
   type Solid,
   type Wall,
+  openingLookParams,
   slabShape,
 } from '@plinth/core';
 import { useMemo, useRef, useState } from 'react';
@@ -40,7 +41,7 @@ import { sunDirection, sunPosition } from '@/lib/solar';
 import { Axes3D } from './Axes3D';
 import { Guides3D } from './Guides3D';
 import { Sun3D } from './Sun3D';
-import { doorOpen, useDoors } from './doors';
+import { movedBy, useMoving } from './doors';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
@@ -121,8 +122,14 @@ export function Model3D() {
     const sky = new THREE.Vector3(...sunDirection(site.northAngle, at));
     return [v, THREE.MathUtils.clamp((at.elevation + 2) / 14, 0.15, 1), { toward: sky, up: at.elevation > 0 }] as const;
   }, [sunTime.day, sunTime.minutes, site.location, site.northAngle]);
-  // Sliding doors opened by the walker
-  useDoors();
+  // An opening's look parameters: its own, from the opening (a swing door's hinge and side), and what the walker has moved
+  useMoving();
+  const openingParams = (fr: (typeof openings)[number]) => {
+    const recipe = lookRecipe(project, openingTarget(fr.opening), fr.opening.look);
+    const params = openingLookParams(fr.opening, recipe);
+    const param = recipe?.interaction?.approach.param;
+    return param && movedBy(fr.id) ? { ...params, [param]: movedBy(fr.id) } : params;
+  };
   // Floors less the slab openings that cut them
   const slabShapes = useMemo(() => new Map(project.spaces.map(s => [s.id, slabShape(project, s)])), [project.spaces]);
   const elementBuilt = (e: (typeof project.elements)[number]) => {
@@ -238,11 +245,7 @@ export function Model3D() {
                             key={fr.id}
                             fr={fr}
                             recipe={lookRecipe(project, openingTarget(fr.opening), fr.opening.look)}
-                            params={
-                              fr.opening.kind === 'sliding-door' && doorOpen(fr.id)
-                                ? { ...fr.opening.lookParams, open: doorOpen(fr.id) }
-                                : fr.opening.lookParams
-                            }
+                            params={openingParams(fr)}
                             base={base}
                             sel={sel.has(fr.wall) ? c.sel : undefined}
                           />

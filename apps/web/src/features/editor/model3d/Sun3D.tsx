@@ -50,6 +50,10 @@ export function Sun3D({ toward, up }: { toward: THREE.Vector3; up: boolean }) {
     <sprite
       ref={sprite}
       renderOrder={-1}
+      // A sprite can only be hit by a ray from a camera: other rays through the scene (picking, revealing) pass by it
+      raycast={function (this: THREE.Sprite, rc, hits) {
+        if (rc.camera) THREE.Sprite.prototype.raycast.call(this, rc, hits);
+      }}
       userData={{ noEdges: true, measure: true }}
       onClick={e => {
         e.stopPropagation();

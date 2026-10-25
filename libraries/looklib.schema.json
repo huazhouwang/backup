@@ -130,6 +130,22 @@
           "propertyNames": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
           "additionalProperties": { "$ref": "#/$defs/param" }
         },
+        "interaction": {
+          "type": "object", "additionalProperties": false, "required": ["approach"],
+          "description": "How it moves as someone walking through the model comes near",
+          "properties": {
+            "approach": {
+              "type": "object", "additionalProperties": false, "required": ["param", "reach", "seconds"],
+              "description": "The number parameter param goes from 0 to 1 over seconds within reach mm, and back; until it reaches passable the walker is stopped (left out: never stopped)",
+              "properties": {
+                "param": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+                "reach": { "type": "number", "exclusiveMinimum": 0, "maximum": 10000 },
+                "seconds": { "type": "number", "exclusiveMinimum": 0, "maximum": 10 },
+                "passable": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          }
+        },
         "seed": { "type": "integer", "description": "Seed for $rnd" },
         "script": { "type": "string", "description": "JSONata: $w, $d, $h (mm) and the parameters in; parts, or { parts, plan }, out" }
       }

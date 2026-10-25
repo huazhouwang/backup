@@ -54,9 +54,20 @@ export interface ParamDecl {
   description?: string;
 }
 
+/**
+ * How an object moves as someone walking through the model comes near, declared by its look rather than known to the code:
+ * `approach.param` (a number parameter, 0 at rest) goes to 1 over `seconds` within `reach` mm, and back as they walk away; the
+ * object stops the walker until the parameter reaches `passable` (a door opening), or never when `passable` is left out.
+ */
+export interface Interaction {
+  approach: { param: string; reach: number; seconds: number; passable?: number };
+}
+
 export interface Recipe {
   /** Parameters an object can set (declarations with defaults) */
   params?: Record<string, ParamDecl>;
+  /** How it moves when someone walking comes near */
+  interaction?: Interaction;
   /** Seed for $rnd(k) */
   seed?: number;
   /** A JSONata expression returning parts */
@@ -112,8 +123,18 @@ export function checkParamValue(d: ParamDecl, v: ParamValue, name = 'the value')
   return null;
 }
 
+export const interactionSchema: z.ZodType<Interaction> = z.object({
+  approach: z.object({
+    param: paramName,
+    reach: z.number().positive().max(10000),
+    seconds: z.number().positive().max(10),
+    passable: z.number().min(0).max(1).optional(),
+  }),
+});
+
 export const recipeSchema: z.ZodType<Recipe> = z.object({
   params: z.record(paramName, paramDeclSchema).optional(),
+  interaction: interactionSchema.optional(),
   seed: z.number().int().optional(),
   script: z.string().min(1).max(30000),
   materials: z

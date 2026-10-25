@@ -39,6 +39,18 @@ test('walk', async ({ browser: b }) => {
   check(Math.abs(start.foot) < 0.05 && start.level === 'L1', `you stand on the ground floor (${start.foot.toFixed(2)} m, ${start.level})`);
   check(!(await page.getByRole('button', { name: '相机' }).count()), 'there is no camera menu');
 
+  // Dragging to look around selects no text, on the canvas or on the page
+  {
+    const box = await page.locator('iframe').first().boundingBox();
+    await page.mouse.move(box.x + 300, box.y + 400);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 900, box.y + 600, { steps: 12 });
+    await page.mouse.up();
+    const selected = [await page.evaluate(() => getSelection()?.toString() ?? ''), await frame.evaluate(() => getSelection()?.toString() ?? '')].join('');
+    check(selected === '', `dragging while walking selects no text (${JSON.stringify(selected.slice(0, 30))})`);
+    await frame.evaluate(() => document.exitPointerLock?.());
+  }
+
   // W walks forward
   const canvas = page.locator('iframe').first();
   const before = await canvas.screenshot();
@@ -77,6 +89,34 @@ test('walk', async ({ browser: b }) => {
   await page.keyboard.up('w');
   const out = await probe(frame);
   check(out.z * 1000 > dy + 300, `the glass sliding door opens as you come near and you walk out (${Math.round(out.z * 1000 - dy)} mm past it)`);
+
+  // Through a hinged door: it swings open as you come near (its look says so)
+  const hinged = await page.evaluate(async () => {
+    const all = (await window.artifact.call('find_objects', { type: 'opening', level: 'L1', limit: 200 })).result;
+    for (const o of all) {
+      const info = (await window.artifact.call('get_object', { ref: o.id })).result;
+      if (info.kind === 'door' && info.width >= 800) {
+        const wall = (await window.artifact.call('get_object', { ref: info.wall.id })).result;
+        return { ...info, wallStart: wall.start, wallEnd: wall.end };
+      }
+    }
+  });
+  {
+    const [wx, wy] = [hinged.wallEnd[0] - hinged.wallStart[0], hinged.wallEnd[1] - hinged.wallStart[1]];
+    const len = Math.hypot(wx, wy);
+    const n = [-wy / len, wx / len];
+    // From 1.4 m on one side, facing across the wall
+    const from = [hinged.center[0] + n[0] * 1400, hinged.center[1] + n[1] * 1400];
+    await place(frame, { x: from[0] / 1000, z: from[1] / 1000, yaw: Math.atan2(n[0], n[1]), pitch: -0.1 });
+    await page.waitForTimeout(1800);
+    await page.screenshot({ path: `${OUT}/walk-hinged-door.png` });
+    await page.keyboard.down('w');
+    await page.waitForTimeout(5000);
+    await page.keyboard.up('w');
+    const p = await probe(frame);
+    const across = (p.x * 1000 - hinged.center[0]) * n[0] + (p.z * 1000 - hinged.center[1]) * n[1];
+    check(across < -300, `a hinged door swings open as you come near and you walk through (${Math.round(-across)} mm past it)`);
+  }
 
   // Up the stairs: north up the west flight, east across the landing, south down the east one to the first floor
   await place(frame, { x: 15.55, z: 5.2, yaw: 0, pitch: 0 });

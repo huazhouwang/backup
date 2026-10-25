@@ -8,7 +8,7 @@
     "zh": "没有指定外观的物品都用它来画：北欧风的家具、门窗和构件，以及墙面、地面和家具的全套材质",
     "en": "What every object without a look of its own is drawn with: Scandinavian furniture, doors and windows, building elements, and the full set of wall, floor and furniture materials"
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Plinth",
   "license": "CC-BY-4.0",
   "groups": {
@@ -1132,6 +1132,19 @@
       "version": "1.0.0",
       "script": "(\n    $fw := 40;\n    $fd := 50;\n    [\n      $box([$w, $h, $min([30, $d])], [0, $h / 2, 0], 'glass'),\n      $box([$w, $fw, $fd], [0, 0 + $fw / 2, 0], 'frame', 0),\n      $box([$w, $fw, $fd], [0, $h - $fw + $fw / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [-$w / 2 + $fw / 2, 0 + $h / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [$w / 2 - $fw / 2, 0 + $h / 2, 0], 'frame', 0)\n    ]\n  )"
     },
+    "door": {
+      "name": {"zh": "平开门", "en": "Hinged door"},
+      "for": ["opening:door"],
+      "group": "openings",
+      "version": "1.0.0",
+      "params": {
+        "open": {"type": "number", "default": 0, "minimum": 0, "maximum": 1, "title": {"zh": "打开", "en": "Open"}, "description": "How far the leaf has swung open (0 closed, 1 at 90°)"},
+        "hinge": {"type": "string", "default": "start", "enum": ["start", "end"], "enumTitles": [{"zh": "起点端", "en": "Start end"}, {"zh": "终点端", "en": "Far end"}], "title": {"zh": "合页", "en": "Hinge"}, "description": "The wall end the hinge is at (the opening's swing.hinge)"},
+        "side": {"type": "string", "default": "right", "enum": ["left", "right"], "enumTitles": [{"zh": "左侧", "en": "Left"}, {"zh": "右侧", "en": "Right"}], "title": {"zh": "开向", "en": "Opens to"}, "description": "The side of the wall it opens to, looking from the wall's start to its end (the opening's swing.side)"}
+      },
+      "interaction": {"approach": {"param": "open", "reach": 1500, "seconds": 0.8, "passable": 0.75}},
+      "script": "(\n    $fw := 50;\n    $fd := $min([90, $d]);\n    $t := 40;\n    $L := $w - 2 * $fw;\n    $lh := $h - $fw;\n    $s := $side = 'left' ? -1 : 1;\n    $ux := $hinge = 'end' ? -1 : 1;\n    $hx := -$ux * ($w / 2 - $fw);\n    $z0 := $s * ($fd / 2 - $t / 2);\n    $a := 90 * $max([0, $min([1, $open])]);\n    $vx := $ux * $cos($a);\n    $vz := $s * $sin($a);\n    $rot := [0, -$atan2($vz, $vx), 0];\n    $along := function($k) {[$hx + $vx * $k, $z0 + $vz * $k]};\n    $c := $along($L / 2);\n    $k := $along($L - 70);\n    [\n      $box([$w, $fw, $fd], [0, $h - $fw / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [-$w / 2 + $fw / 2, $h / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [$w / 2 - $fw / 2, $h / 2, 0], 'frame', 0),\n      $box([$L, $lh - 10, $t], [$c[0], ($lh - 10) / 2 + 10, $c[1]], 'wood', 2, $rot),\n      $box([120, 20, $t + 50], [$k[0], 1000, $k[1]], 'metal', 4, $rot)\n    ]\n  )"
+    },
     "sliding-door": {
       "name": {"zh": "推拉玻璃门", "en": "Sliding glass door"},
       "for": ["opening:sliding-door"],
@@ -1140,6 +1153,7 @@
       "params": {
         "open": {"type": "number", "default": 0, "minimum": 0, "maximum": 1, "title": {"zh": "打开", "en": "Open"}, "description": "How far the two leaves have slid apart into the wall (0 closed, 1 open)"}
       },
+      "interaction": {"approach": {"param": "open", "reach": 2000, "seconds": 0.6, "passable": 0.7}},
       "script": "(\n    $fw := 40;\n    $fd := $min([70, $d]);\n    $cw := $w - 2 * $fw;\n    $top := $h - $fw;\n    $lw := $cw / 2 + 25;\n    $sf := 45;\n    $tz := $min([22, $d / 4]);\n    $o := $max([0, $min([1, $open])]);\n    $leaf := function($c, $z) {[\n      $box([$lw - 2 * $sf, $top - 2 * $sf, 10], [$c, $top / 2, $z], 'glass'),\n      $box([$sf, $top, 40], [$c - $lw / 2 + $sf / 2, $top / 2, $z], 'frame', 0),\n      $box([$sf, $top, 40], [$c + $lw / 2 - $sf / 2, $top / 2, $z], 'frame', 0),\n      $box([$lw, $sf, 40], [$c, $sf / 2, $z], 'frame', 0),\n      $box([$lw, $sf, 40], [$c, $top - $sf / 2, $z], 'frame', 0)\n    ]};\n    [\n      $box([$w, $fw, $fd], [0, $h - $fw / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [-$w / 2 + $fw / 2, $h / 2, 0], 'frame', 0),\n      $box([$fw, $h, $fd], [$w / 2 - $fw / 2, $h / 2, 0], 'frame', 0),\n      $box([$w, 8, $fd], [0, 4, 0], 'frame', 0),\n      $leaf(-$cw / 2 + $lw / 2 - $o * $lw, -$tz),\n      $leaf($cw / 2 - $lw / 2 + $o * $lw, $tz)\n    ]\n  )"
     },
     "glass-block": {

@@ -25,6 +25,18 @@ export function lookRecipe(p: Project, target: LookTarget, own?: string): Recipe
   return DEFAULT_LOOKS[target] ?? null;
 }
 
+/**
+ * The parameters an opening's look gets from the opening itself, when the look declares them: `hinge` and `side` from a swing
+ * door's swing. The opening's own lookParams come on top.
+ */
+export function openingLookParams(o: Pick<Opening, 'swing' | 'lookParams'>, recipe: Recipe | null): Record<string, unknown> | undefined {
+  const declared = recipe?.params ?? {};
+  const own: Record<string, unknown> = {};
+  if (o.swing && 'hinge' in declared) own.hinge = o.swing.hinge;
+  if (o.swing && 'side' in declared) own.side = o.swing.side;
+  return Object.keys(own).length ? { ...own, ...o.lookParams } : o.lookParams;
+}
+
 /** The look ID an object is drawn with (its own, the design's for its target), or null for the default */
 export function lookOf(p: Project, target: LookTarget, own?: string): string | null {
   const looks = p.library.looks ?? {};

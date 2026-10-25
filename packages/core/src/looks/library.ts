@@ -6,7 +6,7 @@
  * and SPDX licences. Only the JSONata script and the multilingual names are our own.
  */
 import { z } from 'zod';
-import { paramDeclSchema, type ParamDecl, type Recipe } from './script.js';
+import { interactionSchema, paramDeclSchema, type Interaction, type ParamDecl, type Recipe } from './script.js';
 import { materialSchema, namesSchema, type Material, type Names } from './material.js';
 
 /** A furniture type a look brings: its name, group and default size */
@@ -29,6 +29,8 @@ export interface LibraryLook {
   /** semver */
   version: string;
   params?: Record<string, ParamDecl>;
+  /** How it moves when someone walking comes near (see Interaction) */
+  interaction?: Interaction;
   seed?: number;
   script: string;
 }
@@ -71,6 +73,7 @@ export const libraryLookSchema: z.ZodType<LibraryLook> = z.object({
   newType: z.object({ name: namesSchema, group: key.optional(), size }).optional(),
   version: z.string().regex(SEMVER),
   params: z.record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/), paramDeclSchema).optional(),
+  interaction: interactionSchema.optional(),
   seed: z.number().int().optional(),
   script: z.string().min(1).max(30000),
 });
@@ -134,6 +137,7 @@ export function libraryTypes(lib: LookLibrary): Record<string, LookType> {
 export function lookRecipeOf(look: LibraryLook, materials?: Record<string, Material>): Recipe {
   return {
     ...(look.params ? { params: look.params } : {}),
+    ...(look.interaction ? { interaction: look.interaction } : {}),
     ...(look.seed !== undefined ? { seed: look.seed } : {}),
     script: look.script,
     ...(materials && Object.keys(materials).length ? { materials } : {}),
