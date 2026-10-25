@@ -3,6 +3,7 @@ import {
   DAY,
   type Event,
   MINUTE,
+  type PlanItem,
   type Window,
   ageNorms,
   babyAge,
@@ -173,6 +174,14 @@ export async function describeBabies(
   })
 }
 
+function planLine(item: PlanItem): string {
+  if (item.kind === 'feed') return '喂奶'
+  if (item.kind === 'diaper') return '换尿布'
+  if (item.kind === 'sleep') return `睡觉（约 ${durationLabel(item.length)}）`
+  const then = [item.feed ? '喂奶' : '', item.diaper ? '换尿布' : ''].filter(Boolean).join('、')
+  return then ? `醒来${then}` : '醒来'
+}
+
 /**
  * What likely comes next for a baby, in a few short lines: from their age and last week's
  * feeds, sleeps and diapers (nextUp), for questions like "下次什么时候喂？".
@@ -202,11 +211,7 @@ export function nextUpLines(
   }
   if (next.diaper.status === 'predicted') lines.push(`下次换尿布${span(next.diaper)}`)
   if (next.plan.length > 1) {
-    const plan = next.plan.map(
-      (item) =>
-        `${formatClock(item.at, timeZone)} ` +
-        (item.kind === 'feed' ? '喂奶' : `睡觉（约 ${durationLabel(item.length)}）`),
-    )
+    const plan = next.plan.map((item) => `${formatClock(item.at, timeZone)} ${planLine(item)}`)
     lines.push(`接下来 12 小时：${plan.join('，')}`)
   }
   return lines

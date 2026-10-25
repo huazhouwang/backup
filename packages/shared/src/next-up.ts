@@ -34,13 +34,18 @@ export type NextSleep =
 
 export type NextDiaper = { status: 'unknown' } | ({ status: 'predicted'; since: number } & Window)
 
-export type PlanItem = { kind: 'feed'; at: number } | { kind: 'sleep'; at: number; length: number }
+export type PlanItem =
+  | { kind: 'feed'; at: number }
+  | { kind: 'diaper'; at: number }
+  | { kind: 'sleep'; at: number; length: number }
+  /** Waking up, with what is done then: at night, a feed and a change before sleeping on. */
+  | { kind: 'wake'; at: number; feed: boolean; diaper: boolean }
 
 export interface NextUp {
   feed: NextFeed
   sleep: NextSleep
   diaper: NextDiaper
-  /** Roughly how the next 12 hours go: sleeps (with how long) and feeds in time order. */
+  /** Roughly how the next 12 hours go: sleeps and wakings, feeds and changes, in time order. */
   plan: PlanItem[]
   /** The baby's usual time from one meal, and one diaper change, to the next. */
   feedEvery: number
@@ -68,6 +73,18 @@ const STIR = 15 * MINUTE
 const HORIZON = 12 * 60 * MINUTE
 /** A suggestion stays this long past its window, then goes: by then it is late or unlogged. */
 const LATE = 60 * MINUTE
+/**
+ * Night, for what is assumed until the baby's own nights are known: a sleep that starts in it
+ * is a long stretch, and waking in it is brief, to feed and sleep on.
+ */
+const NIGHT_FROM = 19 * 60
+const NIGHT_UNTIL = 5 * 60
+/** Awake at night, in minutes: a feed and a change, then back to sleep. */
+const NIGHT_AWAKE: readonly [number, number] = [30, 60]
+/** Due within this long of waking, a feed or change is done on waking. */
+const ON_WAKING = 30 * MINUTE
+/** Babies under this many months still feed when they wake at night. */
+const NIGHT_FEEDS_UNTIL = 12
 const PLAN_LIMIT = 16
 const MINUTES_A_DAY = 24 * 60
 /** Formula leaves the stomach about half as fast as breast milk; it counts for more. */
@@ -281,10 +298,25 @@ export function nextUp(events: readonly Event[], options: NextUpOptions): NextUp
     const awake = after ? after.startAt - sleep.endAt : 0
     if (awake > 0 && awake <= wakeRange[1] * 3) awakeSpells.push({ value: awake, at: sleep.endAt })
   }
-  const awakeAt = (wokeAt: number) => rhythmAt(awakeSpells, wakeRange, wokeAt, now, minuteOfDay)
+  const isNight = (at: number) => {
+    const minute = minuteOfDay(at)
+    return minute >= NIGHT_FROM || minute < NIGHT_UNTIL
+  }
+  const awakeAt = (wokeAt: number) =>
+    rhythmAt(
+      awakeSpells,
+      isNight(wokeAt) ? minutes(NIGHT_AWAKE) : wakeRange,
+      wokeAt,
+      now,
+      minuteOfDay,
+    )
   const ownLength = (startAt: number) => usual(sleepLengths, now, { at: startAt, minuteOfDay })
+  const nightStretch = minutes(norms.nightSleepMinutes)
   const lengthAt = (startAt: number) =>
-    ownLength(startAt) ?? RECORD_KINDS.sleep.usualMinutes * MINUTE
+    ownLength(startAt) ??
+    (isNight(startAt)
+      ? (nightStretch[0] + nightStretch[1]) / 2
+      : RECORD_KINDS.sleep.usualMinutes * MINUTE)
 
   const lastSleep = sleeps.at(-1)
   let sleep: NextSleep = { status: 'unknown' }
@@ -348,33 +380,55 @@ export function nextUp(events: readonly Event[], options: NextUpOptions): NextUp
     if (due(next)) diaper = { status: 'predicted', since: lastChange, ...next }
   }
 
-  // The next 12 hours: sleep and wake in turn, meals at their rhythm.
+  // The next 12 hours: asleep and awake in turn. Feeds and changes come at their rhythm while
+  // awake; one due while asleep is done on waking, and at night every waking has them. One
+  // already late is due now.
   const plan: PlanItem[] = []
   const end = now + HORIZON
+  const add = (item: PlanItem) => {
+    if (item.at >= now && item.at < end) plan.push({ ...item, at: round(item.at) })
+  }
+  const diaperAt = (at: number) => rhythmAt(diaperGaps, diaperRange, at, now, minuteOfDay)
   let nextFeed =
     feed.status === 'predicted'
       ? mid(feed)
       : feed.status === 'feeding' && lastMeal
         ? lastMeal.startAt + feedAt(lastMeal.startAt).center
-        : null
-  let nextSleep =
-    sleep.status === 'predicted'
-      ? mid(sleep)
-      : sleep.status === 'sleeping' && sleep.wake
-        ? mid(sleep.wake) + awakeAt(mid(sleep.wake)).center
-        : null
+        : lastMeal
+          ? now
+          : null
+  let nextDiaper =
+    diaper.status === 'predicted' ? mid(diaper) : lastChange === undefined ? null : now
+  let wakeAt = sleep.status === 'sleeping' && sleep.wake ? mid(sleep.wake) : null
+  let nextSleep = sleep.status === 'predicted' ? mid(sleep) : null
   while (plan.length < PLAN_LIMIT) {
-    // Only what is still ahead: one already late shows on its own row, not in the plan.
-    if (nextFeed !== null && nextFeed < end && (nextSleep === null || nextFeed <= nextSleep)) {
-      if (nextFeed >= now) plan.push({ kind: 'feed', at: round(nextFeed) })
-      nextFeed += feedAt(nextFeed).center
-    } else if (nextSleep !== null && nextSleep < end) {
-      const length = lengthAt(nextSleep)
-      if (nextSleep >= now) plan.push({ kind: 'sleep', at: round(nextSleep), length })
-      const wokeAt = nextSleep + length
-      nextSleep = wokeAt + awakeAt(wokeAt).center
+    if (wakeAt !== null) {
+      const night = isNight(wakeAt)
+      const feeds =
+        (night && months < NIGHT_FEEDS_UNTIL) ||
+        (nextFeed !== null && nextFeed <= wakeAt + ON_WAKING)
+      const changed = nextDiaper !== null && (nextDiaper <= wakeAt + ON_WAKING || night)
+      add({ kind: 'wake', at: wakeAt, feed: feeds, diaper: changed })
+      if (feeds) nextFeed = wakeAt + feedAt(wakeAt).center
+      if (changed) nextDiaper = wakeAt + diaperAt(wakeAt).center
+      nextSleep = wakeAt + awakeAt(wakeAt).center
+      wakeAt = null
+      continue
+    }
+    const first = Math.min(nextFeed ?? Infinity, nextDiaper ?? Infinity, nextSleep ?? Infinity)
+    if (first >= end) break
+    if (first === nextFeed) {
+      add({ kind: 'feed', at: first })
+      nextFeed = first + feedAt(first).center
+    } else if (first === nextDiaper) {
+      // Not woken for a change at night.
+      if (!isNight(first)) add({ kind: 'diaper', at: first })
+      nextDiaper = first + diaperAt(first).center
     } else {
-      break
+      const length = lengthAt(first)
+      add({ kind: 'sleep', at: first, length })
+      wakeAt = first + length
+      nextSleep = null
     }
   }
 

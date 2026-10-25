@@ -22,8 +22,26 @@ interface Row {
 const sleepFor = (length: number) =>
   m.nextSleepFor({ duration: durationLabel(length, { short: true }) })
 
-const planLabel = (item: PlanItem) =>
-  item.kind === 'feed' ? m.nextFeed() : `${m.nextSleep()} · ${sleepFor(item.length)}`
+/** What is done on waking: "喂奶 · 换尿布". */
+const onWaking = (item: Extract<PlanItem, { kind: 'wake' }>) =>
+  [item.feed ? m.nextFeed() : null, item.diaper ? m.nextDiaper() : null]
+    .filter((part) => part !== null)
+    .join(' · ')
+
+const PLAN_ICON: Record<PlanItem['kind'], IconKind> = {
+  feed: 'bottle',
+  diaper: 'diaper',
+  sleep: 'sleep',
+  wake: 'sleep',
+}
+
+function planLabel(item: PlanItem) {
+  if (item.kind === 'feed') return m.nextFeed()
+  if (item.kind === 'diaper') return m.nextDiaper()
+  if (item.kind === 'sleep') return `${m.nextSleep()} · ${sleepFor(item.length)}`
+  const then = onWaking(item)
+  return then ? `${m.nextWake()} · ${then}` : m.nextWake()
+}
 
 const middle = ({ from, to }: Window) => Math.round((from + to) / 2 / 300_000) * 300_000
 
@@ -38,7 +56,9 @@ export function NextUp({ baby, events }: { baby: Baby; events: readonly Event[] 
   const next = nextUp(events, { months: ageInMonths(baby.birthDate, now), now })
 
   const rows: Row[] = []
-  if (next.feed.status === 'predicted') {
+  // Asleep, a feed due before waking is done on waking: it shows on the waking row.
+  const firstWake = next.plan[0]?.kind === 'wake' ? next.plan[0] : undefined
+  if (next.feed.status === 'predicted' && !firstWake?.feed) {
     rows.push({ icon: 'bottle', label: m.nextFeed(), window: next.feed })
   }
   if (next.sleep.status === 'predicted') {
@@ -50,7 +70,12 @@ export function NextUp({ baby, events }: { baby: Baby; events: readonly Event[] 
     })
   }
   if (next.sleep.status === 'sleeping' && next.sleep.wake) {
-    rows.push({ icon: 'sleep', label: m.nextWake(), window: next.sleep.wake })
+    rows.push({
+      icon: 'sleep',
+      label: m.nextWake(),
+      window: next.sleep.wake,
+      detail: firstWake ? onWaking(firstWake) || undefined : undefined,
+    })
   }
   // A sleeping baby isn't changed on a schedule.
   if (next.diaper.status === 'predicted' && next.sleep.status !== 'sleeping') {
@@ -114,7 +139,7 @@ export function NextUp({ baby, events }: { baby: Baby; events: readonly Event[] 
               {next.plan.map((item) => (
                 <li key={`${item.kind}-${item.at}`} className="flex items-center gap-2">
                   <span className="w-14 font-bold tabular-nums">{formatTime(item.at)}</span>
-                  <EventIcon kind={item.kind === 'feed' ? 'bottle' : 'sleep'} className="size-5" />
+                  <EventIcon kind={PLAN_ICON[item.kind]} className="size-5" />
                   {planLabel(item)}
                 </li>
               ))}

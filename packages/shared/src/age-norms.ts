@@ -9,7 +9,7 @@
  * - WHO infant and young child feeding (solids from about 6 months, 8–12 breastfeeds a day for
  *   newborns).
  * - AASM 2016 consensus and National Sleep Foundation (sleep a day by age); common pediatric
- *   sleep guidance for wake windows.
+ *   sleep guidance for wake windows and for how long a night stretch of sleep lasts by age.
  */
 export interface AgeNorms {
   /** Up to this many whole months (exclusive). */
@@ -20,6 +20,8 @@ export interface AgeNorms {
   feedIntervalMinutes: [number, number]
   /** Between daytime diaper changes, in minutes. */
   diaperIntervalMinutes: [number, number]
+  /** One stretch of sleep at night, in minutes, until the baby's own nights are known. */
+  nightSleepMinutes: [number, number]
   bottleMlPerFeed: [number, number]
   feedsPerDay: [number, number]
   /** Milk a day, bottle and breast together, when it is known. */
@@ -89,24 +91,35 @@ const band = (
   wakeMinutes: [number, number],
   feedIntervalMinutes: [number, number],
   diaperIntervalMinutes: [number, number],
+  nightSleepMinutes: [number, number],
   intake: Intake,
-): AgeNorms => ({ untilMonths, wakeMinutes, feedIntervalMinutes, diaperIntervalMinutes, ...intake })
+): AgeNorms => ({
+  untilMonths,
+  wakeMinutes,
+  feedIntervalMinutes,
+  diaperIntervalMinutes,
+  nightSleepMinutes,
+  ...intake,
+})
 
-/** By age: until months, awake, feed every, diaper every, then what the baby takes in. */
+/**
+ * By age: until months, awake, feed every, diaper every, a night's stretch of sleep, then what
+ * the baby takes in.
+ */
 export const AGE_NORMS: readonly AgeNorms[] = [
-  band(1, [35, 60], [120, 180], [120, 180], NEWBORN),
-  band(2, [60, 90], [150, 210], [150, 210], ONE_MONTH),
-  band(3, [60, 90], [150, 240], [150, 210], TWO_MONTHS),
-  band(4, [75, 120], [180, 240], [180, 240], TWO_MONTHS),
-  band(5, [90, 150], [180, 240], [180, 240], FOUR_MONTHS),
-  band(6, [120, 180], [180, 270], [180, 240], FOUR_MONTHS),
-  band(7, [120, 180], [180, 270], [180, 240], SIX_MONTHS),
-  band(9, [150, 210], [210, 270], [180, 240], SIX_MONTHS),
-  band(11, [165, 240], [210, 300], [180, 270], NINE_MONTHS),
-  band(12, [180, 270], [210, 300], [180, 270], NINE_MONTHS),
-  band(13, [180, 270], [180, 240], [180, 270], TODDLER),
-  band(19, [240, 330], [180, 240], [180, 270], TODDLER),
-  band(Number.POSITIVE_INFINITY, [300, 360], [180, 240], [180, 270], TODDLER),
+  band(1, [35, 60], [120, 180], [120, 180], [120, 180], NEWBORN),
+  band(2, [60, 90], [150, 210], [150, 210], [180, 300], ONE_MONTH),
+  band(3, [60, 90], [150, 240], [150, 210], [180, 300], TWO_MONTHS),
+  band(4, [75, 120], [180, 240], [180, 240], [300, 360], TWO_MONTHS),
+  band(5, [90, 150], [180, 240], [180, 240], [300, 360], FOUR_MONTHS),
+  band(6, [120, 180], [180, 270], [180, 240], [300, 360], FOUR_MONTHS),
+  band(7, [120, 180], [180, 270], [180, 240], [360, 480], SIX_MONTHS),
+  band(9, [150, 210], [210, 270], [180, 240], [360, 480], SIX_MONTHS),
+  band(11, [165, 240], [210, 300], [180, 270], [360, 480], NINE_MONTHS),
+  band(12, [180, 270], [210, 300], [180, 270], [360, 480], NINE_MONTHS),
+  band(13, [180, 270], [180, 240], [180, 270], [600, 660], TODDLER),
+  band(19, [240, 330], [180, 240], [180, 270], [600, 660], TODDLER),
+  band(Number.POSITIVE_INFINITY, [300, 360], [180, 240], [180, 270], [600, 660], TODDLER),
 ]
 
 /** What is usual at `months` old (whole or fractional). */

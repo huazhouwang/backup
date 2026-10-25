@@ -143,6 +143,33 @@ describe('nextUp', () => {
     })
   })
 
+  describe('a night without history', () => {
+    // Fed at 19:00, changed at 21:22, asleep since 22:15; no earlier nights logged.
+    const events = [bottle(at(1, 19)), diaper(at(1, 21, 22)), sleep(at(1, 22, 15), null)]
+    const next = nextUp(events, options(at(1, 22, 25)))
+
+    it('expects a long stretch, not an hour as by day', () => {
+      // Four months: a night stretch of 5–6 hours.
+      expect(next.sleep).toMatchObject({
+        status: 'sleeping',
+        wake: { from: at(2, 2, 50), to: at(2, 4, 40), personalized: false },
+      })
+    })
+
+    it('wakes to feed and change, then sleeps on, without feeds or naps in between', () => {
+      const [wake, after] = next.plan
+      expect(wake).toEqual({ kind: 'wake', at: at(2, 3, 45), feed: true, diaper: true })
+      // Back to sleep after a short night waking, for another long stretch.
+      expect(after).toMatchObject({ kind: 'sleep', at: at(2, 4, 30), length: 330 * MINUTE })
+      expect(next.plan.filter((item) => item.at < at(2, 3, 45))).toEqual([])
+    })
+
+    it('feeds on waking at night even before any feed is logged', () => {
+      const unfed = nextUp([sleep(at(1, 22, 15), null)], options(at(1, 22, 25)))
+      expect(unfed.plan[0]).toMatchObject({ kind: 'wake', feed: true })
+    })
+  })
+
   describe('feeds', () => {
     it('counts a top-up as part of the meal before it', () => {
       // A little at 9:00, more at 9:30: one meal from 9:00, the next about 3.5 hours later.
