@@ -10,4 +10,9 @@ describe('durationLabel', () => {
     expect(durationLabel(120 * 60_000)).toBe('2 小时')
     expect(durationLabel(80 * 60_000)).toBe('1 小时 20 分钟')
   })
+
+  it('has a short form for tight spots', () => {
+    expect(durationLabel(83 * 60_000, { short: true })).toBe('1小时23分')
+    expect(durationLabel(45 * 60_000, { short: true })).toBe('45 分钟')
+  })
 })

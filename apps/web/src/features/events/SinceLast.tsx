@@ -13,13 +13,18 @@ export type SinceCategory = 'feeding' | 'sleep' | 'diaper'
  * How long since the last of a kind, the main question at 3am: "2 小时 10 分钟前", "醒了 1
  * 小时 5 分钟" (or "正在睡"), "还没有记录".
  */
-export function sinceText(events: readonly Event[], category: SinceCategory, now: number) {
+export function sinceText(
+  events: readonly Event[],
+  category: SinceCategory,
+  now: number,
+  { short = false } = {},
+) {
   if (category === 'sleep' && events.some((event) => event.type === 'sleep' && isRunning(event))) {
     return m.sinceSleepingNow()
   }
   const at = lastActivityAt(events, category, now)
   if (at === undefined) return m.sinceNever()
-  const duration = durationLabel(now - at)
+  const duration = durationLabel(now - at, { short })
   return category === 'sleep' ? m.sinceAwake({ duration }) : m.timeAgo({ duration })
 }
 

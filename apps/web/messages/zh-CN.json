@@ -182,6 +182,7 @@
   "durationEndFuture": "结束时间不能晚于现在，请调整开始时间或时长",
   "durationHours": "{hours} 小时",
   "durationHoursMinutes": "{hours} 小时 {minutes} 分钟",
+  "durationHoursMinutesShort": "{hours}小时{minutes}分",
   "durationHowLong": "持续了多久",
   "durationMinutes": "{minutes} 分钟",
   "durationRequired": "请选择持续了多久",

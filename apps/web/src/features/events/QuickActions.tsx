@@ -79,9 +79,9 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
               <span
                 id={`${sinceId}-${category}`}
                 aria-hidden
-                className="text-caption font-bold whitespace-nowrap opacity-90"
+                className="text-center text-caption leading-tight font-bold opacity-90"
               >
-                <RollingText>{sinceText(events, category, now)}</RollingText>
+                <RollingText>{sinceText(events, category, now, { short: true })}</RollingText>
               </span>
             </Button>
           ))}
