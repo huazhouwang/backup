@@ -87,7 +87,7 @@ interface Session {
 async function tap(
   context: AudioContext,
   source: MediaStreamAudioSourceNode,
-  blocks: Float32Array[],
+  take: (samples: Float32Array) => void,
 ) {
   // Pulled by the output, silently: nothing is played back.
   const mute = context.createGain()
@@ -102,7 +102,7 @@ async function tap(
     }
     const node = new AudioWorkletNode(context, 'bobo-tap')
     node.port.addEventListener('message', (event: MessageEvent<Float32Array>) => {
-      blocks.push(event.data)
+      take(event.data)
     })
     node.port.start()
     source.connect(node).connect(mute)
@@ -110,7 +110,7 @@ async function tap(
   }
   const node = context.createScriptProcessor(4096, 1, 1)
   node.addEventListener('audioprocess', (event) => {
-    blocks.push(event.inputBuffer.getChannelData(0).slice(0))
+    take(event.inputBuffer.getChannelData(0).slice(0))
   })
   source.connect(node).connect(mute)
 }
@@ -140,8 +140,10 @@ export function useRecorder() {
     return current
   }, [])
 
-  const start = useCallback(async () => {
+  /** `quietMs`: how long from now to leave out, while a cue sounds that it shouldn't hear. */
+  const start = useCallback(async (quietMs = 0) => {
     if (session.current) return
+    const quietUntil = performance.now() + quietMs
     abandoned.current = false
     setState('starting')
     // Made within the tap, as iOS requires, before anything is awaited.
@@ -162,7 +164,9 @@ export function useRecorder() {
       levels.fftSize = 256
       source.connect(levels)
       const blocks: Float32Array[] = []
-      await tap(context, source, blocks)
+      await tap(context, source, (samples) => {
+        if (performance.now() >= quietUntil) blocks.push(samples)
+      })
       session.current = { stream, context, blocks, startedAt: performance.now() }
       setAnalyser(levels)
       setState('recording')

@@ -11,6 +11,7 @@ import {
 import { Button } from '../../components/ui/Button'
 import { FormError } from '../../components/ui/FormError'
 import { MicIcon } from '../../components/ui/MicIcon'
+import { START_CUE_MS, playCue, tapPhone } from '../../lib/cues'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { MAX_RECORDING_MS, useRecorder } from './recorder'
@@ -114,8 +115,12 @@ export function TalkRow({
     setMode('off')
     setDropping(false)
     const said = recorder.finish()
-    if (said) onSpoken(said)
-    else {
+    tapPhone()
+    if (said) {
+      playCue('send')
+      onSpoken(said)
+    } else {
+      playCue('cancel')
       setError(m.voiceMicTooShort())
       onDrop()
     }
@@ -152,6 +157,8 @@ export function TalkRow({
   }, [recorderState, snapshot])
   const drop = () => {
     recorder.cancel()
+    playCue('cancel')
+    tapPhone()
     setMode('off')
     setDropping(false)
     onDrop()
@@ -161,7 +168,10 @@ export function TalkRow({
     setMode(next)
     setStartedAt(Date.now())
     onBegin()
-    recorder.start().catch((reason: unknown) => {
+    // The start sound plays first; the recording leaves it out.
+    playCue('start')
+    tapPhone()
+    recorder.start(START_CUE_MS).catch((reason: unknown) => {
       setMode('off')
       onDrop()
       const denied = reason instanceof DOMException && reason.name === 'NotAllowedError'
