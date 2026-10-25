@@ -8,7 +8,7 @@
  * ceilings.
  */
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import * as THREE from 'three';
 import { area, findObject, openingFrames, pointInPolygon, type Point, type Project } from '@plinth/core';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
@@ -18,9 +18,13 @@ import { useEditor, useEditorStore } from '../store';
 import { northOnPlan } from '@/lib/solar';
 import { publishHeading } from '../compass/heading';
 import { resumeOrbit } from './CameraRig';
+import { closeAllDoors, passableDoors, setDoorOpen } from './doors';
 import { buildWorld, collide, EYE, groundAt, type Role, type World } from './walk-world';
 
 const WALK_FOV = 70;
+/** How near a sliding door opens (m) and how fast (fully open in 1 / DOOR_SPEED s) */
+const DOOR_REACH = 2;
+const DOOR_SPEED = 1.6;
 /** Walking and running speeds (m/s), turning speed with Q/E (rad/s) */
 const WALK = 1.4;
 const RUN = 3;
@@ -85,8 +89,9 @@ export function walkRole(p: Project, id: string | undefined): Role {
   if (!o) return { block: false, ground: true };
   if (o.kind === 'furniture') return { block: false, ground: false };
   if (o.kind === 'wall') return { block: true, ground: true };
-  // Doors (sliding glass ones too), gates and bare openings are walked through; a window stops you, even down to the floor
-  if (o.kind === 'opening') return o.obj.kind === 'window' ? { block: true, ground: false } : { block: false, ground: false };
+  // Doors, gates and bare openings are walked through; a sliding glass door stops you until it opens (see the doors below); a
+  // window stops you, even down to the floor
+  if (o.kind === 'opening') return o.obj.kind === 'window' || o.obj.kind === 'sliding-door' ? { block: true, ground: false } : { block: false, ground: false };
   return { block: false, ground: true };
 }
 
@@ -101,6 +106,16 @@ export function WalkView() {
   const keys = useRef(new Set<string>());
   const joy = useRef<{ id: number; ox: number; oy: number; dx: number; dy: number } | null>(null);
   const world = useRef<{ project: Project; world: World; at: number } | null>(null);
+  // The sliding glass doors (their middle, m) and how far each has opened
+  const slidingDoors = useMemo(
+    () =>
+      openingFrames(project)
+        .filter(f => f.opening.kind === 'sliding-door')
+        .map(f => ({ id: f.id, x: f.center[0] * M, z: f.center[1] * M, floor: (project.levels.find(l => l.id === f.level)?.elevation ?? 0) * M })),
+    [project],
+  );
+  const doorMotion = useRef(new Map<string, number>());
+  useEffect(() => closeAllDoors, []);
   // The level the walker stands on, so a change from the switcher (not from walking) goes to that level's start
   const standing = useRef<string | null>(null);
 
@@ -303,6 +318,21 @@ export function WalkView() {
       fwd -= joy.current.dy;
       side += joy.current.dx;
     }
+    // Sliding glass doors open as you come near, and close behind you
+    const through = passableDoors();
+    let doorsMoving = false;
+    for (const d of slidingDoors) {
+      const near = Math.abs(m.foot - d.floor) < 1.2 && Math.hypot(m.x - d.x, m.z - d.z) < DOOR_REACH;
+      const v = doorMotion.current.get(d.id) ?? 0;
+      const next = THREE.MathUtils.clamp(v + (near ? 1 : -1) * Math.min(0.15, delta) * DOOR_SPEED, 0, 1);
+      if (next === v) continue;
+      doorsMoving = true;
+      doorMotion.current.set(d.id, next);
+      const was = through.has(d.id);
+      setDoorOpen(d.id, Math.round(next * 10) / 10);
+      // Its leaves are built anew as it moves: look at the scene again once they are in place
+      if (was !== passableDoors().has(d.id) && world.current) world.current.at = performance.now() - 700;
+    }
     // A slow frame still walks at full speed, in short steps so the body never skips through a wall
     const total = Math.min(0.15, delta);
     const n = Math.ceil(total / 0.034);
@@ -316,7 +346,7 @@ export function WalkView() {
         cy = Math.cos(m.yaw);
       let nx = m.x + (-sy * fwd + cy * side) * speed,
         nz = m.z + (-cy * fwd - sy * side) * speed;
-      [nx, nz] = collide(w, nx, nz, m.foot);
+      [nx, nz] = collide(w, nx, nz, m.foot, through);
       const g = groundAt(w, nx, nz, m.foot);
       if (g !== null && g >= m.foot - 0.02) {
         // Up a step smoothly
@@ -350,7 +380,7 @@ export function WalkView() {
       standing.current = on.id;
       store.getState().setView({ level: on.id });
     }
-    if (k.size || joy.current || settling || m.vy) invalidate();
+    if (k.size || joy.current || settling || m.vy || doorsMoving) invalidate();
   });
   return null;
 }

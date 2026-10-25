@@ -20,6 +20,8 @@ export type Role = { block: boolean; ground: boolean };
 interface Piece {
   mesh: THREE.Mesh;
   box: THREE.Box3;
+  /** The project object it shows */
+  id: string | undefined;
 }
 
 export interface World {
@@ -43,9 +45,10 @@ export function buildWorld(scene: THREE.Object3D, roleOf: (id: string | undefine
     const mesh = o as THREE.Mesh & { isLine2?: boolean };
     if (!mesh.isMesh || mesh.isLine2 || !mesh.visible || o.userData.measure || !mesh.geometry?.getAttribute('position')) return;
     for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return;
-    const role = roleOf(ownerId(o));
+    const id = ownerId(o);
+    const role = roleOf(id);
     if (!role.block && !role.ground) return;
-    const piece = { mesh, box: new THREE.Box3().setFromObject(mesh) };
+    const piece = { mesh, box: new THREE.Box3().setFromObject(mesh), id };
     if (role.block) world.blockers.push(piece);
     if (role.ground) world.grounds.push(piece);
   });
@@ -65,10 +68,13 @@ export function groundAt(world: World, x: number, z: number, foot: number): numb
   return hit ? hit.point.y : null;
 }
 
-/** Where the body ends up moving to (x, z): pushed out of whatever it would stand in, so it slides along walls */
-export function collide(world: World, x: number, z: number, foot: number): [number, number] {
+/**
+ * Where the body ends up moving to (x, z): pushed out of whatever it would stand in, so it slides along walls. `open` lets it
+ * through objects that stand open (sliding doors that have opened)
+ */
+export function collide(world: World, x: number, z: number, foot: number, open?: ReadonlySet<string>): [number, number] {
   const box = new THREE.Box3(new THREE.Vector3(x - 1, foot + FEEL[0] - 0.01, z - 1), new THREE.Vector3(x + 1, foot + FEEL[FEEL.length - 1] + 0.01, z + 1));
-  const meshes = near(world.blockers, box);
+  const meshes = near(open?.size ? world.blockers.filter(b => !b.id || !open.has(b.id)) : world.blockers, box);
   if (!meshes.length) return [x, z];
   const at = new THREE.Vector3();
   // Each pass pushes out of the deepest overlap; a corner takes a pass per wall

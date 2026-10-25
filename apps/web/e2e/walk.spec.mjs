@@ -57,18 +57,26 @@ test('walk', async ({ browser: b }) => {
   const wall = await probe(frame);
   check(wall.z > 0.21 + 0.2, `the wall stops you (${wall.z.toFixed(2)} m from the north edge)`);
 
-  // Out through the glass sliding door in the south wall (doors are walked through, windows stop you)
+  // Out through the glass sliding door in the south wall: it opens as you come near (windows stop you)
   const door = await page.evaluate(async () => {
     const found = (await window.artifact.call('find_objects', { query: '推拉门', type: 'opening', level: 'L1' })).result[0];
     return (await window.artifact.call('get_object', { ref: found.id })).result;
   });
   const [dx, dy] = door.center;
-  await place(frame, { x: dx / 1000, z: dy / 1000 - 1.2, yaw: Math.PI, pitch: 0 });
+  // Stand back from it: it is closed, two glass leaves meeting in the middle
+  await place(frame, { x: dx / 1000, z: dy / 1000 - 3.5, yaw: Math.PI, pitch: -0.05 });
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}/walk-door-closed.png` });
+  // Come near: it slides open into the wall
+  await place(frame, { x: dx / 1000, z: dy / 1000 - 1.6 });
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: `${OUT}/walk-door-open.png` });
+  // And you walk out
   await page.keyboard.down('w');
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(4500);
   await page.keyboard.up('w');
   const out = await probe(frame);
-  check(out.z * 1000 > dy + 300, `you walk out through the glass sliding door (${Math.round(out.z * 1000 - dy)} mm past it)`);
+  check(out.z * 1000 > dy + 300, `the glass sliding door opens as you come near and you walk out (${Math.round(out.z * 1000 - dy)} mm past it)`);
 
   // Up the stairs: north up the west flight, east across the landing, south down the east one to the first floor
   await place(frame, { x: 15.55, z: 5.2, yaw: 0, pitch: 0 });
