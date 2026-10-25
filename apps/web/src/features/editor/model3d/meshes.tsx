@@ -4,7 +4,7 @@
  * records its id in userData for picking.
  */
 import { Edges } from '@react-three/drei';
-import type { Element, OpeningFrame, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@plinth/core';
+import type { Element, OpeningFrame, Polygon, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@plinth/core';
 import { footing, lookRecipe, materialOf, SLAB_THICKNESS, wallTarget, type Material } from '@plinth/core';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
@@ -42,23 +42,24 @@ export function WallMesh({ w, project, base, finish, ...o }: Outline & { w: Wall
   );
 }
 
-/** A space's floor slab with its top at `y` (millimetres), in its floor material, with a white ceiling underneath */
+/** A space's floor slab (`shape`: the space less the slab openings on its level) with its top at `y` (millimetres), in its floor material, with a white ceiling underneath */
 export function Slab({
   s,
+  shape,
   y,
   thickness,
   color,
   materials,
   ceiling: ceilingColor,
   ...o
-}: Outline & { s: Space; y: number; thickness: number; color: string; materials: Record<string, Material>; ceiling: string }) {
+}: Outline & { s: Space; shape: Polygon[]; y: number; thickness: number; color: string; materials: Record<string, Material>; ceiling: string }) {
   // The floor's material, as on the plan: its pattern, else its colour (white with a style that draws plain floors)
   const floor = modelStyle().floors === 'material' ? materialOf(s.floor, null, materials) : undefined;
   const map = useFloorTexture(useCanvasDocument(), s.floor, floor);
   if (floor && !map) color = materialStyle(floor).color;
   const ref = useFeedback<THREE.Mesh>(s.id, color, !!o.sel);
-  const geo = useDisposed(useMemo(() => slabGeometry(s.shape, thickness), [s.shape, thickness]));
-  const ceiling = useDisposed(useMemo(() => slabGeometry(s.shape, 1), [s.shape]));
+  const geo = useDisposed(useMemo(() => slabGeometry(shape, thickness), [shape, thickness]));
+  const ceiling = useDisposed(useMemo(() => slabGeometry(shape, 1), [shape]));
   // Two millimetres up: the walls of the floor below end exactly at this floor's level, and their tops would flicker through it
   const bottom = (y + 2 - thickness) * M;
   return (

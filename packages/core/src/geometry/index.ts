@@ -5,3 +5,4 @@ export * from './topology.js';
 export * from './mesh.js';
 export * from './elements.js';
 export * from './roofs.js';
+export * from './slabs.js';

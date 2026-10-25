@@ -31,6 +31,10 @@ export interface ElementPlan {
 export interface ElementGeometry {
   solids: Solid[];
   plans: ElementPlan[];
+  /** A stair: where it lands on the floor it reaches, a step past its last riser (plan point, on the top level) */
+  arrival?: { level: string; at: Point };
+  /** A stair: the opening it needs in the floor it reaches, from its last riser to its far end across both flights */
+  opening?: { level: string; ring: Point[] };
 }
 
 /** Rectangle [x, y, w, h] (top-left corner, size) */
@@ -64,6 +68,8 @@ export interface StairParams {
 const DIRS: Record<StairParams['up'], Point> = { north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0] };
 /** Thickness of a step's slab below its tread, and of the landing */
 const WAIST = 150;
+/** How far past its last riser a stair lands on the upper floor, for checking there is one (mm) */
+const ARRIVAL = 300;
 /** Plan arrows and the walking line stop this far short of the ends */
 const ARROW = 200;
 
@@ -137,7 +143,9 @@ function stair(p: Project, e: Element): ElementGeometry {
   const base: ElementPlan = { id: e.id, level: e.level, fills, lines: [...treads, { points: walk }, { points: arrow }] };
   // From the level above, the flights are seen through the floor opening
   const above: ElementPlan = { id: e.id, level: storey.to.id, fills, lines: treads.map(l => ({ ...l, dashed: true })), faint: true };
-  return { solids, plans: [base, above] };
+  // A step past the second flight's last riser, in the middle of the flight's width
+  const arrival = { level: storey.to.id, at: at(end2 - ARRIVAL, across - fw / 2) };
+  return { solids, plans: [base, above], arrival, opening: { level: storey.to.id, ring: quad(end2, along, 0, across) } };
 }
 
 /** Points along a circular arc from angle a0 to a1 (radians, x east, y south) */

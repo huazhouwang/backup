@@ -3,8 +3,11 @@ import { upgradeLegacyStairs } from '../legacy/stairs.js';
 import { nameIn } from '../looks/material.js';
 import { DEFAULT_MATERIALS, DEFAULT_TYPES } from '../looks/builtin.js';
 import { normalizeRecipe } from '../looks/recipe-convert.js';
+import { elementGeometry } from '../geometry/elements.js';
+import { pointInPolygon } from '../geometry/geometry.js';
 import { heightsFromElevations } from './levels.js';
-import { SCHEMA, SCHEMA_VERSION, type Project } from './schema.js';
+import { names } from './names.js';
+import { SCHEMA, SCHEMA_VERSION, type Polygon, type Project } from './schema.js';
 
 /**
  * When the schema is upgraded, add a step here: MIGRATIONS[n] converts version n data to version n+1.
@@ -35,7 +38,32 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   // v8: levels are a stack (each elevation is the one below's plus its storey height); storeys reach the next level, so
   // nothing moves
   7: doc => ({ ...doc, levels: heightsFromElevations(doc.levels ?? []) }),
+  // v9: a room marked as a slab opening that a stair arrives in becomes a room with floor, cut by a void the stair's size
+  8: doc => fitStairOpenings(doc),
 };
+
+/**
+ * v9: the legacy page marked a whole stairwell room above as a slab opening, so a stair arrived over a hole. Where a stair lands
+ * in such a room, the room keeps its floor and a void the size of the opening the stair needs (from its last riser to its far
+ * end) cuts it (see slabs.ts).
+ */
+export function fitStairOpenings(doc: any) {
+  const spaces: any[] = [...(doc.spaces ?? [])];
+  for (const e of doc.elements ?? []) {
+    const g = elementGeometry(doc as Project, e);
+    if (!g.arrival || !g.opening) continue;
+    const { level, at } = g.arrival;
+    const room = spaces.find(s => s.level === level && s.slabOpening && s.kind !== 'void' && s.shape.some((poly: Polygon) => pointInPolygon(at, poly)));
+    if (!room) continue;
+    const { slabOpening: _open, ...rest } = room;
+    spaces[spaces.indexOf(room)] = rest;
+    const used = new Set(spaces.map(s => s.id));
+    let id = `${room.id}-void`;
+    for (let n = 2; used.has(id); n++) id = `${room.id}-void${n}`;
+    spaces.push({ id, name: names(doc).stairOpening, level, kind: 'void', shape: [{ outer: g.opening.ring }], floor: room.floor });
+  }
+  return { ...doc, spaces };
+}
 
 /** Furniture types merged in v7: the same design at another size or shape (the planting bed "bed" frees its key for the bed) */
 const MERGED: Record<string, string> = { sofa3: 'sofa', sofa2: 'sofa', bed18: 'bed', bed15: 'bed', bed12: 'bed', shower5: 'shower', bed: 'planter' };

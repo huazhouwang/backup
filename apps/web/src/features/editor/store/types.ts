@@ -16,19 +16,10 @@ export interface LastChange {
 /** What the user is placing from the add palette: it follows the pointer in the plan until a click puts it down */
 export type Placing = { kind: 'furniture'; type: string } | { kind: 'opening'; opening: OpeningKind };
 
-/** SketchUp's standard views: the camera turns to look from there (top, or one side named by true north), and still orbits */
-export type StandardView = 'iso' | 'top' | 'front' | 'back' | 'left' | 'right';
-
-/**
- * The 3D camera, as SketchUp's Camera menu and section planes: perspective or parallel projection, walking at eye height, a section
- * plane cut across a line drawn in the plan (looking across from its right-hand side), and the last standard view asked for
- */
+/** The 3D camera's modes: walking at eye height, and a section plane cut across a line drawn in the plan (looking across from its right-hand side) */
 export interface Camera3D {
-  projection: 'perspective' | 'parallel';
   walking: boolean;
   section: { a: Point; b: Point } | null;
-  /** A standard view to turn to; `at` makes each request new */
-  standard: { view: StandardView; at: number } | null;
 }
 
 export interface ModelOption {

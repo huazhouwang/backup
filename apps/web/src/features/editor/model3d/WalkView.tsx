@@ -1,31 +1,31 @@
 /**
- * Walking through the house at eye height, as SketchUp's walk and look-around tools: the camera stands 1.6 m above the floor in a
- * room of the current level (the selected one if any), with a wider lens. Dragging looks around; a tap on a floor walks there; the
- * wheel steps forward or back; WASD, the arrow keys or the on-screen joystick (on a phone) walk. The whole house is shown, so the
- * floors above are the ceilings.
+ * Walking through the house at eye height, as wushi-amr's walk. On a computer a click locks the pointer and the mouse looks
+ * around; WASD or the arrow keys walk, Q/E turn, Shift runs; the first Esc frees the pointer (the browser's), the next leaves
+ * walking. On a touch screen a finger on the left of the view brings up a joystick where it lands and walks, a finger on the
+ * right looks around, both at once. Walls stop the body and it slides along them; steps up to 0.4 m are climbed, so stairs lead
+ * upstairs, and the current level follows where you stand (see walk-world.ts). Each level starts in its largest room, facing
+ * the nearest door or window; the level switcher goes to that start. The whole house is shown, so the floors above are the
+ * ceilings.
  */
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import * as THREE from 'three';
-import { area, pointInPolygon, type Point, type Project } from '@plinth/core';
+import { area, findObject, openingFrames, pointInPolygon, type Point, type Project } from '@plinth/core';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { FOV } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
 import { useEditor, useEditorStore } from '../store';
-import { perspectiveOf, resumeOrbit } from './CameraRig';
+import { resumeOrbit } from './CameraRig';
+import { buildWorld, collide, EYE, groundAt, type Role, type World } from './walk-world';
 
-/**
- * The on-screen joystick's push (see WalkJoystick): forward and right, each -1…1. A plain shared object, as the joystick lives
- * outside the 3D canvas
- */
-export const walkStick = { forward: 0, right: 0, wake: () => {} };
-
-/** Eye height above the floor (m) */
-const EYE = 1.6;
-const WALK_FOV = 65;
-/** Walking speed with the keys (m/s) and a wheel step (m) */
-const SPEED = 1.6;
-const STEP = 0.5;
+const WALK_FOV = 70;
+/** Walking and running speeds (m/s), turning speed with Q/E (rad/s) */
+const WALK = 1.4;
+const RUN = 3;
+const TURN = 1.6;
+/** Joystick reach (px); the share of the view's width on the left where a finger walks */
+export const JOY_REACH = 45;
+const JOY_SIDE = 0.45;
 const MOVE_KEYS: Record<string, [number, number]> = {
   w: [1, 0],
   arrowup: [1, 0],
@@ -36,6 +36,23 @@ const MOVE_KEYS: Record<string, [number, number]> = {
   d: [0, 1],
   arrowright: [0, 1],
 };
+const KEYS = new Set([...Object.keys(MOVE_KEYS), 'q', 'e', 'shift']);
+
+/** The floating joystick while a finger walks (where it landed and its push, -1…1), for the overlay drawn over the view */
+type Pad = { x: number; y: number; dx: number; dy: number } | null;
+const pad = { joy: null as Pad, listeners: new Set<() => void>() };
+const setPad = (joy: Pad) => {
+  pad.joy = joy;
+  for (const l of pad.listeners) l();
+};
+export const useWalkPad = () =>
+  useSyncExternalStore(
+    l => {
+      pad.listeners.add(l);
+      return () => pad.listeners.delete(l);
+    },
+    () => pad.joy,
+  );
 
 /** Where to stand: in the selected room, else the largest indoor room of the level; its middle if inside it, else a corner's neighbourhood */
 export function walkStart(p: Project, level: string, selected?: string): Point | null {
@@ -51,156 +68,276 @@ export function walkStart(p: Project, level: string, selected?: string): Point |
   return [ring[0][0] + (mid[0] - ring[0][0]) * 0.25, ring[0][1] + (mid[1] - ring[0][1]) * 0.25];
 }
 
+/** Facing the door or window nearest to where you stand: the yaw (radians, 0 looks north on the drawing, i.e. along -y) */
+export function walkFacing(p: Project, level: string, at: Point): number {
+  const near = openingFrames(p)
+    .filter(f => f.level === level)
+    .sort((a, b) => Math.hypot(a.center[0] - at[0], a.center[1] - at[1]) - Math.hypot(b.center[0] - at[0], b.center[1] - at[1]))[0];
+  if (!near) return 0;
+  return Math.atan2(-(near.center[0] - at[0]), -(near.center[1] - at[1]));
+}
+
+/** How the walker treats an object: walls and windows stop it, doors and furniture don't; anything else carries the feet */
+export function walkRole(p: Project, id: string | undefined): Role {
+  const o = id ? findObject(p, id) : undefined;
+  if (!o) return { block: false, ground: true };
+  if (o.kind === 'furniture') return { block: false, ground: false };
+  if (o.kind === 'wall') return { block: true, ground: true };
+  // A door (down to the floor) is walked through; a window stops you
+  if (o.kind === 'opening') return o.obj.sill < 300 ? { block: false, ground: false } : { block: true, ground: false };
+  return { block: false, ground: true };
+}
+
 export function WalkView() {
   const project = useEditor(s => s.project);
   const projectId = useEditor(s => s.projectId);
+  const level = useEditor(s => s.view.level);
   const store = useEditorStore();
-  const { camera, gl, scene, raycaster, invalidate, set } = useThree();
+  const { camera, gl, scene, invalidate } = useThree();
   const doc = useCanvasDocument();
-  const look = useRef({ yaw: 0, pitch: 0 });
-  const walk = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
+  const me = useRef({ x: 0, z: 0, foot: 0, vy: 0, eye: null as number | null, yaw: 0, pitch: 0 });
   const keys = useRef(new Set<string>());
+  const joy = useRef<{ id: number; ox: number; oy: number; dx: number; dy: number } | null>(null);
+  const world = useRef<{ project: Project; world: World; at: number } | null>(null);
+  // The level the walker stands on, so a change from the switcher (not from walking) goes to that level's start
+  const standing = useRef<string | null>(null);
 
   const aim = () => {
-    const { yaw, pitch } = look.current;
-    const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
-    camera.lookAt(camera.position.clone().add(dir));
+    camera.rotation.set(me.current.pitch, me.current.yaw, 0, 'YXZ');
+    invalidate();
+  };
+  /** Stand at a level's start */
+  const goTo = (levelId: string) => {
+    const l = project.levels.find(x => x.id === levelId) ?? project.levels[0];
+    const at = walkStart(project, l.id, store.getState().view.selection[0]) ?? [0, 0];
+    Object.assign(me.current, { x: at[0] * M, z: at[1] * M, foot: l.elevation * M + 0.3, vy: 0, eye: null, yaw: walkFacing(project, l.id, at), pitch: 0 });
+    standing.current = l.id;
     invalidate();
   };
 
-  // Stand in the room; a wider lens and a near plane for close walls. Coming from an elevation, the perspective camera is back
-  // as the default one a render later: set up then
+  // A wider lens and a near plane for close walls; back to the orbit view where it was on leaving
   useEffect(() => {
-    // Walking always looks through the perspective camera, also when the orbit view was in parallel projection
-    if (!(camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
-      const persp = perspectiveOf.get(gl);
-      if (persp) set({ camera: persp });
-      return;
-    }
-    const { view } = store.getState();
-    const level = project.levels.find(l => l.id === view.level) ?? project.levels[0];
-    const at = walkStart(project, level.id, view.selection[0]) ?? [0, 0];
-    camera.position.set(at[0] * M, level.elevation * M + EYE, at[1] * M);
-    look.current = { yaw: 0, pitch: -0.05 };
     const cam = camera as THREE.PerspectiveCamera;
     cam.fov = WALK_FOV;
     cam.near = 0.05;
     cam.updateProjectionMatrix();
     store.getState().setPlanUntil3D(false);
-    aim();
+    goTo(store.getState().view.level);
     return () => {
       cam.fov = FOV;
+      cam.rotation.order = 'XYZ';
       cam.updateProjectionMatrix();
       if (store.getState().view.mode === '3d') resumeOrbit.add(projectId);
     };
-  }, [camera]);
+  }, []);
 
-  // Drag to look around, tap a floor to walk there, wheel to step. Touch gestures are ours, not the page's (scrolling, zooming):
-  // the orbit controls that claimed them are gone while walking
+  // In development (and so in the end-to-end tests), where the walker stands can be read and set from the canvas's window
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const win = doc.defaultView as unknown as { walkProbe?: unknown };
+    win.walkProbe = {
+      get: () => ({ ...me.current, level: standing.current }),
+      set: (at: Partial<typeof me.current>) => {
+        Object.assign(me.current, at);
+        invalidate();
+      },
+    };
+    return () => void delete win.walkProbe;
+  }, [doc]);
+
+  // The level switcher: go to that level's start
+  useEffect(() => {
+    if (standing.current && level !== standing.current) goTo(level);
+  }, [level]);
+
+  // Pointer input: a mouse click locks the pointer, a finger on the left walks with a joystick, anywhere else a drag looks around
   useEffect(() => {
     const el = gl.domElement;
     const before = el.style.touchAction;
+    // Touch gestures are ours, not the page's (scrolling, zooming): the orbit controls that claimed them are gone while walking
     el.style.touchAction = 'none';
-    walkStick.wake = invalidate;
-    let down: { x: number; y: number; id: number; moved: boolean } | null = null;
-    const onDown = (e: PointerEvent) => {
-      if (!e.isPrimary) return;
-      down = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
-      el.setPointerCapture(e.pointerId);
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!down || e.pointerId !== down.id) return;
-      const dx = e.clientX - down.x,
-        dy = e.clientY - down.y;
-      if (!down.moved && Math.hypot(dx, dy) < 5) return;
-      down.moved = true;
-      down.x = e.clientX;
-      down.y = e.clientY;
-      // Dragging turns the view the other way, as if grabbing the scene
-      look.current.yaw -= dx * 0.004;
-      look.current.pitch = THREE.MathUtils.clamp(look.current.pitch + dy * 0.004, -1.3, 1.3);
+    const looks = new Map<number, { x: number; y: number }>();
+    const turn = (dx: number, dy: number, k: number) => {
+      me.current.yaw -= dx * k;
+      me.current.pitch = THREE.MathUtils.clamp(me.current.pitch - dy * k, -1.2, 1.2);
       aim();
     };
-    const onUp = (e: PointerEvent) => {
-      const d = down;
-      down = null;
-      if (!d || d.moved || e.pointerId !== d.id) return;
+    const onDown = (e: PointerEvent) => {
+      el.setPointerCapture(e.pointerId);
       const r = el.getBoundingClientRect();
-      raycaster.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
-      const hit = raycaster.intersectObjects(scene.children, true).find(h => (h.object as THREE.Mesh).isMesh && h.face);
-      // Only floors: a surface facing up
-      const n = hit?.face?.normal.clone().transformDirection(hit.object.matrixWorld);
-      if (!hit || !n || n.y < 0.7) return;
-      walk.current = { from: camera.position.clone(), to: new THREE.Vector3(hit.point.x, hit.point.y + EYE, hit.point.z), t: 0 };
-      invalidate();
+      if (e.pointerType === 'mouse') {
+        if (doc.pointerLockElement !== el) {
+          // Pointer lock isn't everywhere (and a test browser may refuse it): dragging looks around meanwhile
+          looks.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          void Promise.resolve(el.requestPointerLock?.()).catch(() => {});
+        }
+        return;
+      }
+      if (!joy.current && e.clientX - r.left < r.width * JOY_SIDE) {
+        joy.current = { id: e.pointerId, ox: e.clientX, oy: e.clientY, dx: 0, dy: 0 };
+        setPad({ x: e.clientX - r.left, y: e.clientY - r.top, dx: 0, dy: 0 });
+        invalidate();
+      } else looks.set(e.pointerId, { x: e.clientX, y: e.clientY });
     };
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const f = new THREE.Vector3(Math.sin(look.current.yaw), 0, -Math.cos(look.current.yaw));
-      camera.position.add(f.multiplyScalar(e.deltaY < 0 ? STEP : -STEP));
-      invalidate();
+    const onMove = (e: PointerEvent) => {
+      const j = joy.current;
+      if (j && e.pointerId === j.id) {
+        let dx = e.clientX - j.ox,
+          dy = e.clientY - j.oy;
+        const len = Math.hypot(dx, dy);
+        if (len > JOY_REACH) [dx, dy] = [(dx / len) * JOY_REACH, (dy / len) * JOY_REACH];
+        j.dx = dx / JOY_REACH;
+        j.dy = dy / JOY_REACH;
+        const r = el.getBoundingClientRect();
+        setPad({ x: j.ox - r.left, y: j.oy - r.top, dx, dy });
+        invalidate();
+        return;
+      }
+      const l = looks.get(e.pointerId);
+      if (!l) return;
+      turn(e.clientX - l.x, e.clientY - l.y, 0.005);
+      l.x = e.clientX;
+      l.y = e.clientY;
+    };
+    const onUp = (e: PointerEvent) => {
+      if (joy.current?.id === e.pointerId) {
+        joy.current = null;
+        setPad(null);
+      }
+      looks.delete(e.pointerId);
+    };
+    // With the pointer locked the mouse looks around without a button
+    const onLocked = (e: MouseEvent) => {
+      if (doc.pointerLockElement === el) turn(e.movementX, e.movementY, 0.0025);
     };
     el.addEventListener('pointerdown', onDown);
     el.addEventListener('pointermove', onMove);
     el.addEventListener('pointerup', onUp);
-    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('pointercancel', onUp);
+    doc.addEventListener('mousemove', onLocked);
     return () => {
       el.style.touchAction = before;
-      walkStick.wake = () => {};
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
-      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointercancel', onUp);
+      doc.removeEventListener('mousemove', onLocked);
+      if (doc.pointerLockElement === el) doc.exitPointerLock();
+      joy.current = null;
+      setPad(null);
     };
-  }, [gl, camera, scene, raycaster]);
+  }, [gl, doc]);
 
-  // Keys, in the canvas's window and the page's (the canvas forwards its key presses, not its releases)
+  // Keys, in the canvas's window and the page's (the canvas forwards its key presses, not its releases). An Esc that frees the
+  // locked pointer stays here, so only the next one leaves walking
   useEffect(() => {
+    const el = gl.domElement;
     const wins = [...new Set([doc.defaultView!, window])];
+    let freed = 0;
+    const onLockChange = () => {
+      if (doc.pointerLockElement !== el) freed = performance.now();
+    };
+    const holdEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (doc.pointerLockElement === el || performance.now() - freed < 250)) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    };
     const press = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (!(k in MOVE_KEYS) || (e.target as Partial<HTMLElement> | null)?.closest?.('input, textarea, [contenteditable]')) return;
+      if (!KEYS.has(k) || (e.target as Partial<HTMLElement> | null)?.closest?.('input, textarea, [contenteditable]')) return;
       keys.current.add(k);
       invalidate();
     };
     const release = (e: KeyboardEvent) => keys.current.delete(e.key.toLowerCase());
     const clear = () => keys.current.clear();
+    doc.addEventListener('pointerlockchange', onLockChange);
+    doc.defaultView!.addEventListener('keydown', holdEsc, true);
     for (const w of wins) {
       w.addEventListener('keydown', press);
       w.addEventListener('keyup', release);
       w.addEventListener('blur', clear);
     }
     return () => {
+      doc.removeEventListener('pointerlockchange', onLockChange);
+      doc.defaultView!.removeEventListener('keydown', holdEsc, true);
       for (const w of wins) {
         w.removeEventListener('keydown', press);
         w.removeEventListener('keyup', release);
         w.removeEventListener('blur', clear);
       }
     };
-  }, [doc]);
+  }, [doc, gl]);
 
-  useFrame((_, dt) => {
-    const w = walk.current;
-    if (w) {
-      w.t = Math.min(1, w.t + dt / 0.7);
-      const k = w.t < 0.5 ? 2 * w.t * w.t : 1 - (-2 * w.t + 2) ** 2 / 2;
-      camera.position.lerpVectors(w.from, w.to, k);
-      if (w.t === 1) walk.current = null;
-      invalidate();
+  useFrame((_, delta) => {
+    // What there is to walk into: built from the scene, again after an edit, and once more when the house has settled
+    const now = performance.now();
+    const w0 = world.current;
+    if (!w0 || w0.project !== project || (w0.at && now - w0.at > 1000)) {
+      world.current = { project, world: buildWorld(scene, id => walkRole(project, id)), at: w0?.project === project ? 0 : now };
     }
-    if (keys.current.size || walkStick.forward || walkStick.right) {
-      let fwd = walkStick.forward,
-        side = walkStick.right;
-      for (const k of keys.current) {
-        fwd += MOVE_KEYS[k][0];
-        side += MOVE_KEYS[k][1];
+    const w = world.current!.world;
+    const m = me.current;
+    const k = keys.current;
+    let fwd = 0,
+      side = 0;
+    for (const key of k) {
+      const mv = MOVE_KEYS[key];
+      if (mv) {
+        fwd += mv[0];
+        side += mv[1];
       }
-      const yaw = look.current.yaw;
-      const f = new THREE.Vector3(Math.sin(yaw), 0, -Math.cos(yaw)),
-        r = new THREE.Vector3(Math.cos(yaw), 0, Math.sin(yaw));
-      camera.position.add(f.multiplyScalar(fwd * SPEED * dt)).add(r.multiplyScalar(side * SPEED * dt));
-      invalidate();
     }
+    if (joy.current) {
+      fwd -= joy.current.dy;
+      side += joy.current.dx;
+    }
+    // A slow frame still walks at full speed, in short steps so the body never skips through a wall
+    const total = Math.min(0.15, delta);
+    const n = Math.ceil(total / 0.034);
+    let settling = false;
+    for (let i = 0; i < n; i++) {
+      const dt = total / n;
+      if (k.has('q')) m.yaw += dt * TURN;
+      if (k.has('e')) m.yaw -= dt * TURN;
+      const speed = (k.has('shift') ? RUN : WALK) * dt;
+      const sy = Math.sin(m.yaw),
+        cy = Math.cos(m.yaw);
+      let nx = m.x + (-sy * fwd + cy * side) * speed,
+        nz = m.z + (-cy * fwd - sy * side) * speed;
+      [nx, nz] = collide(w, nx, nz, m.foot);
+      const g = groundAt(w, nx, nz, m.foot);
+      if (g !== null && g >= m.foot - 0.02) {
+        // Up a step smoothly
+        m.foot += (g - m.foot) * Math.min(1, dt * 12);
+        m.vy = 0;
+        settling ||= Math.abs(g - m.foot) > 0.002;
+      } else {
+        m.vy -= 9.8 * dt;
+        m.foot = Math.max(g ?? -Infinity, m.foot + m.vy * dt);
+        if (g !== null && m.foot <= g) m.vy = 0;
+        settling = true;
+      }
+      m.x = nx;
+      m.z = nz;
+      const eye = m.foot + EYE;
+      m.eye = m.eye === null ? eye : m.eye + (eye - m.eye) * Math.min(1, dt * 10);
+      settling ||= Math.abs(eye - m.eye) > 0.002;
+    }
+    // Fallen off the edge of the world: back to the level's start
+    if (m.foot < project.site.groundLevel * M - 10) goTo(standing.current ?? level);
+    camera.position.set(m.x, m.eye!, m.z);
+    camera.rotation.set(m.pitch, m.yaw, 0, 'YXZ');
+    // The level follows the feet
+    const on = [...project.levels]
+      .sort((a, b) => a.elevation - b.elevation)
+      .filter(l => l.elevation * M <= m.foot + 0.5)
+      .pop();
+    if (on && on.id !== standing.current) {
+      standing.current = on.id;
+      store.getState().setView({ level: on.id });
+    }
+    if (k.size || joy.current || settling || m.vy) invalidate();
   });
   return null;
 }

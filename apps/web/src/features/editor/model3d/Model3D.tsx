@@ -19,6 +19,7 @@ import {
   roofs,
   type Solid,
   type Wall,
+  slabShape,
 } from '@plinth/core';
 import { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -40,7 +41,7 @@ import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
 import { SectionPlane } from './SectionPlane';
 import { WalkView } from './WalkView';
-import { WalkJoystick } from './WalkJoystick';
+import { WalkOverlay } from './WalkOverlay';
 import { ElementExtras, Furniture, OpeningLook, RailingLook, RoofMesh, Slab, SolidMesh, WallMesh } from './meshes';
 import { detectQuality, isTouchDevice, Renderer, type Quality } from './Renderer';
 import { Reveal } from './Reveal';
@@ -105,6 +106,8 @@ export function Model3D() {
   const solids = useMemo(() => projectElements(project).flatMap(g => g.solids), [project]);
   const openings = useMemo(() => openingFrames(project), [project]);
   const roofed = useMemo(() => roofs(project), [project]);
+  // Floors less the slab openings that cut them
+  const slabShapes = useMemo(() => new Map(project.spaces.map(s => [s.id, slabShape(project, s)])), [project.spaces]);
   const elementBuilt = (e: (typeof project.elements)[number]) => {
     const look = elementLook(project, e);
     return look.recipe ? getBuild(look.recipe, look.size, look.params) : undefined;
@@ -188,6 +191,7 @@ export function Model3D() {
                           <Slab
                             key={s.id}
                             s={s}
+                            shape={slabShapes.get(s.id) ?? s.shape}
                             {...slabLevel(s, l.elevation, project.site.groundLevel)}
                             color={c.wall}
                             ceiling={c.wall}
@@ -281,15 +285,15 @@ export function Model3D() {
           <Picker />
           <Measure3D />
           <Reveal ownerOf={ownerOf} />
-          {/* Parallel projection and sections read as drawings: with edges */}
-          <Renderer draw={draw} edges={style.edges || camera3d.projection === 'parallel' || !!camera3d.section} edgeColor={c.edge} growth={growth} />
+          {/* Sections read as drawings: with edges */}
+          <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
           {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
           <Wake on={[view.selection, view.highlight]} />
           <Capture draw={draw} />
         </Canvas>
       </TintColors.Provider>
-      {camera3d.walking && <WalkJoystick className="absolute bottom-6 left-6 max-md:bottom-20" />}
+      {camera3d.walking && <WalkOverlay />}
       <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground max-md:hidden">{!camera3d.walking && m.model3d_hint()}</p>
     </div>
   );

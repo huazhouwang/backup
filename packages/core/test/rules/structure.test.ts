@@ -1,6 +1,6 @@
-/** Stairs climb through slab openings, openings are guarded, bearing walls stand on bearing walls, floors don't reach far out */
+/** Stairs climb through slab openings and land on a floor, openings are guarded, bearing walls stand on bearing walls, floors don't reach far out */
 import { describe, expect, it } from 'vitest';
-import { checkStructure, createProject, createRegistry, migrate, Session, type CallResult, type Project } from '../../src/index.js';
+import { checkStructure, createProject, createRegistry, migrate, Session, slabAt, type CallResult, type Project } from '../../src/index.js';
 import { sampleFile } from '../support.js';
 
 const registry = createRegistry();
@@ -73,6 +73,64 @@ describe('stairs and openings', () => {
     );
     expect(h.edit(d => void d.elements.push(structuredClone(stair) as Project['elements'][number])).ok).toBe(true);
     expect(codes(h)).not.toContain('stair-no-opening');
+  });
+
+  it('a stair lands on a floor: an opening reaching past its last riser leaves it arriving over a hole', async () => {
+    const h = await house();
+    const well = (y0: number) =>
+      h.edit(
+        d =>
+          void d.spaces.push({
+            id: 'well',
+            name: 'Stairwell',
+            level: 'L2',
+            kind: 'void',
+            floor: 'concrete',
+            shape: [
+              {
+                outer: [
+                  [3400, y0],
+                  [5880, y0],
+                  [5880, 3100],
+                  [3400, 3100],
+                ],
+              },
+            ],
+          }),
+      );
+    // The stair arrives at its north end, a step short of y = 500: an opening from y = 100 swallows the landing
+    well(100);
+    const refused = h.edit(d => void d.elements.push(structuredClone(stair) as Project['elements'][number]));
+    expect(refused.ok).toBe(false);
+    expect((refused.error as { issues?: { code: string }[] }).issues?.map(i => i.code)).toContain('stair-arrival-no-floor');
+  });
+
+  it('an opening cuts the floor of the room it lies in, and a stair arriving beyond it lands on that floor', async () => {
+    const h = await house();
+    h.edit(
+      d =>
+        void d.spaces.push({
+          id: 'well',
+          name: 'Stairwell',
+          level: 'L2',
+          kind: 'void',
+          floor: 'concrete',
+          shape: [
+            {
+              outer: [
+                [3400, 400],
+                [5880, 400],
+                [5880, 3100],
+                [3400, 3100],
+              ],
+            },
+          ],
+        }),
+    );
+    expect(slabAt(h.session.project, 'L2', [4000, 2000])).toBe(false);
+    expect(slabAt(h.session.project, 'L2', [4000, 200])).toBe(true);
+    expect(h.edit(d => void d.elements.push(structuredClone(stair) as Project['elements'][number])).ok).toBe(true);
+    expect(codes(h)).not.toContain('stair-arrival-no-floor');
   });
 
   it('an opening in the floor with nothing around it is reported; walls around it guard it', async () => {

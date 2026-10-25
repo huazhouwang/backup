@@ -30,6 +30,15 @@ describe('乌石合院 scheme 10', () => {
     });
   });
 
+  it('the stairs land on floor: each stairwell room above keeps its floor, cut by a void the size of the stair (v9)', () => {
+    for (const id of ['L2-s03', 'L3-s03', 'RF-s02']) {
+      const room = project.spaces.find(s => s.id === id)!;
+      expect(room.slabOpening).toBeUndefined();
+      const hole = project.spaces.find(s => s.id === `${id}-void`)!;
+      expect(hole).toMatchObject({ kind: 'void', level: room.level, name: '楼梯洞口' }); // i18n-ok: sample data name
+    }
+  });
+
   it('object names are unique within a level and usable as references', () => {
     for (const l of project.levels) {
       for (const list of [project.walls, project.spaces, project.furniture]) {

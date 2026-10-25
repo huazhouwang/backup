@@ -21,7 +21,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   placing: null,
   measuring: false,
   sectioning: false,
-  camera3d: { projection: 'perspective', walking: false, section: null, standard: null },
+  camera3d: { walking: false, section: null },
 
   setCompare(on) {
     set({ compare: on });

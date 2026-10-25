@@ -1,12 +1,10 @@
 import { OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { Point } from '@plinth/core';
 import { hops } from '@/canvas/hop';
 import { planFrame } from '@/graphics/plan/plan-geometry';
 import { useEditor } from '../store';
-import type { StandardView } from '../store/types';
 import { BIRD, FOV, framed, nearPlane, type Pose } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
 
@@ -15,35 +13,14 @@ export type Orbit = { target: THREE.Vector3; enabled: boolean; update(): void };
 const lastPose = new Map<string, Pose>();
 /** Projects coming back from walking: the orbit view resumes where it was, without growing the house again */
 export const resumeOrbit = new Set<string>();
-/** Each canvas's perspective camera, kept while parallel projection makes an orthographic one the default */
-export const perspectiveOf = new WeakMap<THREE.WebGLRenderer, THREE.PerspectiveCamera>();
-
-/**
- * Where a standard view looks from (a unit vector from the model towards the camera), as SketchUp's: front looks north from the
- * south, back south, left from the west, right from the east (by the site's true north), top straight down with north up
- */
-export function standardDirection(view: StandardView, northAngle: number): THREE.Vector3 {
-  if (view === 'iso') return BIRD.clone();
-  if (view === 'top') return new THREE.Vector3(0, 1, 1e-4).normalize();
-  const r = (northAngle * Math.PI) / 180;
-  const north: Point = [Math.sin(r), -Math.cos(r)];
-  const turn = { back: 0, right: 90, front: 180, left: 270 }[view];
-  const t = (turn * Math.PI) / 180;
-  return new THREE.Vector3(north[0] * Math.cos(t) - north[1] * Math.sin(t), 0, north[0] * Math.sin(t) + north[1] * Math.cos(t));
-}
-
-/** The orbit controls, bound once to the canvas's perspective camera; the rig swaps the camera they drive for parallel projection */
+/** The orbit controls */
 export function OrbitRig({ radius }: { radius: number }) {
-  const gl = useThree(s => s.gl);
-  const initial = useThree(s => s.camera);
-  if (!perspectiveOf.has(gl) && (initial as THREE.PerspectiveCamera).isPerspectiveCamera) perspectiveOf.set(gl, initial as THREE.PerspectiveCamera);
   return (
     <OrbitControls
-      camera={perspectiveOf.get(gl) ?? initial}
       makeDefault
       enableDamping
       dampingFactor={0.09}
-      // Down to the horizon, so a front view is square to the facade
+      // Down to the horizon, not below the ground
       maxPolarAngle={Math.PI / 2}
       minDistance={Math.max(1.5, radius * 0.15)}
       maxDistance={radius * 6}
@@ -93,12 +70,9 @@ export function CameraRig({
   growth: React.RefObject<{ g: number }>;
   projectId: string;
 }) {
-  const { camera, controls, size, invalidate, set, gl } = useThree();
+  const { camera, controls, size, invalidate } = useThree();
   const project = useEditor(s => s.project);
   const camera3d = useEditor(s => s.camera3d);
-  // Parallel projection: an orthographic camera at the same place, its zoom matching what the perspective view showed
-  const ortho = useMemo(() => new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 5000), []);
-  const zoomFor = (distance: number) => size.height / (2 * distance * Math.tan(THREE.MathUtils.degToRad(FOV) / 2));
   const dimensions = useEditor(s => s.view.layers.dimensions);
   const setLeave3D = useEditor(s => s.setLeave3D);
   const setPlanUntil3D = useEditor(s => s.setPlanUntil3D);
@@ -201,41 +175,6 @@ export function CameraRig({
     run(framed(box, size.width / size.height, dir.y > 0.99 ? BIRD : dir), 600);
   }, [fitRequest]);
 
-  // Perspective or parallel projection: swap the camera the controls drive, keeping the view
-  useEffect(() => {
-    const persp = perspectiveOf.get(gl);
-    const ctl = controls as unknown as (Orbit & { object: THREE.Camera }) | null;
-    if (!ctl || !persp) return;
-    const target = ctl.target;
-    if (camera3d.projection === 'parallel' && camera !== ortho) {
-      ortho.position.copy(camera.position);
-      ortho.quaternion.copy(camera.quaternion);
-      ortho.zoom = zoomFor(camera.position.distanceTo(target));
-      Object.assign(ortho, { left: -size.width / 2, right: size.width / 2, top: size.height / 2, bottom: -size.height / 2 });
-      ortho.updateProjectionMatrix();
-      ctl.object = ortho;
-      set({ camera: ortho });
-    } else if (camera3d.projection === 'perspective' && camera === ortho) {
-      // Back to perspective at the distance that shows what the parallel view showed
-      const distance = size.height / (2 * ortho.zoom * Math.tan(THREE.MathUtils.degToRad(FOV) / 2));
-      persp.position.copy(target).add(ortho.position.clone().sub(target).normalize().multiplyScalar(distance));
-      ctl.object = persp;
-      set({ camera: persp });
-    } else return;
-    ctl.update();
-    invalidate();
-  }, [camera3d.projection, controls]);
-  useEffect(() => {
-    Object.assign(ortho, { left: -size.width / 2, right: size.width / 2, top: size.height / 2, bottom: -size.height / 2 });
-    ortho.updateProjectionMatrix();
-  }, [size]);
-
-  // A standard view: turn there, framing the model; it still orbits afterwards
-  useEffect(() => {
-    if (!camera3d.standard || !orbit) return;
-    turnTo(framed(box, size.width / size.height, standardDirection(camera3d.standard.view, project.site.northAngle)), 700);
-  }, [camera3d.standard?.at]);
-
   // A section plane: face the cut squarely, from the viewer's side (drawing one opens 3D, so the controls may come after it)
   useEffect(() => {
     const sec = camera3d.section;
@@ -277,10 +216,6 @@ export function CameraRig({
     const s = new THREE.Spherical(THREE.MathUtils.lerp(s0.radius, s1.radius, k), THREE.MathUtils.lerp(s0.phi, s1.phi, k), s0.theta + dTheta * k);
     orbit.target.lerpVectors(a.from.target, a.to.target, k);
     camera.position.copy(orbit.target).add(new THREE.Vector3().setFromSpherical(s));
-    if ((camera as THREE.OrthographicCamera).isOrthographicCamera) {
-      (camera as THREE.OrthographicCamera).zoom = zoomFor(s.radius);
-      (camera as THREE.OrthographicCamera).updateProjectionMatrix();
-    }
     if (a.grow) grow(THREE.MathUtils.lerp(a.grow[0], a.grow[1], t));
     orbit.enabled = t === 1 && !leaving.current;
     orbit.update();

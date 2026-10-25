@@ -6,6 +6,7 @@
 import { pointAt, pointInPolygon, wallLength } from '../geometry/geometry.js';
 import { wallHeight } from '../geometry/mesh.js';
 import { roofs } from '../geometry/roofs.js';
+import { slabAt } from '../geometry/slabs.js';
 import { text } from '../i18n.js';
 import { levelAbove, SLAB_THICKNESS } from '../model/levels.js';
 import type { Id, Point, Project, Wall } from '../model/schema.js';
@@ -18,7 +19,7 @@ const STOREY_WALLS = new Set<Wall['kind']>(['bearing', 'partition']);
 function slabAbove(p: Project, level: Id, at: Point) {
   const above = levelAbove(p, level);
   if (!above) return false;
-  return p.spaces.some(s => s.level === above.id && s.kind !== 'void' && !s.slabOpening && s.shape.some(poly => pointInPolygon(at, poly)));
+  return slabAt(p, above.id, at);
 }
 
 export function checkIntegrity(p: Project): Issue[] {

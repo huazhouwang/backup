@@ -63,7 +63,7 @@ export function AddMenu() {
   );
 }
 
-/** While placing, measuring, drawing a section or walking: what to do, and a way out */
+/** While placing, measuring, drawing a section, walking or looking at a section plane: what to do, and a way out */
 export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
@@ -73,6 +73,7 @@ export function ToolHint({ className }: { className?: string }) {
   const setSectioning = useEditor(s => s.setSectioning);
   const walking = useEditor(s => s.camera3d.walking);
   const setCamera3d = useEditor(s => s.setCamera3d);
+  const section = useEditor(s => s.camera3d.section);
   const mode = useEditor(s => s.view.mode);
   const furniture = useEditor(s => s.project.library.furniture);
   let text: string | null = null;
@@ -81,7 +82,22 @@ export function ToolHint({ className }: { className?: string }) {
     text = placing.kind === 'opening' ? m.add_hint_opening({ name }) : m.add_hint_furniture({ name });
   } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
   else if (sectioning && mode === '2d') text = m.section_hint();
-  else if (walking && mode === '3d') text = m.model3d_hint_walk();
+  else if (walking && mode === '3d') text = matchMedia('(pointer: coarse)').matches ? m.model3d_hint_walk_touch() : m.model3d_hint_walk();
+  // A section plane in 3D: flip it or clear it
+  if (!text && section && mode === '3d')
+    return (
+      <div className={className}>
+        <div className="flex items-center gap-2 rounded-lg bg-background px-3 py-1.5 text-sm shadow-md ring-1 ring-foreground/10">
+          <span>{m.section_on()}</span>
+          <Button size="xs" variant="outline" onClick={() => setCamera3d({ section: { a: section.b, b: section.a } })}>
+            {m.view_section_flip()}
+          </Button>
+          <Button size="xs" variant="outline" onClick={() => setCamera3d({ section: null })}>
+            {m.section_clear()}
+          </Button>
+        </div>
+      </div>
+    );
   if (!text) return null;
   return (
     <div className={className}>

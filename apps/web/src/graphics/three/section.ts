@@ -3,7 +3,7 @@
  * walls whose bodies the line crosses (with the doors and windows it passes through left open) and the floor slabs and roofs it
  * crosses. Millimetres: along the line from its start, and absolute height.
  */
-import { dot, footing, roofs, SLAB_THICKNESS, sub, wallBody, wallDir, wallHeight, type Point, type Polygon, type Project } from '@plinth/core';
+import { dot, footing, roofs, SLAB_THICKNESS, slabShape, sub, wallBody, wallDir, wallHeight, type Point, type Polygon, type Project } from '@plinth/core';
 import { hasSlab, slabLevel } from './scene/units';
 
 export interface SectionLine {
@@ -75,7 +75,7 @@ export function sectionCuts(p: Project, line: SectionLine): CutRect[] {
   for (const s of p.spaces) {
     if (!hasSlab(s)) continue;
     const { y, thickness } = slabLevel(s, elev.get(s.level) ?? 0, p.site.groundLevel);
-    for (const poly of s.shape) for (const [s0, s1] of crossings(line, poly)) out.push({ s0, s1, y0: y - thickness, y1: y });
+    for (const poly of slabShape(p, s)) for (const [s0, s1] of crossings(line, poly)) out.push({ s0, s1, y0: y - thickness, y1: y });
   }
   for (const r of roofs(p)) {
     const top = (elev.get(r.level) ?? 0) + r.top;

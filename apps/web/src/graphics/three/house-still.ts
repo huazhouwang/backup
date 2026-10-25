@@ -19,6 +19,7 @@ import {
   type Project,
   type Recipe,
   type RecipeSize,
+  slabShape,
 } from '@plinth/core';
 import * as THREE from 'three';
 import { lightDocument } from '@/canvas/CanvasFrame';
@@ -102,7 +103,7 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, W: number, H: num
       material.color.set(white);
       material.map = await floorTexture(doc, m);
     }
-    const mesh = add(house, slabGeometry(s.shape, thickness), material);
+    const mesh = add(house, slabGeometry(slabShape(p, s), thickness), material);
     mesh.position.y = (y + 2 - thickness) * M;
     mesh.receiveShadow = true;
   }

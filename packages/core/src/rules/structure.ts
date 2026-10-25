@@ -1,13 +1,15 @@
 /**
  * Vertical coordination and structure, as BIM tools treat them. A stair needs an opening in the slab it climbs through (Revit's
- * stair and shaft opening): without one it runs into the floor above, an error. Openings in a slab should be guarded by walls or
+ * stair and shaft opening): without one it runs into the floor above, an error; and where it arrives there must be floor, not
+ * more of that opening. Openings in a slab should be guarded by walls or
  * railings. And the architectural model keeps structure plausible without computing it (that is the engineers' analytical model):
  * an upper bearing wall should stand on a bearing wall, and a floor shouldn't reach far beyond the storey below it. Those two
  * are rules of thumb, reported as warnings, never as engineering.
  */
 import pc from 'polygon-clipping';
 import { area, dot, fromPc, rect, sub, toPc, union, wallBody, wallDir, wallLength, wallNormal } from '../geometry/geometry.js';
-import { projectElements } from '../geometry/elements.js';
+import { elementGeometry, projectElements } from '../geometry/elements.js';
+import { slabAt } from '../geometry/slabs.js';
 import { overlapArea } from '../geometry/topology.js';
 import { text } from '../i18n.js';
 import { levelStack } from '../model/levels.js';
@@ -126,6 +128,23 @@ export function checkStructure(p: Project): Issue[] {
         message: text('rule_stair_no_opening', '{element} has no opening in the floor of {level} to climb through', {
           element: e.name,
           level: name.get(e.topLevel) ?? e.topLevel,
+        }),
+        targets: [e.id],
+      });
+  }
+
+  // A stair lands on a floor: where it arrives, the level above has a slab, not the opening it climbs through
+  for (const e of p.elements) {
+    const arrival = elementGeometry(p, e).arrival;
+    if (!arrival) continue;
+    const { level, at } = arrival;
+    if (!slabAt(p, level, at, true))
+      out.push({
+        code: 'stair-arrival-no-floor',
+        severity: 'error',
+        message: text('rule_stair_arrival_no_floor', '{element} arrives over the opening in the floor of {level}, with no floor to step onto', {
+          element: e.name,
+          level: name.get(level) ?? level,
         }),
         targets: [e.id],
       });
