@@ -126,6 +126,28 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
   // The page behind stays put while the sheet is up, even on a sheet too short to scroll.
   useEffect(() => (shownInDialog ? lockScroll() : undefined), [shownInDialog])
 
+  // iOS lays the keyboard over the page without resizing it, so a sheet at the bottom would
+  // sit behind it, field and all. The sheet rests on the keyboard instead, and fits above it.
+  useEffect(() => {
+    const viewport = window.visualViewport
+    const dialog = ref.current
+    if (!shownInDialog || !viewport || !dialog) return undefined
+    const fit = () => {
+      const covered = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      dialog.style.setProperty('--keyboard', `${covered}px`)
+      dialog.style.setProperty('--visible', `${viewport.height}px`)
+    }
+    fit()
+    viewport.addEventListener('resize', fit)
+    viewport.addEventListener('scroll', fit)
+    return () => {
+      viewport.removeEventListener('resize', fit)
+      viewport.removeEventListener('scroll', fit)
+      dialog.style.removeProperty('--keyboard')
+      dialog.style.removeProperty('--visible')
+    }
+  }, [shownInDialog])
+
   // Dragging the header pulls the sheet down; far or fast enough, it closes.
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     // The finger moves the sheet now; a running slide would hold it in place.
@@ -172,7 +194,8 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
         if (event.target === event.currentTarget) onClose()
       }}
       className={clsx(
-        'fixed inset-x-0 top-auto bottom-0 m-0 mx-auto w-full max-w-app max-h-[85dvh] overflow-x-hidden overscroll-contain',
+        'fixed inset-x-0 top-auto bottom-[var(--keyboard,0px)] m-0 mx-auto w-full max-w-app overflow-x-hidden overscroll-contain',
+        'max-h-[min(85dvh,calc(var(--visible,100dvh)-1rem))]',
         'sheet rounded-t-xl border-2 border-b-0 border-border bg-bg p-0 text-fg focus:outline-none',
       )}
     >
