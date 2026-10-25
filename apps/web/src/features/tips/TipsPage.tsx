@@ -11,6 +11,7 @@ import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { useBabyEvents } from '../events/use-events'
+import { typingDots } from '../voice/ChangingText'
 import { tipsQueries } from './api'
 import { type Comparison, compareWithUsual } from './compare'
 import { tipById } from './library'
@@ -65,18 +66,6 @@ export function TipsPage({
   )
 }
 
-const dots = (
-  <span aria-hidden className="inline-flex h-5 items-center gap-1 align-middle">
-    {[0, 150, 300].map((delay) => (
-      <span
-        key={delay}
-        className="size-2 animate-typing rounded-full bg-current"
-        style={{ animationDelay: `${delay}ms` }}
-      />
-    ))}
-  </span>
-)
-
 /** Bobo's observation on the week: signed in only, as the family's AI writes it. */
 function Observation({ baby, day }: { baby: Baby; day: string }) {
   const { userId } = useAccess()
@@ -91,7 +80,7 @@ function Observation({ baby, day }: { baby: Baby; day: string }) {
       <CardTitle small>{m.tipsObservationTitle()}</CardTitle>
       {isPending ? (
         <p className="m-0 flex items-center gap-2 text-fg-muted">
-          {dots}
+          {typingDots}
           {m.tipsObservationLoading()}
         </p>
       ) : data?.text ? (

@@ -66,6 +66,13 @@ export const SESSIONS = [
     email: 'mic-denied@example.com',
   },
   {
+    key: 'tabMic',
+    token: 'e2e-tab-mic',
+    userId: 'e2e-tab-mic',
+    name: '测试家长',
+    email: 'tab-mic@example.com',
+  },
+  {
     key: 'elsewhere',
     token: 'e2e-elsewhere',
     userId: 'e2e-elsewhere',

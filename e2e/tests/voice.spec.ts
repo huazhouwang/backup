@@ -84,7 +84,10 @@ test('talks to Bobo on its own page, by holding the microphone or tapping it', a
   await signIn(context, 'voice')
   const api = await standInApi(page)
   await page.goto('/')
-  await page.getByRole('button', { name: /和 Bobo 说/ }).click()
+  await page
+    .locator('main')
+    .getByRole('button', { name: /和 Bobo 说/ })
+    .click()
   await expect(page).toHaveURL(/\/chat/)
   await expect(page.getByRole('heading', { name: '和 Bobo 说' })).toBeVisible()
   // A page of its own, covering the tab bar.
@@ -159,7 +162,10 @@ test('explains the microphone before the system asks, and how to turn it back on
   await signIn(context, 'micExplain')
   const api = await standInApi(page)
   await page.goto('/')
-  await page.getByRole('button', { name: /和 Bobo 说/ }).click()
+  await page
+    .locator('main')
+    .getByRole('button', { name: /和 Bobo 说/ })
+    .click()
   const mic = page.getByRole('button', { name: '按住说话' })
   await page.waitForTimeout(500)
 
@@ -205,7 +211,10 @@ test('says how to turn the microphone back on once it was refused', async ({ bro
   await signIn(context, 'micDenied')
   await standInApi(page)
   await page.goto('/')
-  await page.getByRole('button', { name: /和 Bobo 说/ }).click()
+  await page
+    .locator('main')
+    .getByRole('button', { name: /和 Bobo 说/ })
+    .click()
   await page.waitForTimeout(500)
   await page.getByRole('button', { name: '按住说话' }).click()
   const denied = page.getByRole('dialog', { name: '麦克风没有打开' })
@@ -213,5 +222,64 @@ test('says how to turn the microphone back on once it was refused', async ({ bro
   await expect(denied.getByText('键盘上的听写', { exact: false })).toBeVisible()
   await denied.getByRole('button', { name: '知道了' }).click()
   await expect(denied).toHaveCount(0)
+  await context.close()
+})
+
+test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }) => {
+  const { context, page } = await newDevice(browser)
+  await context.grantPermissions(['microphone'])
+  await onboard(page)
+  await signIn(context, 'tabMic')
+  const api = await standInApi(page)
+  await page.goto('/')
+  const mic = page.getByRole('navigation').getByRole('button', { name: '和 Bobo 说话' })
+  await expect(mic).toBeVisible()
+  // Signed in and settled: the Today bar shows once the account is known.
+  await expect(page.locator('main').getByRole('button', { name: /和 Bobo 说/ })).toBeVisible()
+  await page.waitForTimeout(500)
+  const box = await mic.boundingBox()
+  if (!box) throw new Error('no microphone')
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+
+  // Held: the page blurs, what is said so far shows; let go, it is heard and answered there.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await expect(page.getByText('松开发送 · 上滑到这里取消')).toBeVisible()
+  await expect(page.getByText('正在说的话')).toBeVisible()
+  await page.mouse.up()
+  await expect(page.getByText('识别中')).toBeVisible()
+  await expect.poll(() => api.uploads.length).toBe(1)
+  api.hear()
+  await expect(page.getByText('我说：换尿不 1')).toBeVisible()
+  api.answer()
+  await expect(page.getByText('我说：换尿布 1')).toBeVisible()
+  await expect(page.getByText('已记录：换尿布 1。还有吗？')).toBeVisible()
+  await expect(page.getByText('按住麦克风继续说 · 点空白处关闭')).toBeVisible()
+  await page.getByRole('button', { name: '关闭' }).click()
+  await expect(page.getByText('已记录：换尿布 1。还有吗？')).toHaveCount(0)
+
+  // Slid up to the cancel target: nothing is sent.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.waitForTimeout(800)
+  await page.mouse.move(x, y - 140, { steps: 5 })
+  await expect(page.getByText('松开取消')).toBeVisible()
+  await page.mouse.up()
+  await expect(page.getByText('松开取消')).toHaveCount(0)
+  expect(api.uploads).toHaveLength(1)
+
+  // A tap records hands-free; the big microphone sends; "打开对话" goes to the chat.
+  await mic.click()
+  await expect(page.getByText('说完点一下麦克风发送')).toBeVisible()
+  await page.waitForTimeout(1000)
+  await page.getByRole('button', { name: '说完了，发送' }).click()
+  await expect.poll(() => api.uploads.length).toBe(2)
+  api.hear()
+  await expect(page.getByText('我说：换尿不 2')).toBeVisible()
+  api.answer()
+  await expect(page.getByText('已记录：换尿布 2。还有吗？')).toBeVisible()
+  await page.getByRole('button', { name: '打开对话' }).click()
+  await expect(page).toHaveURL(/\/chat/)
   await context.close()
 })

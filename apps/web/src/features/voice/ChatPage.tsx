@@ -14,6 +14,7 @@ import { lockScroll } from '../../lib/scroll-lock'
 import { m } from '../../paraglide/messages.js'
 import { requestSync } from '../../sync/runner'
 import { type ChatMessage, type ChatTurn, voiceApi } from './api'
+import { ChangingText, typingDots as dots } from './ChangingText'
 import { voiceKeys } from './queries'
 import { canRecord } from './recorder'
 import { TalkRow } from './TalkRow'
@@ -316,38 +317,6 @@ const bubbleClass = (mine: boolean) =>
       : 'self-start rounded-bl-md bg-surface',
   )
 
-/**
- * Text that animates what changes in it: the part that differs from before (between what the
- * two share at the start and at the end) blurs in, the rest stays still. A corrected word
- * swaps in place; a reply being written fades in as it grows.
- */
-function ChangingText({ text }: { text: string }) {
-  const [shown, setShown] = useState({ text, before: text, version: 0 })
-  if (shown.text !== text) setShown({ text, before: shown.text, version: shown.version + 1 })
-  const { before } = shown
-  let start = 0
-  while (start < text.length && start < before.length && text[start] === before[start]) start += 1
-  let end = 0
-  while (
-    end < text.length - start &&
-    end < before.length - start &&
-    text[text.length - 1 - end] === before[before.length - 1 - end]
-  ) {
-    end += 1
-  }
-  const changed = text.slice(start, text.length - end)
-  if (!changed) return text
-  return (
-    <>
-      {text.slice(0, start)}
-      <span key={shown.version} className="animate-text-in">
-        {changed}
-      </span>
-      {text.slice(text.length - end)}
-    </>
-  )
-}
-
 function Bubble({ message }: { message: ChatMessage }) {
   const mine = message.role === 'user'
   return (
@@ -360,18 +329,6 @@ function Bubble({ message }: { message: ChatMessage }) {
     </p>
   )
 }
-
-const dots = (
-  <span aria-hidden className="inline-flex h-5 items-center gap-1 align-middle">
-    {[0, 150, 300].map((delay) => (
-      <span
-        key={delay}
-        className="size-2 animate-typing rounded-full bg-current"
-        style={{ animationDelay: `${delay}ms` }}
-      />
-    ))}
-  </span>
-)
 
 /**
  * A message on its way: the user's while they talk and it is heard (with what has been
