@@ -69,7 +69,7 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
               key={category}
               tone={categoryTone[category]}
               size="lg"
-              className="min-h-28 flex-col gap-0.5 py-3"
+              className="aspect-square min-h-28 flex-col gap-0.5 py-3"
               aria-describedby={`${sinceId}-${category}`}
               onClick={() => setOpen(category)}
             >
