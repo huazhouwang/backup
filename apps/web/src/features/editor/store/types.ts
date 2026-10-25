@@ -85,6 +85,8 @@ export interface EditorState {
   northRequest: number;
   /** The guide the tape measure just drew, whose offset can be typed exactly: moved to origin + normal × distance */
   guideEdit: { id: string; origin: Point; normal: Point; distance: number } | null;
+  /** The model axes are selected in the plan: their handles show ('handles'), or a tap on a wall turns red along it ('align') */
+  axesEdit: 'handles' | 'align' | null;
 }
 
 export interface EditorActions {
@@ -103,6 +105,7 @@ export interface EditorActions {
   faceNorth(): void;
   setSunOpen(open: boolean): void;
   setGuideEdit(g: EditorState['guideEdit']): void;
+  setAxesEdit(on: EditorState['axesEdit']): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

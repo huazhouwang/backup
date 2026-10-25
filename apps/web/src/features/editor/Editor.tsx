@@ -79,6 +79,7 @@ export function Editor({ initial, search }: { initial: InitialProject; search: {
         else if (s.measuring) s.setMeasuring(false);
         else if (s.sectioning) s.setSectioning(false);
         else if (s.camera3d.walking) s.setCamera3d({ walking: false });
+        else if (s.axesEdit) s.setAxesEdit(null);
         else s.select([]);
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && s.canEdit() && s.view.selection.length) {
         // Delete the selection as one edit, by the same rules as the panel's buttons (bearing walls stay)

@@ -5,7 +5,7 @@
  * floor-materials.tsx), furniture and fittings white with thin black edges. Coordinates in millimetres. Interaction (picking)
  * is optional.
  */
-import type { Project } from '@plinth/core';
+import type { AxesFrame, Point, Project } from '@plinth/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
 import { isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
@@ -224,23 +224,88 @@ export function PlanDimensions({ chains, size, line, color = 'var(--foreground)'
  * The model axes on the plan, as SketchUp's top view: red along x, green along y, through the origin across the drawing's frame;
  * solid on the positive side, dashed on the negative
  */
-export function PlanAxes({ frame, line }: { frame: { x: number; y: number; w: number; h: number }; line: Line }) {
-  const [x0, x1, y0, y1] = [frame.x, frame.x + frame.w, frame.y, frame.y + frame.h];
-  const seg = (k: string, color: string, a: [number, number], b: [number, number], dash?: number[]) => (
-    <line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={color} {...line(1, dash)} />
+/** The part of the line through `at` along `dir` inside a rectangle [x, y, w, h], as a range of t; null when it misses */
+export function lineRange(at: Point, dir: Point, [x, y, w, h]: [number, number, number, number]): [number, number] | null {
+  let t0 = -Infinity,
+    t1 = Infinity;
+  for (const [o, d, lo, hi] of [
+    [at[0], dir[0], x, x + w],
+    [at[1], dir[1], y, y + h],
+  ] as const) {
+    if (Math.abs(d) < 1e-12) {
+      if (o < lo || o > hi) return null;
+      continue;
+    }
+    const a = (lo - o) / d,
+      b = (hi - o) / d;
+    t0 = Math.max(t0, Math.min(a, b));
+    t1 = Math.min(t1, Math.max(a, b));
+  }
+  return t0 <= t1 ? [t0, t1] : null;
+}
+
+/**
+ * The model axes on the plan, as SketchUp draws them: red and green through the origin, solid on the positive side with an arrow at
+ * its end, dashed on the negative. Moved or turned (see Axes in the core schema), the world axes stay as faint dashes and the model
+ * axes carry a tick every metre and a label every five. `px` is a screen pixel in mm.
+ */
+export function PlanAxes({ frame, axes, line, px }: { frame: { x: number; y: number; w: number; h: number }; axes: AxesFrame; line: Line; px: number }) {
+  const rect: [number, number, number, number] = [frame.x, frame.y, frame.w, frame.h];
+  const custom = axes.angle % 360 !== 0 || axes.origin[0] !== 0 || axes.origin[1] !== 0;
+  const at = (o: Point, d: Point, t: number): Point => [o[0] + d[0] * t, o[1] + d[1] * t];
+  const seg = (k: string, color: string, a: Point, b: Point, dash?: number[], opacity?: number) => (
+    <line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={color} opacity={opacity} {...line(1, dash)} />
   );
+  const axis = (k: string, color: string, o: Point, d: Point, faint: boolean) => {
+    const r = lineRange(o, d, rect);
+    if (!r) return null;
+    const [t0, t1] = r;
+    if (faint) return seg(k, color, at(o, d, t0), at(o, d, t1), [4, 4], 0.35);
+    const n: Point = [-d[1], d[0]];
+    const out = [];
+    if (t1 > 0) {
+      const tip = at(o, d, t1);
+      const s = 9 * px;
+      out.push(
+        seg(`${k}+`, color, at(o, d, Math.max(0, t0)), at(tip, d, -s)),
+        <polygon
+          key={`${k}>`}
+          points={[tip, at(at(tip, d, -s * 1.6), n, s * 0.55), at(at(tip, d, -s * 1.6), n, -s * 0.55)].map(q => q.join(',')).join(' ')}
+          fill={color}
+        />,
+      );
+    }
+    if (t0 < 0) out.push(seg(`${k}-`, color, at(o, d, t0), at(o, d, Math.min(0, t1)), [6, 4]));
+    if (custom)
+      for (let m = Math.ceil(t0 / 1000); m <= Math.floor(t1 / 1000); m++) {
+        if (!m) continue;
+        const q = at(o, d, m * 1000);
+        const long = m % 5 === 0;
+        const h = (long ? 6 : 3) * px;
+        out.push(seg(`${k}t${m}`, color, at(q, n, -h), at(q, n, h)));
+        if (long)
+          out.push(
+            <text
+              key={`${k}l${m}`}
+              x={at(q, n, 14 * px)[0]}
+              y={at(q, n, 14 * px)[1]}
+              fontSize={10 * px}
+              fill={color}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontFamily="var(--font-mono)"
+            >
+              {m}
+            </text>,
+          );
+      }
+    return <g key={k}>{out}</g>;
+  };
   return (
-    <g pointerEvents="none" data-axes>
-      {y0 <= 0 &&
-        y1 >= 0 && [
-          x1 > 0 && seg('x+', 'var(--axis-x)', [Math.max(0, x0), 0], [x1, 0]),
-          x0 < 0 && seg('x-', 'var(--axis-x)', [x0, 0], [Math.min(0, x1), 0], [6, 4]),
-        ]}
-      {x0 <= 0 &&
-        x1 >= 0 && [
-          y1 > 0 && seg('y+', 'var(--axis-y)', [0, Math.max(0, y0)], [0, y1]),
-          y0 < 0 && seg('y-', 'var(--axis-y)', [0, y0], [0, Math.min(0, y1)], [6, 4]),
-        ]}
+    <g pointerEvents="none" data-axes={custom ? `${axes.origin.join(',')}@${axes.angle}` : 'world'}>
+      {custom && [axis('wx', 'var(--axis-x)', [0, 0], [1, 0], true), axis('wy', 'var(--axis-y)', [0, 0], [0, 1], true)]}
+      {axis('x', 'var(--axis-x)', axes.origin, axes.x, false)}
+      {axis('y', 'var(--axis-y)', axes.origin, axes.y, false)}
     </g>
   );
 }

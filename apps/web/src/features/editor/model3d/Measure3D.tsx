@@ -14,8 +14,9 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { m } from '@/lib/i18n';
 import { themeColor } from '@/lib/theme';
+import { axesFrame } from '@plinth/core';
 import { useEditor } from '../store';
-import { edgeNear, guideOffset, infer, nearestCorner, nearestOnGuides, parts, type Axis, type GuideRef, type Inferred } from './measure-infer';
+import { AXES, axesIn3D, edgeNear, guideOffset, infer, nearestCorner, nearestOnGuides, parts, type Axis, type GuideRef, type Inferred } from './measure-infer';
 import { guideIn3D } from './Guides3D';
 import { useRun } from '../panels/common';
 import { M } from '@/graphics/three/scene';
@@ -46,6 +47,10 @@ export function Measure3D() {
   const guides = useEditor(s => s.project.guides);
   const guidesRef = useRef<GuideRef[]>([]);
   guidesRef.current = useMemo(() => (guides ?? []).map(guideIn3D), [guides]);
+  // The model axes the tape locks onto
+  const axes = useEditor(s => s.project.axes);
+  const axesRef = useRef(AXES);
+  axesRef.current = useMemo(() => axesIn3D(axesFrame(axes)), [axes]);
   useEffect(() => {
     setTapes([]);
     setFrom(null);
@@ -104,10 +109,19 @@ export function Measure3D() {
         !nearestCorner(hit.corners, pointer, screen) &&
         !nearestOnGuides(guidesRef.current, ray, pointer, screen)
       ) {
-        const edge = edgeNear(hit.corners, pointer, screen);
+        const edge = edgeNear(hit.corners, pointer, screen, axesRef.current);
         if (edge) return { point: edge.at, axis: null, endpoint: false, edge: true };
       }
-      const result = infer({ ray, pointer, screen, hit, from: start, held: e.shiftKey ? held.current : null, guides: guidesRef.current });
+      const result = infer({
+        ray,
+        pointer,
+        screen,
+        hit,
+        from: start,
+        held: e.shiftKey ? held.current : null,
+        guides: guidesRef.current,
+        axes: axesRef.current,
+      });
       // Shift holds the axis the tape last locked onto; letting go frees it
       held.current = e.shiftKey ? (result?.axis ?? held.current) : (result?.axis ?? null);
       return result;
@@ -150,7 +164,7 @@ export function Measure3D() {
       down = e.button === 0 && e.isPrimary ? { x: e.clientX, y: e.clientY, id: e.pointerId } : null;
       if (down && !fromRef.current && canEditRef.current) {
         const { pointer, screen, hit, normal } = probe(e);
-        const edge = hit && normal && !nearestCorner(hit.corners, pointer, screen) ? edgeNear(hit.corners, pointer, screen) : null;
+        const edge = hit && normal && !nearestCorner(hit.corners, pointer, screen) ? edgeNear(hit.corners, pointer, screen, axesRef.current) : null;
         if (edge && normal) {
           guide = { edge, normal };
           // The camera stays put while the guide is drawn

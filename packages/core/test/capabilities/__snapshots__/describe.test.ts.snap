@@ -1155,6 +1155,43 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Remove guides",
   },
   {
+    "description": "Move or turn the model axes people draw and place along: origin a plan point, angle the red axis clockwise from east (degrees); reset: true puts them back on the world axes. Coordinates in every capability stay world coordinates.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "angle": {
+          "type": "number",
+        },
+        "origin": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "reset": {
+          "default": false,
+          "type": "boolean",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "axes_set",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Move the axes",
+  },
+  {
     "description": "Move or rotate furniture: position for an absolute location or by for a relative offset; rotation for the new angle.",
     "examples": [],
     "input": {

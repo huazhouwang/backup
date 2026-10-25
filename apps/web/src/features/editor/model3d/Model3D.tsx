@@ -309,7 +309,7 @@ export function Model3D() {
           <Picker />
           <Measure3D />
           <Sun3D toward={sunSky.toward} up={sunSky.up} />
-          {view.layers.axes && <Axes3D reach={span * 1.5} />}
+          {view.layers.axes && <Axes3D reach={span * 1.5} axes={project.axes} />}
           {view.layers.guides && <Guides3D guides={project.guides ?? []} selected={sel} reach={span * 2} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}

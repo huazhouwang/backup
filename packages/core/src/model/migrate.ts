@@ -42,6 +42,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   8: doc => fitStairOpenings(doc),
   // v10 adds guides
   9: doc => ({ ...doc, guides: doc.guides ?? [] }),
+  // v11 adds the model axes (axes); optional, nothing to convert
+  10: doc => doc,
 };
 
 /**

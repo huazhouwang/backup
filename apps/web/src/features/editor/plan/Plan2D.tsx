@@ -1,21 +1,23 @@
 /**
  * Floor plan: SVG in millimetres. Picking, zoom/pan, selection and change highlights, compare with before, dimensions (see
- * dimensions.ts), and dragging the selected wall, door or window, or piece of furniture (see plan-drag.ts).
+ * dimensions.ts), dragging the selected wall, door or window, or piece of furniture (see plan-drag.ts), and moving and turning
+ * the model axes once they are selected (see plan-axes.ts).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { wallBody, type Point, type Project } from '@plinth/core';
+import { axesOf, findObject, wallBody, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
 import { holdAxis, snapMeasure } from './plan-measure';
 import { guideDraft, guideSources, sourceAt, type GuideDraft, type GuideSource } from './plan-guide-draw';
 import { clipLine } from './plan-guides';
+import { alignToWall, axesDrag, lineRange, TURN_PX, type AxesDrag, type AxesGrab } from './plan-axes';
 import { PlanGuides } from './PlanGuides';
 import { placeCall, type PlaceResult } from './plan-place';
 import { exteriorDimensions, selectionDimensions, type DimChain } from '@/graphics/plan/dimensions';
 import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
 import { PlanDefs, PlanDimensions, PlanInk, PlanAxes, PlanLabels, PlanMarks, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
-import { useEditor } from '../store';
+import { useEditor, useEditorStore } from '../store';
 import { m } from '@/lib/i18n';
 import { standaloneSvg } from '@/lib/theme';
 import { useBuildsVersion } from '@/lib/builds';
@@ -90,12 +92,22 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   // A new highlight restarts the fade: the token goes into the overlay keys
   const changeToken = useMemo(() => Date.now(), [view.highlight]);
 
+  const store = useEditorStore();
+  const run = useRun();
   const pick = useCallback(
     (id: string) => (e: React.MouseEvent) => {
       e.stopPropagation();
+      // Aligning the axes: a wall (or a door or window in it) turns red along it
+      const s = store.getState();
+      const hit = s.axesEdit === 'align' ? findObject(s.project, id) : undefined;
+      const wall = hit?.kind === 'wall' ? hit.obj : hit?.kind === 'opening' ? hit.wall : undefined;
+      if (wall) {
+        void run('axes_set', { angle: alignToWall(wall, axesOf(s.project).angle) }).then(r => r.ok && s.setAxesEdit('handles'));
+        return;
+      }
       select(e.shiftKey || e.metaKey ? (sel.has(id) ? view.selection.filter(x => x !== id) : [...view.selection, id]) : [id]);
     },
-    [select, view.selection],
+    [select, view.selection, run],
   );
 
   // Reset zoom when switching floors, and on "fit all"
@@ -123,7 +135,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   // Place mode: what is being placed follows the pointer; a click puts it down and selects it
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
-  const run = useRun();
   const [ghost, setGhost] = useState<PlaceResult | null>(null);
   useEffect(() => setGhost(null), [placing, view.level]);
   const pointMm = (e: React.MouseEvent): Point => {
@@ -132,6 +143,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   };
   // The tape measure: two clicks give a distance; measurements stay until the tool is put away
   const measuring = useEditor(s => s.measuring);
+  const sectioning = useEditor(s => s.sectioning);
   const [measures, setMeasures] = useState<[Point, Point][]>([]);
   const [from, setFrom] = useState<Point | null>(null);
   const [hover, setHover] = useState<{ point: Point; snapped: string | null } | null>(null);
@@ -142,7 +154,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   }, [measuring, view.level]);
   const measurePoint = (e: React.MouseEvent) => {
     const s = snapMeasure(project, view.level, pointMm(e), SNAP_PX * pxMm);
-    return from && e.shiftKey ? { point: holdAxis(from, s.point), snapped: s.snapped } : s;
+    return from && e.shiftKey ? { point: holdAxis(from, s.point, axes), snapped: s.snapped } : s;
   };
   // Dragging off an edge or a corner with the tape draws a guide (see plan-guide-draw.ts); dragging elsewhere pans the plan
   const setGuideEdit = useEditor(s => s.setGuideEdit);
@@ -170,7 +182,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     g.moved = true;
     if (g.src) {
       const q = pointMm(e);
-      const d = canEdit ? guideDraft(g.src, q, view.level) : null;
+      const d = canEdit ? guideDraft(g.src, q, view.level, axes) : null;
       setDraft(d && { g: d, at: q });
       setHover(null);
     } else if (g.pan) {
@@ -194,6 +206,73 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     }
     if (last) setGuideEdit({ id: last, origin: d.origin, normal: d.normal, distance: d.distance });
   };
+  // The model axes: a tap on the knob at the origin selects them; then their handles move and turn them or draw guides off them,
+  // each gesture past a threshold and called off by a second finger (see plan-axes.ts)
+  const axesEdit = useEditor(s => s.axesEdit);
+  const setAxesEdit = useEditor(s => s.setAxesEdit);
+  const axes = useMemo(() => axesOf(project), [project.axes]);
+  const axesTool = view.layers.axes && view.mode === '2d' && canEdit && !compare && !measuring && !placing && !sectioning;
+  const [axesDraft, setAxesDraft] = useState<{ d: AxesDrag; at: Point } | null>(null);
+  const shownAxes = axesDraft?.d.kind === 'axes' ? axesDraft.d.frame : axes;
+  const axesGesture = useRef<{ id: number; grab: AxesGrab; from: Point; x: number; y: number; moved: boolean; touch: boolean; draft: AxesDrag | null } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!axesTool) setAxesEdit(null);
+  }, [axesTool]);
+  useEffect(() => {
+    if (view.selection.length) setAxesEdit(null);
+  }, [view.selection]);
+  const axesCancel = () => {
+    axesGesture.current = null;
+    setAxesDraft(null);
+  };
+  useEffect(() => {
+    const doc = ref.current?.ownerDocument;
+    if (!doc) return;
+    // A second finger means a pinch, not the drag: drop it unapplied
+    const onDown = (e: PointerEvent) => {
+      if (axesGesture.current && e.pointerId !== axesGesture.current.id) axesCancel();
+    };
+    doc.addEventListener('pointerdown', onDown, true);
+    return () => doc.removeEventListener('pointerdown', onDown, true);
+  }, [ref]);
+  const axesDown = (grab: AxesGrab) => (e: React.PointerEvent) => {
+    if (!e.isPrimary || e.button !== 0) return;
+    e.stopPropagation();
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    axesGesture.current = { id: e.pointerId, grab, from: pointMm(e), x: e.clientX, y: e.clientY, moved: false, touch: e.pointerType !== 'mouse', draft: null };
+  };
+  const axesMove = (e: React.PointerEvent) => {
+    const g = axesGesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    // A wobble on press is a tap, not a drag (more for a finger)
+    if (!g.moved && Math.hypot(e.clientX - g.x, e.clientY - g.y) < (g.touch ? 10 : 6)) return;
+    g.moved = true;
+    const at = pointMm(e);
+    g.draft = axesDrag(project, view.level, axes, g.grab, g.from, at, SNAP_PX * pxMm);
+    setAxesDraft(g.draft && { d: g.draft, at });
+  };
+  const axesUp = async (e: React.PointerEvent) => {
+    const g = axesGesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    axesCancel();
+    const d = g.moved ? g.draft : null;
+    if (!d) return;
+    if (d.kind === 'axes') await run(d.call.name, d.call.input);
+    else for (const c of d.draft.calls) if (!(await run(c.name, c.input)).ok) return;
+  };
+  const axesHandle = (grab: AxesGrab) => ({
+    className: 'plan-drag',
+    style: { touchAction: 'none' as const },
+    'data-axes-handle': grab,
+    onPointerDown: axesDown(grab),
+    onPointerMove: axesMove,
+    onPointerUp: axesUp,
+    onPointerCancel: axesCancel,
+    onClick: (e: React.MouseEvent) => e.stopPropagation(),
+  });
+
   const measureClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (suppressClick.current) {
@@ -206,7 +285,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     setFrom(null);
   };
   // The section tool: two clicks draw the line, then 3D shows the section looking across it (arrows show which way)
-  const sectioning = useEditor(s => s.sectioning);
   const setSectioning = useEditor(s => s.setSectioning);
   const setCamera3d = useEditor(s => s.setCamera3d);
   const setView = useEditor(s => s.setView);
@@ -218,7 +296,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   }, [sectioning, view.level]);
   const cutPoint = (e: React.MouseEvent) => {
     const q = pointMm(e);
-    return cutFrom && e.shiftKey ? holdAxis(cutFrom, q) : q;
+    return cutFrom && e.shiftKey ? holdAxis(cutFrom, q, axes) : q;
   };
   const cutClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -273,7 +351,10 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           // Fingers on the plan are ours, not the page's: the zoom pans and pinches, handles drag, the tape draws guides (SVG
           // shapes can't say so themselves)
           style={{ background: 'var(--canvas-backdrop)', touchAction: 'none' }}
-          onClick={() => select([])}
+          onClick={() => {
+            select([]);
+            setAxesEdit(null);
+          }}
           role="img"
           aria-label={m.editor_plan_aria({ level: project.levels.find(l => l.id === view.level)?.name ?? '' })}
         >
@@ -314,12 +395,125 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             </g>
           )}
 
-          {view.layers.axes && <PlanAxes frame={frame} line={screenLine} />}
+          {view.layers.axes && <PlanAxes frame={frame} axes={shownAxes} line={screenLine} px={pxMm} />}
           {view.layers.guides && (
             <PlanGuides project={project} frame={frame} selected={sel} pick={measuring || placing || sectioning ? undefined : pick} pxMm={pxMm} />
           )}
           {view.layers.labels && <PlanLabels shapes={shapes} pick={pick} />}
           <PlanMarks frame={frame} size={scale.size} line={screenLine} />
+
+          {/* The model axes: the knob at the origin selects them; selected, their handles (see plan-axes.ts) */}
+          {axesTool && !axesEdit && (
+            <g data-feedback>
+              <circle
+                cx={axes.origin[0]}
+                cy={axes.origin[1]}
+                r={4 * pxMm}
+                fill="var(--background)"
+                stroke="var(--foreground)"
+                {...screenLine(1.5)}
+                pointerEvents="none"
+              />
+              <circle
+                cx={axes.origin[0]}
+                cy={axes.origin[1]}
+                r={12 * pxMm}
+                fill="transparent"
+                className="cursor-pointer"
+                role="button"
+                aria-label={m.axes_select()}
+                data-axes-knob
+                onClick={e => {
+                  e.stopPropagation();
+                  select([]);
+                  setAxesEdit('handles');
+                }}
+              />
+            </g>
+          )}
+          {axesTool && axesEdit && (
+            <g data-feedback data-axes-edit={axesEdit}>
+              {(['x', 'y'] as const).map(k => {
+                const d = shownAxes[k];
+                const r = lineRange(shownAxes.origin, d, [frame.x, frame.y, frame.w, frame.h]);
+                if (!r) return null;
+                const [a, b] = r.map(t => [shownAxes.origin[0] + d[0] * t, shownAxes.origin[1] + d[1] * t]);
+                return (
+                  <line
+                    key={k}
+                    x1={a[0]}
+                    y1={a[1]}
+                    x2={b[0]}
+                    y2={b[1]}
+                    stroke="transparent"
+                    strokeWidth={22}
+                    vectorEffect="non-scaling-stroke"
+                    aria-label={m.axes_drag_guide()}
+                    {...axesHandle(k)}
+                    className="plan-drag cursor-copy"
+                  />
+                );
+              })}
+              {(() => {
+                const o = shownAxes.origin;
+                const t: Point = [o[0] + shownAxes.x[0] * TURN_PX * pxMm, o[1] + shownAxes.x[1] * TURN_PX * pxMm];
+                return (
+                  <>
+                    <circle cx={t[0]} cy={t[1]} r={8 * pxMm} fill="var(--background)" stroke="var(--axis-x)" {...screenLine(2)} pointerEvents="none" />
+                    <circle
+                      cx={t[0]}
+                      cy={t[1]}
+                      r={18 * pxMm}
+                      fill="transparent"
+                      aria-label={m.axes_turn()}
+                      {...axesHandle('turn')}
+                      className="plan-drag cursor-grab"
+                    />
+                    <rect
+                      x={o[0] - 6 * pxMm}
+                      y={o[1] - 6 * pxMm}
+                      width={12 * pxMm}
+                      height={12 * pxMm}
+                      fill="var(--background)"
+                      stroke="var(--chart-2)"
+                      {...screenLine(2)}
+                      pointerEvents="none"
+                    />
+                    <rect
+                      x={o[0] - 16 * pxMm}
+                      y={o[1] - 16 * pxMm}
+                      width={32 * pxMm}
+                      height={32 * pxMm}
+                      fill="transparent"
+                      aria-label={m.axes_origin()}
+                      {...axesHandle('origin')}
+                      className="plan-drag cursor-move"
+                    />
+                  </>
+                );
+              })()}
+              {axesDraft && (
+                <g pointerEvents="none">
+                  {axesDraft.d.kind === 'guide' && <GuideDraftMark draft={axesDraft.d.draft} at={axesDraft.at} frame={frame} pxMm={pxMm} />}
+                  {axesDraft.d.kind === 'axes' && (
+                    <text
+                      x={axesDraft.at[0] + 14 * pxMm}
+                      y={axesDraft.at[1] - 14 * pxMm}
+                      fontSize={12 * pxMm}
+                      fill="var(--chart-2)"
+                      fontFamily="var(--font-mono)"
+                      paintOrder="stroke"
+                      stroke="var(--background)"
+                      strokeWidth={3 * pxMm}
+                      data-axes-readout
+                    >
+                      {axesDraft.d.readout}
+                    </text>
+                  )}
+                </g>
+              )}
+            </g>
+          )}
 
           {/* The selected object can be dragged: a handle over it, then snapping guides and the distance while dragging */}
           {handle && outlines.has(handle) && (
@@ -458,32 +652,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               {[...measures.flat(), ...(from ? [from] : [])].map((q, i) => (
                 <circle key={i} cx={q[0]} cy={q[1]} r={3 * pxMm} fill="var(--chart-2)" pointerEvents="none" />
               ))}
-              {draft && (
-                <g pointerEvents="none">
-                  {(() => {
-                    const seg = clipLine({ id: '', ...draft.g.line }, [frame.x - frame.w, frame.y - frame.h, frame.w * 3, frame.h * 3]);
-                    return (
-                      seg && (
-                        <line x1={seg[0][0]} y1={seg[0][1]} x2={seg[1][0]} y2={seg[1][1]} stroke="var(--chart-2)" strokeDasharray="8 5" {...screenLine(1.5)} />
-                      )
-                    );
-                  })()}
-                  {draft.g.point && <circle cx={draft.g.point[0]} cy={draft.g.point[1]} r={4 * pxMm} fill="var(--chart-2)" />}
-                  <text
-                    x={draft.at[0] + 14 * pxMm}
-                    y={draft.at[1] - 14 * pxMm}
-                    fontSize={12 * pxMm}
-                    fill="var(--chart-2)"
-                    fontFamily="var(--font-mono)"
-                    paintOrder="stroke"
-                    stroke="var(--background)"
-                    strokeWidth={3 * pxMm}
-                    data-guide-draft={draft.g.distance}
-                  >
-                    {draft.g.distance}
-                  </text>
-                </g>
-              )}
+              {draft && <GuideDraftMark draft={draft.g} at={draft.at} frame={frame} pxMm={pxMm} />}
               {hover && (
                 <circle
                   cx={hover.point[0]}
@@ -547,6 +716,30 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
         </svg>
       </TransformComponent>
     </TransformWrapper>
+  );
+}
+
+/** A guide being drawn: its line across the plan, its end point, and its offset by the pointer */
+function GuideDraftMark({ draft, at, frame, pxMm }: { draft: GuideDraft; at: Point; frame: { x: number; y: number; w: number; h: number }; pxMm: number }) {
+  const seg = clipLine({ id: '', ...draft.line }, [frame.x - frame.w, frame.y - frame.h, frame.w * 3, frame.h * 3]);
+  return (
+    <g pointerEvents="none">
+      {seg && <line x1={seg[0][0]} y1={seg[0][1]} x2={seg[1][0]} y2={seg[1][1]} stroke="var(--chart-2)" strokeDasharray="8 5" {...screenLine(1.5)} />}
+      {draft.point && <circle cx={draft.point[0]} cy={draft.point[1]} r={4 * pxMm} fill="var(--chart-2)" />}
+      <text
+        x={at[0] + 14 * pxMm}
+        y={at[1] - 14 * pxMm}
+        fontSize={12 * pxMm}
+        fill="var(--chart-2)"
+        fontFamily="var(--font-mono)"
+        paintOrder="stroke"
+        stroke="var(--background)"
+        strokeWidth={3 * pxMm}
+        data-guide-draft={draft.distance}
+      >
+        {draft.distance}
+      </text>
+    </g>
   );
 }
 

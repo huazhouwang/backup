@@ -1,8 +1,8 @@
 /**
  * The tape measure in the plan, as SketchUp's: a point snaps to a wall corner, a furniture corner or a guide crossing within a few
- * pixels, else onto a wall face or a guide, else stays where it is; with Shift the second point holds the first one's horizontal or vertical line.
+ * pixels, else onto a wall face or a guide, else stays where it is; with Shift the second point holds the first one's line along a model axis.
  */
-import { furnitureFootprint, wallBody, type Point, type Project } from '@plinth/core';
+import { axesFrame, furnitureFootprint, wallBody, type AxesFrame, type Point, type Project } from '@plinth/core';
 import { snapToGuides } from './plan-guides';
 
 /** The nearest point on segment ab to p, and its distance */
@@ -41,5 +41,11 @@ export function snapMeasure(p: Project, level: string, at: Point, tol: number): 
   return { point: at, snapped: null };
 }
 
-/** With Shift: the second point on the first one's horizontal or vertical line, whichever is nearer */
-export const holdAxis = (a: Point, b: Point): Point => (Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? [b[0], a[1]] : [a[0], b[1]]);
+/** With Shift: the second point on the line through the first along the red or green axis of `f`, whichever is nearer */
+export function holdAxis(a: Point, b: Point, f: AxesFrame = axesFrame()): Point {
+  const v = [b[0] - a[0], b[1] - a[1]];
+  const along = (u: Point) => v[0] * u[0] + v[1] * u[1];
+  const dir = Math.abs(along(f.x)) >= Math.abs(along(f.y)) ? f.x : f.y;
+  const t = along(dir);
+  return [a[0] + dir[0] * t, a[1] + dir[1] * t];
+}

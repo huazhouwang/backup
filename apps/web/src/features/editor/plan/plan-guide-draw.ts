@@ -1,9 +1,10 @@
 /**
  * Drawing guides with the tape measure in the plan, as SketchUp's: dragging off an edge (a wall face, a model axis, another guide)
  * draws a guide parallel to it, the offset following the pointer on a 10 mm step; dragging off a corner (a wall or furniture
- * corner, the origin, a guide crossing) draws a guide along the axis the pointer follows, with a guide point at its end.
+ * corner, the origin, a guide crossing) draws a guide along the axis the pointer follows, with a guide point at its end. The axes are
+ * the model axes, wherever they have been moved and turned (see Axes in the core schema).
  */
-import { furnitureFootprint, wallBody, type Point, type Project } from '@plinth/core';
+import { axesFrame, axesOf, furnitureFootprint, wallBody, type AxesFrame, type Point, type Project } from '@plinth/core';
 import { crossing, planGuideLines, planGuidePoints } from './plan-guides';
 
 export type GuideSource = { kind: 'edge'; a: Point; b: Point } | { kind: 'corner'; at: Point };
@@ -12,9 +13,10 @@ export type GuideSource = { kind: 'edge'; a: Point; b: Point } | { kind: 'corner
 const REACH = 1e6;
 
 /** What a guide can be dragged off on a level: wall faces, the axes and guide lines as edges; corners and crossings */
-export function guideSources(p: Project, level: string): { edges: [Point, Point][]; corners: Point[] } {
+export function guideSources(p: Project, level: string, f: AxesFrame = axesOf(p)): { edges: [Point, Point][]; corners: Point[] } {
   const edges: [Point, Point][] = [];
   const corners: Point[] = [[0, 0]];
+  if (f.origin[0] || f.origin[1]) corners.push(f.origin);
   for (const w of p.walls.filter(x => x.level === level)) {
     const ring = wallBody(w).outer;
     ring.forEach((q, i) => {
@@ -23,16 +25,11 @@ export function guideSources(p: Project, level: string): { edges: [Point, Point]
     });
   }
   for (const f of p.furniture.filter(x => x.level === level)) corners.push(...furnitureFootprint(f).outer);
-  edges.push(
-    [
-      [-REACH, 0],
-      [REACH, 0],
-    ],
-    [
-      [0, -REACH],
-      [0, REACH],
-    ],
-  );
+  for (const d of [f.x, f.y])
+    edges.push([
+      [f.origin[0] - d[0] * REACH, f.origin[1] - d[1] * REACH],
+      [f.origin[0] + d[0] * REACH, f.origin[1] + d[1] * REACH],
+    ]);
   const lines = planGuideLines(p);
   for (const l of lines)
     edges.push([
@@ -64,8 +61,8 @@ export interface GuideDraft {
   normal: Point;
 }
 
-/** The guide a drag from `src` to `to` (mm) draws on `level`; null before it has moved off */
-export function guideDraft(src: GuideSource, to: Point, level: string): GuideDraft | null {
+/** The guide a drag from `src` to `to` (mm) draws on `level`, along the axes `f` off a corner; null before it has moved off */
+export function guideDraft(src: GuideSource, to: Point, level: string, f: AxesFrame = axesFrame()): GuideDraft | null {
   if (src.kind === 'edge') {
     const len = Math.hypot(src.b[0] - src.a[0], src.b[1] - src.a[1]);
     const dir: Point = [(src.b[0] - src.a[0]) / len, (src.b[1] - src.a[1]) / len];
@@ -83,19 +80,21 @@ export function guideDraft(src: GuideSource, to: Point, level: string): GuideDra
       normal,
     };
   }
-  const dx = to[0] - src.at[0],
-    dy = to[1] - src.at[1];
-  const horizontal = Math.abs(dx) >= Math.abs(dy);
-  const d = step(horizontal ? dx : dy);
+  // Along whichever axis the pointer follows more
+  const v = [to[0] - src.at[0], to[1] - src.at[1]];
+  const along = (u: Point) => v[0] * u[0] + v[1] * u[1];
+  const dir = Math.abs(along(f.x)) >= Math.abs(along(f.y)) ? f.x : f.y;
+  const d = step(along(dir));
   if (!d) return null;
-  const axis: Point = horizontal ? [Math.sign(d), 0] : [0, Math.sign(d)];
-  const end: Point = horizontal ? [src.at[0] + d, src.at[1]] : [src.at[0], src.at[1] + d];
+  const axis: Point = [dir[0] * Math.sign(d), dir[1] * Math.sign(d)];
+  const end: Point = [Math.round(src.at[0] + dir[0] * d), Math.round(src.at[1] + dir[1] * d)];
+  const direction = dir[1] === 0 && dir[0] === 1 ? 'x' : dir[0] === 0 && dir[1] === 1 ? 'y' : [dir[0], dir[1], 0];
   return {
     calls: [
-      { name: 'guide_add', input: { at: src.at, direction: horizontal ? 'x' : 'y', level } },
+      { name: 'guide_add', input: { at: src.at, direction, level } },
       { name: 'guide_add', input: { kind: 'point', at: end, level } },
     ],
-    line: { at: src.at, dir: horizontal ? [1, 0] : [0, 1] },
+    line: { at: src.at, dir },
     point: end,
     distance: Math.abs(d),
     origin: src.at,

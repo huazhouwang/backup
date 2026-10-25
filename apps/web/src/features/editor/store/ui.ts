@@ -22,6 +22,7 @@ type Ui = Pick<
   | 'sunOpen'
   | 'northRequest'
   | 'guideEdit'
+  | 'axesEdit'
 > &
   Pick<
     EditorActions,
@@ -37,6 +38,7 @@ type Ui = Pick<
     | 'setSun'
     | 'faceNorth'
     | 'setGuideEdit'
+    | 'setAxesEdit'
     | 'setSunOpen'
   >;
 
@@ -56,6 +58,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   sunOpen: false,
   northRequest: 0,
   guideEdit: null,
+  axesEdit: null,
 
   setCompare(on) {
     set({ compare: on });
@@ -79,15 +82,15 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   // One tool at a time: taking one out puts the others away
   setPlacing(placing) {
-    set({ placing, ...(placing ? { measuring: false, sectioning: false } : {}) });
+    set({ placing, ...(placing ? { measuring: false, sectioning: false, axesEdit: null } : {}) });
   },
 
   setMeasuring(measuring) {
-    set({ measuring, guideEdit: null, ...(measuring ? { placing: null, sectioning: false } : {}) });
+    set({ measuring, guideEdit: null, ...(measuring ? { placing: null, sectioning: false, axesEdit: null } : {}) });
   },
 
   setSectioning(sectioning) {
-    set({ sectioning, ...(sectioning ? { placing: null, measuring: false } : {}) });
+    set({ sectioning, ...(sectioning ? { placing: null, measuring: false, axesEdit: null } : {}) });
   },
 
   setCamera3d(patch) {
@@ -108,5 +111,10 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   setGuideEdit(guideEdit) {
     set({ guideEdit });
+  },
+
+  // Selecting the axes puts the tools away
+  setAxesEdit(axesEdit) {
+    set({ axesEdit, ...(axesEdit ? { placing: null, measuring: false, sectioning: false } : {}) });
   },
 });
