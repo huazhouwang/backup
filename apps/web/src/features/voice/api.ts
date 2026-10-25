@@ -40,6 +40,8 @@ export interface ChatTurn {
   done: boolean
   /** A change is waiting for the user's yes or no. */
   confirming: boolean
+  /** What was heard in a recording; missing when nothing was. */
+  heard?: string
 }
 
 export interface ChatMessage {
@@ -129,6 +131,12 @@ export const voiceApi = {
       method: 'POST',
       body: JSON.stringify({ text, ...device() }),
     }),
+  /** A recording (WAV), heard in the language the device is set to, then answered. */
+  speak: (recording: Blob) =>
+    apiFetch<ChatTurn>(
+      `/api/voice/chat/audio?${new URLSearchParams({ ...device(), speech: navigator.language })}`,
+      { method: 'POST', body: recording, headers: { 'Content-Type': 'audio/wav' } },
+    ),
 }
 
 /**

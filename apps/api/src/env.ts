@@ -7,7 +7,9 @@ type Declared = Cloudflare.Env
 export interface Env
   extends
     Pick<Declared, 'DB'>,
-    Partial<Pick<Declared, 'AUTH_EMAIL_RATE_LIMIT' | 'AUTH_IP_RATE_LIMIT' | 'VOICE_RATE_LIMIT'>> {
+    Partial<
+      Pick<Declared, 'AUTH_EMAIL_RATE_LIMIT' | 'AUTH_IP_RATE_LIMIT' | 'VOICE_RATE_LIMIT' | 'AI'>
+    > {
   /** Public origin of the app, e.g. https://bobo.example.workers.dev */
   BETTER_AUTH_URL: string
   /** Secret used to sign session cookies (wrangler secret put BETTER_AUTH_SECRET). */

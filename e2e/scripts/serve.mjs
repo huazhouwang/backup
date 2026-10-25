@@ -41,6 +41,8 @@ const dev = spawn(
     'exec',
     'wrangler',
     'dev',
+    // No remote bindings (Workers AI): the tests stand in for them and run without an account.
+    '--local',
     '--port',
     String(PORT),
     '--persist-to',

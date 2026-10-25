@@ -21,6 +21,8 @@
       "migrations_dir": "apps/api/migrations",
     },
   ],
+  // Speech to text for the chat box's microphone.
+  "ai": { "binding": "AI" },
   // Auth endpoint limits (src/rate-limit.ts). namespace_id must be unique in the account.
   "ratelimits": [
     {

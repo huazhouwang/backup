@@ -47,6 +47,15 @@ describe('siri voice logging', () => {
   // The model the last message ran on (by saved key hint), and what it was told.
   let usedKey: string | undefined
   let system = ''
+  // What the fake Whisper hears next, and what it was asked.
+  let heard = ''
+  let whisper: { language?: string; initial_prompt?: string } = {}
+  const whisperAi = {
+    run: async (_model: string, input: typeof whisper) => {
+      whisper = input
+      return { text: heard }
+    },
+  } as unknown as Ai
 
   const siri = (token: string | null, text: string) =>
     t.request('/api/voice/siri', {
@@ -100,7 +109,7 @@ describe('siri voice logging', () => {
 
   beforeAll(async () => {
     t = await createTestApp(
-      { ENCRYPTION_SECRET: 'test-ai-key-secret-test-ai-key-secret' },
+      { ENCRYPTION_SECRET: 'test-ai-key-secret-test-ai-key-secret', AI: whisperAi },
       {
         voiceAdapter: async (_env, ai) => {
           usedKey = ai.keyHint
@@ -226,6 +235,38 @@ describe('siri voice logging', () => {
       { role: 'user', text: '今天怎么样' },
       { role: 'assistant', text: '今天换了几次尿布。' },
     ])
+  })
+
+  it('hears a recording in the speaker’s language, then answers it like typed text', async () => {
+    const speak = (bytes: number, query = 'speech=en-GB&locale=zh-CN') =>
+      t.request(`/api/voice/chat/audio?${query}`, {
+        method: 'POST',
+        headers: { cookie: headers.get('cookie') ?? '', 'Content-Type': 'audio/wav' },
+        body: new Uint8Array(bytes),
+      })
+    heard = 'how was today'
+    fake.setResponses([{ text: '今天很好。' }])
+    expect(await (await speak(32_000)).json()).toEqual({
+      reply: '今天很好。',
+      done: false,
+      confirming: false,
+      heard: 'how was today',
+    })
+    // In English, with the babies' names to spell; no Chinese vocabulary.
+    expect(whisper).toMatchObject({ language: 'en', initial_prompt: '小米粒' })
+    const chat = await t.request('/api/voice/chat', { headers })
+    const { lines } = (await chat.json()) as { lines: Array<{ role: string; text: string }> }
+    expect(lines.at(-2)).toMatchObject({ role: 'user', text: 'how was today' })
+
+    // In Chinese the prompt also carries the words it should spell in simplified script.
+    heard = '  '
+    const unheard = await speak(32_000, 'speech=zh-Hans-CN')
+    expect(await unheard.json()).toMatchObject({ reply: '没听清，请再说一遍。', done: false })
+    expect(whisper.language).toBe('zh')
+    expect(whisper.initial_prompt).toMatch(/^小米粒 .*毫升/)
+    // Too short to hold anything, or over the body limit.
+    expect((await speak(100)).status).toBe(400)
+    expect((await speak(1024 * 1024 + 1)).status).toBe(413)
   })
 
   it('pages through the last 30 days of conversations, newest first', async () => {

@@ -26,6 +26,10 @@ export default defineConfig({
     ...devices['iPhone 13'],
     // Chromium only: WebKit isn't installed in this setup.
     browserName: 'chromium',
+    // A stand-in microphone (a steady tone) that needs no permission prompt.
+    launchOptions: {
+      args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+    },
     locale: 'zh-CN',
     timezoneId: 'Asia/Shanghai',
     trace: 'retain-on-failure',

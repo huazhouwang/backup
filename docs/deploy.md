@@ -27,7 +27,9 @@ Until the Cloudflare secrets below are set, the workflow skips deploying.
    **Workers & Pages** once, which creates your `<name>.workers.dev` subdomain.
 2. Copy your **Account ID** (Workers & Pages overview, right-hand side).
 3. Create an API token (**My Profile → API Tokens → Create Token**) from the
-   **Edit Cloudflare Workers** template, and add **Account → D1 → Edit** to it.
+   **Edit Cloudflare Workers** template, and add **Account → D1 → Edit** to it. The chat
+   box's microphone uses Workers AI; if a deploy fails on the `AI` binding, add
+   **Account → Workers AI → Read** too.
 
 ### 2. GitHub secrets and variables
 

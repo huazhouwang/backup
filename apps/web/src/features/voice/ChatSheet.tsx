@@ -11,6 +11,8 @@ import { m } from '../../paraglide/messages.js'
 import { requestSync } from '../../sync/runner'
 import { type ChatMessage, type ChatTurn, voiceApi } from './api'
 import { voiceKeys } from './queries'
+import { canRecord } from './recorder'
+import { TalkRow } from './TalkRow'
 import { useChatHistory } from './use-chat-history'
 
 const dayOf = (time: number) => new Date(time).toDateString()
@@ -47,15 +49,19 @@ export function ChatSheet({
     useChatHistory(open)
   const [text, setText] = useState('')
   const [confirming, setConfirming] = useState(false)
+  // The sheet's content renders only in the browser, so this can be asked right away.
+  const [micShown] = useState(canRecord)
 
-  const send = useMutation<ChatTurn, Error, string>({
-    mutationFn: voiceApi.send,
+  // Typed text, or a recording whose words come back with the answer.
+  const send = useMutation<ChatTurn, Error, string | Blob>({
+    mutationFn: (said) => (typeof said === 'string' ? voiceApi.send(said) : voiceApi.speak(said)),
     onMutate: async (said) => {
       // A refetch already on its way would overwrite the message shown below.
       await queryClient.cancelQueries({ queryKey: voiceKeys.chat })
-      append({ role: 'user', text: said })
+      if (typeof said === 'string') append({ role: 'user', text: said })
     },
     onSuccess: (turn) => {
+      if (turn.heard) append({ role: 'user', text: turn.heard })
       append({ role: 'assistant', text: turn.reply })
       setConfirming(turn.confirming)
       // The agent writes on the server; pull now so the records show without waiting.
@@ -124,7 +130,9 @@ export function ChatSheet({
           )}
           {rows}
           {send.isPending && (
-            <output className="m-0 block text-caption text-fg-muted">{m.voiceThinking()}</output>
+            <output className="m-0 block text-caption text-fg-muted">
+              {send.variables instanceof Blob ? m.voiceListening() : m.voiceThinking()}
+            </output>
           )}
         </div>
         {confirming && !send.isPending && (
@@ -137,20 +145,27 @@ export function ChatSheet({
             </Button>
           </div>
         )}
-        <form className="flex items-end gap-2" onSubmit={submit}>
-          <div className="min-w-0 flex-1">
-            <Input
-              label={m.voiceChatLabel()}
-              placeholder={m.voiceChatPlaceholder()}
-              value={text}
-              ref={field}
-              maxLength={300}
-              onChange={(event) => setText(event.target.value)}
-            />
-          </div>
-          <Button type="submit" disabled={send.isPending || !text.trim()}>
-            {m.voiceChatSend()}
-          </Button>
+        <form onSubmit={submit}>
+          <TalkRow
+            field={
+              <Input
+                label={m.voiceChatLabel()}
+                placeholder={m.voiceChatPlaceholder()}
+                value={text}
+                ref={field}
+                maxLength={300}
+                onChange={(event) => setText(event.target.value)}
+              />
+            }
+            send={
+              <Button type="submit" disabled={send.isPending || !text.trim()}>
+                {m.voiceChatSend()}
+              </Button>
+            }
+            showMic={micShown && !text.trim()}
+            disabled={send.isPending}
+            onSpoken={(recording) => send.mutate(recording)}
+          />
         </form>
         {send.isError && <FormError>{m.actionFailed()}</FormError>}
         {/* Remounts when a message is added at the end, keeping it and the input in view. */}

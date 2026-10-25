@@ -45,6 +45,13 @@ export const SESSIONS = [
     email: 'visual@example.com',
   },
   {
+    key: 'voice',
+    token: 'e2e-voice',
+    userId: 'e2e-voice',
+    name: '测试家长',
+    email: 'voice@example.com',
+  },
+  {
     key: 'elsewhere',
     token: 'e2e-elsewhere',
     userId: 'e2e-elsewhere',

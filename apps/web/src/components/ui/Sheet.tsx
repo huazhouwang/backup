@@ -54,7 +54,10 @@ function useLastOpen<T>(open: boolean, value: T): T {
  * Bottom sheet built on the native <dialog> element, which provides focus trapping,
  * Escape to close and an inert background. Used instead of centered modals for forms.
  */
-const onHandle = (target: Element) => target.closest('[data-sheet-handle]') !== null
+// Touches that are someone else's: the header's drag, or a control marked data-sheet-still
+// (a button held to talk), which the sheet's content must not bounce under.
+const onHandle = (target: Element) =>
+  target.closest('[data-sheet-handle], [data-sheet-still]') !== null
 
 export function Sheet({ open, onClose, title, children }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null)

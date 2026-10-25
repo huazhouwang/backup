@@ -44,7 +44,7 @@ Requires Node.js 22+ and pnpm 12 (version pinned via `packageManager`).
 pnpm install
 cp .dev.vars.example .dev.vars   # then fill it in; BETTER_AUTH_URL=http://localhost:3000
 pnpm --filter @bobo/api db:migrate:local
-pnpm dev           # web on :3000 (proxies /api) + wrangler dev on :8787
+pnpm dev           # web on :3000 (proxies /api) + wrangler dev on :8787 (no Workers AI: no speech)
 ```
 
 ```sh
