@@ -245,8 +245,11 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   // Held: the page blurs, what is said so far shows; let go, it is heard and answered there.
   await page.mouse.move(x, y)
   await page.mouse.down()
-  await expect(page.getByText('松开发送 · 上滑到这里取消')).toBeVisible()
+  await expect(page.getByText('松开发送')).toBeVisible()
   await expect(page.getByText('正在说的话')).toBeVisible()
+  // The overlay's microphone sits right on top of the tab bar's.
+  const held = await page.getByRole('button', { name: '说完了，发送' }).boundingBox()
+  expect(Math.abs((held?.x ?? 0) + (held?.width ?? 0) / 2 - x)).toBeLessThan(2)
   await page.mouse.up()
   await expect(page.getByText('识别中')).toBeVisible()
   await expect.poll(() => api.uploads.length).toBe(1)
@@ -259,19 +262,32 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   await page.getByRole('button', { name: '关闭' }).click()
   await expect(page.getByText('已记录：换尿布 1。还有吗？')).toHaveCount(0)
 
-  // Slid up to the cancel target: nothing is sent.
+  // Slid right onto cancel: nothing is sent.
   await page.mouse.move(x, y)
   await page.mouse.down()
   await page.waitForTimeout(800)
-  await page.mouse.move(x, y - 140, { steps: 5 })
+  await page.mouse.move(x + 96, y, { steps: 5 })
   await expect(page.getByText('松开取消')).toBeVisible()
   await page.mouse.up()
   await expect(page.getByText('松开取消')).toHaveCount(0)
   expect(api.uploads).toHaveLength(1)
 
-  // A tap records hands-free; the big microphone sends; "打开对话" goes to the chat.
+  // Slid left onto the chat: nothing is sent and the chat opens.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.waitForTimeout(800)
+  await page.mouse.move(x - 96, y, { steps: 5 })
+  await expect(page.getByText('松开打开对话')).toBeVisible()
+  await page.mouse.up()
+  await expect(page).toHaveURL(/\/chat/)
+  expect(api.uploads).toHaveLength(1)
+  await page.goBack()
+  await expect(mic).toBeVisible()
+  await page.waitForTimeout(500)
+
+  // A tap records hands-free, the microphone turning into send; "打开对话" goes to the chat.
   await mic.click()
-  await expect(page.getByText('说完点一下麦克风发送')).toBeVisible()
+  await expect(page.getByText('说完点一下发送')).toBeVisible()
   await page.waitForTimeout(1000)
   await page.getByRole('button', { name: '说完了，发送' }).click()
   await expect.poll(() => api.uploads.length).toBe(2)

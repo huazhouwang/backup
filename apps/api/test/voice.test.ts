@@ -316,6 +316,36 @@ describe('siri voice logging', () => {
     expect(lines.at(-2)).toMatchObject({ role: 'user', text: '小米粒今天怎么样' })
   })
 
+  it('takes a message whose recent lines are long, using only their start', async () => {
+    let correction = ''
+    fake.setResponses([
+      ({ request }) => {
+        correction = JSON.stringify(request.systemPrompts ?? [])
+        return { text: '换尿布了' }
+      },
+      { text: '好。' },
+    ])
+    const long = `Bobo: ${'今天喝奶五次。'.repeat(60)}`
+    const res = await t.request('/api/voice/chat', {
+      method: 'POST',
+      headers: {
+        cookie: headers.get('cookie') ?? '',
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({
+        text: '换尿布了',
+        spoken: true,
+        recent: ['User: 一', 'Bobo: 二', 'User: 三', long, 'User: 五'],
+      }),
+    })
+    expect(res.status).toBe(200)
+    await res.text()
+    expect(correction).toContain('User: 五')
+    expect(correction).not.toContain('User: 一')
+    expect(correction).not.toContain(long)
+  })
+
   it('pages through the last 30 days of conversations, newest first', async () => {
     const reader = await t.signIn('翻记录')
     const prefix = `voice_${reader.user.id}_`

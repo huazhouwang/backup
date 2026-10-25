@@ -92,7 +92,8 @@ export function TalkRow({
 }) {
   const talk = useTalk({
     disabled,
-    cancelDistance: CANCEL_DISTANCE,
+    // Slid up: letting go drops the recording.
+    aim: (_dx, dy) => (dy < -CANCEL_DISTANCE ? 'drop' : null),
     onBegin,
     onPartial,
     onDrop,

@@ -19,11 +19,18 @@ const TAP_MS = 300
 const PARTIAL_EVERY_MS = 1500
 
 export type TalkMode = 'off' | 'hold' | 'free'
+/**
+ * Where a held finger has slid to: letting go there drops the recording, or drops it and
+ * leaves for the chat page.
+ */
+export type TalkAim = 'drop' | 'chat' | null
 
 export interface TalkOptions {
   disabled: boolean
-  /** Slid up this far (px) while holding, letting go drops the recording. */
-  cancelDistance: number
+  /** Where a finger held down at the microphone and slid by (dx, dy) px is aiming. */
+  aim: (dx: number, dy: number) => TalkAim
+  /** Let go while aiming somewhere: the recording is dropped first. */
+  onAimed?: (aim: NonNullable<TalkAim>) => void
   /** Recording started. */
   onBegin: () => void
   /** What has been said so far, while recording goes on. */
@@ -35,7 +42,7 @@ export interface TalkOptions {
 }
 
 /**
- * Talking by microphone: hold it to talk and let go to send, slide up to drop it, or tap it
+ * Talking by microphone: hold it to talk and let go to send, slide away to drop it, or tap it
  * to talk hands-free and tap again to send. Before the microphone is first used, the system's
  * question is explained (or how to turn it back on, once refused). While recording, what has
  * been said so far goes to `onPartial` every so often, one at a time. `buttonProps` go on the
@@ -44,24 +51,25 @@ export interface TalkOptions {
  */
 export function useTalk({
   disabled,
-  cancelDistance,
+  aim,
+  onAimed,
   onBegin,
   onPartial,
   onDrop,
   onSpoken,
 }: TalkOptions) {
   const [mode, setMode] = useState<TalkMode>('off')
-  const [dropping, setDropping] = useState(false)
+  const [aiming, setAiming] = useState<TalkAim>(null)
   const [startedAt, setStartedAt] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [permission, setPermission] = useMicPermission()
   const [sheet, setSheet] = useState<'explain' | 'denied' | null>(null)
-  const down = useRef<{ y: number; at: number } | null>(null)
+  const down = useRef<{ x: number; y: number; at: number } | null>(null)
 
   const recorder = useRecorder()
   const done = () => {
     setMode('off')
-    setDropping(false)
+    setAiming(null)
     const said = recorder.finish()
     tapPhone()
     if (said) {
@@ -108,7 +116,7 @@ export function useTalk({
     playCue('cancel')
     tapPhone()
     setMode('off')
-    setDropping(false)
+    setAiming(null)
     onDrop()
   }
   const begin = (next: TalkMode) => {
@@ -144,14 +152,14 @@ export function useTalk({
   const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     if (disabled || event.button !== 0) return
     if (mode === 'off' && !mayRecord()) return
-    down.current = { y: event.clientY, at: event.timeStamp }
+    down.current = { x: event.clientX, y: event.clientY, at: event.timeStamp }
     if (mode !== 'off') return
     event.currentTarget.setPointerCapture(event.pointerId)
     begin('hold')
   }
   const onPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
     if (mode === 'hold' && down.current) {
-      setDropping(down.current.y - event.clientY > cancelDistance)
+      setAiming(aim(event.clientX - down.current.x, event.clientY - down.current.y))
     }
   }
   const onPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
@@ -160,8 +168,10 @@ export function useTalk({
     if (!pressed) return
     if (mode === 'free') done()
     else if (mode !== 'hold') return
-    else if (dropping) drop()
-    else if (event.timeStamp - pressed.at < TAP_MS) setMode('free')
+    else if (aiming) {
+      drop()
+      onAimed?.(aiming)
+    } else if (event.timeStamp - pressed.at < TAP_MS) setMode('free')
     else done()
   }
   const onPointerCancel = () => {
@@ -192,7 +202,8 @@ export function useTalk({
   return {
     mode,
     recording,
-    dropping,
+    aiming,
+    dropping: aiming === 'drop',
     startedAt,
     analyser: recorder.analyser,
     error,

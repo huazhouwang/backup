@@ -67,8 +67,14 @@ const textSchema = z.object({
   locale: localeSchema.optional(),
   /** Heard from a recording: speech recognition's mistakes are corrected first. */
   spoken: z.boolean().optional(),
-  /** The chat's last few lines, which help correct what was heard. */
-  recent: z.array(z.string().max(MAX_TEXT)).max(4).optional(),
+  /**
+   * The chat's last few lines, which help correct what was heard. Only context: a long
+   * reply is cut short rather than refusing the message.
+   */
+  recent: z
+    .array(z.string().transform((line) => line.slice(0, MAX_TEXT)))
+    .transform((lines) => lines.slice(-4))
+    .optional(),
 })
 
 /**
@@ -77,7 +83,10 @@ const textSchema = z.object({
  */
 const speechQuerySchema = z.object({
   speech: localeSchema.optional(),
-  recent: z.string().max(MAX_TEXT).optional(),
+  recent: z
+    .string()
+    .transform((line) => line.slice(0, MAX_TEXT))
+    .optional(),
   partial: z.literal('1').optional(),
 })
 /** Foods and medicines logged within this long help recognise speech. */
