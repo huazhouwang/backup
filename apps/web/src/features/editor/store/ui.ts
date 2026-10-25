@@ -19,6 +19,7 @@ type Ui = Pick<
   | 'sectioning'
   | 'camera3d'
   | 'sun'
+  | 'sunOpen'
   | 'northRequest'
   | 'guideEdit'
 > &
@@ -36,6 +37,7 @@ type Ui = Pick<
     | 'setSun'
     | 'faceNorth'
     | 'setGuideEdit'
+    | 'setSunOpen'
   >;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
@@ -51,6 +53,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   camera3d: { walking: false, section: null },
   // Today at three in the afternoon
   sun: { day: dayOfYear(new Date()), minutes: 15 * 60 },
+  sunOpen: false,
   northRequest: 0,
   guideEdit: null,
 
@@ -97,6 +100,10 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   faceNorth() {
     set({ northRequest: Date.now() });
+  },
+
+  setSunOpen(sunOpen) {
+    set({ sunOpen });
   },
 
   setGuideEdit(guideEdit) {

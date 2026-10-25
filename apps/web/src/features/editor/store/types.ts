@@ -79,6 +79,8 @@ export interface EditorState {
   camera3d: Camera3D;
   /** Where the sun stands, as SketchUp's shadow settings: a day of the year and a local time (minutes after midnight); view state, not saved */
   sun: { day: number; minutes: number };
+  /** The sun's day and time settings are open */
+  sunOpen: boolean;
   /** Asks the 3D view to turn to look north (the time of the request) */
   northRequest: number;
   /** The guide the tape measure just drew, whose offset can be typed exactly: moved to origin + normal × distance */
@@ -99,6 +101,7 @@ export interface EditorActions {
   setCamera3d(patch: Partial<Camera3D>): void;
   setSun(patch: Partial<EditorState['sun']>): void;
   faceNorth(): void;
+  setSunOpen(open: boolean): void;
   setGuideEdit(g: EditorState['guideEdit']): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;

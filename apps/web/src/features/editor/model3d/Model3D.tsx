@@ -39,6 +39,7 @@ import { FOV } from '@/graphics/three/framing';
 import { sunDirection, sunPosition } from '@/lib/solar';
 import { Axes3D } from './Axes3D';
 import { Guides3D } from './Guides3D';
+import { Sun3D } from './Sun3D';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
@@ -112,10 +113,12 @@ export function Model3D() {
   // The sun at the chosen day and time: kept a little above the horizon for the light, weaker as it sinks
   const sunTime = useEditor(s => s.sun);
   const { site } = project;
-  const [sunToward, sunStrength] = useMemo(() => {
+  const [sunToward, sunStrength, sunSky] = useMemo(() => {
     const at = sunPosition(site.location, sunTime.day, sunTime.minutes);
     const v = new THREE.Vector3(...sunDirection(site.northAngle, { ...at, elevation: Math.max(at.elevation, 6) }));
-    return [v, THREE.MathUtils.clamp((at.elevation + 2) / 14, 0.15, 1)] as const;
+    // The disc in the sky stands where the sun really is
+    const sky = new THREE.Vector3(...sunDirection(site.northAngle, at));
+    return [v, THREE.MathUtils.clamp((at.elevation + 2) / 14, 0.15, 1), { toward: sky, up: at.elevation > 0 }] as const;
   }, [sunTime.day, sunTime.minutes, site.location, site.northAngle]);
   // Floors less the slab openings that cut them
   const slabShapes = useMemo(() => new Map(project.spaces.map(s => [s.id, slabShape(project, s)])), [project.spaces]);
@@ -295,6 +298,7 @@ export function Model3D() {
           <SafariPinch />
           <Picker />
           <Measure3D />
+          <Sun3D toward={sunSky.toward} up={sunSky.up} />
           {view.layers.axes && <Axes3D reach={span * 1.5} />}
           {view.layers.guides && <Guides3D guides={project.guides ?? []} selected={sel} reach={span * 2} />}
           <Reveal ownerOf={ownerOf} />

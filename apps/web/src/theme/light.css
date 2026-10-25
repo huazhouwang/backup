@@ -63,6 +63,8 @@
   --canvas-backdrop: oklch(0.91 0.004 100);
   --canvas-sky: oklch(0.87 0.035 235);
   --canvas-sun: oklch(0.99 0.006 85);
+  /* The sun's disc in the sky */
+  --canvas-sun-disc: oklch(0.97 0.09 95);
   --canvas-skylight: oklch(0.84 0.008 85);
   --canvas-ground: oklch(0.853 0.031 103);
   /* Shadows cast on the ground in 3D */

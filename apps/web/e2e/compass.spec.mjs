@@ -1,5 +1,5 @@
 // E2E: the compass → in the plan it points to the drawing's north, the old north arrow is gone → in 3D it turns with the view and
-// a tap turns the view to look north → its sun opens the date and time, and moving the time moves the sun and the shadows
+// a tap turns the view to look north → the 日照 button opens the date and time, and moving the time moves the sun and the shadows
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
