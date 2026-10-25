@@ -4,13 +4,10 @@
  * drag is one undoable edit, the same one the agent or the props panel would make.
  *
  * Snapping, within a few screen pixels: a wall to the line of a parallel wall (on its floor, or the floors above and below), a
- * door or window to the middle of its wall, furniture against a wall face (square to the model axes); each to the guides. Otherwise
- * to a 50 mm step.
+ * door or window to the middle of its wall, furniture against a wall face; each to the guides. Otherwise to a 50 mm step.
  */
 import {
-  axesOf,
   directionOf,
-  fromAxes,
   dot,
   findObject,
   furnitureFootprint,
@@ -24,7 +21,6 @@ import {
   type Wall,
 } from '@plinth/core';
 import { guideStops, planGuideLines } from './plan-guides';
-import { inAxes } from './plan-axes';
 
 export interface DragResult {
   name: string;
@@ -54,24 +50,7 @@ export function dragCall(p: Project, id: string, delta: Point, tol: number): Dra
   const e = findObject(p, id);
   if (e?.kind === 'wall') return dragWall(p, e.obj, delta, tol);
   if (e?.kind === 'opening' && e.wall) return dragOpening(p, e.wall, e.obj.id, delta, tol);
-  if (e?.kind === 'furniture') {
-    // Square to the model axes: worked out in their coordinates and brought back
-    const f = axesOf(p);
-    const local = inAxes(p, f);
-    const r = dragFurniture(
-      local,
-      local.furniture.find(x => x.id === id)!,
-      [dot(delta, f.x), dot(delta, f.y)],
-      tol,
-    );
-    if (!r || local === p) return r;
-    const position = fromAxes(f, r.input.position as Point);
-    return {
-      ...r,
-      input: { ...r.input, position: [Math.round(position[0]), Math.round(position[1])] },
-      guides: r.guides.map(([a, b]) => [fromAxes(f, a), fromAxes(f, b)] as [Point, Point]),
-    };
-  }
+  if (e?.kind === 'furniture') return dragFurniture(p, e.obj, delta, tol);
   return null;
 }
 

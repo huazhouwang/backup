@@ -82,7 +82,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   // One tool at a time: taking one out puts the others away
   setPlacing(placing) {
-    set({ placing, ...(placing ? { measuring: false, sectioning: false, axesEdit: null } : {}) });
+    set({ placing, ...(placing ? { measuring: false, sectioning: false } : {}) });
   },
 
   setMeasuring(measuring) {
@@ -90,7 +90,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   },
 
   setSectioning(sectioning) {
-    set({ sectioning, ...(sectioning ? { placing: null, measuring: false, axesEdit: null } : {}) });
+    set({ sectioning, ...(sectioning ? { placing: null, measuring: false } : {}) });
   },
 
   setCamera3d(patch) {
@@ -113,8 +113,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
     set({ guideEdit });
   },
 
-  // Selecting the axes puts the tools away
   setAxesEdit(axesEdit) {
-    set({ axesEdit, ...(axesEdit ? { placing: null, measuring: false, sectioning: false } : {}) });
+    set({ axesEdit });
   },
 });

@@ -44,6 +44,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   9: doc => ({ ...doc, guides: doc.guides ?? [] }),
   // v11 adds the model axes (axes); optional, nothing to convert
   10: doc => doc,
+  // v12: the axes no longer turn (only their origin moves); guides may be copies of an axis (axis), optional
+  11: doc => (doc.axes ? { ...doc, axes: { origin: doc.axes.origin } } : doc),
 };
 
 /**

@@ -1,44 +1,19 @@
 /**
- * The model axes as a frame (see Axes in schema.ts): red along `x`, green along `y`, both unit plan vectors, crossing at `origin`.
- * Without project axes they are the world's.
+ * The model axes (see Axes in schema.ts): x east, y south and z up, square to each other, crossing at an origin on the ground. By
+ * default the origin is the house's top-left corner on the plan (the north-west corner of the ground floor's walls); once
+ * people move it, the project keeps it.
  */
-import type { Axes, Point, Project } from '../model/schema.js';
+import type { Point, Project } from '../model/schema.js';
+import { wallBody } from './geometry.js';
 
-export interface AxesFrame {
-  origin: Point;
-  angle: number;
-  /** The red axis, a unit plan vector */
-  x: Point;
-  /** The green axis, a quarter turn clockwise from red on the plan (south when red points east) */
-  y: Point;
+/** The house's top-left corner on the plan: the least x and y of the ground floor's storey walls, or 0, 0 without any */
+export function houseCorner(p: Project): Point {
+  const ground = Math.min(...p.levels.map(l => l.elevation));
+  const level = p.levels.find(l => l.elevation === ground)?.id;
+  const ring = p.walls.filter(w => w.level === level && (w.kind === 'bearing' || w.kind === 'partition')).flatMap(w => wallBody(w).outer);
+  if (!ring.length) return [0, 0];
+  return [Math.round(Math.min(...ring.map(q => q[0]))), Math.round(Math.min(...ring.map(q => q[1])))];
 }
 
-export const WORLD_AXES: Axes = { origin: [0, 0], angle: 0 };
-
-export function axesFrame(a: Axes = WORLD_AXES): AxesFrame {
-  const r = (a.angle * Math.PI) / 180;
-  const c = Math.cos(r),
-    s = Math.sin(r);
-  const clean = (v: number) => (Math.abs(v) < 1e-12 ? 0 : v);
-  return { origin: a.origin, angle: a.angle, x: [clean(c), clean(s)], y: [clean(-s), clean(c)] };
-}
-
-/** The project's axes as a frame */
-export const axesOf = (p: Pick<Project, 'axes'>): AxesFrame => axesFrame(p.axes);
-
-/** Whether the axes have been moved or turned */
-export const customAxes = (p: Pick<Project, 'axes'>) => !!p.axes && (p.axes.angle % 360 !== 0 || p.axes.origin[0] !== 0 || p.axes.origin[1] !== 0);
-
-/** A world plan point in the axes' coordinates */
-export function toAxes(f: AxesFrame, q: Point): Point {
-  const d = [q[0] - f.origin[0], q[1] - f.origin[1]];
-  return [d[0] * f.x[0] + d[1] * f.x[1], d[0] * f.y[0] + d[1] * f.y[1]];
-}
-
-/** A point in the axes' coordinates back in the world */
-export function fromAxes(f: AxesFrame, q: Point): Point {
-  return [f.origin[0] + q[0] * f.x[0] + q[1] * f.y[0], f.origin[1] + q[0] * f.x[1] + q[1] * f.y[1]];
-}
-
-/** An angle in [0, 360) */
-export const normalAngle = (deg: number) => ((deg % 360) + 360) % 360;
+/** Where the axes cross: where people put the origin, else the house's top-left corner */
+export const axesOrigin = (p: Project): Point => p.axes?.origin ?? houseCorner(p);

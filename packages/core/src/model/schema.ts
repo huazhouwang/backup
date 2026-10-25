@@ -13,7 +13,7 @@ import type { Material } from '../looks/material.js';
 import type { Recipe } from '../looks/script.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 11 as const;
+export const SCHEMA_VERSION = 12 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -49,7 +49,7 @@ export interface Project {
   constraints: Constraint[];
   /** Guides drawn to line things up with (added in v10) */
   guides: Guide[];
-  /** The model axes moved or turned to line work up with (added in v11); absent, they are the world's */
+  /** Where people moved the model axes' origin (added in v11, origin only since v12); absent, the house's top-left corner */
   axes?: Axes;
   brief: Brief;
   decisions: Decision[];
@@ -198,17 +198,17 @@ export interface Guide {
   at: [Mm, Mm, Mm];
   /** A line's direction, a unit vector (x east, y south, z up) */
   dir?: [number, number, number];
+  /** A copy of a model axis (added in v12): drawn like the axes, from `at` along `dir`, and named after it (x₁, y₂, z₁ …) */
+  axis?: 'x' | 'y' | 'z';
 }
 
 /**
- * The model axes, as SketchUp's: a frame people move and turn in the plan to draw and place along a house that isn't square to
- * the world (see geometry/axes.ts). Only drawing and snapping follow it; positions stay in world coordinates.
+ * The model axes: x east, y south and z up, always square to the world, crossing at an origin on the ground that people move in 3D
+ * (see geometry/axes.ts). Positions stay in world coordinates.
  */
 export interface Axes {
-  /** Where the axes cross, a plan point */
+  /** Where the axes cross, a plan point on the ground */
   origin: Point;
-  /** How far the red axis is turned from east, clockwise on the plan like furniture rotation (degrees) */
-  angle: number;
 }
 
 /** Constraints: placeholder in v1; solving is roadmap step 3 */

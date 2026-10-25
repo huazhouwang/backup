@@ -1,26 +1,11 @@
 /**
  * Placing from the add palette, as SketchUp places a component: what is being placed follows the pointer in the plan, and a
- * click puts it down with the capability call that makes it. Furniture at its default size, square to the model axes on a 50 mm
- * step, pushed out of any wall it would stand in; a door or window onto the nearest wall it can go in, snapped to the wall's middle. Both snap to guides.
+ * click puts it down with the capability call that makes it. Furniture at its default size, on a 50 mm step, pushed out of any
+ * wall it would stand in; a door or window onto the nearest wall it can go in, snapped to the wall's middle. Both snap to guides.
  */
-import {
-  axesOf,
-  dot,
-  fromAxes,
-  OPENING_DEFAULTS,
-  toAxes,
-  pointAt,
-  sub,
-  wallDir,
-  wallLength,
-  wallNormal,
-  type Point,
-  type Project,
-  type Wall,
-} from '@plinth/core';
+import { dot, OPENING_DEFAULTS, pointAt, sub, wallDir, wallLength, wallNormal, type Point, type Project, type Wall } from '@plinth/core';
 import type { Placing } from '../store/types';
 import { guideStops, snapToGuides } from './plan-guides';
-import { inAxes } from './plan-axes';
 
 export interface PlaceResult {
   name: string;
@@ -77,31 +62,24 @@ function clearOfWalls(walls: Wall[], c: Point, w: number, d: number): Point {
 export function placeCall(p: Project, level: string, placing: Placing, at: Point, tol: number): PlaceResult | null {
   const walls = p.walls.filter(w => w.level === level);
   if (placing.kind === 'furniture') {
-    // Square to the model axes: worked out in their coordinates (on a step from their origin) and brought back
-    const f = axesOf(p);
-    const local = inAxes(p, f);
     const size = p.library.furniture[placing.type]?.size ?? { w: 600, d: 600, h: 750 };
     const onGuide = snapToGuides(p, at, tol);
-    const q = toAxes(f, onGuide ? onGuide.point : at);
     const c = clearOfWalls(
-      local.walls.filter(w => w.level === level && STOREY.includes(w.kind)),
-      onGuide ? q : [snap(q[0]), snap(q[1])],
+      walls.filter(w => STOREY.includes(w.kind)),
+      onGuide ? onGuide.point : [snap(at[0]), snap(at[1])],
       size.w,
       size.d,
     );
     const [hw, hd] = [size.w / 2, size.d / 2];
-    const position = fromAxes(f, c);
     return {
       name: 'furniture_add',
-      input: { level, type: placing.type, position: [Math.round(position[0]), Math.round(position[1])], ...(f.angle ? { rotation: f.angle } : {}) },
-      ghost: (
-        [
-          [c[0] - hw, c[1] - hd],
-          [c[0] + hw, c[1] - hd],
-          [c[0] + hw, c[1] + hd],
-          [c[0] - hw, c[1] + hd],
-        ] as Point[]
-      ).map(v => fromAxes(f, v)),
+      input: { level, type: placing.type, position: c },
+      ghost: [
+        [c[0] - hw, c[1] - hd],
+        [c[0] + hw, c[1] - hd],
+        [c[0] + hw, c[1] + hd],
+        [c[0] - hw, c[1] + hd],
+      ],
     };
   }
   const kinds = HOSTS[placing.opening] ?? STOREY;

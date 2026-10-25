@@ -39,6 +39,10 @@ export function SafariPinch() {
  * Done on pointer events instead of the browser's click, which OrbitControls' pointer capture makes unreliable in some browsers.
  * Shift or Cmd adds to / removes from the selection, like the plan.
  */
+/** Taps something else took first (the axes, see Axes3D), which the picker leaves alone */
+const claimed = new WeakSet<Event>();
+export const claimTap = (e: Event) => void claimed.add(e);
+
 export function Picker() {
   const { gl, camera, scene, raycaster } = useThree();
   const store = useEditorStore();
@@ -56,7 +60,7 @@ export function Picker() {
       const d = down;
       down = null;
       // The tape measure takes the taps while it is out (see Measure3D), and walking takes them to walk (see WalkView)
-      if (store.getState().measuring || store.getState().camera3d.walking) return;
+      if (store.getState().measuring || store.getState().camera3d.walking || claimed.has(e)) return;
       if (!d || d.id !== e.pointerId || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return;
       const r = el.getBoundingClientRect();
       raycaster.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);

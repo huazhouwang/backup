@@ -28,10 +28,10 @@ describe('drawing guides with the tape', () => {
     ]);
   });
 
-  it('off the red axis, and nothing before it has moved off', () => {
-    const src = sourceAt(guideSources(p, 'L1'), [-3000, 8], 20)!;
+  it('off the x axis (through the origin on the house corner, 0, 900), and nothing before it has moved off', () => {
+    const src = sourceAt(guideSources(p, 'L1'), [-3000, 908], 20)!;
     expect(src.kind).toBe('edge');
-    expect(guideDraft(src, [-3000, 3], 'L1')).toBeNull();
-    expect(guideDraft(src, [-3000, -1200], 'L1')!.line.at).toEqual([-3000, -1200]);
+    expect(guideDraft(src, [-3000, 903], 'L1')).toBeNull();
+    expect(guideDraft(src, [-3000, -300], 'L1')!.line.at).toEqual([-3000, -300]);
   });
 });

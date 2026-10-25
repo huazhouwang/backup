@@ -1,182 +1,201 @@
-// E2E: the model axes → panning across the origin changes nothing → a click on the origin knob selects them → the origin drags
-// onto the house's north-west corner → the knob on red turns them in 15° steps → dragging red draws a parallel guide → a wall
-// tap aligns red with it → undo, and reset from the ⋯ menu → a wall next to the moved origin is still picked by a tap; on a phone
-// a finger moves the origin, a second finger calls the drag off, the ⋯ menu selects them, a finger turns them and drags a guide off
+// E2E: the model axes in 3D → x, y, z in black, named by their heads, crossing at the house's top-left corner → a drag across
+// the origin before tapping it turns the camera and moves nothing → a tap on the origin, then its handle drags it on the ground
+// (snapping to a corner) → a tap on x offers to copy it, and the copy (x₁) is a guide → a tap on the copy selects it: its side
+// handle slides it, its head turns it in 15° steps → a z copy tips over like a fan → undo; on a phone the same with one finger,
+// and a second finger calls a drag off
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
-const open = async page => {
+const open = async (page, phone = false) => {
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: /打开样例方案/ }).click();
   await page.waitForURL(/\/p\//);
   await page.waitForFunction(() => window.artifact?.ready);
   const frame = page.frames().find(f => f !== page.mainFrame());
-  const iframe = await page.locator('iframe[title="画布"], iframe[title="Canvas"]').first().boundingBox();
-  const at = async (x, y) => {
-    const q = await frame.evaluate(
-      ([x, y]) => {
-        const p = new DOMPoint(x, y).matrixTransform(document.querySelector('svg[role="img"]').getScreenCTM());
-        return [p.x, p.y];
-      },
-      [x, y],
-    );
-    return [iframe.x + q[0], iframe.y + q[1]];
+  // The origin out in the south yard, in front of the house as the camera first looks
+  await page.evaluate(async () => window.artifact.call('axes_set', { origin: [9000, 16000] }));
+  const button = page.getByRole('button', { name: /三维/ }).first();
+  await (phone ? button.tap() : button.click());
+  await page.waitForTimeout(6000);
+  const iframe = await page.locator('iframe').first().boundingBox();
+  /** Where a mark shows on the page */
+  const pos = async sel => {
+    const r = await frame.evaluate(s => {
+      const b = document.querySelector(s)?.getBoundingClientRect();
+      return b && [b.x + b.width / 2, b.y + b.height / 2];
+    }, sel);
+    return r && [iframe.x + r[0], iframe.y + r[1]];
   };
-  const axes = () => frame.evaluate(() => document.querySelector('[data-axes]')?.getAttribute('data-axes'));
-  return { frame, at, axes };
+  /** A point `t` of the way from the origin toward an axis's head (its label) */
+  const along = async (label, t) => {
+    const o = await pos('[data-axes-origin]');
+    const h = await pos(`[data-axis-label="${label}"]`);
+    return [o[0] + (h[0] - o[0]) * t, o[1] + (h[1] - o[1]) * t];
+  };
+  const origin = () => frame.evaluate(() => document.querySelector('[data-axes-origin]')?.getAttribute('data-axes-origin'));
+  const guides = async () => {
+    const found = (await page.evaluate(async () => (await window.artifact.call('find_objects', { type: 'guide' })).result)) ?? [];
+    return Promise.all(found.map(g => page.evaluate(async id => (await window.artifact.call('get_object', { ref: id })).result, g.id)));
+  };
+  return { frame, pos, along, origin, guides };
 };
-const drag = async (page, from, to) => {
+const drag = async (page, from, to, steps = 12) => {
   await page.mouse.move(...from);
   await page.mouse.down();
-  await page.mouse.move(to[0], to[1], { steps: 12 });
+  await page.mouse.move(to[0], to[1], { steps });
   await page.mouse.up();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(500);
 };
-const selection = page => page.evaluate(async () => (await window.artifact.call('view_get', {})).result.selection.map(s => s.id ?? s));
 
-test('axes', async ({ browser: b }) => {
+test('axes in 3D', async ({ browser: b }) => {
   test.setTimeout(180_000);
   const page = await b.newPage({ viewport: { width: 1400, height: 900 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  const { frame, at, axes } = await open(page);
-  check((await axes()) === 'world', 'the world axes to begin with');
+  const reset = await (async () => {
+    await page.goto(BASE, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: /打开样例方案/ }).click();
+    await page.waitForURL(/\/p\//);
+    await page.waitForFunction(() => window.artifact?.ready);
+    const frame = page.frames().find(f => f !== page.mainFrame());
+    return frame.evaluate(() => document.querySelector('[data-axes]')?.getAttribute('data-axes'));
+  })();
+  check(reset === '2030,30', `the origin starts on the house's top-left corner (${reset})`);
+  const { frame, pos, along, origin, guides } = await open(page);
+  const labels = await frame.evaluate(() => [...document.querySelectorAll('[data-axis-label]')].map(e => e.textContent).join(''));
+  check(labels === 'xyz', `the heads are named x, y, z (${labels})`);
+  await page.screenshot({ path: `${OUT}/axes-3d.png` });
 
-  // Not selected: a drag across the origin pans, the axes stay
-  const o = await at(0, 0);
-  await drag(page, o, [o[0] + 120, o[1] + 80]);
-  check((await axes()) === 'world', 'a drag from the origin before selecting the axes leaves them');
+  // Before a tap, a drag from the origin turns the camera
+  const o = await pos('[data-axes-origin]');
+  await drag(page, o, [o[0] + 60, o[1] + 10]);
+  check((await origin()) === '9000,16000', 'a drag before tapping the origin moves nothing');
+  await page.waitForTimeout(800);
 
-  // Select them
-  const o2 = await at(0, 0);
-  await page.mouse.click(...o2);
-  await page.waitForTimeout(300);
-  check((await frame.locator('[data-axes-edit]').count()) === 1, 'a click on the origin knob selects the axes');
-  check(await page.getByText('拖原点移动').isVisible(), 'the hint says what the handles do');
-
-  // The origin onto the north-west corner (2030, 30)
-  await drag(page, o2, await at(2040, 40));
-  check((await axes()) === '2030,30@0', `the origin snaps onto the corner (${await axes()})`);
-  await page.screenshot({ path: `${OUT}/axes-moved.png` });
-
-  // Turn: the knob stands 90 px along red; drag it 30° clockwise
-  const c = await at(2030, 30);
-  const knob = [c[0] + 90, c[1]];
-  const r = 200;
-  await drag(page, knob, [c[0] + r * Math.cos(Math.PI / 6), c[1] + r * Math.sin(Math.PI / 6)]);
-  check((await axes()) === '2030,30@30', `the knob turns them by 15° steps (${await axes()})`);
-  await page.screenshot({ path: `${OUT}/axes-turned.png` });
-
-  // Off red (at 160 px from the origin): a guide parallel to it
-  const along = [c[0] + 160 * Math.cos(Math.PI / 6), c[1] + 160 * Math.sin(Math.PI / 6)];
-  await page.mouse.move(...along);
-  await page.mouse.down();
-  await page.mouse.move(along[0] - 40, along[1] + 70, { steps: 10 });
-  const shown = await frame.evaluate(() => document.querySelector('[data-guide-draft]')?.textContent);
-  await page.mouse.up();
+  // Tap the origin: move mode; its handle drags it on the ground
+  await page.mouse.click(...(await pos('[data-axes-origin]')));
   await page.waitForTimeout(400);
-  const gs = (await page.evaluate(async () => (await window.artifact.call('find_objects', { type: 'guide' })).result)) ?? [];
-  const g = gs[0] && (await page.evaluate(async id => (await window.artifact.call('get_object', { ref: id })).result, gs[0].id));
-  check(!!shown && !!g && Math.abs(g.dir[0] - Math.cos(Math.PI / 6)) < 1e-3, `dragging red draws a guide parallel to it (${shown}, ${JSON.stringify(g?.dir)})`);
-
-  // Align to a wall: the north wall runs east, so red goes back to 0°
-  await page.getByRole('button', { name: '对齐墙' }).click();
-  await page.mouse.click(...(await at(6000, 120)));
-  await page.waitForTimeout(400);
-  check((await axes()) === '2030,30@0', `a wall tap aligns red with it (${await axes()})`);
-
-  // Undo goes back to 30°, the ⋯ menu resets
+  check(await page.getByText('拖动原点在地面上移动').isVisible(), 'a tap on the origin enters move mode');
+  const h = await pos('[data-axes-handle="origin"]');
+  const toward = await along('x', 0.25);
+  await drag(page, h, toward);
+  const moved = await origin();
+  check(moved && moved !== '9000,16000', `the handle drags the origin on the ground (${moved})`);
   await page.keyboard.press('Control+z');
-  await page.waitForTimeout(300);
-  check((await axes()) === '2030,30@30', `undo turns them back (${await axes()})`);
+  await page.waitForTimeout(400);
+  check((await origin()) === '9000,16000', 'undo puts it back');
   await page.getByRole('button', { name: '完成' }).click();
-  check((await frame.locator('[data-axes-edit]').count()) === 0, 'done puts the handles away');
-
-  // The north wall right next to the moved origin (a window in it) is still picked by a click
-  await page.mouse.click(...(await at(2030 + 800, 120)));
   await page.waitForTimeout(300);
-  const sel = await selection(page);
-  check(
-    sel.length === 1 && (await frame.locator('[data-axes-edit]').count()) === 0,
-    `a click on the wall by the origin picks what is there, not the axes (${sel})`,
-  );
 
-  await page.getByRole('button', { name: '更多' }).click();
-  await page.getByRole('menuitem', { name: '重置坐标轴' }).click();
-  await page.waitForTimeout(300);
-  check((await axes()) === 'world', 'the ⋯ menu resets them');
+  // Tap x: the copy button; the copy is a guide named x₁
+  await page.mouse.click(...(await along('x', 0.4)));
+  await page.waitForTimeout(400);
+  const clone = frame.locator('[data-axes-clone="x"]');
+  check((await clone.count()) === 1, 'a tap on x offers to copy it');
+  await clone.click();
+  await page.waitForTimeout(500);
+  let [x1] = await guides();
+  check(x1?.name === 'x₁' && x1.axis === 'x' && x1.at[1] === 16000, `the copy is a guide x₁ on the axis (${x1?.name} ${JSON.stringify(x1?.at)})`);
+  check((await frame.locator('[data-axes-handle="slide"]').count()) === 2, 'the new copy is selected, with a handle on each side');
+
+  // Slide it across itself (north, toward the house) by the side handle higher on screen, then turn it by its head
+  const s = await (async () => {
+    const r = await frame.evaluate(
+      () =>
+        [...document.querySelectorAll('[data-axes-handle="slide"]')]
+          .map(e => e.getBoundingClientRect())
+          .map(b => [b.x + b.width / 2, b.y + b.height / 2])
+          .sort((a, b) => a[1] - b[1])[0],
+    );
+    const f = await page.locator('iframe').first().boundingBox();
+    return [f.x + r[0], f.y + r[1]];
+  })();
+  const y = await along('y', 0.15);
+  const o2 = await pos('[data-axes-origin]');
+  await drag(page, s, [s[0] - (y[0] - o2[0]), s[1] - (y[1] - o2[1])]);
+  [x1] = await guides();
+  check(x1.at[1] < 16000 && x1.at[0] === 9000, `the side handle slides it across itself (${JSON.stringify(x1.at)})`);
+  await page.screenshot({ path: `${OUT}/axes-3d-slid.png` });
+  const tip = await pos('[data-axes-handle="turn"]');
+  await drag(page, tip, [tip[0] - 40, tip[1] - 160], 16);
+  [x1] = await guides();
+  const deg = (Math.atan2(x1.dir[1], x1.dir[0]) * 180) / Math.PI;
+  check(Math.abs(Math.round(deg / 15) * 15 - deg) < 0.01 && Math.abs(deg) > 1 && x1.dir[2] === 0, `the head turns it level in 15° steps (${deg.toFixed(2)}°)`);
+
+  // A z copy tips over like a fan
+  await page.mouse.click(...(await pos('[data-axes-origin]')));
+  await page.getByRole('button', { name: '完成' }).click();
+  await page.mouse.click(...(await along('z', 0.4)));
+  await page.waitForTimeout(400);
+  await frame.locator('[data-axes-clone="z"]').click();
+  await page.waitForTimeout(500);
+  const ztip = await pos('[data-axes-handle="turn"]');
+  const xHead = await along('x', 0.5);
+  await drag(page, ztip, xHead, 16);
+  const z1 = (await guides()).find(g => g.name === 'z₁');
+  const tilt = (Math.acos(z1.dir[2]) * 180) / Math.PI;
+  check(tilt > 1 && Math.abs(Math.round(tilt / 15) * 15 - tilt) < 0.05, `the z copy tips over in 15° steps (${tilt.toFixed(1)}°)`);
+  await page.screenshot({ path: `${OUT}/axes-3d-fan.png` });
   check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 });
 
-test('axes on a phone', async ({ browser: b }) => {
+test('axes in 3D on a phone', async ({ browser: b }) => {
   test.setTimeout(180_000);
   const context = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  const { at, axes, frame } = await open(page);
+  const { frame, pos, along, origin, guides } = await open(page, true);
   const cdp = await context.newCDPSession(page);
   const touch = (type, points) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) });
   const swipe = async (from, to, steps = 10) => {
     await touch('touchStart', [from]);
     for (let i = 1; i <= steps; i++) await touch('touchMove', [[from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps]]);
   };
-  const o = await at(0, 0);
-  await page.touchscreen.tap(...o);
-  await page.waitForTimeout(400);
-  check((await frame.locator('[data-axes-edit]').count()) === 1, 'a tap on the origin knob selects the axes');
-
-  // One finger moves the origin
-  await swipe(o, [o[0] + 60, o[1] + 40]);
-  await touch('touchEnd', []);
+  await page.touchscreen.tap(...(await pos('[data-axes-origin]')));
   await page.waitForTimeout(500);
-  const moved = await axes();
-  check(moved !== 'world', `a finger drags the origin (${moved})`);
+  check((await frame.locator('[data-axes-handle="origin"]').count()) === 1, 'a tap on the origin enters move mode');
+  const h = await pos('[data-axes-handle="origin"]');
+  const toward = await along('x', 0.3);
+  await swipe(h, toward);
+  await touch('touchEnd', []);
+  await page.waitForTimeout(600);
+  const moved = await origin();
+  check(moved !== '9000,16000', `a finger drags the origin (${moved})`);
 
-  // A second finger calls the drag off
-  const o3 = await at(...moved.split('@')[0].split(',').map(Number));
-  await swipe(o3, [o3[0] + 50, o3[1]], 6);
+  // Copy x with taps, then slide the copy with a finger
+  await page.getByRole('button', { name: '完成' }).tap({ timeout: 5000 });
+  await page.waitForTimeout(400);
+  await page.touchscreen.tap(...(await along('x', 0.7)));
+  await page.waitForTimeout(500);
+  await frame.locator('[data-axes-clone="x"]').tap({ timeout: 5000 });
+  await page.waitForTimeout(600);
+  const [x1] = await guides();
+  check(x1?.name === 'x₁', `a tap copies x (${x1?.name})`);
+  const s = await pos('[data-axes-handle="slide"]');
+  await swipe(s, [s[0], s[1] - 60]);
+  await touch('touchEnd', []);
+  await page.waitForTimeout(600);
+  const [after] = await guides();
+  check(after.at[1] !== x1.at[1] && after.at[0] === x1.at[0], `a finger slides the copy across itself (${JSON.stringify(after.at)})`);
+  await page.screenshot({ path: `${OUT}/axes-3d-phone.png` });
+
+  // A second finger calls a drag off
+  await page.touchscreen.tap(...(await pos('[data-axes-origin]')));
+  await page.waitForTimeout(500);
+  const h2 = await pos('[data-axes-handle="origin"]');
+  await swipe(h2, [h2[0] + 40, h2[1]], 6);
   await touch('touchStart', [
-    [o3[0] + 50, o3[1]],
-    [o3[0] + 150, o3[1] + 150],
+    [h2[0] + 40, h2[1]],
+    [h2[0] + 140, h2[1] + 140],
   ]);
   await touch('touchMove', [
-    [o3[0] + 60, o3[1]],
-    [o3[0] + 170, o3[1] + 170],
+    [h2[0] + 50, h2[1]],
+    [h2[0] + 160, h2[1] + 160],
   ]);
   await touch('touchEnd', []);
-  await page.waitForTimeout(500);
-  check((await axes()) === moved, `a second finger cancels the drag (${await axes()})`);
+  await page.waitForTimeout(600);
+  check((await origin()) === moved, `a second finger cancels the drag (${await origin()})`);
 
-  // Done, then back in from the ⋯ menu
-  await page.getByRole('button', { name: '完成' }).tap();
-  await page.waitForTimeout(300);
-  check((await frame.locator('[data-axes-edit]').count()) === 0, 'done puts the handles away');
-  await page.getByRole('button', { name: '更多' }).tap();
-  await page.getByRole('menuitem', { name: '编辑坐标轴' }).tap();
-  await page.waitForTimeout(400);
-  check((await frame.locator('[data-axes-edit]').count()) === 1, 'the ⋯ menu selects the axes too');
-
-  // A finger on the turning knob turns them
-  const knob = await frame.evaluate(() => {
-    const r = document.querySelector('[data-axes-handle="turn"]').getBoundingClientRect();
-    return [r.x + r.width / 2, r.y + r.height / 2];
-  });
-  const iframe = await page.locator('iframe').first().boundingBox();
-  const k = [iframe.x + knob[0], iframe.y + knob[1]];
-  const len = k[0] - o3[0];
-  await swipe(k, [o3[0], o3[1] + len], 12);
-  await touch('touchEnd', []);
-  await page.waitForTimeout(500);
-  check((await axes()).endsWith('@90'), `a finger turns them (${await axes()})`);
-
-  // A finger drags a guide off red (now pointing down the screen)
-  const off = [o3[0], o3[1] + len * 1.6];
-  await swipe(off, [off[0] + 80, off[1]], 10);
-  await touch('touchEnd', []);
-  await page.waitForTimeout(500);
-  const gs = (await page.evaluate(async () => (await window.artifact.call('find_objects', { type: 'guide' })).result)) ?? [];
-  check(gs.length === 1, `a finger drags a guide off an axis (${gs.length})`);
-  await page.screenshot({ path: `${OUT}/axes-phone.png` });
   check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 });

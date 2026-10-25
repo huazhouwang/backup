@@ -1009,13 +1009,13 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Place furniture",
   },
   {
-    "description": "Draw a guide (a construction line, or a point) to line things up with; it is not part of the building. A line runs without end through at along direction: "x" (east–west), "y" (north–south), "z" (up) or a vector [dx, dy, dz]. Heights: height above the floor of level (default the ground floor), e.g. a sill line.",
+    "description": "Draw a guide (a construction line, or a point) to line things up with; it is not part of the building. A line runs without end through at along direction: "x" (east–west), "y" (north–south), "z" (up) or a vector [dx, dy, dz]. Heights: height above the floor of level (default the ground floor), e.g. a sill line. axis copies a model axis (named x₁, y₁, z₁ …): by default through the axes origin along that axis.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {
         "at": {
-          "description": "[x, y] in mm; x points east, y points south",
+          "description": "Plan point (default the axes origin)",
           "items": false,
           "maxItems": 2,
           "minItems": 2,
@@ -1028,6 +1028,15 @@ exports[`capability descriptions are stable 1`] = `
             },
           ],
           "type": "array",
+        },
+        "axis": {
+          "description": "Copy this model axis",
+          "enum": [
+            "x",
+            "y",
+            "z",
+          ],
+          "type": "string",
         },
         "direction": {
           "anyOf": [
@@ -1048,7 +1057,6 @@ exports[`capability descriptions are stable 1`] = `
               "type": "array",
             },
           ],
-          "default": "x",
         },
         "height": {
           "description": "Height above that level’s floor (mm)",
@@ -1067,9 +1075,6 @@ exports[`capability descriptions are stable 1`] = `
           "type": "string",
         },
       },
-      "required": [
-        "at",
-      ],
       "type": "object",
     },
     "kind": "edit",
@@ -1079,7 +1084,7 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Add a guide",
   },
   {
-    "description": "Move a guide: at for its new plan point (and level/height for its height), or by for an offset [dx, dy] or [dx, dy, dz].",
+    "description": "Move a guide: at for its new plan point (and level/height for its height), or by for an offset [dx, dy] or [dx, dy, dz]; direction turns a line ("x", "y", "z" or a vector).",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1106,6 +1111,26 @@ exports[`capability descriptions are stable 1`] = `
           "maxItems": 3,
           "minItems": 2,
           "type": "array",
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "x",
+                "y",
+                "z",
+              ],
+              "type": "string",
+            },
+            {
+              "items": {
+                "type": "number",
+              },
+              "maxItems": 3,
+              "minItems": 2,
+              "type": "array",
+            },
+          ],
         },
         "guide": {
           "type": "string",
@@ -1155,14 +1180,11 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Remove guides",
   },
   {
-    "description": "Move or turn the model axes people draw and place along: origin a plan point, angle the red axis clockwise from east (degrees); reset: true puts them back on the world axes. Coordinates in every capability stay world coordinates.",
+    "description": "Move the model axes' origin to a plan point on the ground (the axes stay x east, y south, z up); reset: true puts it back on the house's top-left corner. Coordinates in every capability stay world coordinates.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {
-        "angle": {
-          "type": "number",
-        },
         "origin": {
           "description": "[x, y] in mm; x points east, y points south",
           "items": false,

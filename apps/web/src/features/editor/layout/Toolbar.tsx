@@ -1,13 +1,11 @@
 import { Link } from '@tanstack/react-router';
-import { customAxes } from '@plinth/core';
-import { ArrowLeftIcon, Axis3dIcon, DownloadIcon, EllipsisIcon, ImageIcon, LayoutPanelLeftIcon, Redo2Icon, Share2Icon, Undo2Icon } from 'lucide-react';
+import { ArrowLeftIcon, DownloadIcon, EllipsisIcon, ImageIcon, LayoutPanelLeftIcon, Redo2Icon, Share2Icon, Undo2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { roleLabel } from '@/lib/api';
 import { m } from '@/lib/i18n';
 import { useEditor } from '../store';
-import { useRun } from '../panels/common';
 import { download } from '@/lib/download';
 import { SaveStatus } from './SaveStatus';
 
@@ -30,9 +28,6 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
   const redo = useEditor(s => s.redo);
   const canEdit = useEditor(s => s.canEdit());
   const session = useEditor(s => s.session);
-  const run = useRun();
-  const select = useEditor(s => s.select);
-  const setAxesEdit = useEditor(s => s.setAxesEdit);
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(project, null, 1)], { type: 'application/json' });
@@ -86,22 +81,6 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
               <LayoutPanelLeftIcon /> {LAYER_LABELS[k][view.layers[k] ? 1 : 0]()}
             </DropdownMenuItem>
           ))}
-          {canEdit && view.mode === '2d' && (
-            <DropdownMenuItem
-              onClick={() => {
-                if (!view.layers.axes) setView({ layers: { ...view.layers, axes: true } });
-                select([]);
-                setAxesEdit('handles');
-              }}
-            >
-              <Axis3dIcon /> {m.axes_edit()}
-            </DropdownMenuItem>
-          )}
-          {canEdit && customAxes(project) && (
-            <DropdownMenuItem onClick={() => void run('axes_set', { reset: true })}>
-              <Axis3dIcon /> {m.axes_reset()}
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

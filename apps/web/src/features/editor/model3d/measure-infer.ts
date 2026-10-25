@@ -1,29 +1,19 @@
 /**
  * Where the 3D tape measure's next point goes, inferred as SketchUp does: an endpoint of the face under the pointer wins when it
  * is a few pixels away; else, once a first point is set, a direction close to one of the three axes on screen locks the point
- * onto that axis through the first point (red x, green the plan's y, blue up; red and green turned with the model axes, see Axes in
- * the core schema); else the point under the pointer. With Shift the axis already locked stays locked wherever the pointer goes.
+ * onto that axis through the first point (red x, green the plan's y, blue up); else the point under the pointer. With Shift the
+ * axis already locked stays locked wherever the pointer goes.
  */
-import type { AxesFrame } from '@plinth/core';
 import * as THREE from 'three';
 
 export type Axis = 'x' | 'y' | 'z';
 
-export type AxisSet = Record<Axis, THREE.Vector3>;
-
 /** The axes in three.js coordinates: the plan's x, the plan's y (three's z) and up (three's y) */
-export const AXES: AxisSet = {
+export const AXES: Record<Axis, THREE.Vector3> = {
   x: new THREE.Vector3(1, 0, 0),
   y: new THREE.Vector3(0, 0, 1),
   z: new THREE.Vector3(0, 1, 0),
 };
-
-/** The model axes in three.js coordinates */
-export const axesIn3D = (f: AxesFrame): AxisSet => ({
-  x: new THREE.Vector3(f.x[0], 0, f.x[1]),
-  y: new THREE.Vector3(f.y[0], 0, f.y[1]),
-  z: AXES.z,
-});
 
 /** How close the pointer must be to an endpoint, in pixels */
 export const SNAP_PX = 14;
@@ -53,14 +43,14 @@ export function nearestOnAxis(from: THREE.Vector3, axis: THREE.Vector3, ray: THR
 }
 
 /** The axis the pointer follows on screen from the first point, if any */
-export function axisOnScreen(from: THREE.Vector3, pointer: THREE.Vector2, screen: Screen, axes: AxisSet = AXES): Axis | null {
+export function axisOnScreen(from: THREE.Vector3, pointer: THREE.Vector2, screen: Screen): Axis | null {
   const a = screen(from);
   const v = pointer.clone().sub(a);
   const len = v.length();
   if (len < AXIS_PX * 1.5) return null;
   let best: { axis: Axis; off: number } | null = null;
-  for (const axis of Object.keys(axes) as Axis[]) {
-    const s = screen(from.clone().add(axes[axis])).sub(a);
+  for (const axis of Object.keys(AXES) as Axis[]) {
+    const s = screen(from.clone().add(AXES[axis])).sub(a);
     // An axis seen end on has no direction on screen
     if (s.length() < 1e-3) continue;
     s.normalize();
@@ -93,40 +83,32 @@ export function infer(opts: {
   held: Axis | null;
   /** Guides to snap to (three.js coordinates) */
   guides?: GuideRef[];
-  /** The model axes */
-  axes?: AxisSet;
 }): Inferred | null {
-  const { ray, pointer, screen, hit, from, held, guides = [], axes = AXES } = opts;
-  const along = (a: THREE.Vector3, b: THREE.Vector3) => alongAxis(a, b, axes);
+  const { ray, pointer, screen, hit, from, held, guides = [] } = opts;
   if (from && held) {
-    const p = nearestOnAxis(from, axes[held], ray);
+    const p = nearestOnAxis(from, AXES[held], ray);
     if (p) return { point: p, axis: held, endpoint: false };
   }
   const corner = hit && nearestCorner(hit.corners, pointer, screen);
-  if (corner) return { point: corner, axis: from ? along(from, corner) : null, endpoint: true };
+  if (corner) return { point: corner, axis: from ? alongAxis(from, corner) : null, endpoint: true };
   const onGuide = nearestOnGuides(guides, ray, pointer, screen);
-  if (onGuide) return { point: onGuide, axis: from ? along(from, onGuide) : null, endpoint: true };
+  if (onGuide) return { point: onGuide, axis: from ? alongAxis(from, onGuide) : null, endpoint: true };
   if (from) {
-    const axis = axisOnScreen(from, pointer, screen, axes);
-    const p = axis && nearestOnAxis(from, axes[axis], ray);
+    const axis = axisOnScreen(from, pointer, screen);
+    const p = axis && nearestOnAxis(from, AXES[axis], ray);
     if (axis && p) return { point: p, axis, endpoint: false };
   }
-  return hit ? { point: hit.point.clone(), axis: from ? along(from, hit.point) : null, endpoint: false } : null;
+  return hit ? { point: hit.point.clone(), axis: from ? alongAxis(from, hit.point) : null, endpoint: false } : null;
 }
 
 /** The axis a segment runs along, if it does (within a millimetre) */
-export function alongAxis(a: THREE.Vector3, b: THREE.Vector3, axes: AxisSet = AXES): Axis | null {
+export function alongAxis(a: THREE.Vector3, b: THREE.Vector3): Axis | null {
   const d = b.clone().sub(a);
-  const len = d.length();
-  if (len < 1e-3) return null;
-  for (const axis of Object.keys(axes) as Axis[])
-    if (
-      d
-        .clone()
-        .sub(axes[axis].clone().multiplyScalar(d.dot(axes[axis])))
-        .length() < 1e-3
-    )
-      return axis;
+  if (d.length() < 1e-3) return null;
+  const off = (u: number, v: number) => Math.abs(u) < 1e-3 && Math.abs(v) < 1e-3;
+  if (off(d.y, d.z)) return 'x';
+  if (off(d.x, d.y)) return 'y';
+  if (off(d.x, d.z)) return 'z';
   return null;
 }
 
@@ -161,12 +143,7 @@ const EDGE_PX = 10;
  * The edge of the face under the pointer that a guide can be dragged off: one running along an axis (a slab edge, a wall top),
  * within EDGE_PX on screen; its point nearest the pointer and its direction
  */
-export function edgeNear(
-  corners: THREE.Vector3[],
-  pointer: THREE.Vector2,
-  screen: Screen,
-  axes: AxisSet = AXES,
-): { at: THREE.Vector3; dir: THREE.Vector3 } | null {
+export function edgeNear(corners: THREE.Vector3[], pointer: THREE.Vector2, screen: Screen): { at: THREE.Vector3; dir: THREE.Vector3 } | null {
   let best: { at: THREE.Vector3; dir: THREE.Vector3; d: number } | null = null;
   for (let i = 0; i < corners.length; i++) {
     const a = corners[i],
@@ -175,7 +152,7 @@ export function edgeNear(
     const len = dir.length();
     if (len < 1e-3) continue;
     dir.divideScalar(len);
-    if (Math.max(Math.abs(dir.x), Math.abs(dir.y), Math.abs(dir.z)) < 1 - 1e-4 && !Object.values(axes).some(u => Math.abs(dir.dot(u)) > 1 - 1e-4)) continue;
+    if (Math.max(Math.abs(dir.x), Math.abs(dir.y), Math.abs(dir.z)) < 1 - 1e-4) continue;
     const sa = screen(a),
       sb = screen(b);
     const s = sb.clone().sub(sa);

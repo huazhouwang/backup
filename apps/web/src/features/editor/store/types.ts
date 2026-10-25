@@ -85,8 +85,8 @@ export interface EditorState {
   northRequest: number;
   /** The guide the tape measure just drew, whose offset can be typed exactly: moved to origin + normal × distance */
   guideEdit: { id: string; origin: Point; normal: Point; distance: number } | null;
-  /** The model axes are selected in the plan: their handles show ('handles'), or a tap on a wall turns red along it ('align') */
-  axesEdit: 'handles' | 'align' | null;
+  /** The model axes in 3D: the origin in move mode, or an axis tapped (offering to copy it as a guide) */
+  axesEdit: 'origin' | 'x' | 'y' | 'z' | null;
 }
 
 export interface EditorActions {

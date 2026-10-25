@@ -1,7 +1,6 @@
 /**
  * The add palette, as SketchUp's component browser: doors and windows, and the design's furniture types by group. Picking one
- * enters place mode (the plan shows where it goes; a click puts it down). And the hint shown while placing or measuring, or with
- * the axes selected.
+ * enters place mode (the plan shows where it goes; a click puts it down). And the hint shown while placing or measuring.
  */
 import type { OpeningKind } from '@plinth/core';
 import { PlusIcon } from 'lucide-react';
@@ -65,7 +64,10 @@ export function AddMenu() {
   );
 }
 
-/** While placing, measuring, drawing a section, walking or looking at a section plane: what to do, and a way out */
+/**
+ * While placing, measuring, drawing a section, walking, looking at a section plane, or moving the axes' origin or a copy of an axis:
+ * what to do, and a way out
+ */
 export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
@@ -80,6 +82,10 @@ export function ToolHint({ className }: { className?: string }) {
   const furniture = useEditor(s => s.project.library.furniture);
   const axesEdit = useEditor(s => s.axesEdit);
   const setAxesEdit = useEditor(s => s.setAxesEdit);
+  const moved = useEditor(s => !!s.project.axes);
+  const copySelected = useEditor(s => s.view.selection.length === 1 && !!s.project.guides?.find(g => g.id === s.view.selection[0])?.axis && s.canEdit());
+  const select = useEditor(s => s.select);
+  const run = useRun();
   let text: string | null = null;
   if (placing && mode === '2d') {
     const name = placing.kind === 'furniture' ? (furniture[placing.type]?.name ?? placing.type) : kindLabel(placing.opening);
@@ -87,14 +93,25 @@ export function ToolHint({ className }: { className?: string }) {
   } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
   else if (sectioning && mode === '2d') text = m.section_hint();
   else if (walking && mode === '3d') text = matchMedia('(pointer: coarse)').matches ? m.model3d_hint_walk_touch() : m.model3d_hint_walk();
-  // The axes selected in the plan: their angle to type, aligning to a wall, resetting them
-  if (!text && axesEdit && mode === '2d')
+  // The axes' origin in move mode, or a copy of an axis selected, in 3D: what the handles do
+  if (!text && mode === '3d' && (axesEdit === 'origin' || copySelected))
     return (
       <div className={className}>
         <div className="flex flex-wrap items-center gap-2 rounded-lg bg-background px-3 py-1.5 text-sm shadow-md ring-1 ring-foreground/10">
-          <span>{axesEdit === 'align' ? m.axes_hint_align() : m.axes_hint()}</span>
-          <AxesControls />
-          <Button size="xs" variant="outline" onClick={() => setAxesEdit(null)}>
+          <span>{axesEdit === 'origin' ? m.axes_hint_origin() : m.axes_hint_copy()}</span>
+          {axesEdit === 'origin' && moved && (
+            <Button size="xs" variant="ghost" onClick={() => void run('axes_set', { reset: true })}>
+              {m.axes_reset()}
+            </Button>
+          )}
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={() => {
+              setAxesEdit(null);
+              if (copySelected) select([]);
+            }}
+          >
             {m.axes_done()}
           </Button>
         </div>
@@ -180,46 +197,6 @@ function GuideControls() {
           }}
         >
           {m.guide_clear()}
-        </Button>
-      )}
-    </>
-  );
-}
-
-/** With the axes selected: the red axis's angle to type, a tap on a wall to align it, and putting the axes back */
-function AxesControls() {
-  const axes = useEditor(s => s.project.axes);
-  const axesEdit = useEditor(s => s.axesEdit);
-  const setAxesEdit = useEditor(s => s.setAxesEdit);
-  const run = useRun();
-  const angle = axes?.angle ?? 0;
-  const [value, setValue] = useState('');
-  useEffect(() => setValue(String(angle)), [angle]);
-  const apply = () => {
-    const a = Number(value);
-    if (value.trim() && Number.isFinite(a) && a !== angle) void run('axes_set', { angle: a });
-  };
-  return (
-    <>
-      <label className="flex items-center gap-1 text-muted-foreground">
-        {m.axes_angle()}
-        <Input
-          className="h-6 w-16 px-1.5 text-right"
-          inputMode="decimal"
-          value={value}
-          aria-label={m.axes_angle()}
-          onChange={e => setValue(e.target.value.replace(/[^\d.-]/g, ''))}
-          onKeyDown={e => e.key === 'Enter' && apply()}
-          onBlur={apply}
-        />
-        °
-      </label>
-      <Button size="xs" variant={axesEdit === 'align' ? 'default' : 'outline'} onClick={() => setAxesEdit(axesEdit === 'align' ? 'handles' : 'align')}>
-        {m.axes_align()}
-      </Button>
-      {axes && (
-        <Button size="xs" variant="ghost" onClick={() => void run('axes_set', { reset: true })}>
-          {m.axes_reset()}
         </Button>
       )}
     </>
