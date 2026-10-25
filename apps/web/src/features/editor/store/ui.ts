@@ -8,7 +8,19 @@ import type { EditorActions, EditorState } from './types';
 
 type Ui = Pick<
   EditorState,
-  'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'measuring' | 'sectioning' | 'camera3d' | 'sun' | 'northRequest'
+  | 'compare'
+  | 'capture'
+  | 'ask'
+  | 'fitRequest'
+  | 'leave3D'
+  | 'planUntil3D'
+  | 'placing'
+  | 'measuring'
+  | 'sectioning'
+  | 'camera3d'
+  | 'sun'
+  | 'northRequest'
+  | 'guideEdit'
 > &
   Pick<
     EditorActions,
@@ -23,6 +35,7 @@ type Ui = Pick<
     | 'setCamera3d'
     | 'setSun'
     | 'faceNorth'
+    | 'setGuideEdit'
   >;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
@@ -39,6 +52,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   // Today at three in the afternoon
   sun: { day: dayOfYear(new Date()), minutes: 15 * 60 },
   northRequest: 0,
+  guideEdit: null,
 
   setCompare(on) {
     set({ compare: on });
@@ -66,7 +80,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   },
 
   setMeasuring(measuring) {
-    set({ measuring, ...(measuring ? { placing: null, sectioning: false } : {}) });
+    set({ measuring, guideEdit: null, ...(measuring ? { placing: null, sectioning: false } : {}) });
   },
 
   setSectioning(sectioning) {
@@ -83,5 +97,9 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   faceNorth() {
     set({ northRequest: Date.now() });
+  },
+
+  setGuideEdit(guideEdit) {
+    set({ guideEdit });
   },
 });

@@ -15,6 +15,7 @@ const KIND_EN: Record<Kind, string> = {
   furniture: 'furniture',
   element: 'element',
   constraint: 'constraint',
+  guide: 'guide',
 };
 export const kindText = (k: Kind) => text(`err_kind_${k}`, KIND_EN[k]);
 /** Join a list for a message: “a、b” in Chinese, "a, b" in English */
@@ -78,7 +79,7 @@ export function getOpening(p: Project, ref: string) {
 
 /** Find an object of any type by name or ID */
 export function findAny(p: Project, ref: string): Id {
-  const kinds: Kind[] = ['space', 'wall', 'opening', 'furniture', 'element', 'level', 'constraint'];
+  const kinds: Kind[] = ['space', 'wall', 'opening', 'furniture', 'element', 'level', 'constraint', 'guide'];
   for (const k of kinds) {
     try {
       return resolve(p, k, ref).id;

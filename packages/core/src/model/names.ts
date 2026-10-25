@@ -18,6 +18,8 @@ export interface Vocabulary {
   roof: string;
   /** The opening a stair climbs through in the floor it reaches */
   stairOpening: string;
+  /** A guide, numbered: 参考线1 / Guide 1 */
+  guide: string;
   direction: Record<Direction, string>;
   /** Word for a wall of this kind: 墙 / 围墙 …, wall / fence … */
   wall: Record<WallKind, string>;
@@ -45,6 +47,7 @@ export const VOCABULARY: Record<ProjectLanguage, Vocabulary> = {
     level: i => ZH_LEVELS[i] ?? `${i + 1}层`,
     roof: '屋顶',
     stairOpening: '楼梯洞口',
+    guide: '参考线',
     direction: { north: '北', south: '南', east: '东', west: '西' },
     wall: { bearing: '墙', partition: '墙', fence: '围墙', parapet: '女儿墙', railing: '栏杆' },
     opening: { door: '门', 'sliding-door': '推拉门', gate: '大门', window: '窗', opening: '洞口' },
@@ -59,6 +62,7 @@ export const VOCABULARY: Record<ProjectLanguage, Vocabulary> = {
     level: i => `Level ${i + 1}`,
     roof: 'Roof',
     stairOpening: 'Stair opening',
+    guide: 'Guide',
     direction: { north: 'North', south: 'South', east: 'East', west: 'West' },
     wall: { bearing: 'wall', partition: 'wall', fence: 'fence', parapet: 'parapet', railing: 'railing' },
     opening: { door: 'Door', 'sliding-door': 'Sliding door', gate: 'Gate', window: 'Window', opening: 'Opening' },

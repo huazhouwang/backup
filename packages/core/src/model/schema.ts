@@ -13,7 +13,7 @@ import type { Material } from '../looks/material.js';
 import type { Recipe } from '../looks/script.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 9 as const;
+export const SCHEMA_VERSION = 10 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -47,6 +47,8 @@ export interface Project {
   elements: Element[];
   furniture: Furniture[];
   constraints: Constraint[];
+  /** Guides drawn to line things up with (added in v10) */
+  guides: Guide[];
   brief: Brief;
   decisions: Decision[];
   library: Library;
@@ -180,6 +182,21 @@ export interface Furniture {
 
 export const CONSTRAINT_TYPES = ['align', 'center', 'size-target', 'spacing', 'reference', 'rule'] as const;
 export type ConstraintType = (typeof CONSTRAINT_TYPES)[number];
+
+/**
+ * A guide, as SketchUp's: a construction line or point people draw (usually with the tape measure) to line things up with; not
+ * part of the building, so no rule checks it. A line runs through `at` along `dir` without end; a point marks `at`. `at` is a
+ * plan point and an absolute height (mm above the ground floor's level, unlike other heights); a line with a level direction
+ * (dir z = 0) shows in the plan on every level, as the vertical plane it stands for.
+ */
+export interface Guide {
+  id: Id;
+  name: string;
+  kind: 'line' | 'point';
+  at: [Mm, Mm, Mm];
+  /** A line's direction, a unit vector (x east, y south, z up) */
+  dir?: [number, number, number];
+}
 
 /** Constraints: placeholder in v1; solving is roadmap step 3 */
 export interface Constraint {

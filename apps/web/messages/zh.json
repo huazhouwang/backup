@@ -804,5 +804,21 @@
   "sun_time": "时间",
   "sun_now": "现在",
   "sun_position": "太阳高度 {elevation}°，方位 {azimuth}°",
-  "sun_below": "太阳在地平线下"
+  "sun_below": "太阳在地平线下",
+  "editor_show_axes": "显示坐标轴",
+  "editor_hide_axes": "隐藏坐标轴",
+  "core_cap_guide_add": "拉参考线",
+  "core_cap_guide_move": "移动参考线",
+  "core_cap_guide_remove": "删除参考线",
+  "core_log_guide_add": "拉参考线",
+  "core_log_guide_move": "移动{guide}",
+  "core_log_guide_remove": "删除参考线",
+  "core_log_guide_clear": "清除参考线",
+  "core_err_guide_direction": "参考线需要一个方向",
+  "core_err_kind_guide": "参考线",
+  "editor_show_guides": "显示参考线",
+  "editor_hide_guides": "隐藏参考线",
+  "guide_offset": "参考线偏移",
+  "guide_clear": "清除全部参考线",
+  "measure_on_edge": "在边线上，拖出参考线"
 }

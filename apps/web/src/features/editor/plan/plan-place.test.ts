@@ -46,3 +46,21 @@ describe('turning furniture with its handle', () => {
     expect(h.handle).toEqual([x, y - f.size.d / 2 - 300]);
   });
 });
+
+describe('placing onto guides', () => {
+  it('furniture goes onto a guide crossing', async () => {
+    const { placeCall } = await import('./plan-place');
+    const { migrate } = await import('@plinth/core');
+    const sample = (await import('../../../../../../samples/wushi-10/project.json')).default;
+    const p = migrate(sample);
+    const g = {
+      ...p,
+      guides: [
+        { id: 'g01', name: 'a', kind: 'line' as const, at: [9000, 2000, 0] as [number, number, number], dir: [0, 1, 0] as [number, number, number] },
+        { id: 'g02', name: 'b', kind: 'line' as const, at: [0, 2500, 0] as [number, number, number], dir: [1, 0, 0] as [number, number, number] },
+      ],
+    };
+    const r = placeCall(g, 'L1', { kind: 'furniture', type: 'chair' }, [9040, 2470], 100)!;
+    expect(r.input.position).toEqual([9000, 2500]);
+  });
+});

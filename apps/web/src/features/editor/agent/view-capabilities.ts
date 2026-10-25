@@ -13,8 +13,8 @@ export interface ViewState {
   selection: string[];
   highlight: string[];
   camera?: { position: [number, number, number]; target: [number, number, number] } | null;
-  /** cutaway: 3D shows only the current level and those below it, instead of the whole house */
-  layers: { furniture: boolean; dimensions: boolean; labels: boolean; cutaway: boolean };
+  /** cutaway: 3D shows only the current level and those below it, instead of the whole house; axes: the red, green and blue model axes; guides: the guides */
+  layers: { furniture: boolean; dimensions: boolean; labels: boolean; cutaway: boolean; axes: boolean; guides: boolean };
 }
 
 /** Implemented by the canvas and injected into CapabilityContext.host.view */
@@ -54,7 +54,7 @@ export const viewSet = defineRead({
   permission: 'read',
   runtime: 'browser',
   description:
-    'Switch between plan and 3D, change level, and toggle the furniture, dimensions and labels layers, and the 3D cutaway (only the current level and below; off shows the whole house).',
+    'Switch between plan and 3D, change level, and toggle the furniture, dimensions, labels, axes and guides layers, and the 3D cutaway (only the current level and below; off shows the whole house).',
   input: z.object({
     mode: z.enum(['2d', '3d']).optional(),
     level: z.string().optional().describe('Level ID or name'),
@@ -64,6 +64,8 @@ export const viewSet = defineRead({
         dimensions: z.boolean().optional(),
         labels: z.boolean().optional(),
         cutaway: z.boolean().optional().describe('3D: hide the levels above the current one'),
+        axes: z.boolean().optional().describe('The red, green and blue model axes through the origin'),
+        guides: z.boolean().optional(),
       })
       .optional(),
   }),

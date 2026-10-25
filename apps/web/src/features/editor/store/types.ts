@@ -81,6 +81,8 @@ export interface EditorState {
   sun: { day: number; minutes: number };
   /** Asks the 3D view to turn to look north (the time of the request) */
   northRequest: number;
+  /** The guide the tape measure just drew, whose offset can be typed exactly: moved to origin + normal × distance */
+  guideEdit: { id: string; origin: Point; normal: Point; distance: number } | null;
 }
 
 export interface EditorActions {
@@ -97,6 +99,7 @@ export interface EditorActions {
   setCamera3d(patch: Partial<Camera3D>): void;
   setSun(patch: Partial<EditorState['sun']>): void;
   faceNorth(): void;
+  setGuideEdit(g: EditorState['guideEdit']): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

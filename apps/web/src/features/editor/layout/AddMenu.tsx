@@ -4,12 +4,13 @@
  */
 import type { OpeningKind } from '@plinth/core';
 import { PlusIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 import { m } from '@/lib/i18n';
-import { kindLabel } from '../panels/common';
+import { kindLabel, useRun } from '../panels/common';
 import { useEditor } from '../store';
 
 const OPENINGS: OpeningKind[] = ['door', 'sliding-door', 'window', 'opening', 'gate'];
@@ -103,6 +104,7 @@ export function ToolHint({ className }: { className?: string }) {
     <div className={className}>
       <div className="flex items-center gap-2 rounded-lg bg-background px-3 py-1.5 text-sm shadow-md ring-1 ring-foreground/10">
         <span>{text}</span>
+        {measuring && <GuideControls />}
         <Button
           size="xs"
           variant="outline"
@@ -117,5 +119,53 @@ export function ToolHint({ className }: { className?: string }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/** With the tape measure: the offset of the guide just drawn, to type exactly, and clearing all the guides */
+function GuideControls() {
+  const edit = useEditor(s => s.guideEdit);
+  const setEdit = useEditor(s => s.setGuideEdit);
+  const count = useEditor(s => s.project.guides?.length ?? 0);
+  const canEdit = useEditor(s => s.canEdit());
+  const run = useRun();
+  const [value, setValue] = useState('');
+  useEffect(() => setValue(edit ? String(edit.distance) : ''), [edit]);
+  if (!canEdit || (!edit && !count)) return null;
+  const apply = async () => {
+    const d = Number(value);
+    if (!edit || !Number.isFinite(d) || d === edit.distance) return;
+    const at = [Math.round(edit.origin[0] + edit.normal[0] * d), Math.round(edit.origin[1] + edit.normal[1] * d)];
+    if ((await run('guide_move', { guide: edit.id, at })).ok) setEdit({ ...edit, distance: d });
+  };
+  return (
+    <>
+      {edit && (
+        <label className="flex items-center gap-1 text-muted-foreground">
+          {m.guide_offset()}
+          <Input
+            className="h-6 w-20 px-1.5 text-right"
+            inputMode="numeric"
+            value={value}
+            aria-label={m.guide_offset()}
+            onChange={e => setValue(e.target.value.replace(/[^\d-]/g, ''))}
+            onKeyDown={e => e.key === 'Enter' && void apply()}
+            onBlur={() => void apply()}
+          />
+          mm
+        </label>
+      )}
+      {count > 0 && (
+        <Button
+          size="xs"
+          variant="ghost"
+          onClick={async () => {
+            if ((await run('guide_remove', { all: true })).ok) setEdit(null);
+          }}
+        >
+          {m.guide_clear()}
+        </Button>
+      )}
+    </>
   );
 }

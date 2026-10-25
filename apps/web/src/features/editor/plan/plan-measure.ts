@@ -1,8 +1,9 @@
 /**
- * The tape measure in the plan, as SketchUp's: a point snaps to a wall corner or a furniture corner within a few pixels, else onto
- * a wall face, else stays where it is; with Shift the second point holds the first one's horizontal or vertical line.
+ * The tape measure in the plan, as SketchUp's: a point snaps to a wall corner, a furniture corner or a guide crossing within a few
+ * pixels, else onto a wall face or a guide, else stays where it is; with Shift the second point holds the first one's horizontal or vertical line.
  */
 import { furnitureFootprint, wallBody, type Point, type Project } from '@plinth/core';
+import { snapToGuides } from './plan-guides';
 
 /** The nearest point on segment ab to p, and its distance */
 function onSegment(p: Point, a: Point, b: Point): { q: Point; d: number } {
@@ -24,6 +25,10 @@ export function snapMeasure(p: Project, level: string, at: Point, tol: number): 
       const d = Math.hypot(c[0] - at[0], c[1] - at[1]);
       if (d <= tol && (!best || d < best.d)) best = { point: [c[0], c[1]], d };
     }
+  // Guides and where they cross count as corners and faces too
+  const guide = snapToGuides(p, at, tol);
+  const gd = guide ? Math.hypot(guide.point[0] - at[0], guide.point[1] - at[1]) : Infinity;
+  if (guide?.snapped === 'corner' && (!best || gd < best.d)) return guide;
   if (best) return { point: best.point, snapped: 'corner' };
   let face: { point: Point; d: number } | null = null;
   for (const ring of walls)
@@ -31,6 +36,7 @@ export function snapMeasure(p: Project, level: string, at: Point, tol: number): 
       const { q, d } = onSegment(at, ring[i], ring[(i + 1) % ring.length]);
       if (d <= tol && (!face || d < face.d)) face = { point: q, d };
     }
+  if (guide && (!face || gd < face.d)) return guide;
   if (face) return { point: face.point, snapped: 'face' };
   return { point: at, snapped: null };
 }

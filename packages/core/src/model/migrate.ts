@@ -40,6 +40,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   7: doc => ({ ...doc, levels: heightsFromElevations(doc.levels ?? []) }),
   // v9: a room marked as a slab opening that a stair arrives in becomes a room with floor, cut by a void the stair's size
   8: doc => fitStairOpenings(doc),
+  // v10 adds guides
+  9: doc => ({ ...doc, guides: doc.guides ?? [] }),
 };
 
 /**

@@ -64,3 +64,29 @@ describe('dragging in the plan', () => {
     expect((r.input.position as number[])[0] - f.size.w / 2).toBe(face);
   });
 });
+
+describe('snapping to guides', () => {
+  const w = wall(EAST_WALL);
+  const x = w.start[0];
+  // A guide along the wall, 1230 mm west of its centreline
+  const withGuide: Project = { ...p, guides: [{ id: 'g01', name: 'g', kind: 'line', at: [x - 1230, 0, 0], dir: [0, 1, 0] }] };
+
+  it('a wall drags onto a guide along it (its centreline or a face)', () => {
+    const r = dragCall(withGuide, w.id, [-1260, 0], TOL)!;
+    expect(r.input).toMatchObject({ direction: 'west', distance: 1230 });
+    const face = dragCall(withGuide, w.id, [-1230 + w.thickness / 2 + 20, 0], TOL)!;
+    expect(face.input).toMatchObject({ distance: 1230 - w.thickness / 2 });
+  });
+
+  it('furniture drags with an edge onto a guide', () => {
+    const f = p.furniture[0];
+    const box = (q: [number, number]) => q[0] - f.size.w / 2;
+    const target = 2000;
+    const g: Project = { ...p, guides: [{ id: 'g01', name: 'g', kind: 'line', at: [target, 0, 0], dir: [0, 1, 0] }] };
+    // Rotation 0 or 180: the footprint's west edge is position x − w/2
+    if (f.rotation % 180 !== 0) return;
+    const dx = target - box(f.position as [number, number]) + 30;
+    const r = dragCall(g, f.id, [dx, 0], TOL)!;
+    expect((r.input.position as number[])[0] - f.size.w / 2).toBe(target);
+  });
+});

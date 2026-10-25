@@ -54,7 +54,7 @@ export function createEditorStore(init: InitialProject, opts: { level?: string; 
       selection: [],
       highlight: opts.focus ?? [],
       camera: null,
-      layers: { furniture: true, dimensions: true, labels: true, cutaway: false },
+      layers: { furniture: true, dimensions: true, labels: true, cutaway: false, axes: true, guides: true },
     };
 
     return {

@@ -37,6 +37,8 @@ import { TintColors } from './feedback';
 import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { sunDirection, sunPosition } from '@/lib/solar';
+import { Axes3D } from './Axes3D';
+import { Guides3D } from './Guides3D';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
 import { Measure3D } from './Measure3D';
@@ -293,6 +295,8 @@ export function Model3D() {
           <SafariPinch />
           <Picker />
           <Measure3D />
+          {view.layers.axes && <Axes3D reach={span * 1.5} />}
+          {view.layers.guides && <Guides3D guides={project.guides ?? []} selected={sel} reach={span * 2} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

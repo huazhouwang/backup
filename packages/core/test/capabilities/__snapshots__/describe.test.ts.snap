@@ -17,7 +17,7 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Project overview",
   },
   {
-    "description": "Search walls, spaces, openings, furniture and elements by name keyword, type and level. Returns ID, name, type and level.",
+    "description": "Search walls, spaces, openings, furniture, elements and guides by name keyword, type and level. Returns ID, name, type and level.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -45,6 +45,7 @@ exports[`capability descriptions are stable 1`] = `
             "element",
             "level",
             "constraint",
+            "guide",
           ],
           "type": "string",
         },
@@ -1006,6 +1007,152 @@ exports[`capability descriptions are stable 1`] = `
     "permission": "reversible",
     "runtime": "any",
     "title": "Place furniture",
+  },
+  {
+    "description": "Draw a guide (a construction line, or a point) to line things up with; it is not part of the building. A line runs without end through at along direction: "x" (east–west), "y" (north–south), "z" (up) or a vector [dx, dy, dz]. Heights: height above the floor of level (default the ground floor), e.g. a sill line.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "at": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "x",
+                "y",
+                "z",
+              ],
+              "type": "string",
+            },
+            {
+              "items": {
+                "type": "number",
+              },
+              "maxItems": 3,
+              "minItems": 2,
+              "type": "array",
+            },
+          ],
+          "default": "x",
+        },
+        "height": {
+          "description": "Height above that level’s floor (mm)",
+          "type": "number",
+        },
+        "kind": {
+          "default": "line",
+          "enum": [
+            "line",
+            "point",
+          ],
+          "type": "string",
+        },
+        "level": {
+          "description": "Level ID or name the height is measured from",
+          "type": "string",
+        },
+      },
+      "required": [
+        "at",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "guide_add",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Add a guide",
+  },
+  {
+    "description": "Move a guide: at for its new plan point (and level/height for its height), or by for an offset [dx, dy] or [dx, dy, dz].",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "at": {
+          "description": "[x, y] in mm; x points east, y points south",
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number",
+            },
+            {
+              "type": "number",
+            },
+          ],
+          "type": "array",
+        },
+        "by": {
+          "items": {
+            "type": "number",
+          },
+          "maxItems": 3,
+          "minItems": 2,
+          "type": "array",
+        },
+        "guide": {
+          "type": "string",
+        },
+        "height": {
+          "type": "number",
+        },
+        "level": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "guide",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "guide_move",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Move a guide",
+  },
+  {
+    "description": "Remove guides by ID or name, or all of them with all: true.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "all": {
+          "default": false,
+          "type": "boolean",
+        },
+        "guides": {
+          "default": [],
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "guide_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Remove guides",
   },
   {
     "description": "Move or rotate furniture: position for an absolute location or by for a relative offset; rotation for the new angle.",

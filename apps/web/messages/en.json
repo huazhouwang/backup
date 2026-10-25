@@ -804,5 +804,21 @@
   "sun_time": "Time",
   "sun_now": "Now",
   "sun_position": "Sun {elevation}° high, bearing {azimuth}°",
-  "sun_below": "The sun is below the horizon"
+  "sun_below": "The sun is below the horizon",
+  "editor_show_axes": "Show axes",
+  "editor_hide_axes": "Hide axes",
+  "core_cap_guide_add": "Add a guide",
+  "core_cap_guide_move": "Move a guide",
+  "core_cap_guide_remove": "Remove guides",
+  "core_log_guide_add": "Add a guide",
+  "core_log_guide_move": "Move {guide}",
+  "core_log_guide_remove": "Remove guides",
+  "core_log_guide_clear": "Clear the guides",
+  "core_err_guide_direction": "A guide line needs a direction",
+  "core_err_kind_guide": "guide",
+  "editor_show_guides": "Show guides",
+  "editor_hide_guides": "Hide guides",
+  "guide_offset": "Guide offset",
+  "guide_clear": "Clear all guides",
+  "measure_on_edge": "On edge: drag out a guide"
 }

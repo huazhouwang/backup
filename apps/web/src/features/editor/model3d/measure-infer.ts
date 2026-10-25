@@ -25,6 +25,8 @@ export interface Inferred {
   point: THREE.Vector3;
   axis: Axis | null;
   endpoint: boolean;
+  /** On an edge a guide can be dragged off (before the first point) */
+  edge?: boolean;
 }
 
 /** A point on the screen in pixels */
@@ -79,14 +81,18 @@ export function infer(opts: {
   hit: { point: THREE.Vector3; corners: THREE.Vector3[] } | null;
   from: THREE.Vector3 | null;
   held: Axis | null;
+  /** Guides to snap to (three.js coordinates) */
+  guides?: GuideRef[];
 }): Inferred | null {
-  const { ray, pointer, screen, hit, from, held } = opts;
+  const { ray, pointer, screen, hit, from, held, guides = [] } = opts;
   if (from && held) {
     const p = nearestOnAxis(from, AXES[held], ray);
     if (p) return { point: p, axis: held, endpoint: false };
   }
   const corner = hit && nearestCorner(hit.corners, pointer, screen);
   if (corner) return { point: corner, axis: from ? alongAxis(from, corner) : null, endpoint: true };
+  const onGuide = nearestOnGuides(guides, ray, pointer, screen);
+  if (onGuide) return { point: onGuide, axis: from ? alongAxis(from, onGuide) : null, endpoint: true };
   if (from) {
     const axis = axisOnScreen(from, pointer, screen);
     const p = axis && nearestOnAxis(from, AXES[axis], ray);
@@ -110,4 +116,66 @@ export function alongAxis(a: THREE.Vector3, b: THREE.Vector3): Axis | null {
 export function parts(a: THREE.Vector3, b: THREE.Vector3) {
   const d = b.clone().sub(a);
   return { length: Math.round(d.length() * 1000), run: Math.round(Math.hypot(d.x, d.z) * 1000), rise: Math.round(Math.abs(d.y) * 1000) };
+}
+
+/** A guide in three.js coordinates: a line through `at` along `dir`, or a point */
+export interface GuideRef {
+  at: THREE.Vector3;
+  dir?: THREE.Vector3;
+}
+
+/** The point of a guide nearest the pointer, within SNAP_PX on screen */
+export function nearestOnGuides(guides: GuideRef[], ray: THREE.Ray, pointer: THREE.Vector2, screen: Screen): THREE.Vector3 | null {
+  let best: { p: THREE.Vector3; d: number } | null = null;
+  for (const g of guides) {
+    const p = g.dir ? nearestOnAxis(g.at, g.dir, ray) : g.at.clone();
+    if (!p || p.clone().sub(ray.origin).dot(ray.direction) <= 0) continue;
+    const d = screen(p).distanceTo(pointer);
+    if (d <= SNAP_PX && (!best || d < best.d)) best = { p, d };
+  }
+  return best?.p ?? null;
+}
+
+/** How close the pointer must be to an edge to drag a guide off it, in pixels */
+const EDGE_PX = 10;
+
+/**
+ * The edge of the face under the pointer that a guide can be dragged off: one running along an axis (a slab edge, a wall top),
+ * within EDGE_PX on screen; its point nearest the pointer and its direction
+ */
+export function edgeNear(corners: THREE.Vector3[], pointer: THREE.Vector2, screen: Screen): { at: THREE.Vector3; dir: THREE.Vector3 } | null {
+  let best: { at: THREE.Vector3; dir: THREE.Vector3; d: number } | null = null;
+  for (let i = 0; i < corners.length; i++) {
+    const a = corners[i],
+      b = corners[(i + 1) % corners.length];
+    const dir = b.clone().sub(a);
+    const len = dir.length();
+    if (len < 1e-3) continue;
+    dir.divideScalar(len);
+    if (Math.max(Math.abs(dir.x), Math.abs(dir.y), Math.abs(dir.z)) < 1 - 1e-4) continue;
+    const sa = screen(a),
+      sb = screen(b);
+    const s = sb.clone().sub(sa);
+    const t = s.lengthSq() ? THREE.MathUtils.clamp(pointer.clone().sub(sa).dot(s) / s.lengthSq(), 0, 1) : 0;
+    const d = sa.clone().addScaledVector(s, t).distanceTo(pointer);
+    if (d <= EDGE_PX && (!best || d < best.d)) best = { at: a.clone().lerp(b, t), dir, d };
+  }
+  return best && { at: best.at, dir: best.dir };
+}
+
+/**
+ * Dragging a guide off an edge: it stays parallel to the edge and moves across it in the face's plane, following the pointer, on a
+ * 10 mm step. The offset (m, signed) and the guide's point
+ */
+export function guideOffset(
+  edge: { at: THREE.Vector3; dir: THREE.Vector3 },
+  normal: THREE.Vector3,
+  ray: THREE.Ray,
+): { offset: number; at: THREE.Vector3 } | null {
+  const across = normal.clone().cross(edge.dir).normalize();
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, edge.at);
+  const p = ray.intersectPlane(plane, new THREE.Vector3());
+  if (!p) return null;
+  const offset = Math.round(p.sub(edge.at).dot(across) * 100) / 100;
+  return { offset, at: edge.at.clone().addScaledVector(across, offset) };
 }

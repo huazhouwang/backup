@@ -220,6 +220,31 @@ export function PlanDimensions({ chains, size, line, color = 'var(--foreground)'
   );
 }
 
+/**
+ * The model axes on the plan, as SketchUp's top view: red along x, green along y, through the origin across the drawing's frame;
+ * solid on the positive side, dashed on the negative
+ */
+export function PlanAxes({ frame, line }: { frame: { x: number; y: number; w: number; h: number }; line: Line }) {
+  const [x0, x1, y0, y1] = [frame.x, frame.x + frame.w, frame.y, frame.y + frame.h];
+  const seg = (k: string, color: string, a: [number, number], b: [number, number], dash?: number[]) => (
+    <line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={color} {...line(1, dash)} />
+  );
+  return (
+    <g pointerEvents="none" data-axes>
+      {y0 <= 0 &&
+        y1 >= 0 && [
+          x1 > 0 && seg('x+', 'var(--axis-x)', [Math.max(0, x0), 0], [x1, 0]),
+          x0 < 0 && seg('x-', 'var(--axis-x)', [x0, 0], [Math.min(0, x1), 0], [6, 4]),
+        ]}
+      {x0 <= 0 &&
+        x1 >= 0 && [
+          y1 > 0 && seg('y+', 'var(--axis-y)', [0, Math.max(0, y0)], [0, y1]),
+          y0 < 0 && seg('y-', 'var(--axis-y)', [0, y0], [0, Math.min(0, y1)], [6, 4]),
+        ]}
+    </g>
+  );
+}
+
 /** Round lengths for the scale bar (metres) */
 const SCALE_LENGTHS = [0.5, 1, 2, 5, 10, 20];
 
