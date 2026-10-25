@@ -11,7 +11,6 @@ import { names } from '../model/names.js';
 import type { Guide, Project } from '../model/schema.js';
 import { resolve, resolveLevel } from '../model/refs.js';
 import { zPoint } from './inputs.js';
-import { axesOrigin } from '../geometry/axes.js';
 
 const AXIS: Record<'x' | 'y' | 'z', [number, number, number]> = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
 
@@ -25,15 +24,12 @@ function unit(d: 'x' | 'y' | 'z' | number[]): [number, number, number] {
   return [r(x), r(y), r(z)];
 }
 
-const SUBSCRIPT = '₀₁₂₃₄₅₆₇₈₉';
-const subscript = (n: number) => [...String(n)].map(d => SUBSCRIPT[Number(d)]).join('');
-
-/** 参考线1, 参考线2 … / Guide 1, Guide 2 …, or for a copy of an axis x₁, x₂ …: the first number not taken */
-function guideName(p: Project, axis?: 'x' | 'y' | 'z') {
+/** 参考线1, 参考线2 … / Guide 1, Guide 2 …: the first number not taken */
+function guideName(p: Project) {
   const used = new Set((p.guides ?? []).map(g => g.name));
   const word = names(p).guide;
   for (let n = 1; ; n++) {
-    const name = axis ? `${axis}${subscript(n)}` : p.language === 'en' ? `${word} ${n}` : `${word}${n}`;
+    const name = p.language === 'en' ? `${word} ${n}` : `${word}${n}`;
     if (!used.has(name)) return name;
   }
 }
@@ -44,27 +40,23 @@ export const guideAdd = defineEdit({
   name: 'guide_add',
   title: 'Add a guide',
   description:
-    'Draw a guide (a construction line, or a point) to line things up with; it is not part of the building. A line runs without end through at along direction: "x" (east–west), "y" (north–south), "z" (up) or a vector [dx, dy, dz]. Heights: height above the floor of level (default the ground floor), e.g. a sill line. axis copies a model axis (named x₁, y₁, z₁ …): by default through the axes origin along that axis.',
+    'Draw a guide (a construction line, or a point) to line things up with; it is not part of the building. A line runs without end through at along direction: "x" (east–west), "y" (north–south), "z" (up) or a vector [dx, dy, dz]. Heights: height above the floor of level (default the ground floor), e.g. a sill line.',
   input: z.object({
     kind: z.enum(['line', 'point']).default('line'),
-    at: zPoint.optional().describe('Plan point (default the axes origin)'),
-    axis: z.enum(['x', 'y', 'z']).optional().describe('Copy this model axis'),
-    direction: z.union([z.enum(['x', 'y', 'z']), z.array(z.number()).min(2).max(3)]).optional(),
+    at: zPoint,
+    direction: z.union([z.enum(['x', 'y', 'z']), z.array(z.number()).min(2).max(3)]).default('x'),
     level: z.string().optional().describe('Level ID or name the height is measured from'),
     height: z.number().optional().describe('Height above that level’s floor (mm)'),
   }),
   label: () => text('log_guide_add', 'Add a guide'),
   apply: (p, i) => {
     p.guides ??= [];
-    const at = i.at ?? axesOrigin(p);
-    const line = i.kind === 'line' || !!i.axis;
     const g: Guide = {
       id: nextId(p, 'g'),
-      name: guideName(p, i.axis),
-      kind: line ? 'line' : 'point',
-      at: [Math.round(at[0]), Math.round(at[1]), Math.round(height(p, i.level, i.height))],
-      ...(line ? { dir: unit(i.direction ?? i.axis ?? 'x') } : {}),
-      ...(i.axis ? { axis: i.axis } : {}),
+      name: guideName(p),
+      kind: i.kind,
+      at: [Math.round(i.at[0]), Math.round(i.at[1]), Math.round(height(p, i.level, i.height))],
+      ...(i.kind === 'line' ? { dir: unit(i.direction) } : {}),
     };
     p.guides.push(g);
     return { id: g.id, name: g.name };
@@ -74,11 +66,9 @@ export const guideAdd = defineEdit({
 export const guideMove = defineEdit({
   name: 'guide_move',
   title: 'Move a guide',
-  description:
-    'Move a guide: at for its new plan point (and level/height for its height), or by for an offset [dx, dy] or [dx, dy, dz]; direction turns a line ("x", "y", "z" or a vector).',
+  description: 'Move a guide: at for its new plan point (and level/height for its height), or by for an offset [dx, dy] or [dx, dy, dz].',
   input: z.object({
     guide: z.string(),
-    direction: z.union([z.enum(['x', 'y', 'z']), z.array(z.number()).min(2).max(3)]).optional(),
     at: zPoint.optional(),
     level: z.string().optional(),
     height: z.number().optional(),
@@ -90,7 +80,6 @@ export const guideMove = defineEdit({
     if (i.at) g.at = [Math.round(i.at[0]), Math.round(i.at[1]), g.at[2]];
     if (i.level != null || i.height != null) g.at[2] = Math.round(height(p, i.level, i.height));
     if (i.by) g.at = [Math.round(g.at[0] + i.by[0]), Math.round(g.at[1] + i.by[1]), Math.round(g.at[2] + (i.by[2] ?? 0))];
-    if (i.direction && g.kind === 'line') g.dir = unit(i.direction);
   },
 });
 

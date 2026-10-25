@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { axesOrigin, wallBody, type Point, type Project } from '@plinth/core';
+import { wallBody, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
 import { holdAxis, snapMeasure } from './plan-measure';
 import { guideDraft, guideSources, sourceAt, type GuideDraft, type GuideSource } from './plan-guide-draw';
@@ -13,7 +13,7 @@ import { PlanGuides } from './PlanGuides';
 import { placeCall, type PlaceResult } from './plan-place';
 import { exteriorDimensions, selectionDimensions, type DimChain } from '@/graphics/plan/dimensions';
 import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
-import { PlanDefs, PlanDimensions, PlanInk, PlanAxes, PlanLabels, PlanMarks, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
+import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanMarks, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
 import { useEditor } from '../store';
 import { m } from '@/lib/i18n';
@@ -314,7 +314,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             </g>
           )}
 
-          {view.layers.axes && <PlanAxes frame={frame} origin={axesOrigin(project)} line={screenLine} px={pxMm} />}
           {view.layers.guides && (
             <PlanGuides project={project} frame={frame} selected={sel} pick={measuring || placing || sectioning ? undefined : pick} pxMm={pxMm} />
           )}

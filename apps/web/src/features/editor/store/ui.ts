@@ -22,7 +22,6 @@ type Ui = Pick<
   | 'sunOpen'
   | 'northRequest'
   | 'guideEdit'
-  | 'axesEdit'
 > &
   Pick<
     EditorActions,
@@ -38,7 +37,6 @@ type Ui = Pick<
     | 'setSun'
     | 'faceNorth'
     | 'setGuideEdit'
-    | 'setAxesEdit'
     | 'setSunOpen'
   >;
 
@@ -58,7 +56,6 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   sunOpen: false,
   northRequest: 0,
   guideEdit: null,
-  axesEdit: null,
 
   setCompare(on) {
     set({ compare: on });
@@ -86,7 +83,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   },
 
   setMeasuring(measuring) {
-    set({ measuring, guideEdit: null, ...(measuring ? { placing: null, sectioning: false, axesEdit: null } : {}) });
+    set({ measuring, guideEdit: null, ...(measuring ? { placing: null, sectioning: false } : {}) });
   },
 
   setSectioning(sectioning) {
@@ -111,9 +108,5 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   setGuideEdit(guideEdit) {
     set({ guideEdit });
-  },
-
-  setAxesEdit(axesEdit) {
-    set({ axesEdit });
   },
 });

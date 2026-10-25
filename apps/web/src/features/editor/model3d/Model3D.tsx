@@ -38,7 +38,6 @@ import { TintColors } from './feedback';
 import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { sunDirection, sunPosition } from '@/lib/solar';
-import { Axes3D } from './Axes3D';
 import { Guides3D } from './Guides3D';
 import { Sun3D } from './Sun3D';
 import { movedBy, useMoving } from './doors';
@@ -309,8 +308,7 @@ export function Model3D() {
           <Picker />
           <Measure3D />
           <Sun3D toward={sunSky.toward} up={sunSky.up} />
-          {view.layers.axes && <Axes3D reach={span * 0.8} />}
-          {view.layers.guides && <Guides3D guides={(project.guides ?? []).filter(g => !g.axis)} selected={sel} reach={span * 2} />}
+          {view.layers.guides && <Guides3D guides={project.guides ?? []} selected={sel} reach={span * 2} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

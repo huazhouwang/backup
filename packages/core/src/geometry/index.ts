@@ -6,4 +6,3 @@ export * from './mesh.js';
 export * from './elements.js';
 export * from './roofs.js';
 export * from './slabs.js';
-export * from './axes.js';

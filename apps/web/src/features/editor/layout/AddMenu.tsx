@@ -64,10 +64,7 @@ export function AddMenu() {
   );
 }
 
-/**
- * While placing, measuring, drawing a section, walking, looking at a section plane, or moving the axes' origin or a copy of an axis:
- * what to do, and a way out
- */
+/** While placing, measuring, drawing a section, walking or looking at a section plane: what to do, and a way out */
 export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
@@ -80,12 +77,6 @@ export function ToolHint({ className }: { className?: string }) {
   const section = useEditor(s => s.camera3d.section);
   const mode = useEditor(s => s.view.mode);
   const furniture = useEditor(s => s.project.library.furniture);
-  const axesEdit = useEditor(s => s.axesEdit);
-  const setAxesEdit = useEditor(s => s.setAxesEdit);
-  const moved = useEditor(s => !!s.project.axes);
-  const copySelected = useEditor(s => s.view.selection.length === 1 && !!s.project.guides?.find(g => g.id === s.view.selection[0])?.axis && s.canEdit());
-  const select = useEditor(s => s.select);
-  const run = useRun();
   let text: string | null = null;
   if (placing && mode === '2d') {
     const name = placing.kind === 'furniture' ? (furniture[placing.type]?.name ?? placing.type) : kindLabel(placing.opening);
@@ -93,30 +84,6 @@ export function ToolHint({ className }: { className?: string }) {
   } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
   else if (sectioning && mode === '2d') text = m.section_hint();
   else if (walking && mode === '3d') text = matchMedia('(pointer: coarse)').matches ? m.model3d_hint_walk_touch() : m.model3d_hint_walk();
-  // The axes' origin in move mode, or a copy of an axis selected, in 3D: what the handles do
-  if (!text && mode === '3d' && (axesEdit === 'origin' || copySelected))
-    return (
-      <div className={className}>
-        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-background px-3 py-1.5 text-sm shadow-md ring-1 ring-foreground/10">
-          <span>{axesEdit === 'origin' ? m.axes_hint_origin() : m.axes_hint_copy()}</span>
-          {axesEdit === 'origin' && moved && (
-            <Button size="xs" variant="ghost" onClick={() => void run('axes_set', { reset: true })}>
-              {m.axes_reset()}
-            </Button>
-          )}
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={() => {
-              setAxesEdit(null);
-              if (copySelected) select([]);
-            }}
-          >
-            {m.axes_done()}
-          </Button>
-        </div>
-      </div>
-    );
   // A section plane in 3D: flip it or clear it
   if (!text && section && mode === '3d')
     return (

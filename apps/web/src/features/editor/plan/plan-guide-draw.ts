@@ -1,21 +1,20 @@
 /**
- * Drawing guides with the tape measure in the plan, as SketchUp's: dragging off an edge (a wall face, a model axis, another guide)
+ * Drawing guides with the tape measure in the plan, as SketchUp's: dragging off an edge (a wall face, another guide)
  * draws a guide parallel to it, the offset following the pointer on a 10 mm step; dragging off a corner (a wall or furniture
- * corner, the origin, a guide crossing) draws a guide along the axis the pointer follows, with a guide point at its end.
+ * corner, a guide crossing) draws a guide along the axis the pointer follows, with a guide point at its end.
  */
-import { axesOrigin, furnitureFootprint, wallBody, type Point, type Project } from '@plinth/core';
+import { furnitureFootprint, wallBody, type Point, type Project } from '@plinth/core';
 import { crossing, planGuideLines, planGuidePoints } from './plan-guides';
 
 export type GuideSource = { kind: 'edge'; a: Point; b: Point } | { kind: 'corner'; at: Point };
 
-/** How far a model axis or guide reaches as an edge to drag off (mm) */
+/** How far a guide reaches as an edge to drag off (mm) */
 const REACH = 1e6;
 
-/** What a guide can be dragged off on a level: wall faces, the axes and guide lines as edges; corners and crossings */
+/** What a guide can be dragged off on a level: wall faces and guide lines as edges; corners and crossings */
 export function guideSources(p: Project, level: string): { edges: [Point, Point][]; corners: Point[] } {
   const edges: [Point, Point][] = [];
-  const o = axesOrigin(p);
-  const corners: Point[] = [o];
+  const corners: Point[] = [];
   for (const w of p.walls.filter(x => x.level === level)) {
     const ring = wallBody(w).outer;
     ring.forEach((q, i) => {
@@ -24,16 +23,6 @@ export function guideSources(p: Project, level: string): { edges: [Point, Point]
     });
   }
   for (const f of p.furniture.filter(x => x.level === level)) corners.push(...furnitureFootprint(f).outer);
-  edges.push(
-    [
-      [o[0] - REACH, o[1]],
-      [o[0] + REACH, o[1]],
-    ],
-    [
-      [o[0], o[1] - REACH],
-      [o[0], o[1] + REACH],
-    ],
-  );
   const lines = planGuideLines(p);
   for (const l of lines)
     edges.push([

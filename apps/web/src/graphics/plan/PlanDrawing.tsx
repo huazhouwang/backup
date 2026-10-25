@@ -5,7 +5,7 @@
  * floor-materials.tsx), furniture and fittings white with thin black edges. Coordinates in millimetres. Interaction (picking)
  * is optional.
  */
-import type { Point, Project } from '@plinth/core';
+import type { Project } from '@plinth/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
 import { isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
@@ -216,58 +216,6 @@ export function PlanDimensions({ chains, size, line, color = 'var(--foreground)'
           </g>
         );
       })}
-    </g>
-  );
-}
-
-/**
- * The model axes on the plan, as in 3D: x and y in black through the origin (see Axes in the core schema), solid on the positive
- * side with a triangle head named by its axis, dashed on the negative. Only shown here; people move the origin in 3D.
- */
-export function PlanAxes({ frame, origin, line, px }: { frame: { x: number; y: number; w: number; h: number }; origin: Point; line: Line; px: number }) {
-  const [x0, x1, y0, y1] = [frame.x, frame.x + frame.w, frame.y, frame.y + frame.h];
-  const [ox, oy] = origin;
-  const seg = (k: string, a: Point, b: Point, dash?: number[]) => (
-    <line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="var(--foreground)" strokeLinecap="round" {...line(dash ? 1 : 2, dash)} />
-  );
-  const s = 9 * px;
-  const head = (k: string, tip: Point, d: Point) => [
-    <polygon
-      key={`${k}>`}
-      points={[
-        tip,
-        [tip[0] - d[0] * s * 1.6 - d[1] * s * 0.55, tip[1] - d[1] * s * 1.6 + d[0] * s * 0.55],
-        [tip[0] - d[0] * s * 1.6 + d[1] * s * 0.55, tip[1] - d[1] * s * 1.6 - d[0] * s * 0.55],
-      ]
-        .map(q => q.join(','))
-        .join(' ')}
-      fill="var(--foreground)"
-    />,
-    <text
-      key={`${k}t`}
-      x={tip[0] - d[0] * s * 0.5 + d[1] * s * 1.6}
-      y={tip[1] - d[1] * s * 0.5 - d[0] * s * 1.6 + s * 0.4}
-      fontSize={12 * px}
-      fontFamily="var(--font-mono)"
-      fontWeight={600}
-      fill="var(--foreground)"
-      textAnchor="middle"
-    >
-      {k}
-    </text>,
-  ];
-  return (
-    <g pointerEvents="none" data-axes={origin.join(',')}>
-      {y0 <= oy &&
-        y1 >= oy && [
-          x1 > ox && [seg('x+', [Math.max(ox, x0), oy], [x1 - s, oy]), ...head('x', [x1, oy], [1, 0])],
-          x0 < ox && seg('x-', [x0, oy], [Math.min(ox, x1), oy], [6, 4]),
-        ]}
-      {x0 <= ox &&
-        x1 >= ox && [
-          y1 > oy && [seg('y+', [ox, Math.max(oy, y0)], [ox, y1 - s]), ...head('y', [ox, y1], [0, 1])],
-          y0 < oy && seg('y-', [ox, y0], [ox, Math.min(oy, y1)], [6, 4]),
-        ]}
     </g>
   );
 }

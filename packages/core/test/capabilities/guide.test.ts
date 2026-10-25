@@ -51,4 +51,12 @@ describe('guides', () => {
     await h.call('guide_add', { at: [0, 0], direction: 'y' });
     expect(checkRules(h.session.project)).toHaveLength(before);
   });
+
+  it('copies of the model axes from v12 stay as plain guides, and the axes go', () => {
+    const doc = { ...migrate(sampleFile()), version: 12, axes: { origin: [100, 200] } } as any;
+    doc.guides = [{ id: 'g1', name: 'x₁', kind: 'line', at: [100, 200, 0], dir: [1, 0, 0], axis: 'x' }];
+    const p = migrate(doc) as any;
+    expect(p.axes).toBeUndefined();
+    expect(p.guides).toEqual([{ id: 'g1', name: 'x₁', kind: 'line', at: [100, 200, 0], dir: [1, 0, 0] }]);
+  });
 });
