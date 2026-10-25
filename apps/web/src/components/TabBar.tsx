@@ -15,6 +15,8 @@ export function TabBar() {
   // shell's active tab. Remounting after hydration recreates the DOM with the real state.
   const hydrated = useHydrated()
   const { pathname } = useLocation()
+  // The chat covers the app, tab bar and all.
+  if (pathname === '/chat') return null
 
   return (
     <nav

@@ -358,6 +358,22 @@
   }
 }
 
+/* Three dots taking turns to hop, while a message is on its way. */
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+    opacity: 0.4;
+  }
+  30% {
+    translate: 0 -0.25rem;
+    opacity: 1;
+  }
+}
+@utility animate-typing {
+  animation: typing 1s ease-in-out infinite;
+}
 @utility animate-celebrate {
   animation: celebrate 700ms var(--ease-out) 150ms both;
 }
@@ -412,6 +428,44 @@ html:active-view-transition-type(tab) {
 }
 
 /*
+ * The chat covers the app: it slides up over the page left in place (with the same little
+ * bounce as a sheet), and back down off it. The page underneath doesn't move.
+ */
+@keyframes cover-in {
+  from {
+    translate: 0 100%;
+  }
+}
+@keyframes cover-out {
+  to {
+    translate: 0 100%;
+  }
+}
+::view-transition-group(chat) {
+  z-index: 2;
+}
+html:active-view-transition-type(up) {
+  &::view-transition-old(page),
+  &::view-transition-new(page) {
+    animation: none;
+  }
+  &::view-transition-new(chat) {
+    animation: 380ms cubic-bezier(0.2, 1.15, 0.35, 1) both cover-in;
+  }
+}
+html:active-view-transition-type(down) {
+  &::view-transition-old(page) {
+    display: none;
+  }
+  &::view-transition-new(page) {
+    animation: none;
+  }
+  &::view-transition-old(chat) {
+    animation: 300ms var(--ease-out) both cover-out;
+  }
+}
+
+/*
  * Bottom sheets: Sheet slides them in with a little bounce and plays the same slide
  * backwards to close. The backdrop fades along with it.
  */
@@ -446,7 +500,16 @@ html:active-view-transition-type(tab) {
       animation: 150ms ease-out reverse both fade-out;
     }
   }
-  .animate-celebrate {
+  html:active-view-transition-type(up, down) {
+    &::view-transition-new(chat) {
+      animation: 150ms ease-out reverse both fade-out;
+    }
+    &::view-transition-old(chat) {
+      animation: 150ms ease-out both fade-out;
+    }
+  }
+  .animate-celebrate,
+  .animate-typing {
     animation: none;
   }
 }

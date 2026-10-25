@@ -65,12 +65,8 @@ const textSchema = z.object({
   locale: localeSchema.optional(),
 })
 
-/** What comes with a recording, in its query: the device's zone, the app's and the speech's language. */
-const audioQuerySchema = z.object({
-  timeZone: timeZoneSchema.optional(),
-  locale: localeSchema.optional(),
-  speech: localeSchema.optional(),
-})
+/** The language a recording is in, from the device's settings. */
+const speechQuerySchema = z.object({ speech: localeSchema.optional() })
 /** A WAV header and a fraction of a second: anything shorter holds nothing to hear. */
 const MIN_AUDIO_BYTES = 4000
 
@@ -254,21 +250,15 @@ async function countMessage(db: D1Database, userId: string, settings: Settings, 
   return row?.dayCount ?? 0
 }
 
-/**
- * Turns a recording into what was said, given the babies' names to spell; null when nothing
- * was heard. Called only once the message is allowed, so nobody pays for one that isn't.
- */
-type Hear = (names: string[]) => Promise<string | null>
-
-/** One message to the user's agent, from the chat box or Siri: typed, or spoken and heard. */
+/** One message to the user's agent, from the chat box or Siri. */
 async function turn(
   env: Env,
   adapterFor: AdapterFor,
   userId: string,
-  said: string | Hear,
+  text: string,
   now: number,
   device: { timeZone?: string; locale?: string } = {},
-): Promise<AgentTurn & { heard?: string }> {
+): Promise<AgentTurn> {
   const db = env.DB
   const [access, settings] = await Promise.all([loadAccess(db, userId), readSettings(db, userId)])
   const families = [...access.values()].filter((family) => family.role !== 'viewer')
@@ -290,11 +280,7 @@ async function turn(
     phrase: settings.phrase,
     modelOptions: modelOptionsFor(ai.ai.provider, ai.ai.model),
   }
-  if (typeof said === 'string') return runAgent(adapter, scope, said, now)
-  const babies = await writableBabies(db, scope.families)
-  const heard = await said(babies.map((baby) => baby.name))
-  if (!heard) return { reply: REPLIES.unclear, done: false, confirming: false }
-  return { ...(await runAgent(adapter, scope, heard, now)), heard }
+  return runAgent(adapter, scope, text, now)
 }
 
 /** Settings page and chat box. Needs a session. */
@@ -354,26 +340,32 @@ export function voiceRoutes(adapterFor: AdapterFor) {
         return c.json(stop(REPLIES.unavailable), 503)
       }
     })
-    .post('/chat/audio', async (c) => {
-      // A recording from the chat box's microphone: heard, then answered as if typed. The
-      // recording itself is not kept; what was heard joins the conversation.
+    .post('/transcribe', async (c) => {
+      // A recording from the chat box's microphone, as text in the speaker's language. The
+      // recording is not kept; the chat box then sends the text like anything typed.
       const userId = c.get('user').id
       const ai = c.env.AI
-      if (!ai) return c.json(stop(REPLIES.unavailable), 503)
+      if (!ai) return c.json({ text: null }, 503)
       const burst = await c.env.VOICE_RATE_LIMIT?.limit({ key: userId })
-      if (burst && !burst.success) return c.json(stop(REPLIES.slowDown), 429)
-      const device = audioQuerySchema.safeParse(c.req.query())
+      if (burst && !burst.success) return c.json({ text: null }, 429)
+      const query = speechQuerySchema.safeParse(c.req.query())
       const audio = await c.req.arrayBuffer()
-      if (!device.success || audio.byteLength < MIN_AUDIO_BYTES) {
-        return c.json({ reply: REPLIES.unclear, done: false, confirming: false }, 400)
+      if (!query.success || audio.byteLength < MIN_AUDIO_BYTES) return c.json({ text: null }, 400)
+      const db = c.env.DB
+      const [access, settings] = await Promise.all([
+        loadAccess(db, userId),
+        readSettings(db, userId),
+      ])
+      // Hearing costs like a message does, so it counts towards the day's limit too.
+      if ((await countMessage(db, userId, settings, Date.now())) > DAILY_LIMIT) {
+        return c.json({ text: null }, 429)
       }
-      const { timeZone, locale, speech } = device.data
-      const hear: Hear = (names) => transcribe(ai, audio, speech, names)
+      const names = (await writableBabies(db, [...access.values()])).map((baby) => baby.name)
       try {
-        return c.json(await turn(c.env, adapterFor, userId, hear, Date.now(), { timeZone, locale }))
+        return c.json({ text: await transcribe(ai, audio, query.data.speech, names) })
       } catch (error) {
-        console.error('Voice audio failed', error)
-        return c.json(stop(REPLIES.unavailable), 503)
+        console.error('Transcription failed', error)
+        return c.json({ text: null }, 503)
       }
     })
 }

@@ -179,8 +179,8 @@ export function TalkRow({
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">
           {recording ? (
-            <div className="flex flex-col gap-1.5">
-              <span className="font-bold">{m.voiceMicRecording()}</span>
+            <div className="flex flex-col">
+              <span className="sr-only">{m.voiceMicRecording()}</span>
               <output
                 className={clsx(
                   'flex min-h-touch items-center gap-3 rounded-lg border-2 px-3',

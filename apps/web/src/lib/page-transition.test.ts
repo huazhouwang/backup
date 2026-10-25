@@ -17,4 +17,10 @@ describe('pageTransition', () => {
   it('fades between sibling sub-pages', () => {
     expect(pageTransition('/settings/about', '/settings/export')).toBe('tab')
   })
+
+  it('slides the chat up over the app, and back down', () => {
+    expect(pageTransition('/', '/chat')).toBe('up')
+    expect(pageTransition('/settings/voice', '/chat')).toBe('up')
+    expect(pageTransition('/chat', '/')).toBe('down')
+  })
 })

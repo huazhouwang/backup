@@ -14,6 +14,7 @@ import { Toaster } from '../components/ui/Toast'
 import { UpdatePrompt } from '../components/UpdatePrompt'
 import { useBounce } from '../lib/bounce'
 import { getLocale } from '../lib/i18n'
+import { KeyboardKeeper } from '../lib/keyboard'
 import { MotionProvider } from '../lib/motion'
 import { splashLinks } from '../lib/splash'
 import { THEME_COLORS, themeInitScript } from '../lib/theme'
@@ -68,7 +69,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 const pageOwnsNot = (target: Element, _axis: unknown, edge: 'start' | 'end') =>
-  target.closest('dialog') !== null ||
+  target.closest('dialog, [data-own-scroll]') !== null ||
   (edge === 'start' && target.closest('[data-pull-to-refresh]') !== null)
 
 function RootLayout() {
@@ -116,6 +117,7 @@ function RootLayout() {
           )}
         </main>
         <TabBar />
+        <KeyboardKeeper />
         <Toaster />
         {hydrated && <UpdatePrompt />}
         {hydrated && (

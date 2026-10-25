@@ -2,6 +2,7 @@ import { clsx } from 'clsx'
 import { type PointerEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
 
 import { useBounce } from '../../lib/bounce'
+import { useVisibleArea } from '../../lib/keyboard'
 import { prefersReducedMotion } from '../../lib/motion'
 import { lockScroll } from '../../lib/scroll-lock'
 
@@ -129,27 +130,8 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
   // The page behind stays put while the sheet is up, even on a sheet too short to scroll.
   useEffect(() => (shownInDialog ? lockScroll() : undefined), [shownInDialog])
 
-  // iOS lays the keyboard over the page without resizing it, so a sheet at the bottom would
-  // sit behind it, field and all. The sheet rests on the keyboard instead, and fits above it.
-  useEffect(() => {
-    const viewport = window.visualViewport
-    const dialog = ref.current
-    if (!shownInDialog || !viewport || !dialog) return undefined
-    const fit = () => {
-      const covered = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
-      dialog.style.setProperty('--keyboard', `${covered}px`)
-      dialog.style.setProperty('--visible', `${viewport.height}px`)
-    }
-    fit()
-    viewport.addEventListener('resize', fit)
-    viewport.addEventListener('scroll', fit)
-    return () => {
-      viewport.removeEventListener('resize', fit)
-      viewport.removeEventListener('scroll', fit)
-      dialog.style.removeProperty('--keyboard')
-      dialog.style.removeProperty('--visible')
-    }
-  }, [shownInDialog])
+  // The sheet rests on the iOS keyboard instead of sitting behind it, and fits above it.
+  useVisibleArea(ref, shownInDialog)
 
   // Dragging the header pulls the sheet down; far or fast enough, it closes.
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {

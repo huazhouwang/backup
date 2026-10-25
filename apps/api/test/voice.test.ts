@@ -66,6 +66,12 @@ describe('siri voice logging', () => {
       },
       body: JSON.stringify({ text }),
     })
+  const hear = (bytes: number, speech = 'en-GB') =>
+    t.request(`/api/voice/transcribe?speech=${speech}`, {
+      method: 'POST',
+      headers: { cookie: headers.get('cookie') ?? '', 'Content-Type': 'audio/wav' },
+      body: new Uint8Array(bytes),
+    })
   /** Says something with the model recording `actions`, then answering `reply`. */
   // One model call: once saved, the record's summary is the answer.
   const record = async (token: string, text: string, actions: VoiceAction[]) => {
@@ -237,36 +243,20 @@ describe('siri voice logging', () => {
     ])
   })
 
-  it('hears a recording in the speaker’s language, then answers it like typed text', async () => {
-    const speak = (bytes: number, query = 'speech=en-GB&locale=zh-CN') =>
-      t.request(`/api/voice/chat/audio?${query}`, {
-        method: 'POST',
-        headers: { cookie: headers.get('cookie') ?? '', 'Content-Type': 'audio/wav' },
-        body: new Uint8Array(bytes),
-      })
-    heard = 'how was today'
-    fake.setResponses([{ text: '今天很好。' }])
-    expect(await (await speak(32_000)).json()).toEqual({
-      reply: '今天很好。',
-      done: false,
-      confirming: false,
-      heard: 'how was today',
-    })
+  it('hears a recording in the speaker’s language, as text for the chat box to send', async () => {
+    heard = ' how was today '
+    expect(await (await hear(32_000)).json()).toEqual({ text: 'how was today' })
     // In English, with the babies' names to spell; no Chinese vocabulary.
     expect(whisper).toMatchObject({ language: 'en', initial_prompt: '小米粒' })
-    const chat = await t.request('/api/voice/chat', { headers })
-    const { lines } = (await chat.json()) as { lines: Array<{ role: string; text: string }> }
-    expect(lines.at(-2)).toMatchObject({ role: 'user', text: 'how was today' })
 
     // In Chinese the prompt also carries the words it should spell in simplified script.
     heard = '  '
-    const unheard = await speak(32_000, 'speech=zh-Hans-CN')
-    expect(await unheard.json()).toMatchObject({ reply: '没听清，请再说一遍。', done: false })
+    expect(await (await hear(32_000, 'zh-Hans-CN')).json()).toEqual({ text: null })
     expect(whisper.language).toBe('zh')
     expect(whisper.initial_prompt).toMatch(/^小米粒 .*毫升/)
     // Too short to hold anything, or over the body limit.
-    expect((await speak(100)).status).toBe(400)
-    expect((await speak(1024 * 1024 + 1)).status).toBe(413)
+    expect((await hear(100)).status).toBe(400)
+    expect((await hear(1024 * 1024 + 1)).status).toBe(413)
   })
 
   it('pages through the last 30 days of conversations, newest first', async () => {

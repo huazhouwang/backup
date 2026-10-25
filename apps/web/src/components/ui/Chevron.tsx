@@ -1,8 +1,15 @@
 import { clsx } from 'clsx'
 
-const paths = { left: 'M15 5l-7 7 7 7', right: 'M9 5l7 7-7 7' } as const
+const paths = {
+  left: 'M15 5l-7 7 7 7',
+  right: 'M9 5l7 7-7 7',
+  down: 'M5 9l7 7 7-7',
+} as const
 
-/** A bold chevron: `right` on rows that open a page, `left` for going back or earlier. */
+/**
+ * A bold chevron: `right` on rows that open a page, `left` for going back or earlier, `down`
+ * for putting away a page that slid up.
+ */
 export function Chevron({
   direction = 'right',
   className,

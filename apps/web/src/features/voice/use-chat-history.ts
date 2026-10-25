@@ -38,7 +38,7 @@ export function useChatHistory(open: boolean) {
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = history
   const top = useCallback(
     (node: HTMLDivElement | null) => {
-      const root = node?.closest('dialog')
+      const root = node?.closest('[data-chat-scroll]')
       if (!node || !root) return undefined
       const observer = new IntersectionObserver(
         ([entry]) => {
@@ -55,7 +55,7 @@ export function useChatHistory(open: boolean) {
   )
   // Runs when a page is added: that is when the anchor applies.
   useLayoutEffect(() => {
-    const root = list.current?.closest('dialog')
+    const root = list.current?.closest('[data-chat-scroll]')
     if (!anchor.current || !root) return
     root.scrollTop = anchor.current.top + root.scrollHeight - anchor.current.height
     anchor.current = null

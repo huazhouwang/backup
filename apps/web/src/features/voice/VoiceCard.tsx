@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
+import { buttonClass } from '../../components/ui/Button'
 import { Card, NoticeCard } from '../../components/ui/Card'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { SignInNotice } from '../account/SignInNotice'
 import { type VoiceSettings } from './api'
-import { ChatSheet } from './ChatSheet'
 import { Connect } from './Connect'
 import { PhraseInput } from './PhraseInput'
 import { voiceQueries } from './queries'
@@ -69,16 +67,14 @@ function AiStatus({ settings }: { settings: VoiceSettings }) {
   )
 }
 
-/** Opens the chat box. */
+/** Opens the chat. */
 function ChatCard() {
-  const [open, setOpen] = useState(false)
   return (
     <Card className="flex flex-col gap-2">
-      <Button variant="outline" block onClick={() => setOpen(true)}>
+      <Link to="/chat" className={buttonClass({ variant: 'outline', block: true })}>
         {m.voiceChatOpen()}
-      </Button>
+      </Link>
       <p className="m-0 text-caption text-fg-muted">{m.voiceChatHint()}</p>
-      <ChatSheet open={open} onClose={() => setOpen(false)} />
     </Card>
   )
 }

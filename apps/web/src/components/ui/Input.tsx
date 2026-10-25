@@ -3,13 +3,15 @@ import { type InputHTMLAttributes, type Ref, useId } from 'react'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
+  /** Read out but not shown, where the field's purpose is plain (a chat's message field). */
+  labelHidden?: boolean
   hint?: string
   error?: string
   ref?: Ref<HTMLInputElement>
 }
 
 /** Text input with a visible label. Font size stays >= 16px to avoid iOS zoom on focus. */
-export function Input({ label, hint, error, className, id, ...props }: InputProps) {
+export function Input({ label, labelHidden, hint, error, className, id, ...props }: InputProps) {
   const generatedId = useId()
   const inputId = id ?? generatedId
   const hintId = hint ? `${inputId}-hint` : undefined
@@ -18,7 +20,7 @@ export function Input({ label, hint, error, className, id, ...props }: InputProp
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="font-bold">
+      <label htmlFor={inputId} className={labelHidden ? 'sr-only' : 'font-bold'}>
         {label}
       </label>
       <input
