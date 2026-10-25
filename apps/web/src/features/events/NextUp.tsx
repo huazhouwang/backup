@@ -19,14 +19,18 @@ interface Row {
   detail?: string
 }
 
-const sleepFor = (length: number) => m.nextSleepFor({ duration: durationLabel(length) })
+const sleepFor = (length: number) =>
+  m.nextSleepFor({ duration: durationLabel(length, { short: true }) })
 
 const planLabel = (item: PlanItem) =>
   item.kind === 'feed' ? m.nextFeed() : `${m.nextSleep()} · ${sleepFor(item.length)}`
 
+const middle = ({ from, to }: Window) => Math.round((from + to) / 2 / 300_000) * 300_000
+
 /**
- * What likely comes next, from the baby's age and last week: the next feed, sleep (or
- * waking) and diaper, and the next 12 hours on tap. Anything running is on its own card above.
+ * What likely comes next, from the baby's age and last week, in the order it comes: the next
+ * feed, sleep (or waking) and diaper, and the next 12 hours on tap. Anything running is on
+ * its own card above.
  */
 export function NextUp({ baby, events }: { baby: Baby; events: readonly Event[] }) {
   const now = useNow(60_000)
@@ -52,6 +56,7 @@ export function NextUp({ baby, events }: { baby: Baby; events: readonly Event[] 
   if (next.diaper.status === 'predicted' && next.sleep.status !== 'sleeping') {
     rows.push({ icon: 'diaper', label: m.nextDiaper(), window: next.diaper })
   }
+  rows.sort((a, b) => middle(a.window) - middle(b.window))
   // Nothing to go on yet: say what to log. Anything running has its own card already.
   const running = next.feed.status === 'feeding' || next.sleep.status === 'sleeping'
   if (rows.length === 0 && next.plan.length === 0 && running) return null
@@ -71,25 +76,24 @@ export function NextUp({ baby, events }: { baby: Baby; events: readonly Event[] 
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {rows.map((row) => (
             <li key={row.label} className="flex items-center gap-3">
-              <EventIcon kind={row.icon} className="size-8" />
-              <span className="flex flex-1 flex-col">
-                <span className="text-caption text-fg-muted">
-                  {row.detail ? `${row.label} · ${row.detail}` : row.label}
-                </span>
-                <span className="font-extrabold tabular-nums">
-                  {m.nextWindow({
-                    from: formatTime(row.window.from),
-                    to: formatTime(row.window.to),
-                  })}
-                </span>
+              <span className="w-20 shrink-0 font-extrabold tabular-nums">
+                {m.nextAround({ time: formatTime(middle(row.window)) })}
               </span>
-              <span className="text-caption font-bold text-fg-muted">
-                {now < row.window.from
-                  ? m.nextIn({ duration: durationLabel(row.window.from - now) })
-                  : now <= row.window.to
+              <EventIcon kind={row.icon} className="size-6 shrink-0" />
+              <span className="min-w-0 flex-1 truncate font-bold">
+                {row.label}
+                {row.detail && (
+                  <span className="font-normal text-fg-muted">{` · ${row.detail}`}</span>
+                )}
+              </span>
+              {/* Its time is on the left; only "now" and "late" need saying. */}
+              {now >= row.window.from && (
+                <span className="shrink-0 text-caption font-bold text-fg-muted">
+                  {now <= row.window.to
                     ? m.nextNow()
-                    : m.nextLate({ duration: durationLabel(now - row.window.to) })}
-              </span>
+                    : m.nextLate({ duration: durationLabel(now - row.window.to, { short: true }) })}
+                </span>
+              )}
             </li>
           ))}
         </ul>
