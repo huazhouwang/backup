@@ -4,7 +4,7 @@ import type { SpeechHints } from '../voice/transcribe'
 import { withoutThinking } from './run'
 
 /** Correcting waits this long at most; past it, what was heard stands. */
-const CORRECT_TIMEOUT_MS = 6_000
+const CORRECT_TIMEOUT_MS = 8_000
 
 const INSTRUCTIONS = [
   'You correct speech recognition. The text is what a parent said to a baby-tracking app, as a speech model heard it.',
@@ -31,6 +31,9 @@ export async function correctHeard(
   ].filter(Boolean)
   const abortController = new AbortController()
   const timer = setTimeout(() => abortController.abort(), CORRECT_TIMEOUT_MS)
+  const started = Date.now()
+  // How it went, for the Worker's logs: never what was said.
+  let outcome: 'changed' | 'unchanged' | 'empty' | 'answered' | 'timed out' | 'failed' = 'failed'
   try {
     const { text } = await chat({
       adapter,
@@ -41,13 +44,23 @@ export async function correctHeard(
       messages: [{ role: 'user', content: heard }],
     })
     const corrected = withoutThinking(text).trim()
+    if (!corrected) {
+      outcome = 'empty'
+      return heard
+    }
     // A correction is about as long as what it corrects; much longer is an answer.
-    if (!corrected || corrected.length > heard.length * 1.5 + 10) return heard
+    if (corrected.length > heard.length * 1.5 + 10) {
+      outcome = 'answered'
+      return heard
+    }
+    outcome = corrected === heard ? 'unchanged' : 'changed'
     return corrected
   } catch (error) {
-    if (!abortController.signal.aborted) console.error('Correcting speech failed', error)
+    if (abortController.signal.aborted) outcome = 'timed out'
+    else console.error('Correcting speech failed', error)
     return heard
   } finally {
     clearTimeout(timer)
+    console.log('Speech correction', { outcome, ms: Date.now() - started, chars: heard.length })
   }
 }
