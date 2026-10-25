@@ -1,6 +1,6 @@
 /**
  * The parts of a house in the 3D view, as react-three-fiber components over the shared scene layer (./scene): walls, floor slabs,
- * roofs, doors and windows, railings, elements and furniture. Each answers selection with a tint and an outline (see feedback.ts) and
+ * roofs, doors and windows, railings, elements and furniture. Each answers selection with an outline (see feedback.ts) and
  * records its id in userData for picking.
  */
 import { Edges } from '@react-three/drei';
@@ -37,7 +37,7 @@ export function WallMesh({ w, project, base, finish, ...o }: Outline & { w: Wall
   return (
     <mesh ref={ref} geometry={geo} position={[w.start[0] * M, y, w.start[1] * M]} castShadow receiveShadow userData={{ id: w.id, restY: y }}>
       <meshStandardMaterial color={finish.color} roughness={finish.roughness} metalness={finish.metalness} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
     </mesh>
   );
 }
@@ -66,7 +66,7 @@ export function Slab({
     <mesh ref={ref} geometry={geo} position={[0, bottom, 0]} receiveShadow userData={{ id: s.id, restY: bottom }}>
       {/* Remounted when the texture arrives: a material compiles once for having a map or not */}
       <meshStandardMaterial key={map ? 'map' : 'plain'} color={color} map={map} roughness={1} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
       {/* Its underside is the ceiling of the room below: painted white, a millimetre under the slab */}
       <mesh geometry={ceiling} position={[0, -0.001, 0]} receiveShadow raycast={() => null} userData={{ noEdges: true }}>
         <meshStandardMaterial color={ceilingColor} roughness={1} />
@@ -84,7 +84,7 @@ export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: nu
   return (
     <mesh ref={ref} geometry={geo} position={[0, y, 0]} castShadow receiveShadow userData={{ id: r.space, restY: y }}>
       <meshStandardMaterial color={color} roughness={0.9} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
     </mesh>
   );
 }
@@ -120,7 +120,7 @@ export function SolidMesh({ s, base, color, ...o }: Outline & { s: Solid; base: 
   return (
     <mesh ref={ref} geometry={geo} position={[0, y, 0]} castShadow={s.kind === 'structure'} receiveShadow userData={{ id: s.id, restY: y }}>
       <meshStandardMaterial color={color} roughness={0.9} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
     </mesh>
   );
 }
@@ -145,7 +145,7 @@ function FurnitureBox({ f, base, color, ...o }: Outline & { f: Project['furnitur
       scale={[f.size.w * M, f.size.h * M, f.size.d * M]}
     >
       <meshStandardMaterial color={color} roughness={0.95} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={2} />}
+      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
     </mesh>
   );
 }
@@ -162,7 +162,7 @@ function FurnitureModel({ f, recipe, base, ...o }: Outline & { f: Project['furni
       {o.sel && (
         <mesh geometry={unitBox} position={[0, (h / 2) * M, 0]} scale={[w * M, h * M, d * M]} raycast={() => null} userData={{ noEdges: true }}>
           <meshBasicMaterial visible={false} />
-          <Edges color={o.sel} lineWidth={2} />
+          <Edges color={o.sel} lineWidth={1.5} />
         </mesh>
       )}
     </group>

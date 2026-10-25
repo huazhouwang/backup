@@ -1,16 +1,15 @@
-/** How an object in the 3D view answers selection and changes: a tint, an outline (see meshes.tsx) and a hop (see canvas/hop.ts) */
+/** How an object in the 3D view answers selection and changes: an outline when selected (see meshes.tsx), a tint and a hop (see canvas/hop.ts) after a change */
 import { useFrame } from '@react-three/fiber';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { hops } from '@/canvas/hop';
 
-/** Selected objects are tinted with the selection color and outlined; just-changed objects get a tint that fades out */
-const SELECTED_TINT = 0.45;
+/** Selected objects keep their colors (only outlined); just-changed objects get a tint that fades out */
 const CHANGED_TINT = 0.6;
-export const TintColors = createContext<{ sel: THREE.Color; changed: THREE.Color }>({ sel: new THREE.Color(), changed: new THREE.Color() });
+export const TintColors = createContext<{ changed: THREE.Color }>({ changed: new THREE.Color() });
 
 /**
- * Per-frame feedback for one object (see canvas/hop.ts): its color (selected, or fading after a change) and the one-time hop.
+ * Per-frame feedback for one object (see canvas/hop.ts): its color (fading after a change, unless selected) and the one-time hop.
  * userData.restY and userData.baseColor record the resting state; screenshots put objects back to it first.
  */
 export function useFeedback<T extends THREE.Object3D>(id: string, color: string | null, selected: boolean) {
@@ -29,8 +28,7 @@ export function useFeedback<T extends THREE.Object3D>(id: string, color: string 
       if (!(part as THREE.Mesh).isMesh || !part.userData.baseColor) return;
       const mat = (part as THREE.Mesh).material as THREE.MeshStandardMaterial;
       mat.color.copy(part.userData.baseColor);
-      if (selected) mat.color.lerp(tints.sel, SELECTED_TINT);
-      else if (k > 0) mat.color.lerp(tints.changed, CHANGED_TINT * k);
+      if (k > 0) mat.color.lerp(tints.changed, CHANGED_TINT * k);
     });
     const px = hops.lift(id, now);
     o.position.y = o.userData.restY;

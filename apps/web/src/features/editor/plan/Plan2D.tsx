@@ -82,7 +82,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     for (const e of shapes.elements.filter(x => !x.faint)) out.set(e.id, e.fills.map(f => `M${pts(f.ring).replaceAll(' ', 'L')}Z`).join(''));
     return out;
   }, [shapes]);
-  const thin = useMemo(() => new Set([...shapes.walls.map(x => x.w.id), ...shapes.openings.map(o => o.id)]), [shapes]);
   // A new highlight restarts the fade: the token goes into the overlay keys
   const changeToken = useMemo(() => Date.now(), [view.highlight]);
 
@@ -198,7 +197,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
 
           {/*
             The plan's only colour is SketchUp's selection blue. Just changed (or pointed at by the agent): a blue tint that fades
-            out (SketchUp has no such hint, so it borrows the selection colour). Selected: tinted with an outline until deselected
+            out (SketchUp has no such hint, so it borrows the selection colour). Selected: outlined until deselected, its colours kept
           */}
           <g pointerEvents="none" data-feedback>
             {view.highlight
@@ -209,16 +208,8 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             {view.selection
               .filter(id => outlines.has(id))
               .map(id => (
-                // Walls, doors and windows are thin: fill them nearly solid so the color reads; rooms and furniture get a light wash
-                <path
-                  key={id}
-                  d={outlines.get(id)}
-                  fill="var(--chart-2)"
-                  fillOpacity={thin.has(id) ? 0.85 : 0.25}
-                  stroke="var(--chart-2)"
-                  strokeWidth={2.5}
-                  vectorEffect="non-scaling-stroke"
-                />
+                // Selected objects keep their colours: only a thin outline
+                <path key={id} d={outlines.get(id)} fill="none" stroke="var(--chart-2)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
               ))}
           </g>
 

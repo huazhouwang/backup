@@ -144,7 +144,7 @@ export function Model3D() {
   const ownerOf = (id: string) => findObject(project, id, 'opening')?.wall?.id;
   // A door or window is part of its wall in 3D, so selecting it marks the wall
   const sel = new Set(view.selection.map(id => ownerOf(id) ?? id));
-  const tints = useMemo(() => ({ sel: new THREE.Color(c.sel), changed: new THREE.Color(c.changed) }), [c.sel, c.changed]);
+  const tints = useMemo(() => ({ changed: new THREE.Color(c.changed) }), [c.changed]);
 
   const [x0, y0, x1, y1] = useMemo(() => siteBounds(project), [project.site.boundary]);
   const cx = ((x0 + x1) / 2) * M,
