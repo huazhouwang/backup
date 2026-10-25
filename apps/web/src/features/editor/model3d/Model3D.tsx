@@ -305,7 +305,9 @@ export function Model3D() {
           <SafariPinch />
           <Picker />
           <Sun3D toward={sunSky.toward} up={sunSky.up} />
-          {view.layers.dimensions && !camera3d.walking && !camera3d.section && <HeightDims3D box={box} shown={levels.map(l => l.id)} />}
+          {view.layers.dimensions && current && !camera3d.walking && !camera3d.section && (
+            <HeightDims3D project={project} level={current.id} shown={levels.map(l => l.id)} quality={q} growth={growth} />
+          )}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

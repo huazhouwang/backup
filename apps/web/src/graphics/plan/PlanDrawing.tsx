@@ -158,9 +158,23 @@ export function PlanLabels({ shapes, pick }: { shapes: LevelShapes; pick?: Pick 
 
 /**
  * Architectural dimensions (see dimensions.ts): a thin line, extension lines, 45° ticks at the marks and each segment's length in
- * millimetres beside the line; a value too long for its segment moves farther out, alternating, so neighbours don't collide
+ * millimetres beside the line; a value too long for its segment moves farther out, alternating, so neighbours don't collide. On
+ * the plan's page each value is haloed in the page colour, clearing the lines behind it; drawn in 3D (`halo` false), over the
+ * ground or the house, a halo would show as a pale box, so there is none.
  */
-export function PlanDimensions({ chains, size, line, color = 'var(--foreground)' }: { chains: DimChain[]; size: number; line: Line; color?: string }) {
+export function PlanDimensions({
+  chains,
+  size,
+  line,
+  color = 'var(--foreground)',
+  halo = true,
+}: {
+  chains: DimChain[];
+  size: number;
+  line: Line;
+  color?: string;
+  halo?: boolean;
+}) {
   const tick = size * 0.45;
   return (
     <g pointerEvents="none" fontFamily="var(--font-mono)" fontSize={size} fill={color} textAnchor="middle">
@@ -205,9 +219,7 @@ export function PlanDimensions({ chains, size, line, color = 'var(--foreground)'
                   y={y}
                   transform={`rotate(${angle} ${x} ${y})`}
                   dominantBaseline={above ? 'alphabetic' : 'hanging'}
-                  paintOrder="stroke"
-                  stroke="var(--canvas-backdrop)"
-                  strokeWidth={size / 5}
+                  {...(halo && { paintOrder: 'stroke', stroke: 'var(--canvas-backdrop)', strokeWidth: size / 5 })}
                 >
                   {text}
                 </text>

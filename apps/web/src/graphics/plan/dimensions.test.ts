@@ -1,7 +1,7 @@
 import { createProject, migrate, type Project } from '@plinth/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../samples/wushi-10/project.json';
-import { elevationText, exteriorDimensions, heightDimensions, selectionDimensions, type DimChain } from './dimensions';
+import { elevationDimensions, elevationText, exteriorDimensions, heightDimensions, selectionDimensions, type DimChain } from './dimensions';
 import { levelShapes } from './plan-geometry';
 
 const p: Project = migrate(sampleJson);
@@ -119,5 +119,22 @@ describe('vertical dimensions for 3D', () => {
 
   it('writes elevations as drawings do', () => {
     expect([elevationText(0), elevationText(3600), elevationText(-200)]).toEqual(['±0.000', '3.600', '-0.200']);
+  });
+});
+
+describe('vertical dimensions on the south elevation', () => {
+  const all = p.levels.map(l => l.id);
+
+  it("stand on the right side chains' lines, heights pointing down, crowded chains left out", () => {
+    const fine = elevationDimensions(p, all, 0, { size: 100, step: 260 });
+    expect(fine.chains.map(c => c.origin[0])).toEqual([390, 650, 910].slice(0, fine.chains.length));
+    const storeys = fine.chains.find(c => c.marks.length === 5)!;
+    expect(storeys.marks).toEqual([-13000, -10200, -6900, -3600, 0]);
+    expect(fine.chains.at(-1)!.marks).toEqual([-13000, 200]);
+    expect(fine.top).toBe(13000);
+    // At a large type size the detail chain no longer fits and is dropped; the overall height always stays
+    const coarse = elevationDimensions(p, all, 0, { size: 600, step: 1560 });
+    expect(coarse.chains.length).toBeLessThan(fine.chains.length);
+    expect(coarse.chains.at(-1)!.marks).toEqual([-13000, 200]);
   });
 });

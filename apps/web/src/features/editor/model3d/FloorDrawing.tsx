@@ -23,7 +23,7 @@ import { markup } from '@/graphics/plan/markup';
  * (4096-pixel textures for two layers on four floors took about 600 MB): the current floor's ink is sharpest; other floors' ink and
  * all paper (seen only while the house grows, and soft-edged) are smaller; low-end phones get half.
  */
-const TEXTURE_PX = {
+export const TEXTURE_PX = {
   high: { ink: 2048, otherInk: 1024, paper: 1024 },
   low: { ink: 1024, otherInk: 512, paper: 512 },
 };
@@ -33,7 +33,7 @@ export const paperOpacity = (g: number) => 1 - THREE.MathUtils.smoothstep(g, 0, 
 /** The ink fades after the paper, gone before the walls are fully up */
 const inkOpacity = (g: number) => 1 - THREE.MathUtils.smoothstep(g, 0.3, 0.8);
 
-async function rasterize(svg: string, width: number, height: number, doc: Document) {
+export async function rasterize(svg: string, width: number, height: number, doc: Document) {
   const img = new doc.defaultView!.Image();
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   await img.decode();
@@ -237,7 +237,7 @@ export function GroundDimensions({
     const dims = frame.dims!;
     const svg = markup(
       <svg xmlns="http://www.w3.org/2000/svg" viewBox={`${frame.x} ${frame.y} ${frame.w} ${frame.h}`} width={w} height={h}>
-        <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, dims)} size={dims.size} line={line} />
+        <PlanDimensions chains={exteriorDimensions(project, level, shapes.bounds, dims)} size={dims.size} line={line} halo={false} />
       </svg>,
       doc,
     );
