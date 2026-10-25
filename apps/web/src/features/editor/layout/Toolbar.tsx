@@ -14,7 +14,6 @@ const LAYER_LABELS = {
   furniture: [m.editor_show_furniture, m.editor_hide_furniture],
   labels: [m.editor_show_labels, m.editor_hide_labels],
   dimensions: [m.editor_show_dimensions, m.editor_hide_dimensions],
-  guides: [m.editor_show_guides, m.editor_hide_guides],
 } as const;
 
 export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: () => void }) {
@@ -75,7 +74,7 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
             <DownloadIcon /> {m.editor_download_json()}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {(['furniture', 'labels', 'dimensions', 'guides'] as const).map(k => (
+          {(['furniture', 'labels', 'dimensions'] as const).map(k => (
             <DropdownMenuItem key={k} onClick={() => setView({ layers: { ...view.layers, [k]: !view.layers[k] } })}>
               <LayoutPanelLeftIcon /> {LAYER_LABELS[k][view.layers[k] ? 1 : 0]()}
             </DropdownMenuItem>

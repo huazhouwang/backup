@@ -4,7 +4,7 @@
  * drag is one undoable edit, the same one the agent or the props panel would make.
  *
  * Snapping, within a few screen pixels: a wall to the line of a parallel wall (on its floor, or the floors above and below), a
- * door or window to the middle of its wall, furniture against a wall face; each to the guides. Otherwise to a 50 mm step.
+ * door or window to the middle of its wall, furniture against a wall face. Otherwise to a 50 mm step.
  */
 import {
   directionOf,
@@ -20,7 +20,6 @@ import {
   type Project,
   type Wall,
 } from '@plinth/core';
-import { guideStops, planGuideLines } from './plan-guides';
 
 export interface DragResult {
   name: string;
@@ -49,7 +48,7 @@ const metres = (mm: number) => `${(mm / 1000).toFixed(2)} m`;
 export function dragCall(p: Project, id: string, delta: Point, tol: number): DragResult | null {
   const e = findObject(p, id);
   if (e?.kind === 'wall') return dragWall(p, e.obj, delta, tol);
-  if (e?.kind === 'opening' && e.wall) return dragOpening(p, e.wall, e.obj.id, delta, tol);
+  if (e?.kind === 'opening' && e.wall) return dragOpening(e.wall, e.obj.id, delta, tol);
   if (e?.kind === 'furniture') return dragFurniture(p, e.obj, delta, tol);
   return null;
 }
@@ -74,25 +73,13 @@ function dragWall(p: Project, w: Wall, delta: Point, tol: number): DragResult | 
     const c = dot(o.start, n);
     if (Math.abs(c - want) < tol && (!best || Math.abs(c - want) < Math.abs(best.c - want))) best = { c, o };
   }
-  // A guide along the wall: its centreline or a face on it
-  let onGuide: number | null = null;
-  for (const g of planGuideLines(p)) {
-    if (Math.abs(g.dir[0] * d[1] - g.dir[1] * d[0]) > 1e-6) continue;
-    for (const c of [dot(g.at, n), dot(g.at, n) - w.thickness / 2, dot(g.at, n) + w.thickness / 2])
-      if (
-        Math.abs(c - want) < tol &&
-        (onGuide === null || Math.abs(c - want) < Math.abs(onGuide - want)) &&
-        (!best || Math.abs(c - want) < Math.abs(best.c - want))
-      )
-        onGuide = c;
-  }
-  const k = onGuide !== null ? onGuide - c0 : best ? best.c - c0 : snapStep(want - c0);
+  const k = best ? best.c - c0 : snapStep(want - c0);
   if (Math.abs(k) < 1) return null;
   // wall_move takes a compass direction: the one nearest the normal, with the distance that projects onto the normal as k
   const dir = directionOf([n[0] * Math.sign(k), n[1] * Math.sign(k)]);
   const distance = Math.abs(k) / Math.abs(dot(UNIT[dir], n));
   const guides: [Point, Point][] = [];
-  if (best && onGuide === null) {
+  if (best) {
     // Along the shared line, spanning both walls
     const along = [w.start, w.end, best.o.start, best.o.end].map(q => dot(q, d));
     const a = Math.min(...along),
@@ -103,15 +90,12 @@ function dragWall(p: Project, w: Wall, delta: Point, tol: number): DragResult | 
   return { name: 'wall_move', input: { wall: w.id, direction: dir, distance: Math.round(distance) }, guides, readout: metres(Math.abs(k)) };
 }
 
-function dragOpening(p: Project, w: Wall, id: string, delta: Point, tol: number): DragResult | null {
+function dragOpening(w: Wall, id: string, delta: Point, tol: number): DragResult | null {
   const o = w.openings.find(x => x.id === id)!;
   const L = wallLength(w);
   const want = o.at + dot(delta, wallDir(w));
   const centred = Math.abs(want - L / 2) < tol;
-  // Its middle or an edge on a guide crossing the wall
-  const stop = guideStops(p, w, [0, o.width / 2, -o.width / 2]).sort((a, b) => Math.abs(a - want) - Math.abs(b - want))[0];
-  const onGuide = !centred && stop != null && Math.abs(stop - want) < tol;
-  const at = Math.min(L - o.width / 2, Math.max(o.width / 2, centred ? L / 2 : onGuide ? stop : snapStep(want)));
+  const at = Math.min(L - o.width / 2, Math.max(o.width / 2, centred ? L / 2 : snapStep(want)));
   if (Math.abs(at - o.at) < 1) return null;
   const n = wallNormal(w),
     mid = pointAt(w, L / 2),
@@ -173,19 +157,6 @@ function dragFurniture(p: Project, f: Project['furniture'][number], delta: Point
             [hi, face],
           ],
     );
-  }
-  // Its edges or middle on a guide running along an axis
-  for (const g of planGuideLines(p)) {
-    const vertical = Math.abs(g.dir[1]) > 1 - 1e-6;
-    if (!vertical && Math.abs(g.dir[0]) <= 1 - 1e-6) continue;
-    const ax = vertical ? 0 : 1;
-    if (snapped[ax]) continue;
-    const [b0, b1] = ax === 0 ? [x0, x1] : [y0, y1];
-    const c = g.at[ax];
-    const shift = [c - b0, c - b1, c - (b0 + b1) / 2].sort((a, b) => Math.abs(a) - Math.abs(b))[0];
-    if (Math.abs(shift) >= tol) continue;
-    pos = ax === 0 ? [pos[0] + shift, pos[1]] : [pos[0], pos[1] + shift];
-    snapped[ax] = true;
   }
   pos = [snapped[0] ? pos[0] : f.position[0] + snapStep(pos[0] - f.position[0]), snapped[1] ? pos[1] : f.position[1] + snapStep(pos[1] - f.position[1])];
   if (Math.abs(pos[0] - f.position[0]) < 1 && Math.abs(pos[1] - f.position[1]) < 1) return null;

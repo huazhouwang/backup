@@ -6,12 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { wallBody, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
-import { holdAxis, snapMeasure } from './plan-measure';
-import { guideDraft, guideSources, sourceAt, type GuideDraft, type GuideSource } from './plan-guide-draw';
-import { clipLine } from './plan-guides';
-import { PlanGuides } from './PlanGuides';
 import { placeCall, type PlaceResult } from './plan-place';
-import { exteriorDimensions, selectionDimensions, type DimChain } from '@/graphics/plan/dimensions';
+import { exteriorDimensions, selectionDimensions } from '@/graphics/plan/dimensions';
 import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/plan/plan-geometry';
 import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanMarks, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
@@ -130,81 +126,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(ref.current!.getScreenCTM()!.inverse());
     return [q.x, q.y];
   };
-  // The tape measure: two clicks give a distance; measurements stay until the tool is put away
-  const measuring = useEditor(s => s.measuring);
-  const [measures, setMeasures] = useState<[Point, Point][]>([]);
-  const [from, setFrom] = useState<Point | null>(null);
-  const [hover, setHover] = useState<{ point: Point; snapped: string | null } | null>(null);
-  useEffect(() => {
-    setMeasures([]);
-    setFrom(null);
-    setHover(null);
-  }, [measuring, view.level]);
-  const measurePoint = (e: React.MouseEvent) => {
-    const s = snapMeasure(project, view.level, pointMm(e), SNAP_PX * pxMm);
-    return from && e.shiftKey ? { point: holdAxis(from, s.point), snapped: s.snapped } : s;
-  };
-  // Dragging off an edge or a corner with the tape draws a guide (see plan-guide-draw.ts); dragging elsewhere pans the plan
-  const setGuideEdit = useEditor(s => s.setGuideEdit);
-  const sources = useMemo(() => (measuring ? guideSources(project, view.level) : null), [measuring, project, view.level]);
-  const [draft, setDraft] = useState<{ g: GuideDraft; at: Point } | null>(null);
-  const gesture = useRef<{ id: number; x: number; y: number; moved: boolean; src: GuideSource | null; pan: { x: number; y: number } | null } | null>(null);
-  const suppressClick = useRef(false);
-  const sheetDown = (e: React.PointerEvent) => {
-    if (!e.isPrimary || !sources) return;
-    const t = zoomRef.current?.instance.state;
-    gesture.current = {
-      id: e.pointerId,
-      x: e.clientX,
-      y: e.clientY,
-      moved: false,
-      src: sourceAt(sources, pointMm(e), SNAP_PX * pxMm),
-      pan: t ? { x: t.positionX, y: t.positionY } : null,
-    };
-    (e.currentTarget as Element).setPointerCapture(e.pointerId);
-  };
-  const sheetMove = (e: React.PointerEvent) => {
-    const g = gesture.current;
-    if (!g || g.id !== e.pointerId) return setHover(measurePoint(e));
-    if (!g.moved && Math.hypot(e.clientX - g.x, e.clientY - g.y) < 6) return;
-    g.moved = true;
-    if (g.src) {
-      const q = pointMm(e);
-      const d = canEdit ? guideDraft(g.src, q, view.level) : null;
-      setDraft(d && { g: d, at: q });
-      setHover(null);
-    } else if (g.pan) {
-      const t = zoomRef.current?.instance.state;
-      if (t) zoomRef.current?.setTransform(g.pan.x + e.clientX - g.x, g.pan.y + e.clientY - g.y, t.scale, 0);
-    }
-  };
-  const sheetUp = async (e: React.PointerEvent) => {
-    const g = gesture.current;
-    gesture.current = null;
-    if (!g || g.id !== e.pointerId || !g.moved) return;
-    suppressClick.current = true;
-    const d = draft?.g;
-    setDraft(null);
-    if (!g.src || !d) return;
-    let last: string | undefined;
-    for (const c of d.calls) {
-      const r = await run(c.name, c.input);
-      if (!r.ok) return;
-      last = (r.result as { id?: string } | undefined)?.id;
-    }
-    if (last) setGuideEdit({ id: last, origin: d.origin, normal: d.normal, distance: d.distance });
-  };
-  const measureClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (suppressClick.current) {
-      suppressClick.current = false;
-      return;
-    }
-    const { point } = measurePoint(e);
-    if (!from) return setFrom(point);
-    if (Math.hypot(point[0] - from[0], point[1] - from[1]) > 1) setMeasures(ms => [...ms, [from, point]]);
-    setFrom(null);
-  };
   // The section tool: two clicks draw the line, then 3D shows the section looking across it (arrows show which way)
   const sectioning = useEditor(s => s.sectioning);
   const setSectioning = useEditor(s => s.setSectioning);
@@ -230,15 +151,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     setView({ mode: '3d' });
   };
   const cutLine = cutFrom && cutHover && Math.hypot(cutHover[0] - cutFrom[0], cutHover[1] - cutFrom[1]) > 1 ? ([cutFrom, cutHover] as const) : null;
-
-  const tape = (a: Point, b: Point): DimChain => {
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    const dir: Point = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
-    return { origin: a, dir, normal: [dir[1], -dir[0]], marks: [0, len], ext: 0 };
-  };
-  const tapes = [...measures, ...(from && hover ? [[from, hover.point] as [Point, Point]] : [])]
-    .filter(([a, b]) => Math.hypot(b[0] - a[0], b[1] - a[1]) > 1)
-    .map(([a, b]) => tape(a, b));
 
   const place = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -270,7 +182,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           className="h-full w-full select-none"
           // Zoomed out, the dimension chains grow past the frame to stay readable
           overflow="visible"
-          // Fingers on the plan are ours, not the page's: the zoom pans and pinches, handles drag, the tape draws guides (SVG
+          // Fingers on the plan are ours, not the page's: the zoom pans and pinches, handles drag (SVG
           // shapes can't say so themselves)
           style={{ background: 'var(--canvas-backdrop)', touchAction: 'none' }}
           onClick={() => select([])}
@@ -314,9 +226,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             </g>
           )}
 
-          {view.layers.guides && (
-            <PlanGuides project={project} frame={frame} selected={sel} pick={measuring || placing || sectioning ? undefined : pick} pxMm={pxMm} />
-          )}
           {view.layers.labels && <PlanLabels shapes={shapes} pick={pick} />}
           <PlanMarks frame={frame} size={scale.size} line={screenLine} />
 
@@ -450,72 +359,6 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               />
             </g>
           )}
-          {/* The tape measure: a sheet over the drawing takes the clicks; the snapped point shows as a dot */}
-          {measuring && (
-            <g data-feedback>
-              <PlanDimensions chains={tapes} size={scale.size} line={screenLine} color="var(--chart-2)" />
-              {[...measures.flat(), ...(from ? [from] : [])].map((q, i) => (
-                <circle key={i} cx={q[0]} cy={q[1]} r={3 * pxMm} fill="var(--chart-2)" pointerEvents="none" />
-              ))}
-              {draft && (
-                <g pointerEvents="none">
-                  {(() => {
-                    const seg = clipLine({ id: '', ...draft.g.line }, [frame.x - frame.w, frame.y - frame.h, frame.w * 3, frame.h * 3]);
-                    return (
-                      seg && (
-                        <line x1={seg[0][0]} y1={seg[0][1]} x2={seg[1][0]} y2={seg[1][1]} stroke="var(--chart-2)" strokeDasharray="8 5" {...screenLine(1.5)} />
-                      )
-                    );
-                  })()}
-                  {draft.g.point && <circle cx={draft.g.point[0]} cy={draft.g.point[1]} r={4 * pxMm} fill="var(--chart-2)" />}
-                  <text
-                    x={draft.at[0] + 14 * pxMm}
-                    y={draft.at[1] - 14 * pxMm}
-                    fontSize={12 * pxMm}
-                    fill="var(--chart-2)"
-                    fontFamily="var(--font-mono)"
-                    paintOrder="stroke"
-                    stroke="var(--background)"
-                    strokeWidth={3 * pxMm}
-                    data-guide-draft={draft.g.distance}
-                  >
-                    {draft.g.distance}
-                  </text>
-                </g>
-              )}
-              {hover && (
-                <circle
-                  cx={hover.point[0]}
-                  cy={hover.point[1]}
-                  r={(hover.snapped ? 6 : 4) * pxMm}
-                  fill={hover.snapped === 'corner' ? 'var(--chart-2)' : 'none'}
-                  stroke="var(--chart-2)"
-                  strokeWidth={2}
-                  vectorEffect="non-scaling-stroke"
-                  pointerEvents="none"
-                />
-              )}
-              <rect
-                x={frame.x - frame.w}
-                y={frame.y - frame.h}
-                width={frame.w * 3}
-                height={frame.h * 3}
-                fill="transparent"
-                // Not panned by the zoom: the sheet pans itself where a drag doesn't draw a guide
-                className="plan-drag cursor-crosshair"
-                style={{ touchAction: 'none' }}
-                onPointerDown={sheetDown}
-                onPointerMove={sheetMove}
-                onPointerUp={sheetUp}
-                onPointerCancel={() => {
-                  gesture.current = null;
-                  setDraft(null);
-                }}
-                onPointerLeave={() => setHover(null)}
-                onClick={measureClick}
-              />
-            </g>
-          )}
           {/* Place mode: a sheet over the drawing takes the pointer, and the ghost shows where it would go */}
           {placing && (
             <g data-feedback>
@@ -548,6 +391,9 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
     </TransformWrapper>
   );
 }
+
+/** With Shift: the second point on the first one's horizontal or vertical line, whichever is nearer */
+const holdAxis = (a: Point, b: Point): Point => (Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? [b[0], a[1]] : [a[0], b[1]]);
 
 /** Snapping distance in screen pixels */
 const SNAP_PX = 8;

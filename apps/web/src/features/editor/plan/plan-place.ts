@@ -1,11 +1,10 @@
 /**
  * Placing from the add palette, as SketchUp places a component: what is being placed follows the pointer in the plan, and a
  * click puts it down with the capability call that makes it. Furniture at its default size, on a 50 mm step, pushed out of any
- * wall it would stand in; a door or window onto the nearest wall it can go in, snapped to the wall's middle. Both snap to guides.
+ * wall it would stand in; a door or window onto the nearest wall it can go in, snapped to the wall's middle.
  */
 import { dot, OPENING_DEFAULTS, pointAt, sub, wallDir, wallLength, wallNormal, type Point, type Project, type Wall } from '@plinth/core';
 import type { Placing } from '../store/types';
-import { guideStops, snapToGuides } from './plan-guides';
 
 export interface PlaceResult {
   name: string;
@@ -63,10 +62,9 @@ export function placeCall(p: Project, level: string, placing: Placing, at: Point
   const walls = p.walls.filter(w => w.level === level);
   if (placing.kind === 'furniture') {
     const size = p.library.furniture[placing.type]?.size ?? { w: 600, d: 600, h: 750 };
-    const onGuide = snapToGuides(p, at, tol);
     const c = clearOfWalls(
       walls.filter(w => STOREY.includes(w.kind)),
-      onGuide ? onGuide.point : [snap(at[0]), snap(at[1])],
+      [snap(at[0]), snap(at[1])],
       size.w,
       size.d,
     );
@@ -99,10 +97,5 @@ export function placeCall(p: Project, level: string, placing: Placing, at: Point
   const L = wallLength(best.w);
   let c = Math.min(Math.max(snap(best.at), width / 2 + 50), L - width / 2 - 50);
   if (Math.abs(c - L / 2) < tol) c = L / 2;
-  else {
-    // Its middle or an edge on a guide that crosses the wall
-    const g = guideStops(p, best.w, [0, width / 2, -width / 2]).sort((a, b) => Math.abs(a - best!.at) - Math.abs(b - best!.at))[0];
-    if (g != null && Math.abs(g - best.at) < tol) c = Math.min(Math.max(g, width / 2 + 50), L - width / 2 - 50);
-  }
   return { name: 'opening_add', input: { wall: best.w.id, kind: placing.opening, at: Math.round(c) }, ghost: along(best.w, c - width / 2, c + width / 2) };
 }

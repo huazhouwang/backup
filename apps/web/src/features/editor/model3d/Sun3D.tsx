@@ -54,7 +54,7 @@ export function Sun3D({ toward, up }: { toward: THREE.Vector3; up: boolean }) {
       raycast={function (this: THREE.Sprite, rc, hits) {
         if (rc.camera) THREE.Sprite.prototype.raycast.call(this, rc, hits);
       }}
-      userData={{ noEdges: true, measure: true }}
+      userData={{ noEdges: true, mark: true }}
       onClick={e => {
         e.stopPropagation();
         setSunOpen(true);

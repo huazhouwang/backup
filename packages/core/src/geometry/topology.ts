@@ -174,7 +174,6 @@ export function nextId(p: Project, prefix: string): Id {
     ...p.elements.map(o => o.id),
     ...p.furniture.map(o => o.id),
     ...p.constraints.map(o => o.id),
-    ...(p.guides ?? []).map(o => o.id),
     ...p.decisions.map(o => o.id),
   ]);
   for (let i = 1; ; i++) {

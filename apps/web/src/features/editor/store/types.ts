@@ -71,8 +71,6 @@ export interface EditorState {
   planUntil3D: boolean;
   /** Place mode (see Placing); null when not placing */
   placing: Placing | null;
-  /** The tape measure is out: clicks in the plan or the 3D view measure instead of selecting */
-  measuring: boolean;
   /** The section tool is out in the plan: two clicks draw a section line */
   sectioning: boolean;
   /** The 3D camera (see Camera3D) */
@@ -83,8 +81,6 @@ export interface EditorState {
   sunOpen: boolean;
   /** Asks the 3D view to turn to look north (the time of the request) */
   northRequest: number;
-  /** The guide the tape measure just drew, whose offset can be typed exactly: moved to origin + normal × distance */
-  guideEdit: { id: string; origin: Point; normal: Point; distance: number } | null;
 }
 
 export interface EditorActions {
@@ -96,13 +92,11 @@ export interface EditorActions {
   setLeave3D(fn: (() => Promise<void>) | null): void;
   setPlanUntil3D(on: boolean): void;
   setPlacing(p: Placing | null): void;
-  setMeasuring(on: boolean): void;
   setSectioning(on: boolean): void;
   setCamera3d(patch: Partial<Camera3D>): void;
   setSun(patch: Partial<EditorState['sun']>): void;
   faceNorth(): void;
   setSunOpen(open: boolean): void;
-  setGuideEdit(g: EditorState['guideEdit']): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

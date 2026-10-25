@@ -56,10 +56,6 @@
   /* 3D canvas (the default model style): white walls shaded by a warm white sun and sky light, under a blue sky over the
        ground (SketchUp's background: the horizon fades from the backdrop's haze up to the sky; the ground is SketchUp's
        default ground color). The plan sits on the backdrop. */
-  /* The model axes (SketchUp's colours): red the plan's x, green the plan's y, blue up; the 3D tape measure locks onto them */
-  --axis-x: oklch(0.6 0.22 27);
-  --axis-y: oklch(0.6 0.18 145);
-  --axis-z: oklch(0.55 0.2 262);
   --canvas-backdrop: oklch(0.91 0.004 100);
   --canvas-sky: oklch(0.87 0.035 235);
   --canvas-sun: oklch(0.99 0.006 85);

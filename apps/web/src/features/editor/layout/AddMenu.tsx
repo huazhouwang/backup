@@ -1,16 +1,15 @@
 /**
  * The add palette, as SketchUp's component browser: doors and windows, and the design's furniture types by group. Picking one
- * enters place mode (the plan shows where it goes; a click puts it down). And the hint shown while placing or measuring.
+ * enters place mode (the plan shows where it goes; a click puts it down). And the hint shown while placing.
  */
 import type { OpeningKind } from '@plinth/core';
 import { PlusIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 import { m } from '@/lib/i18n';
-import { kindLabel, useRun } from '../panels/common';
+import { kindLabel } from '../panels/common';
 import { useEditor } from '../store';
 
 const OPENINGS: OpeningKind[] = ['door', 'sliding-door', 'window', 'opening', 'gate'];
@@ -64,12 +63,10 @@ export function AddMenu() {
   );
 }
 
-/** While placing, measuring, drawing a section, walking or looking at a section plane: what to do, and a way out */
+/** While placing, drawing a section, walking or looking at a section plane: what to do, and a way out */
 export function ToolHint({ className }: { className?: string }) {
   const placing = useEditor(s => s.placing);
   const setPlacing = useEditor(s => s.setPlacing);
-  const measuring = useEditor(s => s.measuring);
-  const setMeasuring = useEditor(s => s.setMeasuring);
   const sectioning = useEditor(s => s.sectioning);
   const setSectioning = useEditor(s => s.setSectioning);
   const walking = useEditor(s => s.camera3d.walking);
@@ -81,8 +78,7 @@ export function ToolHint({ className }: { className?: string }) {
   if (placing && mode === '2d') {
     const name = placing.kind === 'furniture' ? (furniture[placing.type]?.name ?? placing.type) : kindLabel(placing.opening);
     text = placing.kind === 'opening' ? m.add_hint_opening({ name }) : m.add_hint_furniture({ name });
-  } else if (measuring) text = mode === '2d' ? m.measure_hint_plan() : m.measure_hint_3d();
-  else if (sectioning && mode === '2d') text = m.section_hint();
+  } else if (sectioning && mode === '2d') text = m.section_hint();
   else if (walking && mode === '3d') text = matchMedia('(pointer: coarse)').matches ? m.model3d_hint_walk_touch() : m.model3d_hint_walk();
   // A section plane in 3D: flip it or clear it
   if (!text && section && mode === '3d')
@@ -104,68 +100,18 @@ export function ToolHint({ className }: { className?: string }) {
     <div className={className}>
       <div className="flex items-center gap-2 rounded-lg bg-background px-3 py-1.5 text-sm shadow-md ring-1 ring-foreground/10">
         <span>{text}</span>
-        {measuring && <GuideControls />}
         <Button
           size="xs"
           variant="outline"
           onClick={() => {
             setPlacing(null);
-            setMeasuring(false);
             setSectioning(false);
             if (walking) setCamera3d({ walking: false });
           }}
         >
-          {measuring ? m.measure_done() : walking ? m.walk_leave() : m.add_cancel()}
+          {walking ? m.walk_leave() : m.add_cancel()}
         </Button>
       </div>
     </div>
-  );
-}
-
-/** With the tape measure: the offset of the guide just drawn, to type exactly, and clearing all the guides */
-function GuideControls() {
-  const edit = useEditor(s => s.guideEdit);
-  const setEdit = useEditor(s => s.setGuideEdit);
-  const count = useEditor(s => s.project.guides?.length ?? 0);
-  const canEdit = useEditor(s => s.canEdit());
-  const run = useRun();
-  const [value, setValue] = useState('');
-  useEffect(() => setValue(edit ? String(edit.distance) : ''), [edit]);
-  if (!canEdit || (!edit && !count)) return null;
-  const apply = async () => {
-    const d = Number(value);
-    if (!edit || !Number.isFinite(d) || d === edit.distance) return;
-    const at = [Math.round(edit.origin[0] + edit.normal[0] * d), Math.round(edit.origin[1] + edit.normal[1] * d)];
-    if ((await run('guide_move', { guide: edit.id, at })).ok) setEdit({ ...edit, distance: d });
-  };
-  return (
-    <>
-      {edit && (
-        <label className="flex items-center gap-1 text-muted-foreground">
-          {m.guide_offset()}
-          <Input
-            className="h-6 w-20 px-1.5 text-right"
-            inputMode="numeric"
-            value={value}
-            aria-label={m.guide_offset()}
-            onChange={e => setValue(e.target.value.replace(/[^\d-]/g, ''))}
-            onKeyDown={e => e.key === 'Enter' && void apply()}
-            onBlur={() => void apply()}
-          />
-          mm
-        </label>
-      )}
-      {count > 0 && (
-        <Button
-          size="xs"
-          variant="ghost"
-          onClick={async () => {
-            if ((await run('guide_remove', { all: true })).ok) setEdit(null);
-          }}
-        >
-          {m.guide_clear()}
-        </Button>
-      )}
-    </>
   );
 }

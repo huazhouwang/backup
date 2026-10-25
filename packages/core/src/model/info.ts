@@ -87,8 +87,6 @@ export function objectInfo(p: Project, id: Id) {
       return { ...e.obj, type: 'level' as const, gross: r2(grossArea(p, e.id)) };
     case 'constraint':
       return { ...e.obj, type: 'constraint' as const };
-    case 'guide':
-      return { ...e.obj, type: 'guide' as const };
     default:
       return null;
   }

@@ -37,13 +37,13 @@ function ownerId(o: THREE.Object3D): string | undefined {
   return undefined;
 }
 
-/** Gather the scene's solid meshes by role (lines, labels and the tape measure's marks are skipped) */
+/** Gather the scene's solid meshes by role (lines, labels and marks such as the sun are skipped) */
 export function buildWorld(scene: THREE.Object3D, roleOf: (id: string | undefined) => Role): World {
   const world: World = { blockers: [], grounds: [] };
   scene.updateMatrixWorld(true);
   scene.traverse(o => {
     const mesh = o as THREE.Mesh & { isLine2?: boolean };
-    if (!mesh.isMesh || mesh.isLine2 || !mesh.visible || o.userData.measure || !mesh.geometry?.getAttribute('position')) return;
+    if (!mesh.isMesh || mesh.isLine2 || !mesh.visible || o.userData.mark || !mesh.geometry?.getAttribute('position')) return;
     for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return;
     const id = ownerId(o);
     const role = roleOf(id);

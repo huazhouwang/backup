@@ -38,12 +38,10 @@ import { TintColors } from './feedback';
 import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { sunDirection, sunPosition } from '@/lib/solar';
-import { Guides3D } from './Guides3D';
 import { Sun3D } from './Sun3D';
 import { movedBy, useMoving } from './doors';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
-import { Measure3D } from './Measure3D';
 import { SectionPlane } from './SectionPlane';
 import { WalkView } from './WalkView';
 import { WalkOverlay } from './WalkOverlay';
@@ -306,9 +304,7 @@ export function Model3D() {
           {camera3d.section && <SectionPlane key={JSON.stringify(camera3d.section)} section={camera3d.section} box={box} />}
           <SafariPinch />
           <Picker />
-          <Measure3D />
           <Sun3D toward={sunSky.toward} up={sunSky.up} />
-          {view.layers.guides && <Guides3D guides={project.guides ?? []} selected={sel} reach={span * 2} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

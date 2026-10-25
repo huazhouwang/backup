@@ -13,8 +13,6 @@ export function removeCall(p: Project, id: string): { name: string; input: Recor
       return e.obj.kind === 'bearing' ? null : { name: 'wall_remove', input: { wall: id } };
     case 'space':
       return { name: 'space_remove', input: { space: id } };
-    case 'guide':
-      return { name: 'guide_remove', input: { guides: [id] } };
     default:
       return null;
   }

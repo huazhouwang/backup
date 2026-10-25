@@ -54,4 +54,16 @@ describe('migrate', () => {
     expect(() => migrate({})).toThrow();
     expect(() => migrate({ schema: 'plinth/project', version: 99 })).toThrow(/newer than/);
   });
+
+  it('drops the model axes (v13) and the guides (v14) of older projects', () => {
+    const doc = {
+      ...migrate(read()),
+      version: 12,
+      axes: { origin: [100, 200] },
+      guides: [{ id: 'g1', name: 'x₁', kind: 'line', at: [0, 0, 0], dir: [1, 0, 0], axis: 'x' }],
+    };
+    const p = migrate(doc) as unknown as Record<string, unknown>;
+    expect(p.axes).toBeUndefined();
+    expect(p.guides).toBeUndefined();
+  });
 });

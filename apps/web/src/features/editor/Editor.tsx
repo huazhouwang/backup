@@ -76,7 +76,6 @@ export function Editor({ initial, search }: { initial: InitialProject; search: {
         else s.undo();
       } else if (e.key === 'Escape') {
         if (s.placing) s.setPlacing(null);
-        else if (s.measuring) s.setMeasuring(false);
         else if (s.sectioning) s.setSectioning(false);
         else if (s.camera3d.walking) s.setCamera3d({ walking: false });
         else s.select([]);

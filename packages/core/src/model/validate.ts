@@ -51,7 +51,6 @@ export function validate(p: Project): ValidationIssue[] {
       issues.push({ path: at, message: text('validate_unknown_material', 'Material {material} is not registered', { material: s.floor }) });
     if (area(s.shape) <= 0) issues.push({ path: at, message: text('validate_zero_area', 'Shape area is 0') });
   });
-  (p.guides ?? []).forEach((g, i) => claim(g.id, `guides[${i}] (${g.name})`));
   p.elements.forEach((e, i) => {
     const at = `elements[${i}] (${e.name})`;
     claim(e.id, at);
