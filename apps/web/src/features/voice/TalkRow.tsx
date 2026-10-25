@@ -12,9 +12,11 @@ import { Button } from '../../components/ui/Button'
 import { FormError } from '../../components/ui/FormError'
 import { MicIcon } from '../../components/ui/MicIcon'
 import { START_CUE_MS, playCue, tapPhone } from '../../lib/cues'
+import { hideHint, isHintHidden } from '../../lib/hints'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
-import { MAX_RECORDING_MS, useRecorder } from './recorder'
+import { MicDeniedSheet, MicExplainSheet } from './MicSheets'
+import { MAX_RECORDING_MS, useMicPermission, useRecorder } from './recorder'
 
 /** Slid up this far (px) while holding, letting go drops the recording. */
 const CANCEL_DISTANCE = 60
@@ -108,6 +110,8 @@ export function TalkRow({
   const [dropping, setDropping] = useState(false)
   const [startedAt, setStartedAt] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [permission, setPermission] = useMicPermission()
+  const [sheet, setSheet] = useState<'explain' | 'denied' | null>(null)
   const down = useRef<{ y: number; at: number } | null>(null)
 
   const recorder = useRecorder()
@@ -174,13 +178,28 @@ export function TalkRow({
     recorder.start(START_CUE_MS).catch((reason: unknown) => {
       setMode('off')
       onDrop()
-      const denied = reason instanceof DOMException && reason.name === 'NotAllowedError'
-      setError(denied ? m.voiceMicDenied() : m.actionFailed())
+      if (reason instanceof DOMException && reason.name === 'NotAllowedError') {
+        setPermission('denied')
+        setSheet('denied')
+      } else setError(m.actionFailed())
     })
+  }
+  // Before the microphone is used: explain first when the system is about to ask, or say how
+  // to turn it back on when it was refused. True when the press can go ahead.
+  const mayRecord = () => {
+    if (permission === 'denied') setSheet('denied')
+    else if (permission === 'prompt' && !isHintHidden('micPermission')) setSheet('explain')
+    else return true
+    return false
+  }
+  const decided = (hide: boolean) => {
+    if (hide) hideHint('micPermission')
+    setSheet(null)
   }
 
   const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     if (disabled || event.button !== 0) return
+    if (mode === 'off' && !mayRecord()) return
     down.current = { y: event.clientY, at: event.timeStamp }
     if (mode !== 'off') return
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -208,8 +227,8 @@ export function TalkRow({
   // Keyboards and switch control press without a pointer: each press starts or sends.
   const onClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0 || disabled) return
-    if (mode === 'off') begin('free')
-    else done()
+    if (mode !== 'off') done()
+    else if (mayRecord()) begin('free')
   }
 
   const status = dropping
@@ -270,6 +289,16 @@ export function TalkRow({
         )}
       </div>
       {error && <FormError size="caption">{error}</FormError>}
+      <MicExplainSheet
+        open={sheet === 'explain'}
+        // Agreed to: the system asks now, and recording goes on hands-free once it may.
+        onContinue={(hide) => {
+          decided(hide)
+          begin('free')
+        }}
+        onLater={decided}
+      />
+      <MicDeniedSheet open={sheet === 'denied'} onClose={() => setSheet(null)} />
     </div>
   )
 }

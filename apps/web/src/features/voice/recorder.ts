@@ -13,6 +13,33 @@ export const canRecord = () =>
   typeof window.AudioContext !== 'undefined' &&
   typeof navigator.mediaDevices?.getUserMedia === 'function'
 
+export type MicPermission = PermissionState | 'unknown'
+
+/**
+ * Whether using the microphone will just work (granted), ask first (prompt) or fail
+ * (denied), kept up to date; 'unknown' where the browser can't say. Known ahead of a tap,
+ * so the tap itself can decide without waiting.
+ */
+export function useMicPermission(): [MicPermission, (state: MicPermission) => void] {
+  const [state, setState] = useState<MicPermission>('unknown')
+  useEffect(() => {
+    let status: PermissionStatus | null = null
+    const update = () => {
+      if (status) setState(status.state)
+    }
+    navigator.permissions
+      ?.query({ name: 'microphone' })
+      .then((result) => {
+        status = result
+        update()
+        status.addEventListener('change', update)
+      })
+      .catch(() => undefined)
+    return () => status?.removeEventListener('change', update)
+  }, [])
+  return [state, setState]
+}
+
 /** Hands each block of microphone samples to the page, as it comes. */
 const TAP = `registerProcessor('bobo-tap', class extends AudioWorkletProcessor {
   process(inputs) {

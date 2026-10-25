@@ -181,7 +181,7 @@ function Usual({ stage }: { stage: Stage }) {
   return (
     <section className="flex flex-col gap-2">
       <CardTitle small>{m.tipsUsualTitle()}</CardTitle>
-      <ul className="m-0 flex flex-col gap-1 pl-5">
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5">
         {lines.map((line) => (
           <li key={line}>{line}</li>
         ))}
@@ -244,7 +244,7 @@ function Doctor({ stage }: { stage: Stage }) {
   return (
     <section className="flex flex-col gap-2 rounded-xl bg-danger-soft p-4">
       <h2 className="m-0 text-body font-extrabold text-danger-text">{m.tipsDoctorTitle()}</h2>
-      <ul className="m-0 flex flex-col gap-1 pl-5 text-danger-text">
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-danger-text">
         {signs.items.map((item) => (
           <li key={item}>{item}</li>
         ))}

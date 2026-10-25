@@ -145,3 +145,73 @@ test('talks to Bobo on its own page, by holding the microphone or tapping it', a
   await expect(page.getByText('今天的记录')).toBeVisible()
   await context.close()
 })
+
+test('explains the microphone before the system asks, and how to turn it back on', async ({
+  browser,
+}) => {
+  const { context, page } = await newDevice(browser)
+  // Not decided yet, as on a phone that hasn't been asked (the test browser allows at once).
+  await page.addInitScript(() => {
+    const status = { state: 'prompt', addEventListener() {}, removeEventListener() {} }
+    Object.defineProperty(navigator.permissions, 'query', { value: async () => status })
+  })
+  await onboard(page)
+  await signIn(context, 'micExplain')
+  const api = await standInApi(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: /和 Bobo 说/ }).click()
+  const mic = page.getByRole('button', { name: '按住说话' })
+  await page.waitForTimeout(500)
+
+  // Not decided yet: the explanation comes first; "暂不" leaves the system's question unasked.
+  await mic.click()
+  const explain = page.getByRole('dialog', { name: '和 Bobo 说话需要用麦克风' })
+  await expect(explain).toBeVisible()
+  await expect(explain.getByText('在 Safari 里打开', { exact: false })).toBeVisible()
+  await explain.getByRole('button', { name: '暂不' }).click()
+  await expect(explain).toHaveCount(0)
+  expect(api.uploads).toHaveLength(0)
+
+  // Again, this time going on and not wanting the explanation again: recording starts
+  // hands-free.
+  await mic.click()
+  await explain.getByLabel('不再显示这段说明').check()
+  await explain.getByRole('button', { name: '继续' }).click()
+  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await page.waitForTimeout(1000)
+  await page.getByRole('button', { name: '说完了，发送' }).click()
+  await expect.poll(() => api.uploads.length).toBe(1)
+  api.hear()
+  await expect(page.getByText('我说：换尿不 1')).toBeVisible()
+  api.answer()
+  await expect(page.getByText('我说：换尿布 1')).toBeVisible()
+
+  // Clearing the device's cache brings explanations back.
+  await page.goto('/settings/about')
+  await page.getByRole('button', { name: '清除本机缓存' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: '清除本机缓存' }).click()
+  await expect(page.getByText('已清除')).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('bobo.hiddenHints'))).toBe('[]')
+  await context.close()
+})
+
+test('says how to turn the microphone back on once it was refused', async ({ browser }) => {
+  const { context, page } = await newDevice(browser)
+  await page.addInitScript(() => {
+    const status = { state: 'denied', addEventListener() {}, removeEventListener() {} }
+    Object.defineProperty(navigator.permissions, 'query', { value: async () => status })
+  })
+  await onboard(page)
+  await signIn(context, 'micDenied')
+  await standInApi(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: /和 Bobo 说/ }).click()
+  await page.waitForTimeout(500)
+  await page.getByRole('button', { name: '按住说话' }).click()
+  const denied = page.getByRole('dialog', { name: '麦克风没有打开' })
+  await expect(denied).toBeVisible()
+  await expect(denied.getByText('键盘上的听写', { exact: false })).toBeVisible()
+  await denied.getByRole('button', { name: '知道了' }).click()
+  await expect(denied).toHaveCount(0)
+  await context.close()
+})

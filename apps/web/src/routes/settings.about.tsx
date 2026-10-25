@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { VersionCard } from '../components/AppVersion'
+import { ClearCacheCard } from '../components/ClearCacheCard'
 import { InstallCard } from '../components/InstallCard'
 import { SettingsPage } from '../components/SettingsLayout'
 import { StorageStatus } from '../components/StorageStatus'
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/settings/about')({
         <CardTitle>{m.storageTitle()}</CardTitle>
         <StorageStatus />
       </Card>
+      <ClearCacheCard />
       <VersionCard />
     </SettingsPage>
   ),

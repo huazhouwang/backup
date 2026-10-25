@@ -16,7 +16,7 @@ function List({ title, items }: { title: string; items: string[] }) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="m-0 text-body font-extrabold">{title}</h2>
-      <ul className="m-0 flex flex-col gap-1 pl-5">
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5">
         {items.map((item) => (
           <li key={item}>{item}</li>
         ))}
