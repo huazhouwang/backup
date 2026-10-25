@@ -489,6 +489,7 @@
   "signUpNickname": "昵称（可选）",
   "signUpNicknamePlaceholder": "例如：妈妈",
   "signUpSubmit": "注册",
+  "sinceAwake": "醒了 {duration}",
   "sinceDiaper": "上次换尿布",
   "sinceFeeding": "上次喂养",
   "sinceNever": "还没有记录",

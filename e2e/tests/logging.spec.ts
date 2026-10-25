@@ -6,8 +6,10 @@ test('logs a diaper change, deletes it and undoes the delete', async ({ page }) 
   await onboard(page)
   await logDiaper(page)
   await expect(todayRows(page)).toHaveCount(1)
-  // "上次换尿布" now shows how long ago instead of "还没有记录".
-  await expect(page.locator('main dd').nth(2)).not.toHaveText('还没有记录')
+  // The diaper button now says how long ago instead of "还没有记录".
+  await expect(
+    page.locator('main').getByRole('button', { name: '尿布', exact: true }),
+  ).not.toHaveAccessibleDescription('还没有记录')
 
   await openRow(page)
   await sheet(page).getByRole('button', { name: '删除' }).click()

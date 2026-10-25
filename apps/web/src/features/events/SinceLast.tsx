@@ -7,36 +7,41 @@ import { durationLabel } from './duration-label'
 import { EventIcon, type IconKind } from './EventIcon'
 import { lastActivityAt } from './summary'
 
-/** "Time since last" hints, the main question at 3am: when did the baby last eat? */
+export type SinceCategory = 'feeding' | 'sleep' | 'diaper'
+
+/**
+ * How long since the last of a kind, the main question at 3am: "2 小时 10 分钟前", "醒了 1
+ * 小时 5 分钟" (or "正在睡"), "还没有记录".
+ */
+export function sinceText(events: readonly Event[], category: SinceCategory, now: number) {
+  if (category === 'sleep' && events.some((event) => event.type === 'sleep' && isRunning(event))) {
+    return m.sinceSleepingNow()
+  }
+  const at = lastActivityAt(events, category, now)
+  if (at === undefined) return m.sinceNever()
+  const duration = durationLabel(now - at)
+  return category === 'sleep' ? m.sinceAwake({ duration }) : m.timeAgo({ duration })
+}
+
+const TILES: { category: SinceCategory; label: () => string; icon: IconKind }[] = [
+  { category: 'feeding', label: m.sinceFeeding, icon: 'bottle' },
+  { category: 'sleep', label: m.sinceSleep, icon: 'sleep' },
+  { category: 'diaper', label: m.sinceDiaper, icon: 'diaper' },
+]
+
+/** "Time since last", for those who can only look: the logging buttons show it to the rest. */
 export function SinceLast({ events }: { events: readonly Event[] }) {
   const now = useNow(30_000)
-  const sleeping = events.some((event) => event.type === 'sleep' && isRunning(event))
-  const items: { label: string; at: number | undefined; icon: IconKind; override?: string }[] = [
-    { label: m.sinceFeeding(), at: lastActivityAt(events, 'feeding', now), icon: 'bottle' },
-    {
-      label: m.sinceSleep(),
-      at: sleeping ? undefined : lastActivityAt(events, 'sleep', now),
-      icon: 'sleep',
-      override: sleeping ? m.sinceSleepingNow() : undefined,
-    },
-    { label: m.sinceDiaper(), at: lastActivityAt(events, 'diaper', now), icon: 'diaper' },
-  ]
-
   return (
     <dl className="m-0 grid grid-cols-3 gap-2">
-      {items.map((item) => (
-        <div key={item.label} className="flex flex-col gap-0.5 rounded-lg bg-surface px-3 py-2">
+      {TILES.map((tile) => (
+        <div key={tile.category} className="flex flex-col gap-0.5 rounded-lg bg-surface px-3 py-2">
           <dt className="flex items-center gap-1 whitespace-nowrap text-caption text-fg-muted">
-            <EventIcon kind={item.icon} className="size-4" />
-            {item.label}
+            <EventIcon kind={tile.icon} className="size-4" />
+            {tile.label()}
           </dt>
           <dd className="m-0 font-extrabold">
-            <RollingText>
-              {item.override ??
-                (item.at === undefined
-                  ? m.sinceNever()
-                  : m.timeAgo({ duration: durationLabel(now - item.at) }))}
-            </RollingText>
+            <RollingText>{sinceText(events, tile.category, now)}</RollingText>
           </dd>
         </div>
       ))}

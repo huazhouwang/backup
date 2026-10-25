@@ -1,8 +1,10 @@
 import type { Baby, Event } from '@bobo/shared'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { Button } from '../../components/ui/Button'
+import { RollingText } from '../../components/ui/RollingText'
 import { Sheet } from '../../components/ui/Sheet'
+import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { useBabies } from '../babies/use-babies'
@@ -20,6 +22,7 @@ import { FeedingForm } from './FeedingForm'
 import { useLogTogether } from './log-targets'
 import { LogTargets } from './LogTargets'
 import { OtherEventForm } from './OtherEventForm'
+import { sinceText } from './SinceLast'
 
 const MAIN_CATEGORIES = ['feeding', 'sleep', 'diaper'] as const
 
@@ -27,8 +30,9 @@ const sheetTitle = (category: Category | undefined) =>
   category === 'diaper' ? m.diaperSheetTitle() : category ? categoryTitle[category]() : ''
 
 /**
- * The three big logging buttons plus a menu for the other types; each opens its sheet. With
- * more than one baby, records can be saved for several at once (e.g. twins).
+ * The three big logging buttons, each saying how long since the last of its kind, plus a menu
+ * for the other types; each opens its sheet. With more than one baby, records can be saved
+ * for several at once (e.g. twins).
  */
 export function QuickActions({ baby, events }: { baby: Baby; events: readonly Event[] }) {
   const babyId = baby.id
@@ -49,6 +53,8 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
         onToggle={(id) => toggle(id, babyId)}
       />
     ) : null
+  const now = useNow(30_000)
+  const sinceId = useId()
   const [open, setOpen] = useState<Category | 'more' | null>(null)
   const close = () => setOpen(null)
   const logging = open === 'more' ? undefined : (open ?? undefined)
@@ -63,11 +69,20 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
               key={category}
               tone={categoryTone[category]}
               size="lg"
-              className="min-h-24 flex-col gap-1"
+              className="min-h-28 flex-col gap-0.5 py-3"
+              aria-describedby={`${sinceId}-${category}`}
               onClick={() => setOpen(category)}
             >
-              <EventIcon kind={categoryIconKind(category)} variant="plain" className="size-11" />
+              <EventIcon kind={categoryIconKind(category)} variant="plain" className="size-9" />
               {categoryTitle[category]()}
+              {/* Read as the button's description, not part of its name. */}
+              <span
+                id={`${sinceId}-${category}`}
+                aria-hidden
+                className="text-caption font-bold whitespace-nowrap opacity-90"
+              >
+                <RollingText>{sinceText(events, category, now)}</RollingText>
+              </span>
             </Button>
           ))}
         </div>

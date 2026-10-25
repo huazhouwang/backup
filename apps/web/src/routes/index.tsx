@@ -40,14 +40,16 @@ function BabyToday({ baby }: { baby: Baby }) {
   const { canLog } = useAccess().forBaby(baby)
   return (
     <div className="flex flex-col gap-6">
-      <SinceLast events={events} />
-      <RunningTimers events={events} />
-      <NextUp baby={baby} events={events} />
       {canLog ? (
         <QuickActions baby={baby} events={events} />
       ) : (
-        <NoticeCard>{m.roleViewerNotice()}</NoticeCard>
+        <>
+          <SinceLast events={events} />
+          <NoticeCard>{m.roleViewerNotice()}</NoticeCard>
+        </>
       )}
+      <RunningTimers events={events} />
+      <NextUp baby={baby} events={events} />
       <TodayList events={events} />
       <BadgeToast baby={baby} events={events} />
     </div>
