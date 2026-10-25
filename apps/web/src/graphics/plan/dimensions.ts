@@ -6,7 +6,18 @@
  * temporary dimensions, as in Revit: a wall its length, a door or window its width and distances to the wall's ends, furniture
  * its distance to the nearest walls. Only walls parallel to the drawing's axes are dimensioned. Millimetres, y pointing south.
  */
-import { furnitureFootprint, pointInPolygon, wallDir, wallLength, wallNormal, type Furniture, type Point, type Project, type Wall } from '@plinth/core';
+import {
+  furnitureFootprint,
+  pointInPolygon,
+  wallDir,
+  wallHeight,
+  wallLength,
+  wallNormal,
+  type Furniture,
+  type Point,
+  type Project,
+  type Wall,
+} from '@plinth/core';
 
 /** A chain of dimensions on one line: marks along `dir` from `origin`, the values written on the `normal` side */
 export interface DimChain {
@@ -21,7 +32,7 @@ export interface DimChain {
   ext: number;
 }
 
-type Side = 'top' | 'bottom' | 'left' | 'right';
+export type Side = 'top' | 'bottom' | 'left' | 'right';
 const SIDES: Side[] = ['top', 'bottom', 'left', 'right'];
 /** Outward direction of each side of the drawing (y points south, down the page) */
 const OUT: Record<Side, Point> = { top: [0, -1], bottom: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -245,3 +256,44 @@ function furnitureDimensions(p: Project, f: Furniture): DimChain[] {
   }
   return out;
 }
+
+/** Vertical dimensions for the 3D view (see HeightDims3D), as on an elevation drawing; heights in mm above the ground floor's level */
+export interface HeightDims {
+  /** Chains of heights from the building outwards: detail (doors' and windows' sills and heads), storeys, overall */
+  chains: number[][];
+  /** The floor levels shown, labelled with their elevations */
+  levels: { at: number; name: string }[];
+  /** The outdoor grade */
+  grade: number;
+}
+
+/**
+ * The vertical dimension chains for one side of the house over the levels shown (`shown`, level IDs): the detail chain from the
+ * sills and heads of the doors and windows in that side's façade (left out when it adds nothing), the floor levels up to the top
+ * of what is shown (the highest wall or parapet), and the overall height from the outdoor grade.
+ */
+export function heightDimensions(p: Project, shown: string[], side: Side): HeightDims {
+  const levels = p.levels.filter(l => shown.includes(l.id)).sort((a, b) => a.elevation - b.elevation);
+  const ground = Math.min(...p.levels.map(l => l.elevation));
+  const grade = ground + p.site.groundLevel;
+  if (!levels.length) return { chains: [], levels: [], grade };
+  const walls = p.walls.filter(w => shown.includes(w.level) && w.kind !== 'fence');
+  const elevation = new Map(levels.map(l => [l.id, l.elevation]));
+  const top = Math.max(levels[levels.length - 1].elevation, ...walls.map(w => elevation.get(w.level)! + wallHeight(p, w)));
+  const storeys = marks([...levels.map(l => l.elevation), top]);
+  const detail = marks([
+    ...storeys,
+    ...levels.flatMap(l => {
+      const front = facade(
+        p.walls.filter(w => w.level === l.id && STOREY.has(w.kind) && orientation(w)),
+        side,
+      );
+      return front.flatMap(w => w.openings.flatMap(o => [l.elevation + o.sill, l.elevation + o.sill + o.height]));
+    }),
+  ]);
+  const chains = [...(detail.length > storeys.length ? [detail] : []), storeys, marks([Math.min(grade, ground), top])];
+  return { chains, levels: levels.map(l => ({ at: l.elevation, name: l.name })), grade };
+}
+
+/** An elevation in metres as drawings write it: ±0.000, 3.000, -0.150 */
+export const elevationText = (mm: number) => (Math.abs(mm) < 0.5 ? '±0.000' : (mm / 1000).toFixed(3));

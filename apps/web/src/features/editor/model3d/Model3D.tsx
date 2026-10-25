@@ -39,6 +39,7 @@ import { FloorDrawing, GroundDimensions, PlanSheet } from './FloorDrawing';
 import { FOV } from '@/graphics/three/framing';
 import { sunDirection, sunPosition } from '@/lib/solar';
 import { Sun3D } from './Sun3D';
+import { HeightDims3D } from './HeightDims3D';
 import { movedBy, useMoving } from './doors';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
@@ -304,6 +305,7 @@ export function Model3D() {
           <SafariPinch />
           <Picker />
           <Sun3D toward={sunSky.toward} up={sunSky.up} />
+          {view.layers.dimensions && !camera3d.walking && !camera3d.section && <HeightDims3D box={box} shown={levels.map(l => l.id)} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

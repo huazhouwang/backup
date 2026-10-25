@@ -1,7 +1,7 @@
 import { createProject, migrate, type Project } from '@plinth/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../samples/wushi-10/project.json';
-import { exteriorDimensions, selectionDimensions, type DimChain } from './dimensions';
+import { elevationText, exteriorDimensions, heightDimensions, selectionDimensions, type DimChain } from './dimensions';
 import { levelShapes } from './plan-geometry';
 
 const p: Project = migrate(sampleJson);
@@ -92,5 +92,32 @@ describe('temporary dimensions', () => {
     const cs = selectionDimensions(p, [f.id], STEP);
     expect(cs.length).toBeGreaterThan(0);
     for (const c of cs) expect(c.marks[1]).toBeGreaterThan(0);
+  });
+});
+
+describe('vertical dimensions for 3D', () => {
+  const all = p.levels.map(l => l.id);
+
+  it('storeys, overall from the grade, and the sills and heads in the façade', () => {
+    const d = heightDimensions(p, all, 'bottom');
+    const [detail, storeys, overall] = d.chains;
+    // The sample's storeys: 3600, 3300, 3300 up to the roof at 10.2 m; the stair housing on the roof tops out at 13 m
+    expect(storeys).toEqual([0, 3600, 6900, 10200, 13000]);
+    expect(overall).toEqual([-200, 13000]);
+    // The south façade's ground-floor windows: sill 900, head 2400 (and the sliding door's head)
+    expect(detail).toEqual(expect.arrayContaining([0, 900, 2400, 3600]));
+    expect(detail.length).toBeGreaterThan(storeys.length);
+    expect(d.levels.map(l => l.at)).toEqual([0, 3600, 6900, 10200]);
+    expect(d.grade).toBe(-200);
+  });
+
+  it('only the levels shown (the cutaway), up to the top of their walls', () => {
+    const d = heightDimensions(p, ['L1', 'L2'], 'bottom');
+    expect(d.chains.at(-2)).toEqual([0, 3600, 6900]);
+    expect(d.chains.at(-1)).toEqual([-200, 6900]);
+  });
+
+  it('writes elevations as drawings do', () => {
+    expect([elevationText(0), elevationText(3600), elevationText(-200)]).toEqual(['±0.000', '3.600', '-0.200']);
   });
 });

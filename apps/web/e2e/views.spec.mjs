@@ -1,5 +1,6 @@
 // E2E: section planes → a section line drawn in the plan cuts the 3D model and the model still orbits → the section bar flips it and
-// clears it → going back to the plan from 3D shows it at its final framing from the first frame
+// clears it → going back to the plan from 3D shows it at its final framing from the first frame → 3D shows vertical dimensions,
+// which the dimensions layer hides
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
@@ -75,6 +76,22 @@ test('views', async ({ browser: b }) => {
   await page.waitForTimeout(5000);
   const boxes = await frame.evaluate(() => window.viewBoxes);
   check(boxes.length === 1, `leaving 3D, the plan shows at one framing (${boxes.join(' | ')})`);
+
+  // 3D: vertical dimensions beside the house, the storeys and the floor levels' elevations; the dimensions layer hides them
+  await page.getByRole('button', { name: '切换到三维' }).click();
+  for (let i = 0; i < 30 && (await frame.locator('[data-elevation]').count()) < 5; i++) await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
+  const heights = await frame.evaluate(() => [...document.querySelectorAll('[data-height-dim]')].map(e => Number(e.textContent)));
+  const levels = await frame.evaluate(() => [...document.querySelectorAll('[data-elevation]')].map(e => e.textContent));
+  check(
+    [3600, 3300, 2800, 13200].every(v => heights.includes(v)) && ['±0.000', '3.600', '6.900', '10.200', '-0.200'].every(v => levels.includes(v)),
+    `3D stands vertical dimensions beside the house (${heights.join(' ')} | ${levels.join(' ')})`,
+  );
+  await page.screenshot({ path: `${OUT}/views-height-dims.png` });
+  await page.getByRole('button', { name: '更多' }).click();
+  await page.getByRole('menuitem', { name: '隐藏尺寸' }).click();
+  await page.waitForTimeout(800);
+  check((await frame.locator('[data-height-dim]').count()) === 0, 'hiding the dimensions hides them in 3D too');
 
   check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 });
