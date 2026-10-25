@@ -6,7 +6,6 @@ import { NoticeCard } from '../components/ui/Card'
 import { BadgeToast } from '../features/achievements/BadgeToast'
 import { RequireBaby } from '../features/babies/RequireBaby'
 import { useSelectedBaby } from '../features/babies/use-babies'
-import { NextUp } from '../features/events/NextUp'
 import { QuickActions } from '../features/events/QuickActions'
 import { RunningTimers } from '../features/events/RunningTimers'
 import { SinceLast } from '../features/events/SinceLast'
@@ -49,7 +48,6 @@ function BabyToday({ baby }: { baby: Baby }) {
         </>
       )}
       <RunningTimers events={events} />
-      <NextUp baby={baby} events={events} />
       <TodayList events={events} />
       <BadgeToast baby={baby} events={events} />
     </div>

@@ -10,10 +10,13 @@ import type { DurationKind } from './kinds'
  */
 export interface DurationTimes {
   kind: DurationKind
-  /** When it started; null until one is picked: then it is taken to have just ended. */
+  /**
+   * When it started; null until one is picked: then it is worked out back from when it
+   * ended and how long it took.
+   */
   startAt: number | null
-  /** The "N 分钟前" choice that set the start, if any. */
-  startedAgo: number | null
+  /** While the start is not picked: how many minutes ago it ended ("刚刚" is 0). */
+  endedAgo: number | null
   /** How long it took, in minutes; null when not recorded. Breastfeeds use `sides`. */
   minutes: number | null
   /** Breastfeeds: minutes on each side, `firstSide` first. */
@@ -22,7 +25,7 @@ export interface DurationTimes {
 }
 
 export type DurationTimesAction =
-  | { type: 'startedAgo'; minutes: number; now: number }
+  | { type: 'endedAgo'; minutes: number }
   | { type: 'start'; at: number }
   | { type: 'end'; at: number; now: number }
   | { type: 'minutes'; minutes: number | null }
@@ -41,7 +44,7 @@ export function resolveTimes(
   now: number,
 ): { startAt: number; endAt: number | null } {
   const total = totalMinutes(times)
-  const startAt = times.startAt ?? now - (total ?? 0) * MINUTE
+  const startAt = times.startAt ?? now - ((times.endedAgo ?? 0) + (total ?? 0)) * MINUTE
   return { startAt, endAt: total === null ? null : startAt + total * MINUTE }
 }
 
@@ -55,17 +58,19 @@ function withTotal(times: DurationTimes, total: number): DurationTimes {
 }
 
 /**
+ * - "N 分钟前" for the end, and a new end while the start is not picked, keep the duration
+ *   and work the start out back from the end;
  * - a new start keeps the duration (the end moves with it);
- * - a new duration keeps the start, or, while the start is not picked, keeps the end at now;
- * - a new end keeps the start and changes the duration; an end before the start moves the
- *   start instead, keeping the duration.
+ * - a new duration keeps the start, or, while the start is not picked, keeps the end;
+ * - a new end keeps a picked start and changes the duration; an end before the start moves
+ *   the start instead, keeping the duration.
  */
 export function timesReducer(times: DurationTimes, action: DurationTimesAction): DurationTimes {
   switch (action.type) {
-    case 'startedAgo':
-      return { ...times, startAt: action.now - action.minutes * MINUTE, startedAgo: action.minutes }
+    case 'endedAgo':
+      return { ...times, startAt: null, endedAgo: action.minutes }
     case 'start':
-      return { ...times, startAt: action.at, startedAgo: null }
+      return { ...times, startAt: action.at, endedAgo: null }
     case 'minutes':
       return { ...times, minutes: action.minutes }
     case 'side':
@@ -73,11 +78,15 @@ export function timesReducer(times: DurationTimes, action: DurationTimesAction):
     case 'firstSide':
       return { ...times, firstSide: action.side }
     case 'end': {
+      if (times.startAt === null) {
+        const ago = Math.max(0, Math.round((action.now - action.at) / MINUTE))
+        return { ...times, endedAgo: ago }
+      }
       const { startAt } = resolveTimes(times, action.now)
       const total = totalMinutes(times) ?? 0
-      if (action.at < startAt || times.startAt === null) {
+      if (action.at < startAt) {
         // Keep how long it took; the start follows the end.
-        return { ...times, startAt: action.at - total * MINUTE, startedAgo: null }
+        return { ...times, startAt: action.at - total * MINUTE }
       }
       return withTotal(times, Math.round((action.at - startAt) / MINUTE))
     }
@@ -93,7 +102,7 @@ export function newTimes(kind: DurationKind, usualMinutes: number, firstSide: Br
   return {
     kind,
     startAt: null,
-    startedAgo: null,
+    endedAgo: 0,
     minutes: kind === 'breast' ? null : usualMinutes,
     sides: kind === 'breast' ? { ...NO_SIDES, [firstSide]: usualMinutes } : NO_SIDES,
     firstSide,
@@ -113,7 +122,7 @@ export function storedTimes(
   return {
     kind,
     startAt,
-    startedAgo: null,
+    endedAgo: null,
     minutes: durationMs === null ? null : toMinutes(durationMs),
     sides: sides ? { left: toMinutes(sides.left), right: toMinutes(sides.right) } : NO_SIDES,
     firstSide,

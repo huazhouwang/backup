@@ -49,7 +49,7 @@ test.describe('bottom sheet', () => {
   // Behind a sheet too short to scroll, iOS Safari scrolls the page on a swipe (Chromium here
   // doesn't), so this checks the lock: the page is pinned in place, and back where it was.
   test('pins the page behind while it is up, and leaves it where it was', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 500 })
+    await page.setViewportSize({ width: 390, height: 400 })
     await page.evaluate(() => window.scrollTo(0, 200))
     const before = await page.evaluate(() => window.scrollY)
     expect(before).toBeGreaterThan(0)

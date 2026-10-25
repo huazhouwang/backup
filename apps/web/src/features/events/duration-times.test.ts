@@ -14,21 +14,30 @@ describe('timesReducer', () => {
     expect(resolveTimes(longer, NOW)).toEqual({ startAt: NOW - 90 * MINUTE, endAt: NOW })
   })
 
-  it('keeps the duration when the start moves, and the start when the duration changes', () => {
-    let times = timesReducer(newTimes('bottle', 15, 'left'), {
-      type: 'startedAgo',
-      minutes: 60,
-      now: NOW,
-    })
-    expect(times.startedAgo).toBe(60)
+  it('works the start out back from when it ended, until a start is picked', () => {
+    let times = timesReducer(newTimes('bottle', 15, 'left'), { type: 'endedAgo', minutes: 30 })
     expect(resolveTimes(times, NOW)).toEqual({
-      startAt: NOW - 60 * MINUTE,
-      endAt: NOW - 45 * MINUTE,
+      startAt: NOW - 45 * MINUTE,
+      endAt: NOW - 30 * MINUTE,
     })
+    // A new duration keeps the end; so does a new end typed in.
+    times = timesReducer(times, { type: 'minutes', minutes: 20 })
+    expect(resolveTimes(times, NOW).endAt).toBe(NOW - 30 * MINUTE)
+    times = timesReducer(times, { type: 'end', at: NOW - 60 * MINUTE, now: NOW })
+    expect(times.endedAgo).toBe(60)
+    expect(resolveTimes(times, NOW).startAt).toBe(NOW - 80 * MINUTE)
+  })
+
+  it('keeps the duration when a picked start moves, and the start when the duration changes', () => {
+    let times = timesReducer(newTimes('bottle', 15, 'left'), {
+      type: 'start',
+      at: NOW - 60 * MINUTE,
+    })
+    expect(times.endedAgo).toBeNull()
+    expect(resolveTimes(times, NOW).endAt).toBe(NOW - 45 * MINUTE)
     times = timesReducer(times, { type: 'minutes', minutes: 30 })
     expect(resolveTimes(times, NOW).endAt).toBe(NOW - 30 * MINUTE)
     times = timesReducer(times, { type: 'start', at: NOW - 120 * MINUTE })
-    expect(times.startedAgo).toBeNull()
     expect(resolveTimes(times, NOW).endAt).toBe(NOW - 90 * MINUTE)
   })
 

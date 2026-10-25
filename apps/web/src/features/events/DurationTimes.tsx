@@ -10,25 +10,26 @@ import { sideLabel } from './labels'
 import { AgoChips } from './QuickTimeField'
 import { TimeRow } from './TimeRow'
 
-/** "How long ago it started" choices, in minutes. */
-const STARTED_AGO = [5, 15, 30, 60, 120, 180] as const
+/** "When it ended" choices, in minutes ago; 0 is "刚刚". */
+const ENDED_AGO = [0, 5, 15, 30, 60, 120] as const
 
 /**
  * Start, duration and end of a duration record, changed only through `timesReducer`. With
- * `quickStart`, "N 分钟前" choices for the start (logging afterwards).
+ * `quickEnd`, "N 分钟前" choices for when it ended (logging afterwards): the start is worked
+ * out back from it and how long it took.
  */
 export function DurationTimesFields({
   times,
   dispatch,
   now,
   errors,
-  quickStart = false,
+  quickEnd = false,
 }: {
   times: DurationTimes
   dispatch: Dispatch<DurationTimesAction>
   now: number
   errors: { start?: string; end?: string; duration?: string }
-  quickStart?: boolean
+  quickEnd?: boolean
 }) {
   const definition = RECORD_KINDS[times.kind]
   const tone = durationChipTone(times.kind)
@@ -36,13 +37,13 @@ export function DurationTimesFields({
 
   return (
     <div className="flex flex-col gap-4">
-      {quickStart && (
+      {quickEnd && (
         <AgoChips
-          legend={m.durationStartedWhen()}
+          legend={m.durationEndedWhen()}
           showLegend
-          options={STARTED_AGO}
-          selected={times.startedAgo}
-          onSelect={(minutes) => dispatch({ type: 'startedAgo', minutes, now: Date.now() })}
+          options={ENDED_AGO}
+          selected={times.startAt === null ? times.endedAgo : null}
+          onSelect={(minutes) => dispatch({ type: 'endedAgo', minutes })}
         />
       )}
       <div className="flex flex-col gap-1">

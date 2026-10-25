@@ -206,13 +206,7 @@ export function DurationForm({
         className="flex flex-col gap-4 border-t-2 border-border pt-4"
       >
         <h3 className="m-0 font-extrabold">{m.durationAfterwards()}</h3>
-        <DurationTimesFields
-          times={times}
-          dispatch={dispatch}
-          now={now}
-          errors={errors}
-          quickStart
-        />
+        <DurationTimesFields times={times} dispatch={dispatch} now={now} errors={errors} quickEnd />
         {kind === 'pumping' && (
           <Input
             label={m.pumpingAmount({ unit: unitLabel('volume') })}
