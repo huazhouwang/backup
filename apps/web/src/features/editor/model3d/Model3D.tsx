@@ -77,7 +77,7 @@ const useColors = () =>
       ground: '--canvas-ground',
       edge: '--foreground',
       shadow: '--canvas-shadow',
-      sel: '--chart-2',
+      sel: '--canvas-selection',
       changed: '--chart-1',
     },
     useCanvasDocument(),
@@ -142,9 +142,8 @@ export function Model3D() {
   // A wall's faces in its finish (plain white with a style that draws white walls)
   const finish = (w: Wall) => (style.walls === 'finish' ? wallFinish(project, w) : { ...materialStyle(undefined), color: c.wall, roughness: 0.9 });
   const ownerOf = (id: string) => findObject(project, id, 'opening')?.wall?.id;
-  // A door or window is part of its wall in 3D, so selecting it marks the wall
-  const sel = new Set(view.selection.map(id => ownerOf(id) ?? id));
-  const tints = useMemo(() => ({ changed: new THREE.Color(c.changed) }), [c.changed]);
+  const sel = new Set(view.selection);
+  const tints = useMemo(() => ({ sel: new THREE.Color(c.sel), selCss: c.sel, changed: new THREE.Color(c.changed) }), [c.sel, c.changed]);
 
   const [x0, y0, x1, y1] = useMemo(() => siteBounds(project), [project.site.boundary]);
   const cx = ((x0 + x1) / 2) * M,
@@ -244,7 +243,7 @@ export function Model3D() {
                             recipe={lookRecipe(project, openingTarget(fr.opening), fr.opening.look)}
                             params={openingParams(fr)}
                             base={base}
-                            sel={sel.has(fr.wall) ? c.sel : undefined}
+                            sel={sel.has(fr.id) ? c.sel : undefined}
                           />
                         ))}
                       {solids

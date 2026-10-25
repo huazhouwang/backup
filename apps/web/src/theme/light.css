@@ -56,6 +56,8 @@
   /* 3D canvas (the default model style): white walls shaded by a warm white sun and sky light, under a blue sky over the
        ground (SketchUp's background: the horizon fades from the backdrop's haze up to the sky; the ground is SketchUp's
        default ground color). The plan sits on the backdrop. */
+  /* Revit's selection and pre-selection colour (RGB 0, 59, 189) */
+  --canvas-selection: oklch(0.423 0.209 262.8);
   --canvas-backdrop: oklch(0.91 0.004 100);
   --canvas-sky: oklch(0.87 0.035 235);
   --canvas-sun: oklch(0.99 0.006 85);

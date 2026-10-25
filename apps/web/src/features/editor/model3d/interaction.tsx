@@ -1,8 +1,9 @@
-/** Input on the 3D view beyond OrbitControls: picking objects, and Safari's trackpad pinch */
+/** Input on the 3D view beyond OrbitControls: picking objects, what the mouse is over, and Safari's trackpad pinch */
 import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '../store';
+import { setHover } from '../hover';
 import type { Orbit } from './CameraRig';
 
 export function SafariPinch() {
@@ -37,7 +38,8 @@ export function SafariPinch() {
 /**
  * Picking: a press and release in (nearly) the same spot selects the object under the pointer; a drag rotates and picks nothing.
  * Done on pointer events instead of the browser's click, which OrbitControls' pointer capture makes unreliable in some browsers.
- * Shift or Cmd adds to / removes from the selection, like the plan.
+ * Shift or Cmd adds to / removes from the selection, like the plan. The mouse resting over an object pre-selects it, as in Revit:
+ * its edges outlined and its name in a tooltip (see hover.ts).
  */
 export function Picker() {
   const { gl, camera, scene, raycaster } = useThree();
@@ -68,13 +70,35 @@ export function Picker() {
       if (e.shiftKey || e.metaKey) select(view.selection.includes(id) ? view.selection.filter(x => x !== id) : [...view.selection, id]);
       else select([id]);
     };
+    // The mouse over an object, looked up once a frame; none while a button is down (orbiting), walking or on touch
+    let frame = 0;
+    const onMove = (e: PointerEvent) => {
+      cancelAnimationFrame(frame);
+      if (e.pointerType !== 'mouse' || e.buttons || store.getState().camera3d.walking) return setHover(null);
+      frame = requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect();
+        raycaster.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+        const hit = raycaster.intersectObjects(scene.children, true).find(h => (h.object as THREE.Mesh).isMesh);
+        const id: string | undefined = hit?.object.userData.id;
+        setHover(id ? { id, x: e.clientX, y: e.clientY } : null);
+      });
+    };
+    const onLeave = () => {
+      cancelAnimationFrame(frame);
+      setHover(null);
+    };
     el.addEventListener('pointerdown', onDown);
     el.addEventListener('pointerup', onUp);
     el.addEventListener('pointercancel', onCancel);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerleave', onLeave);
     return () => {
+      onLeave();
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointerup', onUp);
       el.removeEventListener('pointercancel', onCancel);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', onLeave);
     };
   }, [gl, camera, scene, raycaster, store]);
   return null;

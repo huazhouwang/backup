@@ -1,26 +1,37 @@
 /**
  * The parts of a house in the 3D view, as react-three-fiber components over the shared scene layer (./scene): walls, floor slabs,
- * roofs, doors and windows, railings, elements and furniture. Each answers selection with an outline (see feedback.ts) and
+ * roofs, doors and windows, railings, elements and furniture. Each answers selection and the mouse over it (see feedback.ts) and
  * records its id in userData for picking.
  */
 import { Edges } from '@react-three/drei';
 import type { Element, OpeningFrame, Polygon, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@plinth/core';
 import { footing, lookRecipe, materialOf, SLAB_THICKNESS, wallTarget, type Material } from '@plinth/core';
-import { useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { materialStyle, type MaterialStyle } from '@/lib/materials';
 import { modelStyle } from '@/graphics/model-style';
 import { useEditor } from '../store';
-import { useFeedback } from './feedback';
+import { TintColors, useFeedback } from './feedback';
+import { useHovered } from '../hover';
 import { useFloorTexture } from '@/graphics/three/floor-textures';
 import { lookMaterial, partsGeometry, useBuild } from '@/graphics/three/looks';
 import { castsShadow, elementExtent, M, railingPieces, slabGeometry, solidGeometry, standardMaterialProps, wallGeometry } from '@/graphics/three/scene';
 
 const unitBox = new THREE.BoxGeometry(1, 1, 1);
 
-/** No outlines on the model, except the selected object's edges in the selection color */
+/** No outlines on the model, except the selected object's edges (`sel`: the selection color) */
 export type Outline = { sel?: string };
+
+/**
+ * The edges to outline an object with, as Revit: under the mouse, heavier, in the selection color (pre-selection); selected,
+ * thinner (the object itself turns semi-transparent blue, see feedback.ts)
+ */
+function useLine(id: string, sel: string | undefined) {
+  const hot = useHovered(id);
+  const { selCss } = useContext(TintColors);
+  return sel ? { color: sel, width: 1.5 } : hot ? { color: selCss, width: 2.5 } : null;
+}
 
 /** Dispose of a geometry when it is replaced or the component goes */
 function useDisposed(geo: THREE.BufferGeometry) {
@@ -30,6 +41,7 @@ function useDisposed(geo: THREE.BufferGeometry) {
 
 /** A wall as one solid in its finish (see wallGeometry), down to the ground on the ground floor; glass is drawn by the openings' looks */
 export function WallMesh({ w, project, base, finish, ...o }: Outline & { w: Wall; project: Project; base: number; finish: MaterialStyle }) {
+  const line = useLine(w.id, o.sel);
   const ref = useFeedback<THREE.Mesh>(w.id, finish.color, !!o.sel);
   const below = footing(base, project.site.groundLevel);
   const geo = useDisposed(useMemo(() => wallGeometry(project, w, below), [w, project, below]));
@@ -37,7 +49,7 @@ export function WallMesh({ w, project, base, finish, ...o }: Outline & { w: Wall
   return (
     <mesh ref={ref} geometry={geo} position={[w.start[0] * M, y, w.start[1] * M]} castShadow receiveShadow userData={{ id: w.id, restY: y }}>
       <meshStandardMaterial color={finish.color} roughness={finish.roughness} metalness={finish.metalness} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
+      {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
     </mesh>
   );
 }
@@ -57,6 +69,7 @@ export function Slab({
   const floor = modelStyle().floors === 'material' ? materialOf(s.floor, null, materials) : undefined;
   const map = useFloorTexture(useCanvasDocument(), s.floor, floor);
   if (floor && !map) color = materialStyle(floor).color;
+  const line = useLine(s.id, o.sel);
   const ref = useFeedback<THREE.Mesh>(s.id, color, !!o.sel);
   const geo = useDisposed(useMemo(() => slabGeometry(shape, thickness), [shape, thickness]));
   const ceiling = useDisposed(useMemo(() => slabGeometry(shape, 1), [shape]));
@@ -66,7 +79,7 @@ export function Slab({
     <mesh ref={ref} geometry={geo} position={[0, bottom, 0]} receiveShadow userData={{ id: s.id, restY: bottom }}>
       {/* Remounted when the texture arrives: a material compiles once for having a map or not */}
       <meshStandardMaterial key={map ? 'map' : 'plain'} color={color} map={map} roughness={1} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
+      {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
       {/* Its underside is the ceiling of the room below: painted white, a millimetre under the slab */}
       <mesh geometry={ceiling} position={[0, -0.001, 0]} receiveShadow raycast={() => null} userData={{ noEdges: true }}>
         <meshStandardMaterial color={ceilingColor} roughness={1} />
@@ -77,6 +90,7 @@ export function Slab({
 
 /** A flat roof over a room with nothing above it (see roofs in @plinth/core), its top on the room's walls; picking it picks the room */
 export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: number; color: string }) {
+  const line = useLine(r.space, o.sel);
   const ref = useFeedback<THREE.Mesh>(r.space, color, !!o.sel);
   const geo = useDisposed(useMemo(() => slabGeometry(r.shape, SLAB_THICKNESS), [r.shape]));
   // Two millimetres up, like a floor: the walls end exactly at its top
@@ -84,7 +98,7 @@ export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: nu
   return (
     <mesh ref={ref} geometry={geo} position={[0, y, 0]} castShadow receiveShadow userData={{ id: r.space, restY: y }}>
       <meshStandardMaterial color={color} roughness={0.9} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
+      {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
     </mesh>
   );
 }
@@ -92,7 +106,7 @@ export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: nu
 /**
  * A door or window drawn by its look (see packages/core/src/looks): by default a window or sliding door is a clear pane in a
  * thin dark frame and a glass-block infill is frosted white; doors stay open. Glass casts no shadow, so sunlight falls through
- * the opening. Part of its wall: picking it picks the wall.
+ * the opening. Picked and selected on its own, as in Revit, not as part of its wall.
  */
 export function OpeningLook({
   fr,
@@ -102,12 +116,14 @@ export function OpeningLook({
   ...o
 }: Outline & { fr: OpeningFrame; recipe: Recipe | null; params?: Record<string, unknown>; base: number }) {
   const y = (base + fr.z) * M;
-  const ref = useFeedback<THREE.Group>(fr.wall, null, !!o.sel);
+  const line = useLine(fr.id, o.sel);
+  const ref = useFeedback<THREE.Group>(fr.id, null, !!o.sel);
   const parts = useLookGeometry(recipe, fr.width, fr.thickness, fr.height, params);
   if (!parts.length) return null;
   return (
     <group ref={ref} position={[fr.center[0] * M, y, fr.center[1] * M]} rotation={[0, -fr.angle, 0]} userData={{ restY: y, opening: fr.id }}>
-      <LookMeshes parts={parts} id={fr.wall} recipe={recipe} />
+      <LookMeshes parts={parts} id={fr.id} recipe={recipe} />
+      {line && <BoxLine w={fr.width} d={fr.thickness} h={fr.height} line={line} />}
     </group>
   );
 }
@@ -115,12 +131,13 @@ export function OpeningLook({
 /** A piece of an element (a stair step, a pond's rim or water): its plan outline extruded */
 export function SolidMesh({ s, base, color, ...o }: Outline & { s: Solid; base: number; color: string }) {
   const y = (base + s.z) * M;
+  const line = useLine(s.id, o.sel);
   const ref = useFeedback<THREE.Mesh>(s.id, color, !!o.sel);
   const geo = useDisposed(useMemo(() => solidGeometry(s), [s.outline, s.height]));
   return (
     <mesh ref={ref} geometry={geo} position={[0, y, 0]} castShadow={s.kind === 'structure'} receiveShadow userData={{ id: s.id, restY: y }}>
       <meshStandardMaterial color={color} roughness={0.9} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
+      {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
     </mesh>
   );
 }
@@ -133,6 +150,7 @@ export function Furniture({ f, recipe, base, color, ...o }: Outline & { f: Proje
 /** Furniture without a look: a box of its size */
 function FurnitureBox({ f, base, color, ...o }: Outline & { f: Project['furniture'][number]; base: number; color: string }) {
   const y = (base + (f.elevation ?? 0) + f.size.h / 2) * M;
+  const line = useLine(f.id, o.sel);
   const ref = useFeedback<THREE.Mesh>(f.id, color, !!o.sel);
   return (
     <mesh
@@ -145,7 +163,7 @@ function FurnitureBox({ f, base, color, ...o }: Outline & { f: Project['furnitur
       scale={[f.size.w * M, f.size.h * M, f.size.d * M]}
     >
       <meshStandardMaterial color={color} roughness={0.95} />
-      {o.sel && <Edges threshold={20} color={o.sel} lineWidth={1.5} />}
+      {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
     </mesh>
   );
 }
@@ -153,18 +171,14 @@ function FurnitureBox({ f, base, color, ...o }: Outline & { f: Project['furnitur
 /** A piece of furniture drawn by its look (see packages/core/src/looks); selected, it is outlined by its bounding box */
 function FurnitureModel({ f, recipe, base, ...o }: Outline & { f: Project['furniture'][number]; recipe: Recipe; base: number }) {
   const y = (base + (f.elevation ?? 0)) * M;
+  const line = useLine(f.id, o.sel);
   const ref = useFeedback<THREE.Group>(f.id, null, !!o.sel);
   const { w, d, h } = f.size;
   const parts = useLookGeometry(recipe, w, d, h, f.lookParams);
   return (
     <group ref={ref} position={[f.position[0] * M, y, f.position[1] * M]} rotation={[0, (-f.rotation * Math.PI) / 180, 0]} userData={{ restY: y }}>
       <LookMeshes parts={parts} id={f.id} recipe={recipe} />
-      {o.sel && (
-        <mesh geometry={unitBox} position={[0, (h / 2) * M, 0]} scale={[w * M, h * M, d * M]} raycast={() => null} userData={{ noEdges: true }}>
-          <meshBasicMaterial visible={false} />
-          <Edges color={o.sel} lineWidth={1.5} />
-        </mesh>
-      )}
+      {line && <BoxLine w={w} d={d} h={h} line={line} />}
     </group>
   );
 }
@@ -205,6 +219,16 @@ export function ElementExtras({ e, solids, recipe, base, ...o }: Outline & { e: 
     <group ref={ref} position={[ext.center[0] * M, base * M, ext.center[1] * M]} userData={{ restY: base * M }}>
       <LookMeshes parts={parts} id={e.id} recipe={recipe} />
     </group>
+  );
+}
+
+/** The edges of a w × d × h box standing on the origin: an outline around a look */
+function BoxLine({ w, d, h, line }: { w: number; d: number; h: number; line: { color: string; width: number } }) {
+  return (
+    <mesh geometry={unitBox} position={[0, (h / 2) * M, 0]} scale={[w * M, h * M, d * M]} raycast={() => null} userData={{ noEdges: true }}>
+      <meshBasicMaterial visible={false} />
+      <Edges color={line.color} lineWidth={line.width} />
+    </mesh>
   );
 }
 

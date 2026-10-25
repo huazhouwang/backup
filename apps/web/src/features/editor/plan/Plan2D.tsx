@@ -12,6 +12,7 @@ import { dimensionScale, levelShapes, planFrame, polyPath } from '@/graphics/pla
 import { PlanDefs, PlanDimensions, PlanInk, PlanLabels, PlanMarks, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
 import { useRun } from '../panels/common';
 import { useEditor } from '../store';
+import { setHover } from '../hover';
 import { m } from '@/lib/i18n';
 import { standaloneSvg } from '@/lib/theme';
 import { useBuildsVersion } from '@/lib/builds';
@@ -124,6 +125,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   const run = useRun();
   const [ghost, setGhost] = useState<PlaceResult | null>(null);
   useEffect(() => setGhost(null), [placing, view.level]);
+  useEffect(() => () => setHover(null), []);
   const pointMm = (e: React.MouseEvent): Point => {
     const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(ref.current!.getScreenCTM()!.inverse());
     return [q.x, q.y];
@@ -188,6 +190,13 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           // shapes can't say so themselves)
           style={{ background: 'var(--canvas-backdrop)', touchAction: 'none' }}
           onClick={() => select([])}
+          // The mouse over an object: its name in a tooltip after a pause (see HoverTip)
+          onPointerMove={e => {
+            if (e.pointerType !== 'mouse' || e.buttons) return setHover(null);
+            const id = (e.target as Element).closest('[data-id]')?.getAttribute('data-id');
+            setHover(id ? { id, x: e.clientX, y: e.clientY } : null);
+          }}
+          onPointerLeave={() => setHover(null)}
           role="img"
           aria-label={m.editor_plan_aria({ level: project.levels.find(l => l.id === view.level)?.name ?? '' })}
         >
@@ -196,8 +205,9 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           <PlanInk shapes={shapes} furniture={view.layers.furniture} line={screenLine} pick={pick} />
 
           {/*
-            The plan's only colour is SketchUp's selection blue. Just changed (or pointed at by the agent): a blue tint that fades
-            out (SketchUp has no such hint, so it borrows the selection colour). Selected: outlined until deselected, its colours kept
+            Selection as Revit shows it: under the mouse, the object's outline in the selection blue (canvas.css) and a tooltip with
+            its name (see HoverTip); selected, semi-transparent in that blue with its temporary dimensions. Just changed (or pointed at
+            by the agent): a blue tint that fades out
           */}
           <g pointerEvents="none" data-feedback>
             {view.highlight
@@ -208,8 +218,17 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             {view.selection
               .filter(id => outlines.has(id))
               .map(id => (
-                // Selected objects keep their colours: only a thin outline
-                <path key={id} d={outlines.get(id)} fill="none" stroke="var(--chart-2)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+                // As Revit draws a selection: semi-transparent in the selection colour, so what is under it still shows
+                <path
+                  key={id}
+                  d={outlines.get(id)}
+                  fill="var(--canvas-selection)"
+                  fillOpacity={0.5}
+                  stroke="var(--canvas-selection)"
+                  strokeWidth={1.5}
+                  vectorEffect="non-scaling-stroke"
+                  data-selected={id}
+                />
               ))}
           </g>
 
@@ -306,7 +325,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           {exterior.length > 0 && <PlanDimensions chains={exterior} size={scale.size} line={screenLine} />}
           {temporary.length > 0 && (
             <g data-feedback>
-              <PlanDimensions chains={temporary} size={scale.size} line={screenLine} />
+              <PlanDimensions chains={temporary} size={scale.size} line={screenLine} color="var(--canvas-selection)" />
             </g>
           )}
           {/* The section tool: the line, with arrows at its ends looking across it */}

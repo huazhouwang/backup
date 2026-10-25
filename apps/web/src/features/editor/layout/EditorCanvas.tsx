@@ -8,6 +8,7 @@ import { ToolHint } from './AddMenu';
 import { Compass } from '../compass/Compass';
 import { CanvasTools } from './CanvasTools';
 import { LevelSwitcher } from './LevelSwitcher';
+import { HoverTip } from '../HoverTip';
 
 /** 3D (three.js) is most of the plan page script; load it only when switching to 3D */
 const loadModel3D = () => import('../model3d/Model3D');
@@ -29,6 +30,7 @@ export function EditorCanvas({ svgRef }: { svgRef?: React.RefObject<SVGSVGElemen
     <>
       <CanvasFrame className="absolute inset-0 size-full border-0">
         <HopDriver />
+        <HoverTip />
         {view.mode === '2d' ? (
           <Plan2D svgRef={svgRef} />
         ) : (
