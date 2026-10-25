@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { clsx } from 'clsx'
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 
 import { Button } from '../../components/ui/Button'
 import { FormError } from '../../components/ui/FormError'
@@ -28,7 +28,20 @@ function startedLabel(at: number) {
  * is really recorded, and Siri remembers it for the next half hour. Shows the latest
  * messages; scrolling up loads earlier ones, back 30 days.
  */
-export function ChatSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ChatSheet({
+  open,
+  onClose,
+  focusOnOpen = false,
+}: {
+  open: boolean
+  onClose: () => void
+  /** Opened to say something: the field takes the focus, and the keyboard comes up. */
+  focusOnOpen?: boolean
+}) {
+  const field = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (open && focusOnOpen) field.current?.focus()
+  }, [open, focusOnOpen])
   const queryClient = useQueryClient()
   const { messages, threads, ended, append, isError, hasEarlier, loadingEarlier, top, list } =
     useChatHistory(open)
@@ -130,6 +143,7 @@ export function ChatSheet({ open, onClose }: { open: boolean; onClose: () => voi
               label={m.voiceChatLabel()}
               placeholder={m.voiceChatPlaceholder()}
               value={text}
+              ref={field}
               maxLength={300}
               onChange={(event) => setText(event.target.value)}
             />

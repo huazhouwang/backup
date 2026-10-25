@@ -11,6 +11,7 @@ import { RunningTimers } from '../features/events/RunningTimers'
 import { SinceLast } from '../features/events/SinceLast'
 import { TodayList } from '../features/events/TodayList'
 import { useBabyEvents } from '../features/events/use-events'
+import { ChatBar } from '../features/voice/ChatBar'
 import { m } from '../paraglide/messages.js'
 import { useAccess } from '../sync/use-access'
 
@@ -47,6 +48,7 @@ function BabyToday({ baby }: { baby: Baby }) {
           <NoticeCard>{m.roleViewerNotice()}</NoticeCard>
         </>
       )}
+      <ChatBar />
       <RunningTimers events={events} />
       <TodayList events={events} />
       <BadgeToast baby={baby} events={events} />

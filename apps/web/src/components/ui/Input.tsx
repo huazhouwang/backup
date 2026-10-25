@@ -1,10 +1,11 @@
 import { clsx } from 'clsx'
-import { type InputHTMLAttributes, useId } from 'react'
+import { type InputHTMLAttributes, type Ref, useId } from 'react'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
   hint?: string
   error?: string
+  ref?: Ref<HTMLInputElement>
 }
 
 /** Text input with a visible label. Font size stays >= 16px to avoid iOS zoom on focus. */
