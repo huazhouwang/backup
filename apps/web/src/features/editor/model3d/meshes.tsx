@@ -23,14 +23,11 @@ const unitBox = new THREE.BoxGeometry(1, 1, 1);
 /** No outlines on the model, except the selected object's edges (`sel`: the selection color) */
 export type Outline = { sel?: string };
 
-/**
- * The edges to outline an object with, as Revit: under the mouse, heavier, in the selection color (pre-selection); selected,
- * thinner (the object itself turns semi-transparent blue, see feedback.ts)
- */
+/** The edges to outline an object with: thin lines in the selection color, selected or under the mouse (its surfaces are stippled while selected, see feedback.ts) */
 function useLine(id: string, sel: string | undefined) {
   const hot = useHovered(id);
   const { selCss } = useContext(TintColors);
-  return sel ? { color: sel, width: 1.5 } : hot ? { color: selCss, width: 2.5 } : null;
+  return sel ? { color: sel, width: 1 } : hot ? { color: selCss, width: 1 } : null;
 }
 
 /** Dispose of a geometry when it is replaced or the component goes */

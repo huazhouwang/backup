@@ -1,5 +1,5 @@
-// E2E: selection the Revit way (#149) → in the plan the mouse over a wall outlines it in the selection blue and a tooltip names it
-// → a click selects it, semi-transparent in that blue → in 3D the mouse over a door or window names it, and a click selects the
+// E2E: selection (#149) → in the plan the mouse over a wall outlines it thinly in the selection blue and a tooltip names it
+// → a click selects it, stippled with blue dots as in SketchUp → in 3D the mouse over a door or window names it, and a click selects the
 // door or window itself, not its wall
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
@@ -51,7 +51,7 @@ test('selection', async ({ browser: b }) => {
     const p = document.querySelector('[data-selected]');
     return p && { fill: p.getAttribute('fill'), opacity: p.getAttribute('fill-opacity') };
   });
-  check(sel?.fill === 'var(--canvas-selection)' && Number(sel.opacity) === 0.5, `selected, it turns semi-transparent blue (${JSON.stringify(sel)})`);
+  check(sel?.fill === 'url(#selection-dots)', `selected, it is stippled with blue dots (${JSON.stringify(sel)})`);
 
   // 3D: find a window under the mouse by its tooltip, then click it
   await page.mouse.click(iframe.x + 10, iframe.y + iframe.height - 10);

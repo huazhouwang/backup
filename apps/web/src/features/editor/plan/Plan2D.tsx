@@ -205,10 +205,17 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
           <PlanInk shapes={shapes} furniture={view.layers.furniture} line={screenLine} pick={pick} />
 
           {/*
-            Selection as Revit shows it: under the mouse, the object's outline in the selection blue (canvas.css) and a tooltip with
-            its name (see HoverTip); selected, semi-transparent in that blue with its temporary dimensions. Just changed (or pointed at
-            by the agent): a blue tint that fades out
+            Selection: under the mouse, a thin outline in the selection blue (canvas.css) and a tooltip with its name (see HoverTip);
+            selected, stippled with blue dots as in SketchUp, with its temporary dimensions. Just changed (or pointed at by the agent):
+            a blue tint that fades out
           */}
+          {/* SketchUp's selection stipple: a dot every few screen pixels, offset on every other row */}
+          <defs>
+            <pattern id="selection-dots" patternUnits="userSpaceOnUse" width={6 * pxMm} height={6 * pxMm}>
+              <rect x={0} y={0} width={1.2 * pxMm} height={1.2 * pxMm} fill="var(--canvas-selection)" />
+              <rect x={3 * pxMm} y={3 * pxMm} width={1.2 * pxMm} height={1.2 * pxMm} fill="var(--canvas-selection)" />
+            </pattern>
+          </defs>
           <g pointerEvents="none" data-feedback>
             {view.highlight
               .filter(id => outlines.has(id) && !sel.has(id))
@@ -218,14 +225,13 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             {view.selection
               .filter(id => outlines.has(id))
               .map(id => (
-                // As Revit draws a selection: semi-transparent in the selection colour, so what is under it still shows
+                // As SketchUp draws a selection: stippled with dots in the selection colour over the object's own colours, thin edges
                 <path
                   key={id}
                   d={outlines.get(id)}
-                  fill="var(--canvas-selection)"
-                  fillOpacity={0.5}
+                  fill="url(#selection-dots)"
                   stroke="var(--canvas-selection)"
-                  strokeWidth={1.5}
+                  strokeWidth={1}
                   vectorEffect="non-scaling-stroke"
                   data-selected={id}
                 />

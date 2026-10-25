@@ -19,10 +19,10 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Plan: outline what the pointer is over in the selection colour at a heavier weight, as Revit's pre-selection; changed objects get a tint that fades out (see Plan2D) */
+/* Plan: outline what the pointer is over with a thin line in the selection colour; changed objects get a tint that fades out (see Plan2D) */
 .plan-hit:hover {
   stroke: var(--canvas-selection);
-  stroke-width: 2.5px;
+  stroke-width: 1px;
   /* The plan is drawn in millimetres: the line keeps its width in screen pixels */
   vector-effect: non-scaling-stroke;
 }

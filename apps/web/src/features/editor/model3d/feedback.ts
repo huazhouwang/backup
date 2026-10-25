@@ -1,18 +1,13 @@
 /**
- * How an object in the 3D view answers selection and changes, as Revit: selected, it turns semi-transparent in the selection colour
- * (things behind it show through) with its edges outlined, and under the mouse its edges are outlined (see meshes.tsx); after a
- * change, a tint that fades out and a hop (see canvas/hop.ts)
+ * How an object in the 3D view answers selection and changes, as SketchUp: selected, its surfaces are stippled with dots in the
+ * selection colour over their own colours, with thin edges (see meshes.tsx); under the mouse, thin edges; after a change, a tint
+ * that fades out and a hop (see canvas/hop.ts)
  */
 import { useFrame } from '@react-three/fiber';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { hops } from '@/canvas/hop';
 
-const SELECTED_TINT = 0.85;
-/** How opaque a selected object is (Revit's "semi-transparent" selection) */
-const SELECTED_OPACITY = 0.65;
-/** How much a selected object glows in the selection colour */
-const SELECTED_GLOW = 0.6;
 const CHANGED_TINT = 0.6;
 /** The selection colour, as a color and as a CSS string for outlines, and the change tint */
 export const TintColors = createContext<{ sel: THREE.Color; selCss: string; changed: THREE.Color }>({
@@ -22,7 +17,8 @@ export const TintColors = createContext<{ sel: THREE.Color; selCss: string; chan
 });
 
 /**
- * Per-frame feedback for one object (see canvas/hop.ts): its color and opacity (selected, or fading after a change) and the one-time hop.
+ * Per-frame feedback for one object (see canvas/hop.ts): the dots over it while selected, its color fading after a change, and the
+ * one-time hop.
  * userData.restY and userData.baseColor record the resting state; screenshots put objects back to it first.
  */
 export function useFeedback<T extends THREE.Object3D>(id: string, color: string | null, selected: boolean) {
@@ -41,13 +37,8 @@ export function useFeedback<T extends THREE.Object3D>(id: string, color: string 
       if (!(part as THREE.Mesh).isMesh || !part.userData.baseColor) return;
       const mat = (part as THREE.Mesh).material as THREE.MeshStandardMaterial;
       mat.color.copy(part.userData.baseColor);
-      if (selected) mat.color.lerp(tints.sel, SELECTED_TINT);
-      else if (k > 0) mat.color.lerp(tints.changed, CHANGED_TINT * k);
-      // The bright white-model lighting would wash a tint out to white: the selection glows in its colour too
-      part.userData.baseEmissive ??= mat.emissive.clone();
-      if (selected) mat.emissive.copy(tints.sel).multiplyScalar(SELECTED_GLOW);
-      else mat.emissive.copy(part.userData.baseEmissive);
-      seeThrough(part, mat, selected);
+      if (k > 0) mat.color.lerp(tints.changed, CHANGED_TINT * k);
+      stipple(part as THREE.Mesh, selected, tints.sel);
     });
     const px = hops.lift(id, now);
     o.position.y = o.userData.restY;
@@ -62,20 +53,49 @@ export function useFeedback<T extends THREE.Object3D>(id: string, color: string 
 }
 const tmp = new THREE.Vector3();
 
-/** A selected part lets what is behind it show through; deselected, it is back to its own opacity */
-function seeThrough(part: THREE.Object3D, mat: THREE.MeshStandardMaterial, on: boolean) {
-  const u = part.userData;
-  if (u.baseOpacity === undefined) {
-    u.baseOpacity = mat.opacity;
-    u.baseTransparent = mat.transparent;
+/**
+ * SketchUp's selected faces: a grid of dots on screen in the selection colour, every few pixels, over the surface's own colour. A
+ * copy of the part's geometry drawn just in front of it, discarding all but the dots.
+ */
+const DOT_SPACING = 3;
+const stippleMaterial = new THREE.ShaderMaterial({
+  uniforms: { color: { value: new THREE.Color() }, spacing: { value: DOT_SPACING }, dot: { value: 1 } },
+  vertexShader: `void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `
+    uniform vec3 color;
+    uniform float spacing;
+    uniform float dot;
+    void main() {
+      vec2 cell = floor(gl_FragCoord.xy / spacing);
+      // Every other row shifted by half a cell, as SketchUp's stipple
+      vec2 p = mod(gl_FragCoord.xy + vec2(mod(cell.y, 2.0) * spacing * 0.5, 0.0), spacing);
+      if (p.x >= dot || p.y >= dot) discard;
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `,
+  depthWrite: false,
+  polygonOffset: true,
+  polygonOffsetFactor: -2,
+  polygonOffsetUnits: -2,
+  side: THREE.DoubleSide,
+});
+
+function stipple(part: THREE.Mesh, on: boolean, color: THREE.Color) {
+  let dots = part.userData.dots as THREE.Mesh | undefined;
+  if (!on && !dots) return;
+  if (!dots) {
+    dots = new THREE.Mesh(part.geometry, stippleMaterial);
+    dots.raycast = () => {};
+    dots.userData = { mark: true, noEdges: true };
+    dots.renderOrder = 1;
+    part.add(dots);
+    part.userData.dots = dots;
   }
-  // All selected parts alike, glass too (clear glass would hardly show the selection)
-  const opacity = on ? SELECTED_OPACITY : u.baseOpacity;
-  const transparent = on || u.baseTransparent;
-  if (mat.opacity === opacity && mat.transparent === transparent) return;
-  mat.opacity = opacity;
-  if (mat.transparent !== transparent) {
-    mat.transparent = transparent;
-    mat.needsUpdate = true;
-  }
+  if (dots.geometry !== part.geometry) dots.geometry = part.geometry;
+  stippleMaterial.uniforms.color.value.copy(color);
+  // In screen pixels whatever the pixel ratio
+  const dpr = globalThis.devicePixelRatio || 1;
+  stippleMaterial.uniforms.spacing.value = DOT_SPACING * dpr;
+  stippleMaterial.uniforms.dot.value = Math.max(1, Math.round(dpr));
+  dots.visible = on;
 }
