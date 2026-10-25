@@ -808,6 +808,7 @@
   "editor_show_axes": "Show axes",
   "editor_hide_axes": "Hide axes",
   "axes_select": "Select the axes",
+  "axes_edit": "Edit the axes",
   "axes_origin": "Drag to move the origin",
   "axes_turn": "Drag to turn the axes",
   "axes_drag_guide": "Drag a guide off the axis",

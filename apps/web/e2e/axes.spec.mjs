@@ -1,7 +1,7 @@
 // E2E: the model axes → panning across the origin changes nothing → a click on the origin knob selects them → the origin drags
 // onto the house's north-west corner → the knob on red turns them in 15° steps → dragging red draws a parallel guide → a wall
 // tap aligns red with it → undo, and reset from the ⋯ menu → a wall next to the moved origin is still picked by a tap; on a phone
-// a finger moves the origin, and a second finger calls the drag off
+// a finger moves the origin, a second finger calls the drag off, the ⋯ menu selects them, a finger turns them and drags a guide off
 import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
@@ -146,7 +146,37 @@ test('axes on a phone', async ({ browser: b }) => {
   ]);
   await touch('touchEnd', []);
   await page.waitForTimeout(500);
-  await page.screenshot({ path: `${OUT}/axes-phone.png` });
   check((await axes()) === moved, `a second finger cancels the drag (${await axes()})`);
+
+  // Done, then back in from the ⋯ menu
+  await page.getByRole('button', { name: '完成' }).tap();
+  await page.waitForTimeout(300);
+  check((await frame.locator('[data-axes-edit]').count()) === 0, 'done puts the handles away');
+  await page.getByRole('button', { name: '更多' }).tap();
+  await page.getByRole('menuitem', { name: '编辑坐标轴' }).tap();
+  await page.waitForTimeout(400);
+  check((await frame.locator('[data-axes-edit]').count()) === 1, 'the ⋯ menu selects the axes too');
+
+  // A finger on the turning knob turns them
+  const knob = await frame.evaluate(() => {
+    const r = document.querySelector('[data-axes-handle="turn"]').getBoundingClientRect();
+    return [r.x + r.width / 2, r.y + r.height / 2];
+  });
+  const iframe = await page.locator('iframe').first().boundingBox();
+  const k = [iframe.x + knob[0], iframe.y + knob[1]];
+  const len = k[0] - o3[0];
+  await swipe(k, [o3[0], o3[1] + len], 12);
+  await touch('touchEnd', []);
+  await page.waitForTimeout(500);
+  check((await axes()).endsWith('@90'), `a finger turns them (${await axes()})`);
+
+  // A finger drags a guide off red (now pointing down the screen)
+  const off = [o3[0], o3[1] + len * 1.6];
+  await swipe(off, [off[0] + 80, off[1]], 10);
+  await touch('touchEnd', []);
+  await page.waitForTimeout(500);
+  const gs = (await page.evaluate(async () => (await window.artifact.call('find_objects', { type: 'guide' })).result)) ?? [];
+  check(gs.length === 1, `a finger drags a guide off an axis (${gs.length})`);
+  await page.screenshot({ path: `${OUT}/axes-phone.png` });
   check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
 });

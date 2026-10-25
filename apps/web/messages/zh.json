@@ -808,6 +808,7 @@
   "editor_show_axes": "显示坐标轴",
   "editor_hide_axes": "隐藏坐标轴",
   "axes_select": "选中坐标轴",
+  "axes_edit": "编辑坐标轴",
   "axes_origin": "拖动移动原点",
   "axes_turn": "拖动旋转坐标轴",
   "axes_drag_guide": "从轴上拖出参考线",

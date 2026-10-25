@@ -214,6 +214,8 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   const axesTool = view.layers.axes && view.mode === '2d' && canEdit && !compare && !measuring && !placing && !sectioning;
   const [axesDraft, setAxesDraft] = useState<{ d: AxesDrag; at: Point } | null>(null);
   const shownAxes = axesDraft?.d.kind === 'axes' ? axesDraft.d.frame : axes;
+  // Handles sized for a finger on a touch screen
+  const fat = useMemo(() => !!ref.current?.ownerDocument.defaultView?.matchMedia('(pointer: coarse)').matches, [size.width]) ? 1.5 : 1;
   const axesGesture = useRef<{ id: number; grab: AxesGrab; from: Point; x: number; y: number; moved: boolean; touch: boolean; draft: AxesDrag | null } | null>(
     null,
   );
@@ -408,7 +410,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               <circle
                 cx={axes.origin[0]}
                 cy={axes.origin[1]}
-                r={4 * pxMm}
+                r={4 * fat * pxMm}
                 fill="var(--background)"
                 stroke="var(--foreground)"
                 {...screenLine(1.5)}
@@ -417,7 +419,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               <circle
                 cx={axes.origin[0]}
                 cy={axes.origin[1]}
-                r={12 * pxMm}
+                r={14 * fat * pxMm}
                 fill="transparent"
                 className="cursor-pointer"
                 role="button"
@@ -446,7 +448,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
                     x2={b[0]}
                     y2={b[1]}
                     stroke="transparent"
-                    strokeWidth={22}
+                    strokeWidth={22 * fat}
                     vectorEffect="non-scaling-stroke"
                     aria-label={m.axes_drag_guide()}
                     {...axesHandle(k)}
@@ -456,34 +458,34 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
               })}
               {(() => {
                 const o = shownAxes.origin;
-                const t: Point = [o[0] + shownAxes.x[0] * TURN_PX * pxMm, o[1] + shownAxes.x[1] * TURN_PX * pxMm];
+                const t: Point = [o[0] + shownAxes.x[0] * TURN_PX * fat * pxMm, o[1] + shownAxes.x[1] * TURN_PX * fat * pxMm];
                 return (
                   <>
-                    <circle cx={t[0]} cy={t[1]} r={8 * pxMm} fill="var(--background)" stroke="var(--axis-x)" {...screenLine(2)} pointerEvents="none" />
+                    <circle cx={t[0]} cy={t[1]} r={8 * fat * pxMm} fill="var(--background)" stroke="var(--axis-x)" {...screenLine(2)} pointerEvents="none" />
                     <circle
                       cx={t[0]}
                       cy={t[1]}
-                      r={18 * pxMm}
+                      r={18 * fat * pxMm}
                       fill="transparent"
                       aria-label={m.axes_turn()}
                       {...axesHandle('turn')}
                       className="plan-drag cursor-grab"
                     />
                     <rect
-                      x={o[0] - 6 * pxMm}
-                      y={o[1] - 6 * pxMm}
-                      width={12 * pxMm}
-                      height={12 * pxMm}
+                      x={o[0] - 6 * fat * pxMm}
+                      y={o[1] - 6 * fat * pxMm}
+                      width={12 * fat * pxMm}
+                      height={12 * fat * pxMm}
                       fill="var(--background)"
                       stroke="var(--chart-2)"
                       {...screenLine(2)}
                       pointerEvents="none"
                     />
                     <rect
-                      x={o[0] - 16 * pxMm}
-                      y={o[1] - 16 * pxMm}
-                      width={32 * pxMm}
-                      height={32 * pxMm}
+                      x={o[0] - 16 * fat * pxMm}
+                      y={o[1] - 16 * fat * pxMm}
+                      width={32 * fat * pxMm}
+                      height={32 * fat * pxMm}
                       fill="transparent"
                       aria-label={m.axes_origin()}
                       {...axesHandle('origin')}
