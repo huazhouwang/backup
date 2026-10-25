@@ -20,6 +20,8 @@ const CANCEL_DISTANCE = 60
 /** Let go sooner than this (ms) and it was a tap: record hands-free until the next tap. */
 const TAP_MS = 300
 const BARS = 5
+/** While talking, what has been said so far is heard this often. */
+const PARTIAL_EVERY_MS = 1500
 
 /** How loud the voice is, as bars that follow it. */
 function Levels({ analyser }: { analyser: AnalyserNode | null }) {
@@ -70,16 +72,20 @@ function Elapsed({ since }: { since: number }) {
 type Mode = 'off' | 'hold' | 'free'
 
 /**
- * The chat box's input row with a microphone: hold it to talk and let go to send, slide up
- * to drop it, or tap it to talk hands-free and tap again to send. While recording, the
- * field gives way to the voice's level and time. The button stays the same element
- * throughout, so the finger holding it is never lost.
+ * The chat's input row with a microphone: hold it to talk and let go to send, slide up to
+ * drop it, or tap it to talk hands-free and tap again to send. While recording, the field
+ * gives way to the voice's level and time, and what has been said so far goes to
+ * `onPartial` every so often, one at a time. The button stays the same element throughout,
+ * so the finger holding it is never lost.
  */
 export function TalkRow({
   field,
   send,
   showMic,
   disabled,
+  onBegin,
+  onPartial,
+  onDrop,
   onSpoken,
 }: {
   /** The text field, shown when not recording. */
@@ -88,6 +94,13 @@ export function TalkRow({
   send: ReactNode
   showMic: boolean
   disabled: boolean
+  /** Recording started. */
+  onBegin: () => void
+  /** What has been said so far, while recording goes on. */
+  onPartial: (soFar: Blob) => Promise<void>
+  /** Recording ended with nothing to send: dropped, too short or failed. */
+  onDrop: () => void
+  /** The whole recording, to send. */
   onSpoken: (recording: Blob) => void
 }) {
   const [mode, setMode] = useState<Mode>('off')
@@ -97,15 +110,14 @@ export function TalkRow({
   const down = useRef<{ y: number; at: number } | null>(null)
 
   const recorder = useRecorder()
-  const done = async () => {
+  const done = () => {
     setMode('off')
     setDropping(false)
-    try {
-      const said = await recorder.finish()
-      if (said) onSpoken(said)
-      else setError(m.voiceMicTooShort())
-    } catch {
-      setError(m.actionFailed())
+    const said = recorder.finish()
+    if (said) onSpoken(said)
+    else {
+      setError(m.voiceMicTooShort())
+      onDrop()
     }
   }
   // At the longest, what was said so far is sent.
@@ -116,20 +128,42 @@ export function TalkRow({
   })
   useEffect(() => {
     if (!recording) return undefined
-    const cutoff = setTimeout(() => void latestDone.current(), MAX_RECORDING_MS)
+    const cutoff = setTimeout(() => latestDone.current(), MAX_RECORDING_MS)
     return () => clearTimeout(cutoff)
   }, [recording])
+  // What has been said so far, heard every so often; never two at once.
+  const latestPartial = useRef(onPartial)
+  useEffect(() => {
+    latestPartial.current = onPartial
+  })
+  const { state: recorderState, snapshot } = recorder
+  useEffect(() => {
+    if (recorderState !== 'recording') return undefined
+    let busy = false
+    const every = setInterval(() => {
+      const soFar = busy ? null : snapshot()
+      if (!soFar) return
+      busy = true
+      void latestPartial.current(soFar).finally(() => {
+        busy = false
+      })
+    }, PARTIAL_EVERY_MS)
+    return () => clearInterval(every)
+  }, [recorderState, snapshot])
   const drop = () => {
     recorder.cancel()
     setMode('off')
     setDropping(false)
+    onDrop()
   }
   const begin = (next: Mode) => {
     setError(null)
     setMode(next)
     setStartedAt(Date.now())
+    onBegin()
     recorder.start().catch((reason: unknown) => {
       setMode('off')
+      onDrop()
       const denied = reason instanceof DOMException && reason.name === 'NotAllowedError'
       setError(denied ? m.voiceMicDenied() : m.actionFailed())
     })
@@ -151,11 +185,11 @@ export function TalkRow({
     const pressed = down.current
     down.current = null
     if (!pressed) return
-    if (mode === 'free') void done()
+    if (mode === 'free') done()
     else if (mode !== 'hold') return
     else if (dropping) drop()
     else if (event.timeStamp - pressed.at < TAP_MS) setMode('free')
-    else void done()
+    else done()
   }
   const onPointerCancel = () => {
     down.current = null
@@ -165,7 +199,7 @@ export function TalkRow({
   const onClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0 || disabled) return
     if (mode === 'off') begin('free')
-    else void done()
+    else done()
   }
 
   const status = dropping

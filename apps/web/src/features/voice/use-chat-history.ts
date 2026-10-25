@@ -24,13 +24,26 @@ export function useChatHistory(open: boolean) {
   const ended = lastThreadId !== null && lastThreadId !== activeThreadId
 
   /** Shows a message before the server has it, at the end of the latest page. */
-  const append = (message: Omit<ChatMessage, 'id' | 'threadId'>) =>
+  /** Shows a message before the server has it; returns its id, for `update`. */
+  const append = (message: Omit<ChatMessage, 'id' | 'threadId'>) => {
+    const id = crypto.randomUUID()
     queryClient.setQueryData<InfiniteData<ChatPage, string | null>>(voiceKeys.chat, (data) => {
       if (!data) return data
       const [latest, ...rest] = data.pages
       if (!latest) return data
-      const line = { ...message, id: crypto.randomUUID(), threadId: null }
+      const line = { ...message, id, threadId: null }
       return { ...data, pages: [{ ...latest, lines: [...latest.lines, line] }, ...rest] }
+    })
+    return id
+  }
+  /** Changes the text of a message shown by `append`: corrected, or a reply growing. */
+  const update = (id: string, text: string) =>
+    queryClient.setQueryData<InfiniteData<ChatPage, string | null>>(voiceKeys.chat, (data) => {
+      if (!data) return data
+      const [latest, ...rest] = data.pages
+      if (!latest) return data
+      const lines = latest.lines.map((line) => (line.id === id ? { ...line, text } : line))
+      return { ...data, pages: [{ ...latest, lines }, ...rest] }
     })
 
   const anchor = useRef<{ height: number; top: number } | null>(null)
@@ -68,6 +81,7 @@ export function useChatHistory(open: boolean) {
     threads,
     ended,
     append,
+    update,
     isError: history.isError,
     hasEarlier: hasNextPage,
     loadingEarlier: isFetchingNextPage,

@@ -86,6 +86,28 @@ export async function recentEvents(
   return toEvents(results)
 }
 
+/**
+ * Foods and medicines logged for the babies lately, most recent first: words a speech model
+ * wouldn't expect, which the family uses.
+ */
+export async function spokenWords(db: D1Database, babyIds: string[], since: number) {
+  if (babyIds.length === 0) return []
+  const { results } = await db
+    .prepare(
+      `select word from (
+         select coalesce(json_extract(data, '$.food'), json_extract(data, '$.name')) as word,
+           max(start_at) as last
+         from events
+         where baby_id in (select value from json_each(?1)) and deleted_at is null
+           and start_at >= ?2 and type in ('feeding', 'medication')
+         group by word)
+       where word is not null order by last desc limit 20`,
+    )
+    .bind(JSON.stringify(babyIds), since)
+    .all<{ word: string }>()
+  return results.map((row) => row.word)
+}
+
 export async function eventsByIds(db: D1Database, ids: string[]) {
   if (ids.length === 0) return []
   const { results } = await db

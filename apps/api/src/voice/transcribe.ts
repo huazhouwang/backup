@@ -4,6 +4,8 @@ const MODEL = '@cf/openai/whisper-large-v3-turbo'
 const VOCABULARY: Record<string, string> = {
   zh: '宝宝喝了120毫升奶粉，母乳亲喂左边10分钟，换尿布，便便，睡着了，醒了，体温，辅食。',
 }
+/** Whisper reads only the last couple of hundred tokens of a prompt; keep it within that. */
+const PROMPT_CHARS = 200
 
 /** Standard, padded base64, as Workers AI takes audio; built in chunks to spare the stack. */
 function base64(bytes: ArrayBuffer) {
@@ -26,20 +28,40 @@ export function speechLanguage(locale: string | undefined) {
   }
 }
 
+/** What a recording is likely to contain, to help the model spell it. */
+export interface SpeechHints {
+  /** The babies' names. */
+  names: string[]
+  /** Foods and medicines the family logs. */
+  words: string[]
+  /** The assistant's last line, which this may answer. */
+  recent?: string
+}
+
 /**
- * What was said in a recording (WAV, as the chat box uploads it), in the user's language,
- * or null when nothing was heard. The babies' names help it spell them.
+ * The prompt Whisper reads as the text before the recording: the conversation's last line
+ * and the words it should know, ending with the vocabulary in the right script.
+ */
+export function speechPrompt(language: string | undefined, hints: SpeechHints) {
+  const vocabulary = language ? (VOCABULARY[language] ?? '') : ''
+  const words = [...hints.names, ...hints.words].join(', ')
+  const prompt = [hints.recent, words, vocabulary].filter(Boolean).join(' ')
+  // The end matters most: the vocabulary sets the script, the names come right before.
+  return prompt.slice(-PROMPT_CHARS)
+}
+
+/**
+ * What was said in a recording (WAV, as the chat uploads it), in the user's language, or
+ * null when nothing was heard.
  */
 export async function transcribe(
   ai: Ai,
   audio: ArrayBuffer,
   locale: string | undefined,
-  names: string[],
+  hints: SpeechHints,
 ): Promise<string | null> {
   const language = speechLanguage(locale)
-  const prompt = [names.join(', '), language ? VOCABULARY[language] : undefined]
-    .filter(Boolean)
-    .join(' ')
+  const prompt = speechPrompt(language, hints)
   const result = await ai.run(MODEL, {
     audio: base64(audio),
     task: 'transcribe',

@@ -1,4 +1,4 @@
-import { apiFetch } from '../../lib/api'
+import { HttpError, apiFetch } from '../../lib/api'
 import { getLocale } from '../../lib/i18n'
 
 /**
@@ -124,17 +124,67 @@ export const voiceApi = {
     apiFetch<ChatPage>(
       before ? `/api/voice/chat?before=${encodeURIComponent(before)}` : '/api/voice/chat',
     ),
-  send: (text: string) =>
-    apiFetch<ChatTurn>('/api/voice/chat', {
-      method: 'POST',
-      body: JSON.stringify({ text, ...device() }),
-    }),
-  /** What was said in a recording (WAV), heard in the language the device is set to. */
-  transcribe: (recording: Blob) =>
+  /**
+   * What was said in a recording (WAV), heard in the language the device is set to: the
+   * whole of it, or a `partial` one while the user is still talking. `recent` is the
+   * assistant's last line, which it may answer.
+   */
+  transcribe: (recording: Blob, options: { partial?: boolean; recent?: string } = {}) =>
     apiFetch<{ text: string | null }>(
-      `/api/voice/transcribe?${new URLSearchParams({ speech: navigator.language })}`,
+      `/api/voice/transcribe?${new URLSearchParams({
+        speech: navigator.language,
+        ...(options.recent ? { recent: options.recent.slice(0, 300) } : {}),
+        ...(options.partial ? { partial: '1' } : {}),
+      })}`,
       { method: 'POST', body: recording, headers: { 'Content-Type': 'audio/wav' } },
     ),
+  /**
+   * Sends a message and follows the answer as it is written. A spoken one is corrected
+   * first (`heard`), with the chat's `recent` lines as context; the reply then grows
+   * (`text`) until the answer is whole.
+   */
+  stream: async (
+    message: { text: string; spoken?: boolean; recent?: string[] },
+    on: { heard?: (text: string) => void; text?: (text: string) => void },
+  ): Promise<ChatTurn> => {
+    const res = await fetch('/api/voice/chat', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ ...message, ...device() }),
+    })
+    if (!res.ok || !res.body) throw new HttpError(res.status)
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+    let buffer = ''
+    for (;;) {
+      // A stream is read in order, one part after another.
+      // oxlint-disable-next-line no-await-in-loop
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += value
+      // Server-sent events: blank-line separated, an `event:` and a `data:` line each.
+      let end = buffer.indexOf('\n\n')
+      while (end !== -1) {
+        const fields = Object.fromEntries(
+          buffer
+            .slice(0, end)
+            .split('\n')
+            .map((line) => [
+              line.slice(0, line.indexOf(':')),
+              line.slice(line.indexOf(':') + 1).trim(),
+            ]),
+        )
+        buffer = buffer.slice(end + 2)
+        end = buffer.indexOf('\n\n')
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+        const data = JSON.parse(fields.data ?? 'null') as { text: string } & ChatTurn
+        if (fields.event === 'heard') on.heard?.(data.text)
+        if (fields.event === 'text') on.text?.(data.text)
+        if (fields.event === 'done') return data
+      }
+    }
+    throw new Error('The answer ended early')
+  },
 }
 
 /**

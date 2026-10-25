@@ -41,6 +41,12 @@
       "namespace_id": "1003",
       "simple": { "limit": 10, "period": 60 },
     },
+    // The chat's live recognition while someone talks: a request every second or two.
+    {
+      "name": "SPEECH_RATE_LIMIT",
+      "namespace_id": "1004",
+      "simple": { "limit": 40, "period": 60 },
+    },
   ],
   // To send email with Cloudflare Email Service (Workers Paid plan), add:
   //   "send_email": [{ "name": "EMAIL" }]

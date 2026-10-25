@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/** Longest recording; the chat box sends it then. 30 s of 16 kHz WAV stays under the API's 1 MB. */
+/** Longest recording; the chat sends it then. 30 s of 16 kHz WAV stays under the API's 1 MB. */
 export const MAX_RECORDING_MS = 30_000
 /** Shorter than this is a slip of the finger, not something said. */
 const MIN_RECORDING_MS = 500
@@ -10,8 +10,17 @@ const SAMPLE_RATE = 16_000
 /** Whether this browser can record from the microphone (else the keyboard's dictation remains). */
 export const canRecord = () =>
   typeof window !== 'undefined' &&
-  typeof window.MediaRecorder !== 'undefined' &&
+  typeof window.AudioContext !== 'undefined' &&
   typeof navigator.mediaDevices?.getUserMedia === 'function'
+
+/** Hands each block of microphone samples to the page, as it comes. */
+const TAP = `registerProcessor('bobo-tap', class extends AudioWorkletProcessor {
+  process(inputs) {
+    const samples = inputs[0] && inputs[0][0]
+    if (samples) this.port.postMessage(samples.slice(0))
+    return true
+  }
+})`
 
 /** 16-bit PCM in a WAV container. */
 function wav(samples: Float32Array) {
@@ -39,39 +48,78 @@ function wav(samples: Float32Array) {
   return new Blob([view], { type: 'audio/wav' })
 }
 
-/**
- * The recording as 16 kHz mono WAV. Phones record in different formats (mp4 on iPhone, webm
- * elsewhere); decoding here means the server always gets the same one.
- */
-async function toWav(recording: Blob) {
-  const decoded = await new OfflineAudioContext(1, 1, SAMPLE_RATE).decodeAudioData(
-    await recording.arrayBuffer(),
-  )
-  const frames = Math.ceil(decoded.duration * SAMPLE_RATE)
-  const context = new OfflineAudioContext(1, frames, SAMPLE_RATE)
-  const source = context.createBufferSource()
-  source.buffer = decoded
-  source.connect(context.destination)
-  source.start()
-  return wav((await context.startRendering()).getChannelData(0))
+/** The blocks so far as one 16 kHz track, each output sample the average of those it covers. */
+function at16k(blocks: Float32Array[], rate: number) {
+  const length = blocks.reduce((sum, block) => sum + block.length, 0)
+  const input = new Float32Array(length)
+  let offset = 0
+  for (const block of blocks) {
+    input.set(block, offset)
+    offset += block.length
+  }
+  const ratio = rate / SAMPLE_RATE
+  const output = new Float32Array(Math.floor(length / ratio))
+  for (let i = 0; i < output.length; i += 1) {
+    const from = Math.floor(i * ratio)
+    const to = Math.max(from + 1, Math.floor((i + 1) * ratio))
+    let sum = 0
+    for (let j = from; j < to; j += 1) sum += input[j] ?? 0
+    output[i] = sum / (to - from)
+  }
+  return output
 }
 
 export type RecorderState = 'idle' | 'starting' | 'recording'
 
 interface Session {
   stream: MediaStream
-  recorder: MediaRecorder
   context: AudioContext
-  chunks: Blob[]
+  /** The microphone's samples so far, at the context's rate. */
+  blocks: Float32Array[]
   startedAt: number
-  /** Resolves with what was recorded once the recorder has stopped. */
-  stopped: Promise<Blob>
+}
+
+/**
+ * Takes the microphone's raw samples as they come: on an AudioWorklet where there is one, else
+ * on the older script processor. Raw samples, unlike a compressed recording, can be turned
+ * into WAV at any moment, to hear what has been said so far.
+ */
+async function tap(
+  context: AudioContext,
+  source: MediaStreamAudioSourceNode,
+  blocks: Float32Array[],
+) {
+  // Pulled by the output, silently: nothing is played back.
+  const mute = context.createGain()
+  mute.gain.value = 0
+  mute.connect(context.destination)
+  if (context.audioWorklet) {
+    const url = URL.createObjectURL(new Blob([TAP], { type: 'text/javascript' }))
+    try {
+      await context.audioWorklet.addModule(url)
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+    const node = new AudioWorkletNode(context, 'bobo-tap')
+    node.port.addEventListener('message', (event: MessageEvent<Float32Array>) => {
+      blocks.push(event.data)
+    })
+    node.port.start()
+    source.connect(node).connect(mute)
+    return
+  }
+  const node = context.createScriptProcessor(4096, 1, 1)
+  node.addEventListener('audioprocess', (event) => {
+    blocks.push(event.inputBuffer.getChannelData(0).slice(0))
+  })
+  source.connect(node).connect(mute)
 }
 
 /**
  * Records from the microphone. `start` asks for it (the first time, the system asks the user);
- * `finish` resolves with the recording as WAV, or null when it was too short; `cancel` drops
- * it. The microphone is let go as soon as recording ends, so the system's indicator goes too.
+ * `snapshot` is what has been said so far, as WAV, while recording goes on; `finish` ends it
+ * with the whole recording as WAV, or null when it was too short; `cancel` drops it. The
+ * microphone is let go as soon as recording ends, so the system's indicator goes too.
  * `analyser` follows the voice's level while recording.
  */
 export function useRecorder() {
@@ -87,7 +135,6 @@ export function useRecorder() {
     setState('idle')
     setAnalyser(null)
     if (!current) return null
-    if (current.recorder.state !== 'inactive') current.recorder.stop()
     for (const track of current.stream.getTracks()) track.stop()
     void current.context.close()
     return current
@@ -99,7 +146,7 @@ export function useRecorder() {
     setState('starting')
     // Made within the tap, as iOS requires, before anything is awaited.
     const context = new AudioContext()
-    // Some browsers start it suspended; the level would then stay flat.
+    // Some browsers start it suspended; nothing would come through.
     void context.resume()
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -110,26 +157,13 @@ export function useRecorder() {
         void context.close()
         return
       }
+      const source = context.createMediaStreamSource(stream)
       const levels = context.createAnalyser()
       levels.fftSize = 256
-      context.createMediaStreamSource(stream).connect(levels)
-      const recorder = new MediaRecorder(stream)
-      const chunks: Blob[] = []
-      recorder.addEventListener('dataavailable', (event) => chunks.push(event.data))
-      const stopped = new Promise<Blob>((resolve) => {
-        recorder.addEventListener('stop', () =>
-          resolve(new Blob(chunks, { type: recorder.mimeType })),
-        )
-      })
-      recorder.start()
-      session.current = {
-        stream,
-        recorder,
-        context,
-        chunks,
-        startedAt: performance.now(),
-        stopped,
-      }
+      source.connect(levels)
+      const blocks: Float32Array[] = []
+      await tap(context, source, blocks)
+      session.current = { stream, context, blocks, startedAt: performance.now() }
       setAnalyser(levels)
       setState('recording')
     } catch (error) {
@@ -139,7 +173,13 @@ export function useRecorder() {
     }
   }, [])
 
-  const finish = useCallback(async () => {
+  const snapshot = useCallback(() => {
+    const current = session.current
+    if (!current || current.blocks.length === 0) return null
+    return wav(at16k(current.blocks, current.context.sampleRate))
+  }, [])
+
+  const finish = useCallback(() => {
     const current = release()
     if (!current) {
       // Let go before the microphone was ready: nothing was said.
@@ -147,7 +187,7 @@ export function useRecorder() {
       return null
     }
     if (performance.now() - current.startedAt < MIN_RECORDING_MS) return null
-    return toWav(await current.stopped)
+    return wav(at16k(current.blocks, current.context.sampleRate))
   }, [release])
 
   const cancel = useCallback(() => {
@@ -155,8 +195,8 @@ export function useRecorder() {
     release()
   }, [release])
 
-  // Closing the sheet mid-recording lets go of the microphone.
+  // Leaving mid-recording lets go of the microphone.
   useEffect(() => cancel, [cancel])
 
-  return { state, analyser, start, finish, cancel }
+  return { state, analyser, start, snapshot, finish, cancel }
 }

@@ -98,6 +98,8 @@ export interface AgentScope {
   modelOptions?: Record<string, unknown>
   /** Overrides TURN_TIMEOUT_MS; tests use a short one. */
   timeoutMs?: number
+  /** Called with the reply so far as the model writes it, for the chat to show it growing. */
+  onText?: (text: string) => void
 }
 
 /**
@@ -254,7 +256,12 @@ async function runChat(
   try {
     for await (const chunk of stream) {
       if (chunk.type === EventType.TEXT_MESSAGE_START) text = ''
-      if (chunk.type === EventType.TEXT_MESSAGE_CONTENT) text += chunk.delta
+      if (chunk.type === EventType.TEXT_MESSAGE_CONTENT) {
+        text += chunk.delta
+        // A tool call written as text is never shown, even while it is being written.
+        const shown = withoutThinking(text)
+        if (shown && !RAW_TOOL_CALL.test(shown)) scope.onText?.(shown)
+      }
       if (chunk.type === EventType.RUN_ERROR) error = chunk.message
       if (chunk.type === EventType.RUN_FINISHED && chunk.outcome?.type === 'interrupt') {
         for (const interrupt of chunk.outcome.interrupts) {

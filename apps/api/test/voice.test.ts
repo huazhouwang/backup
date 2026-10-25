@@ -42,6 +42,7 @@ const KEY = 'sk-or-v1-0123456789'
 describe('siri voice logging', () => {
   let t: Awaited<ReturnType<typeof createTestApp>>
   let headers: Headers
+  let myId: string
   let familyId: string
   const fake = fakeText()
   // The model the last message ran on (by saved key hint), and what it was told.
@@ -66,12 +67,18 @@ describe('siri voice logging', () => {
       },
       body: JSON.stringify({ text }),
     })
-  const hear = (bytes: number, speech = 'en-GB') =>
-    t.request(`/api/voice/transcribe?speech=${speech}`, {
+  const hear = (bytes: number, query = 'en-GB') =>
+    t.request(`/api/voice/transcribe?speech=${query}`, {
       method: 'POST',
       headers: { cookie: headers.get('cookie') ?? '', 'Content-Type': 'audio/wav' },
       body: new Uint8Array(bytes),
     })
+  const day = async () =>
+    (
+      await t.env.DB.prepare('select day_count as n from voice_settings where user_id = ?')
+        .bind(myId)
+        .first<{ n: number }>()
+    )?.n
   /** Says something with the model recording `actions`, then answering `reply`. */
   // One model call: once saved, the record's summary is the answer.
   const record = async (token: string, text: string, actions: VoiceAction[]) => {
@@ -123,7 +130,9 @@ describe('siri voice logging', () => {
         },
       },
     )
-    headers = (await t.signIn()).headers
+    const me = await t.signIn()
+    headers = me.headers
+    myId = me.user.id
     familyId = await newFamily(headers, '我们家', '小米粒')
   })
   afterAll(() => t.dispose())
@@ -249,14 +258,62 @@ describe('siri voice logging', () => {
     // In English, with the babies' names to spell; no Chinese vocabulary.
     expect(whisper).toMatchObject({ language: 'en', initial_prompt: '小米粒' })
 
-    // In Chinese the prompt also carries the words it should spell in simplified script.
+    // In Chinese the prompt also carries the words it should spell in simplified script,
+    // after the assistant's last line, which this may answer.
     heard = '  '
-    expect(await (await hear(32_000, 'zh-Hans-CN')).json()).toEqual({ text: null })
+    expect(await (await hear(32_000, 'zh-Hans-CN&recent=要删除吗？')).json()).toEqual({
+      text: null,
+    })
     expect(whisper.language).toBe('zh')
-    expect(whisper.initial_prompt).toMatch(/^小米粒 .*毫升/)
+    expect(whisper.initial_prompt).toMatch(/^要删除吗？ 小米粒 .*毫升/)
     // Too short to hold anything, or over the body limit.
     expect((await hear(100)).status).toBe(400)
     expect((await hear(1024 * 1024 + 1)).status).toBe(413)
+  })
+
+  it('counts a whole recording towards the day, not the parts heard while talking', async () => {
+    heard = '换尿布'
+    const before = await day()
+    await hear(32_000, 'zh-CN&partial=1')
+    expect(await day()).toBe(before)
+    await hear(32_000, 'zh-CN')
+    expect(await day()).toBe((before ?? 0) + 1)
+  })
+
+  it('streams the answer, correcting what was heard first', async () => {
+    let correction = ''
+    fake.setResponses([
+      ({ request }) => {
+        correction = JSON.stringify(request.systemPrompts ?? [])
+        return { text: '小米粒今天怎么样' }
+      },
+      { text: '今天一切都好。' },
+    ])
+    const res = await t.request('/api/voice/chat', {
+      method: 'POST',
+      headers: {
+        cookie: headers.get('cookie') ?? '',
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({ text: '小米力今天怎么样', spoken: true, recent: ['还有吗？'] }),
+    })
+    expect(res.headers.get('content-type')).toMatch(/text\/event-stream/)
+    const sent = [...(await res.text()).matchAll(/event: (\w+)\ndata: (.*)\n/g)].map(
+      ([, event, data]) => ({ event, data: JSON.parse(data ?? 'null') as unknown }),
+    )
+    expect(sent[0]).toEqual({ event: 'heard', data: { text: '小米粒今天怎么样' } })
+    expect(sent.some(({ event }) => event === 'text')).toBe(true)
+    expect(sent.at(-1)).toEqual({
+      event: 'done',
+      data: { reply: '今天一切都好。', done: false, confirming: false },
+    })
+    // The correction knew the babies and the conversation; the agent got the corrected text.
+    expect(correction).toContain('小米粒')
+    expect(correction).toContain('还有吗？')
+    const chat = await t.request('/api/voice/chat', { headers })
+    const { lines } = (await chat.json()) as { lines: Array<{ role: string; text: string }> }
+    expect(lines.at(-2)).toMatchObject({ role: 'user', text: '小米粒今天怎么样' })
   })
 
   it('pages through the last 30 days of conversations, newest first', async () => {

@@ -371,6 +371,16 @@
     opacity: 1;
   }
 }
+/* Words that change in a message (a correction, a reply being written) come into focus. */
+@keyframes text-in {
+  from {
+    filter: blur(4px);
+    opacity: 0;
+  }
+}
+@utility animate-text-in {
+  animation: text-in 350ms var(--ease-out) both;
+}
 @utility animate-typing {
   animation: typing 1s ease-in-out infinite;
 }
@@ -509,7 +519,8 @@ html:active-view-transition-type(down) {
     }
   }
   .animate-celebrate,
-  .animate-typing {
+  .animate-typing,
+  .animate-text-in {
     animation: none;
   }
 }

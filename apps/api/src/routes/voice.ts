@@ -1,10 +1,12 @@
 import { idTime } from '@bobo/shared'
 import type { AnyTextAdapter, ModelMessage } from '@tanstack/ai'
 import { Hono } from 'hono'
+import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
 
-import { loadAccess } from '../access'
-import { writableBabies } from '../agent/data'
+import { type Access, loadAccess } from '../access'
+import { spokenWords, writableBabies } from '../agent/data'
+import { correctHeard } from '../agent/heard'
 import { type SavedAi, aiForUser } from '../agent/keys'
 import { KEEP_MS } from '../agent/retention'
 import {
@@ -63,10 +65,23 @@ const textSchema = z.object({
   text: z.string().trim().min(1).max(MAX_TEXT),
   timeZone: timeZoneSchema.optional(),
   locale: localeSchema.optional(),
+  /** Heard from a recording: speech recognition's mistakes are corrected first. */
+  spoken: z.boolean().optional(),
+  /** The chat's last few lines, which help correct what was heard. */
+  recent: z.array(z.string().max(MAX_TEXT)).max(4).optional(),
 })
 
-/** The language a recording is in, from the device's settings. */
-const speechQuerySchema = z.object({ speech: localeSchema.optional() })
+/**
+ * What comes with a recording: the language it is in (from the device's settings), the
+ * assistant's last line, and whether it is a part heard while the user is still talking.
+ */
+const speechQuerySchema = z.object({
+  speech: localeSchema.optional(),
+  recent: z.string().max(MAX_TEXT).optional(),
+  partial: z.literal('1').optional(),
+})
+/** Foods and medicines logged within this long help recognise speech. */
+const WORDS_SINCE_MS = 30 * 86_400_000
 /** A WAV header and a fraction of a second: anything shorter holds nothing to hear. */
 const MIN_AUDIO_BYTES = 4000
 
@@ -250,14 +265,35 @@ async function countMessage(db: D1Database, userId: string, settings: Settings, 
   return row?.dayCount ?? 0
 }
 
+/** The babies' names and the foods and medicines logged for them: words speech may contain. */
+async function speechHints(db: D1Database, access: Access, now: number) {
+  const babies = await writableBabies(db, [...access.values()])
+  const words = await spokenWords(
+    db,
+    babies.map((baby) => baby.id),
+    now - WORDS_SINCE_MS,
+  )
+  return { names: babies.map((baby) => baby.name), words }
+}
+
+interface TurnOptions {
+  /** The device's zone and the app's language, when they come with the message. */
+  timeZone?: string
+  locale?: string
+  /** Heard from a recording: corrected first, with the chat's last lines as context. */
+  spoken?: { recent: string[]; onHeard: (text: string) => void }
+  /** The reply so far, as the model writes it. */
+  onText?: (text: string) => void
+}
+
 /** One message to the user's agent, from the chat box or Siri. */
 async function turn(
   env: Env,
   adapterFor: AdapterFor,
   userId: string,
-  text: string,
+  said: string,
   now: number,
-  device: { timeZone?: string; locale?: string } = {},
+  options: TurnOptions = {},
 ): Promise<AgentTurn> {
   const db = env.DB
   const [access, settings] = await Promise.all([loadAccess(db, userId), readSettings(db, userId)])
@@ -275,10 +311,20 @@ async function turn(
     sharedOnly: ai.kind === 'shared',
     keyScope: ai.kind === 'own' ? 'own' : `shared:${ai.ai.userId}:${ai.ai.familyId}`,
     userId,
-    timeZone: device.timeZone ?? settings.timeZone,
-    locale: device.locale ?? settings.locale,
+    timeZone: options.timeZone ?? settings.timeZone,
+    locale: options.locale ?? settings.locale,
     phrase: settings.phrase,
     modelOptions: modelOptionsFor(ai.ai.provider, ai.ai.model),
+    onText: options.onText,
+  }
+  let text = said
+  if (options.spoken) {
+    const hints = await speechHints(db, access, now)
+    text = await correctHeard(adapter, scope.modelOptions, said, {
+      ...hints,
+      conversation: options.spoken.recent,
+    })
+    options.spoken.onHeard(text)
   }
   return runAgent(adapter, scope, text, now)
 }
@@ -329,10 +375,40 @@ export function voiceRoutes(adapterFor: AdapterFor) {
     )
     .post('/chat', json(textSchema), async (c) => {
       const userId = c.get('user').id
+      const { text, timeZone, locale, spoken, recent = [] } = c.req.valid('json')
+      // The chat asks for the answer as it is written; other callers get it whole.
+      if (c.req.header('Accept')?.includes('text/event-stream')) {
+        return streamSSE(c, async (stream) => {
+          // Events go out in order, whenever the model or the correction produces them.
+          let queue = Promise.resolve()
+          const send = (event: string, data: unknown) => {
+            queue = queue.then(() => stream.writeSSE({ event, data: JSON.stringify(data) }))
+          }
+          let result: AgentTurn
+          const burst = await c.env.VOICE_RATE_LIMIT?.limit({ key: userId })
+          if (burst && !burst.success) result = stop(REPLIES.slowDown)
+          else {
+            try {
+              result = await turn(c.env, adapterFor, userId, text, Date.now(), {
+                timeZone,
+                locale,
+                spoken: spoken
+                  ? { recent, onHeard: (heard) => send('heard', { text: heard }) }
+                  : undefined,
+                onText: (reply) => send('text', { text: reply }),
+              })
+            } catch (error) {
+              console.error('Voice chat failed', error)
+              result = stop(REPLIES.unavailable)
+            }
+          }
+          send('done', result)
+          await queue
+        })
+      }
       // Each message calls the model.
       const burst = await c.env.VOICE_RATE_LIMIT?.limit({ key: userId })
       if (burst && !burst.success) return c.json(stop(REPLIES.slowDown), 429)
-      const { text, timeZone, locale } = c.req.valid('json')
       try {
         return c.json(await turn(c.env, adapterFor, userId, text, Date.now(), { timeZone, locale }))
       } catch (error) {
@@ -341,28 +417,33 @@ export function voiceRoutes(adapterFor: AdapterFor) {
       }
     })
     .post('/transcribe', async (c) => {
-      // A recording from the chat box's microphone, as text in the speaker's language. The
-      // recording is not kept; the chat box then sends the text like anything typed.
+      // A recording from the chat's microphone, as text in the speaker's language: a part
+      // while they are still talking, or the whole of it. The recording is not kept; the chat
+      // then sends the text like anything typed.
       const userId = c.get('user').id
       const ai = c.env.AI
       if (!ai) return c.json({ text: null }, 503)
-      const burst = await c.env.VOICE_RATE_LIMIT?.limit({ key: userId })
-      if (burst && !burst.success) return c.json({ text: null }, 429)
       const query = speechQuerySchema.safeParse(c.req.query())
+      const partial = query.success && query.data.partial === '1'
+      const limiter = partial ? c.env.SPEECH_RATE_LIMIT : c.env.VOICE_RATE_LIMIT
+      const burst = await limiter?.limit({ key: userId })
+      if (burst && !burst.success) return c.json({ text: null }, 429)
       const audio = await c.req.arrayBuffer()
       if (!query.success || audio.byteLength < MIN_AUDIO_BYTES) return c.json({ text: null }, 400)
       const db = c.env.DB
+      const now = Date.now()
       const [access, settings] = await Promise.all([
         loadAccess(db, userId),
         readSettings(db, userId),
       ])
-      // Hearing costs like a message does, so it counts towards the day's limit too.
-      if ((await countMessage(db, userId, settings, Date.now())) > DAILY_LIMIT) {
+      // The whole recording costs like a message does, so it counts towards the day's limit.
+      // The parts heard while talking are only previews of it, held back by their own limit.
+      if (!partial && (await countMessage(db, userId, settings, now)) > DAILY_LIMIT) {
         return c.json({ text: null }, 429)
       }
-      const names = (await writableBabies(db, [...access.values()])).map((baby) => baby.name)
+      const hints = { ...(await speechHints(db, access, now)), recent: query.data.recent }
       try {
-        return c.json({ text: await transcribe(ai, audio, query.data.speech, names) })
+        return c.json({ text: await transcribe(ai, audio, query.data.speech, hints) })
       } catch (error) {
         console.error('Transcription failed', error)
         return c.json({ text: null }, 503)

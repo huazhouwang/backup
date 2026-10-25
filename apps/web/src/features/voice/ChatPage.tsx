@@ -63,45 +63,108 @@ export function ChatPage({
   }
 
   const queryClient = useQueryClient()
-  const { messages, threads, ended, append, isError, hasEarlier, loadingEarlier, top, list } =
-    useChatHistory(true)
+  const {
+    messages,
+    threads,
+    ended,
+    append,
+    update,
+    isError,
+    hasEarlier,
+    loadingEarlier,
+    top,
+    list,
+  } = useChatHistory(true)
   useBounce(scroller, { axes: ['y'], content: list })
   const [text, setText] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [unheard, setUnheard] = useState(false)
   // The page renders only in the browser, so this can be asked right away.
   const [micShown] = useState(canRecord)
+  // A voice message on its way: being said (with what has been heard so far), then heard.
+  const [live, setLive] = useState<{ phase: 'talking' | 'hearing'; text: string } | null>(null)
+  // Whether the assistant's reply has started to show, growing as it is written.
+  const [answering, setAnswering] = useState(false)
+  const lastReply = messages.findLast((message) => message.role === 'assistant')?.text
 
-  const send = useMutation<ChatTurn, Error, string>({
-    mutationFn: voiceApi.send,
-    onMutate: async (said) => {
-      // A refetch already on its way would overwrite the message shown below.
+  const send = useMutation<ChatTurn, Error, { text: string; spoken?: boolean }>({
+    mutationFn: async ({ text: said, spoken }) => {
+      // A refetch already on its way would overwrite the messages shown below.
       await queryClient.cancelQueries({ queryKey: voiceKeys.chat })
-      append({ role: 'user', text: said })
+      const recent = messages
+        .slice(-4)
+        .map((message) => `${message.role === 'user' ? 'User' : 'Bobo'}: ${message.text}`)
+      const mine = append({ role: 'user', text: said })
+      let reply: string | null = null
+      const turn = await voiceApi.stream(
+        { text: said, spoken, recent },
+        {
+          // What was heard, corrected: the message changes in place.
+          heard: (corrected) => update(mine, corrected),
+          text: (sofar) => {
+            if (reply) update(reply, sofar)
+            else {
+              reply = append({ role: 'assistant', text: sofar })
+              setAnswering(true)
+            }
+          },
+        },
+      )
+      if (reply) update(reply, turn.reply)
+      else append({ role: 'assistant', text: turn.reply })
+      return turn
     },
     onSuccess: (turn) => {
-      append({ role: 'assistant', text: turn.reply })
       setConfirming(turn.confirming)
       // The agent writes on the server; pull now so the records show without waiting.
       void requestSync()
     },
     // Back in step with the server: which conversation the messages went to.
-    onSettled: () => queryClient.invalidateQueries({ queryKey: voiceKeys.chat }),
-  })
-  const say = (said: string) => {
-    if (!said || send.isPending) return
-    setText('')
-    setUnheard(false)
-    send.mutate(said)
-  }
-  const hear = useMutation({
-    mutationFn: voiceApi.transcribe,
-    onMutate: () => setUnheard(false),
-    onSuccess: ({ text: heard }) => {
-      if (heard) say(heard)
-      else setUnheard(true)
+    onSettled: () => {
+      setAnswering(false)
+      return queryClient.invalidateQueries({ queryKey: voiceKeys.chat })
     },
   })
+  const say = (said: string, spoken = false) => {
+    if (!said || send.isPending) return
+    if (!spoken) setText('')
+    setUnheard(false)
+    send.mutate({ text: said, spoken })
+  }
+  const hear = useMutation({
+    mutationFn: (recording: Blob) => voiceApi.transcribe(recording, { recent: lastReply }),
+    onMutate: () => setUnheard(false),
+    onSuccess: ({ text: heard }) => {
+      setLive(null)
+      if (heard) say(heard, true)
+      else setUnheard(true)
+    },
+    onError: () => setLive(null),
+  })
+  // While talking: what has been said so far, unless the recording has ended meanwhile.
+  const talking = useRef(false)
+  const voice = {
+    onBegin: () => {
+      talking.current = true
+      setUnheard(false)
+      setLive({ phase: 'talking', text: '' })
+    },
+    onPartial: async (soFar: Blob) => {
+      const { text: heard } = await voiceApi
+        .transcribe(soFar, { partial: true, recent: lastReply })
+        .catch(() => ({ text: null }))
+      if (heard && talking.current) setLive({ phase: 'talking', text: heard })
+    },
+    onDrop: () => {
+      talking.current = false
+      setLive(null)
+    },
+    onSpoken: (recording: Blob) => {
+      talking.current = false
+      setLive((current) => ({ phase: 'hearing', text: current?.text ?? '' }))
+      hear.mutate(recording)
+    },
+  }
   const busy = send.isPending || hear.isPending
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -179,11 +242,17 @@ export function ChatPage({
             </p>
           )}
           {rows}
-          {hear.isPending && <Waiting mine label={m.voiceHearing()} />}
-          {send.isPending && <Waiting label={m.voiceThinking()} />}
+          {live && (
+            <Waiting
+              mine
+              text={live.text}
+              label={live.phase === 'talking' ? m.voiceListening() : m.voiceHearing()}
+            />
+          )}
+          {send.isPending && !answering && <Waiting label={m.voiceThinking()} />}
           {/* Remounts when a message is added at the end, keeping it in view. */}
           <div
-            key={`${messages.at(-1)?.id}-${busy}`}
+            key={`${messages.at(-1)?.id}-${messages.at(-1)?.text.length}-${busy}-${live?.text}`}
             ref={(node) => node?.scrollIntoView({ block: 'end' })}
           />
         </div>
@@ -228,7 +297,7 @@ export function ChatPage({
             }
             showMic={micShown && !text.trim()}
             disabled={busy}
-            onSpoken={(recording) => hear.mutate(recording)}
+            {...voice}
           />
         </form>
       </div>
@@ -244,6 +313,38 @@ const bubbleClass = (mine: boolean) =>
       : 'self-start rounded-bl-md bg-surface',
   )
 
+/**
+ * Text that animates what changes in it: the part that differs from before (between what the
+ * two share at the start and at the end) blurs in, the rest stays still. A corrected word
+ * swaps in place; a reply being written fades in as it grows.
+ */
+function ChangingText({ text }: { text: string }) {
+  const [shown, setShown] = useState({ text, before: text, version: 0 })
+  if (shown.text !== text) setShown({ text, before: shown.text, version: shown.version + 1 })
+  const { before } = shown
+  let start = 0
+  while (start < text.length && start < before.length && text[start] === before[start]) start += 1
+  let end = 0
+  while (
+    end < text.length - start &&
+    end < before.length - start &&
+    text[text.length - 1 - end] === before[before.length - 1 - end]
+  ) {
+    end += 1
+  }
+  const changed = text.slice(start, text.length - end)
+  if (!changed) return text
+  return (
+    <>
+      {text.slice(0, start)}
+      <span key={shown.version} className="animate-text-in">
+        {changed}
+      </span>
+      {text.slice(text.length - end)}
+    </>
+  )
+}
+
 function Bubble({ message }: { message: ChatMessage }) {
   const mine = message.role === 'user'
   return (
@@ -252,28 +353,52 @@ function Bubble({ message }: { message: ChatMessage }) {
       <span className="sr-only">
         {mine ? m.voiceChatSpeakerMe() : m.voiceChatSpeakerAssistant()}
       </span>
-      {message.text}
+      <ChangingText text={message.text} />
     </p>
   )
 }
 
-/** A message on its way: the user's while it is being heard, the assistant's while it thinks. */
-function Waiting({ mine = false, label }: { mine?: boolean; label: string }) {
+const dots = (
+  <span aria-hidden className="inline-flex h-5 items-center gap-1 align-middle">
+    {[0, 150, 300].map((delay) => (
+      <span
+        key={delay}
+        className="size-2 animate-typing rounded-full bg-current"
+        style={{ animationDelay: `${delay}ms` }}
+      />
+    ))}
+  </span>
+)
+
+/**
+ * A message on its way: the user's while they talk and it is heard (with what has been
+ * heard so far), the assistant's while it thinks.
+ */
+function Waiting({
+  mine = false,
+  text = '',
+  label,
+}: {
+  mine?: boolean
+  text?: string
+  label: string
+}) {
   return (
-    <output className={clsx(bubbleClass(mine), 'flex items-center gap-2')}>
-      <span aria-hidden className="flex h-5 items-center gap-1">
-        {[0, 150, 300].map((delay) => (
-          <span
-            key={delay}
-            className="size-2 animate-typing rounded-full bg-current"
-            style={{ animationDelay: `${delay}ms` }}
-          />
-        ))}
-      </span>
-      {mine ? (
-        <span className="text-caption font-bold">{label}</span>
+    <output className={clsx(bubbleClass(mine), 'block')}>
+      {text ? (
+        <>
+          <span className="sr-only">{label}</span>
+          <ChangingText text={text} /> {dots}
+        </>
       ) : (
-        <span className="sr-only">{label}</span>
+        <span className="flex items-center gap-2">
+          {dots}
+          {mine ? (
+            <span className="text-caption font-bold">{label}</span>
+          ) : (
+            <span className="sr-only">{label}</span>
+          )}
+        </span>
       )}
     </output>
   )
