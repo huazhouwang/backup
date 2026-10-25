@@ -106,7 +106,7 @@ export function OpeningLook({
   const parts = useLookGeometry(recipe, fr.width, fr.thickness, fr.height, params);
   if (!parts.length) return null;
   return (
-    <group ref={ref} position={[fr.center[0] * M, y, fr.center[1] * M]} rotation={[0, -fr.angle, 0]} userData={{ restY: y }}>
+    <group ref={ref} position={[fr.center[0] * M, y, fr.center[1] * M]} rotation={[0, -fr.angle, 0]} userData={{ restY: y, opening: fr.id }}>
       <LookMeshes parts={parts} id={fr.wall} recipe={recipe} />
     </group>
   );

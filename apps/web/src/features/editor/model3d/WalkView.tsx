@@ -85,8 +85,8 @@ export function walkRole(p: Project, id: string | undefined): Role {
   if (!o) return { block: false, ground: true };
   if (o.kind === 'furniture') return { block: false, ground: false };
   if (o.kind === 'wall') return { block: true, ground: true };
-  // A door (down to the floor) is walked through; a window stops you
-  if (o.kind === 'opening') return o.obj.sill < 300 ? { block: false, ground: false } : { block: true, ground: false };
+  // Doors (sliding glass ones too), gates and bare openings are walked through; a window stops you, even down to the floor
+  if (o.kind === 'opening') return o.obj.kind === 'window' ? { block: true, ground: false } : { block: false, ground: false };
   return { block: false, ground: true };
 }
 

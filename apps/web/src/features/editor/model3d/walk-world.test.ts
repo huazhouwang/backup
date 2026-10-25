@@ -13,7 +13,16 @@ const box = (id: string, size: [number, number, number], at: [number, number, nu
 };
 box('floor', [20, 0.2, 20], [0, -0.1, 0]);
 box('wall', [0.2, 3, 10], [2, 1.5, 0]);
-box('door', [0.05, 2, 1], [-3, 1, 0]);
+// A glass sliding door: its parts carry its wall's id (it is picked with the wall), the group says which opening it is
+{
+  const door = new THREE.Group();
+  door.userData.opening = 'door';
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2, 1));
+  leaf.position.set(-3, 1, 0);
+  leaf.userData.id = 'wall';
+  door.add(leaf);
+  scene.add(door);
+}
 for (let i = 0; i < 10; i++) box('stair', [1, 0.17 * (i + 1), 0.26], [-1, (0.17 * (i + 1)) / 2, -1 - 0.26 * i - 0.13]);
 const world = buildWorld(scene, id => ({ block: id === 'wall', ground: id !== 'door' }));
 

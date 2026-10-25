@@ -29,6 +29,8 @@ export interface World {
 
 /** The id of the project object a mesh shows: its own or its nearest parent's */
 function ownerId(o: THREE.Object3D): string | undefined {
+  // A door or window is picked as part of its wall (its parts carry the wall's id) but walked as itself
+  for (let p: THREE.Object3D | null = o; p; p = p.parent) if (typeof p.userData.opening === 'string') return p.userData.opening;
   for (let p: THREE.Object3D | null = o; p; p = p.parent) if (typeof p.userData.id === 'string') return p.userData.id;
   return undefined;
 }
