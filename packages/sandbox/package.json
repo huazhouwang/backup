@@ -1,0 +1,24 @@
+{
+  "name": "@plinth/sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plinth sandbox: runs untrusted JavaScript in QuickJS compiled to WebAssembly, isolated by realm and script",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./workerd": "./src/workerd.ts",
+    "./browser": "./src/browser.ts",
+    "./worker": "./src/worker.ts"
+  },
+  "scripts": {
+    "test:browser": "vitest run --dir test/browser"
+  },
+  "dependencies": {
+    "@jitl/quickjs-wasmfile-release-sync": "0.32.0",
+    "quickjs-emscripten-core": "0.32.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "miniflare": "5.20261012.0-beta"
+  }
+}

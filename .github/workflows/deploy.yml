@@ -1,5 +1,5 @@
 # Check + deploy to Cloudflare Workers
-# - Pull requests and pushes, in parallel: core (typecheck + tests), lint (oxlint, oxfmt, theme + i18n checks), web (build + typecheck + unit tests),
+# - Pull requests and pushes, in parallel: core (typecheck + tests, core and sandbox), sandbox-browser (Chromium), lint (oxlint, oxfmt, theme + i18n checks), web (build + typecheck + unit tests),
 #   api (permission matrix against a local Worker)
 # - Pushes to main: after checks pass, migrate the production D1, deploy, sync Worker secrets
 # Configure under the repo's Settings → Secrets and variables → Actions; see "Deployment" in the README
@@ -29,6 +29,21 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+
+  # The sandbox's browser host in Chromium (opaque-origin worker, no network, watchdog); the rest of its tests run in core
+  sandbox-browser:
+    # Playwright 1.56 can't install Chromium on ubuntu-latest (26.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser -w @plinth/sandbox
 
   lint:
     runs-on: ubuntu-latest
@@ -90,7 +105,7 @@ jobs:
         run: cat dev.log
 
   deploy:
-    needs: [core, lint, web, api]
+    needs: [core, sandbox-browser, lint, web, api]
     timeout-minutes: 20
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

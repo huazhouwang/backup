@@ -9,8 +9,8 @@
   "scripts": {
     "extract": "node scripts/extract-legacy.mjs",
     "convert": "tsx scripts/convert-legacy.ts",
-    "test": "vitest run --dir packages/core",
-    "typecheck": "tsc -p packages/core --noEmit",
+    "test": "vitest run --dir packages --exclude '**/test/browser/**'",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/sandbox --noEmit",
     "bench": "tsx packages/core/bench/transactions.ts",
     "lint": "oxlint",
     "format": "oxfmt",
