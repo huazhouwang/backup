@@ -10,6 +10,7 @@
  * - ui: buttons and a toolbar in the editor's look
  */
 export { bridge, connect, report } from './bridge';
+export { type ModuleCanvas } from './modules';
 export { mount, svgEl, type PlanView, type Tool } from './plan';
 export { addSnaps, draggable, isSelected, onSelection, selectable, snap, SNAP_PX, snapPoints, type SnapProvider, type Snapped } from './interact';
 export { wallTool } from './walls';

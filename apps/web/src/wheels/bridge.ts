@@ -39,6 +39,11 @@ addEventListener('keydown', e => {
   post({ type: 'key', key, code, shiftKey, ctrlKey, metaKey, altKey, repeat });
 });
 
+type TryResult = { ok: true } | { ok: false; error: string };
+let tryHandler: ((id: string, source: string) => Promise<TryResult>) | null = null;
+/** How the page tries a module the editor is about to save (set by the page once it runs modules) */
+export const onTry = (fn: (id: string, source: string) => Promise<TryResult>) => (tryHandler = fn);
+
 let ready: Promise<Init> | null = null;
 /** Wait for the editor's first message (the design, level, selection); listen for what follows */
 export function connect(): Promise<Init> {
@@ -77,6 +82,11 @@ export function connect(): Promise<Init> {
         case 'reply':
           pending.get(m.id)?.(m.reply);
           pending.delete(m.id);
+          return;
+        case 'try':
+          void (tryHandler ? tryHandler(m.id, m.source) : Promise.resolve({ ok: false as const, error: 'the page is not ready' })).then(r =>
+            post({ type: 'tried', reqId: m.reqId, ok: r.ok, ...(r.ok ? {} : { error: r.error }) }),
+          );
       }
     });
   });

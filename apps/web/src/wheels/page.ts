@@ -7,7 +7,8 @@ import type { Point } from '@plinth/core';
 import { overwriteGetLocale } from '@/paraglide/runtime';
 import { m } from '@/lib/i18n';
 import { dragCall, draggable as canDrag } from '@/features/editor/plan/plan-drag';
-import { bridge, connect, post } from './bridge';
+import { bridge, connect, onTry, post } from './bridge';
+import { syncModules, tryModule } from './modules';
 import { addSnaps, draggable, isSelected, onSelection, selectable, snap, SNAP_PX, snapPoints, type SnapProvider } from './interact';
 import { mount, svgEl, type PlanView } from './plan';
 import { button, toolbar } from './ui';
@@ -145,6 +146,15 @@ export async function start(): Promise<Canvas> {
   overwriteGetLocale(() => init.locale);
   document.documentElement.lang = init.locale === 'zh' ? 'zh-CN' : init.locale;
   const canvas = defaultPage(document.body);
+  // The design's own modules run on top, and follow the design as it changes
+  await syncModules(canvas);
+  let modules = init.project.canvas?.modules;
+  bridge.on('project', p => {
+    if (p.canvas?.modules === modules) return;
+    modules = p.canvas?.modules;
+    void syncModules(canvas);
+  });
+  onTry((id, source) => tryModule(canvas, id, source));
   requestAnimationFrame(() =>
     post({
       type: 'ready',

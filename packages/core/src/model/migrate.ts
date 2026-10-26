@@ -56,6 +56,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   15: doc => doc,
   // v17 adds copies of widgets installed from user and team widget libraries (library.widgetCopies); optional
   16: doc => doc,
+  // v18 adds the design's canvas page modules and their data (canvas); optional
+  17: doc => doc,
 };
 
 /**

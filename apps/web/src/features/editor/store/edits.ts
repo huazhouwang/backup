@@ -1,6 +1,7 @@
 /** Edits: calling capabilities (checking the role), previewing a call on a scratch copy, undo and redo, and what just changed */
 import { capabilityTitle, mutates, Session } from '@plinth/core';
 import { registry } from '../agent/registry';
+import { canvasHost } from '../sandbox/host';
 import { m } from '@/lib/i18n';
 import { can } from '@/shared/roles';
 import type { StoreContext } from './create';
@@ -11,7 +12,7 @@ type Edits = Pick<EditorState, 'lastChange' | 'lookChange' | 'pendingLabels'> &
   Pick<EditorActions, 'call' | 'preview' | 'undo' | 'redo' | 'canEdit' | 'clearLookChange'>;
 
 export const editsSlice = ({ set, get, session }: StoreContext): Edits => {
-  const host = () => ({ view: get().viewHost(), comments: commentsHost(get().projectId), looks: looksHost, libraries: librariesHost });
+  const host = () => ({ view: get().viewHost(), comments: commentsHost(get().projectId), looks: looksHost, libraries: librariesHost, canvas: canvasHost });
   return {
     lastChange: null,
     lookChange: null,

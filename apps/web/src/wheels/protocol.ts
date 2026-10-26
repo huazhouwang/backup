@@ -27,7 +27,9 @@ export type HostMessage =
   | { type: 'level'; level: string }
   | { type: 'selection'; ids: string[] }
   | { type: 'canEdit'; canEdit: boolean }
-  | { type: 'reply'; id: number; reply: CallReply };
+  | { type: 'reply'; id: number; reply: CallReply }
+  /** Run a module briefly before it is saved (canvas_module_put) */
+  | { type: 'try'; reqId: number; id: string; source: string };
 
 export type PageMessage =
   | { type: 'ready'; perf: { firstDrawMs: number; bundleBytes: number } }
@@ -36,7 +38,8 @@ export type PageMessage =
   | { type: 'perf'; name: string; ms: number }
   /** A key pressed in the page that the page didn't use, for the editor's shortcuts (undo, Esc…) */
   | { type: 'key'; key: string; code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean }
-  | { type: 'error'; source: string; message: string };
+  | { type: 'error'; source: string; message: string }
+  | { type: 'tried'; reqId: number; ok: boolean; error?: string };
 
 type Item = { id: string };
 const isList = (v: unknown): v is Item[] =>

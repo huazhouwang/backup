@@ -14,7 +14,7 @@ import type { ParamValue, Recipe } from '../looks/script.js';
 import type { WidgetDef } from '../widgets/format.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 17 as const;
+export const SCHEMA_VERSION = 18 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -50,6 +50,8 @@ export interface Project {
   constraints: Constraint[];
   /** Widgets installed on this design's canvas (added in v15) */
   widgets: WidgetInstance[];
+  /** What this design adds to its canvas page (issue 171): modules the agent wrote, and the data each keeps. Added in v18. */
+  canvas?: CanvasPage;
   brief: Brief;
   decisions: Decision[];
   library: Library;
@@ -192,6 +194,28 @@ export interface WidgetInstance {
   widget: { library: string; id: string; version: string };
   params: Record<string, ParamValue>;
   visible: boolean;
+}
+
+/**
+ * A design's additions to its canvas page (issue 171): ES modules run in the sandboxed page on top of the default one, each
+ * `export default function (canvas) {…}`, using the wheels it imports as `plinth`; and the data each module keeps (its own JSON,
+ * changed through canvas_data_set, so it undoes and is shared like the rest of the design).
+ */
+export interface CanvasPage {
+  modules: CanvasModule[];
+  data?: Record<string, unknown>;
+}
+
+export interface CanvasModule {
+  /** kebab-case, unique in the design */
+  id: string;
+  name: string;
+  /** What it does, for the agent and people reading the design (English) */
+  description?: string;
+  /** The module's JavaScript source */
+  source: string;
+  /** Bumped on every change */
+  version: number;
 }
 
 export const CONSTRAINT_TYPES = ['align', 'center', 'size-target', 'spacing', 'reference', 'rule'] as const;

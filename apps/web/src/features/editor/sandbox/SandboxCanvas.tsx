@@ -14,6 +14,7 @@ import { getLocale, m } from '@/lib/i18n';
 import { cn } from 'cn';
 import { registry } from '../agent/registry';
 import { useEditor, useEditorStore } from '../store';
+import { setCanvasPage } from './host';
 import { diffProject, isEmptyDiff, type CallReply, type HostMessage, type PageMessage } from '@/wheels/protocol';
 
 /** UTF-8 text as base64, for a data: URL */
@@ -61,6 +62,22 @@ export function SandboxCanvas({ className }: { className?: string }) {
   const [ready, setReady] = useState(false);
 
   const post = (msg: HostMessage) => ref.current?.contentWindow?.postMessage(msg, '*');
+  // Trying modules before they are saved: the page answers each request
+  const tries = useRef(new Map<number, (r: { ok: true } | { ok: false; error: string }) => void>());
+  useEffect(() => {
+    if (!ready) return;
+    let n = 0;
+    setCanvasPage(
+      (id, source) =>
+        new Promise(resolve => {
+          const reqId = ++n;
+          tries.current.set(reqId, resolve);
+          post({ type: 'try', reqId, id, source });
+          setTimeout(() => tries.current.has(reqId) && (tries.current.delete(reqId), resolve({ ok: false, error: 'the canvas page did not answer' })), 5000);
+        }),
+    );
+    return () => void setCanvasPage(null);
+  }, [ready]);
 
   const init = () => {
     const s = store.getState();
@@ -80,6 +97,10 @@ export function SandboxCanvas({ className }: { className?: string }) {
       if (!ref.current || e.source !== ref.current.contentWindow) return;
       const msg = e.data;
       switch (msg.type) {
+        case 'tried':
+          tries.current.get(msg.reqId)?.(msg.ok ? { ok: true } : { ok: false, error: msg.error ?? 'failed' });
+          tries.current.delete(msg.reqId);
+          return;
         case 'ready':
           setReady(true);
           (globalThis as { plinthSandboxPerf?: unknown }).plinthSandboxPerf = { ...msg.perf };
