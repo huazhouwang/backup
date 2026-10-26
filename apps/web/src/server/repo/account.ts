@@ -1,9 +1,22 @@
-/** Account: exporting a user's data */
+/** Account: the user's own canvas modules, and exporting a user's data */
+import type { CanvasPage } from '@plinth/core';
 import { m } from '@/lib/i18n';
 import { db } from './db';
 import { listApiKeys, listModels } from './models';
 import { getLibrary } from './libraries';
 import { getMyWidgets, getWidgetLibrary } from './widget-libraries';
+
+/** The user's own canvas modules (issue 171), run in every design they open */
+export async function getMyCanvas(userId: string): Promise<CanvasPage> {
+  const r = await db().prepare('select canvas from user_pref where user_id = ?').bind(userId).first<{ canvas: string | null }>();
+  return r?.canvas ? (JSON.parse(r.canvas) as CanvasPage) : { modules: [] };
+}
+
+export const putMyCanvas = (userId: string, page: CanvasPage) =>
+  db()
+    .prepare('insert into user_pref (user_id, canvas) values (?, ?) on conflict (user_id) do update set canvas = excluded.canvas')
+    .bind(userId, JSON.stringify(page))
+    .run();
 
 /** Data export: account info + the latest version of each owned project */
 export async function exportUserData(userId: string) {
@@ -30,5 +43,6 @@ export async function exportUserData(userId: string) {
     lookLibraries: libraries.filter(Boolean).map(l => l!.library),
     widgetLibraries: widgetLibraries.filter(Boolean).map(l => l!.library),
     myWidgets: await getMyWidgets(userId),
+    myCanvas: await getMyCanvas(userId),
   };
 }

@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { createProject, createRegistry, migrate, SCHEMA_VERSION, Session, type CanvasHost } from '../../src/index.js';
+import {
+  canvasPageSchema,
+  createProject,
+  createRegistry,
+  migrate,
+  putCanvasModule,
+  removeCanvasModule,
+  SCHEMA_VERSION,
+  Session,
+  setCanvasData,
+  type CanvasHost,
+} from '../../src/index.js';
 import { sampleFile } from '../support.js';
 
 const registry = createRegistry();
@@ -51,5 +62,20 @@ describe("the design's canvas page modules", () => {
     const p = migrate({ ...sampleFile(), version: 17 });
     expect(p.version).toBe(SCHEMA_VERSION);
     expect(p.canvas).toBeUndefined();
+  });
+});
+
+describe("a person's own canvas page (kept in their settings)", () => {
+  it('adds, versions, keeps data for and removes modules, and validates what is stored', () => {
+    let { page } = putCanvasModule(undefined, { id: 'mine', name: '我的', source: SOURCE });
+    ({ page } = putCanvasModule(page, { id: 'mine', name: '我的', source: SOURCE + ' ' }));
+    expect(page.modules).toHaveLength(1);
+    expect(page.modules[0].version).toBe(2);
+    page = setCanvasData(page, 'mine', { n: 1 });
+    expect(canvasPageSchema.safeParse(page).success).toBe(true);
+    expect(() => setCanvasData(page, 'other', 1)).toThrow();
+    page = removeCanvasModule(page, 'mine');
+    expect(page).toEqual({ modules: [] });
+    expect(canvasPageSchema.safeParse({ modules: [{ id: 'Bad id', name: 'x', source: 'x', version: 1 }] }).success).toBe(false);
   });
 });

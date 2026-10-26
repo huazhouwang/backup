@@ -1,10 +1,14 @@
 /**
- * The canvas page for the agent (issue 171): the wheels' reference, read before writing a module (canvas_module_put). Runs in the
- * browser; the server only uses the definition to describe the tool.
+ * The canvas page for the agent (issue 171): the wheels' reference, read before writing a module (canvas_module_put), and the
+ * person's own modules, kept in their settings and run in every design they open. Run in the browser; the server only uses the
+ * definitions to describe the tools.
  */
-import { defineRead } from '@plinth/core';
+import { CANVAS_LIMITS, defineRead, putCanvasModule, removeCanvasModule } from '@plinth/core';
 import { z } from 'zod';
+import { m } from '@/lib/i18n';
 import { WHEELS_DOC } from '@/wheels/docs';
+import { tryModule } from '../sandbox/host';
+import { changeMyCanvas, myCanvas } from '../sandbox/mine';
 
 export const canvasWheels = defineRead({
   name: 'canvas_wheels',
@@ -18,4 +22,70 @@ export const canvasWheels = defineRead({
   run: () => ({ doc: WHEELS_DOC }),
 });
 
-export const CANVAS_CAPABILITIES = [canvasWheels];
+const zId = z
+  .string()
+  .regex(/^[a-z][a-z0-9-]{0,47}$/)
+  .describe('kebab-case id, e.g. structural-grid');
+
+export const canvasMyModules = defineRead({
+  name: 'canvas_my_modules',
+  title: 'List my canvas modules',
+  kind: 'query',
+  permission: 'read',
+  runtime: 'browser',
+  description:
+    "The user's own canvas modules: kept in their settings, not in this design, and run in every design they open (only they see them). sources=true also returns their source.",
+  input: z.object({ sources: z.boolean().optional() }),
+  run: async i =>
+    (await myCanvas()).modules.map(x => ({
+      id: x.id,
+      name: x.name,
+      description: x.description,
+      version: x.version,
+      bytes: x.source.length,
+      ...(i.sources ? { source: x.source } : {}),
+    })),
+});
+
+export const canvasMyModulePut = defineRead({
+  name: 'canvas_my_module_put',
+  title: 'Save my canvas module',
+  kind: 'relation',
+  permission: 'reversible',
+  runtime: 'browser',
+  description:
+    'Like canvas_module_put, but for the user themselves: the module is kept in their settings and runs in every design they open, seen only by them. Use it only when they ask for something for themselves ("for me", "in all my designs"); otherwise use canvas_module_put. Its canvas.data is kept in their settings too. Tried in the open page first: an error comes back to fix.',
+  input: z.object({
+    id: zId,
+    name: z.string().min(1).max(80).describe('Display name, in the language the user writes in'),
+    description: z.string().max(1000).optional().describe('What it does (English)'),
+    source: z.string().min(1).max(CANVAS_LIMITS.source).describe('The module source'),
+  }),
+  run: async i => {
+    const r = await tryModule('me', i.id, i.source);
+    if (!r.ok) throw new Error(m.editor_my_canvas_failed({ error: r.error }));
+    let version = 0;
+    await changeMyCanvas(page => {
+      const next = putCanvasModule(page, i);
+      version = next.module.version;
+      return next.page;
+    });
+    return { id: i.id, version, tried: r.tried };
+  },
+});
+
+export const canvasMyModuleRemove = defineRead({
+  name: 'canvas_my_module_remove',
+  title: 'Remove my canvas module',
+  kind: 'relation',
+  permission: 'reversible',
+  runtime: 'browser',
+  description: "Remove one of the user's own canvas modules, with the data it kept.",
+  input: z.object({ id: zId }),
+  run: async i => {
+    await changeMyCanvas(page => removeCanvasModule(page, i.id));
+    return { id: i.id };
+  },
+});
+
+export const CANVAS_CAPABILITIES = [canvasWheels, canvasMyModules, canvasMyModulePut, canvasMyModuleRemove];

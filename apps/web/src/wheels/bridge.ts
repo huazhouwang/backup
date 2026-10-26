@@ -3,8 +3,8 @@
  * the current level and the selection, and calls capabilities through the editor: the same registry the editor and its agent
  * use, so a change from the page is checked by the building rules, undoable and saved like any other.
  */
-import type { Project } from '@plinth/core';
-import { applyDiff, type CallReply, type HostMessage, type Init, type PageMessage } from './protocol';
+import type { CanvasPage, Project } from '@plinth/core';
+import { applyDiff, type CallReply, type HostMessage, type Init, type ModuleScope, type PageMessage } from './protocol';
 
 type Events = { project: Project; level: string; selection: string[]; canEdit: boolean };
 type Listener<K extends keyof Events> = (value: Events[K]) => void;
@@ -40,9 +40,22 @@ addEventListener('keydown', e => {
 });
 
 type TryResult = { ok: true } | { ok: false; error: string };
-let tryHandler: ((id: string, source: string) => Promise<TryResult>) | null = null;
+type Trier = (scope: ModuleScope, id: string, source: string) => Promise<TryResult>;
+let tryHandler: Trier | null = null;
 /** How the page tries a module the editor is about to save (set by the page once it runs modules) */
-export const onTry = (fn: (id: string, source: string) => Promise<TryResult>) => (tryHandler = fn);
+export const onTry = (fn: Trier) => (tryHandler = fn);
+
+const mineListeners = new Set<(page: CanvasPage) => void>();
+/** The person's own modules and their data (not part of the design) */
+export const myCanvas = (): CanvasPage => state?.mine ?? { modules: [] };
+/** Hear when the person's own modules or their data change */
+export const onMine = (fn: (page: CanvasPage) => void) => (mineListeners.add(fn), () => void mineListeners.delete(fn));
+/** Save the data of one of the person's own modules, in their settings */
+export function setMyData(module: string, data: unknown): Promise<CallReply> {
+  const id = ++callId;
+  post({ type: 'mydata', id, module, data });
+  return new Promise(resolve => pending.set(id, resolve));
+}
 
 let ready: Promise<Init> | null = null;
 /** Wait for the editor's first message (the design, level, selection); listen for what follows */
@@ -79,12 +92,23 @@ export function connect(): Promise<Init> {
           state.canEdit = m.canEdit;
           emit('canEdit', m.canEdit);
           return;
+        case 'mine':
+          if (!state) return;
+          state.mine = m.page;
+          for (const fn of mineListeners) {
+            try {
+              fn(m.page);
+            } catch (e) {
+              report('listener', e);
+            }
+          }
+          return;
         case 'reply':
           pending.get(m.id)?.(m.reply);
           pending.delete(m.id);
           return;
         case 'try':
-          void (tryHandler ? tryHandler(m.id, m.source) : Promise.resolve({ ok: false as const, error: 'the page is not ready' })).then(r =>
+          void (tryHandler ? tryHandler(m.scope, m.id, m.source) : Promise.resolve({ ok: false as const, error: 'the page is not ready' })).then(r =>
             post({ type: 'tried', reqId: m.reqId, ok: r.ok, ...(r.ok ? {} : { error: r.error }) }),
           );
       }

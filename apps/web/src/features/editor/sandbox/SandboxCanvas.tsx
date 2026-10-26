@@ -5,7 +5,7 @@
  * only through the bridge (wheels/protocol.ts): the design and its changes, the level and the selection come in; capability
  * calls and selections go out, and every call is made here, as the person looking, through the same registry as the editor.
  */
-import { findObject, mutates } from '@plinth/core';
+import { findObject, mutates, setCanvasData } from '@plinth/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import wheels from 'virtual:canvas-wheels';
 import css from '@/canvas/canvas.css?inline';
@@ -15,6 +15,7 @@ import { cn } from 'cn';
 import { registry } from '../agent/registry';
 import { useEditor, useEditorStore } from '../store';
 import { setCanvasPage } from './host';
+import { changeMyCanvas, useMyCanvas } from './mine';
 import { diffProject, isEmptyDiff, type CallReply, type HostMessage, type PageMessage } from '@/wheels/protocol';
 
 /** UTF-8 text as base64, for a data: URL */
@@ -54,10 +55,13 @@ export function SandboxCanvas({ className }: { className?: string }) {
   const selection = useEditor(s => s.view.selection);
   const canEdit = useEditor(s => s.canEdit());
   const select = useEditor(s => s.select);
+  const mine = useMyCanvas();
+  const mineRef = useRef(mine);
+  mineRef.current = mine;
   const ref = useRef<HTMLIFrameElement>(null);
   const srcDoc = useMemo(() => pageHtml(), []);
   // What the page was last told, so only changes are sent; and whether it has started
-  const told = useRef({ started: false, project, level, selection, canEdit });
+  const told = useRef({ started: false, project, level, selection, canEdit, mine });
   const [errors, setErrors] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -68,11 +72,11 @@ export function SandboxCanvas({ className }: { className?: string }) {
     if (!ready) return;
     let n = 0;
     setCanvasPage(
-      (id, source) =>
+      (scope, id, source) =>
         new Promise(resolve => {
           const reqId = ++n;
           tries.current.set(reqId, resolve);
-          post({ type: 'try', reqId, id, source });
+          post({ type: 'try', reqId, scope, id, source });
           setTimeout(() => tries.current.has(reqId) && (tries.current.delete(reqId), resolve({ ok: false, error: 'the canvas page did not answer' })), 5000);
         }),
     );
@@ -81,7 +85,7 @@ export function SandboxCanvas({ className }: { className?: string }) {
 
   const init = () => {
     const s = store.getState();
-    told.current = { started: true, project: s.project, level: s.view.level, selection: s.view.selection, canEdit: s.canEdit() };
+    told.current = { started: true, project: s.project, level: s.view.level, selection: s.view.selection, canEdit: s.canEdit(), mine: mineRef.current };
     post({
       type: 'init',
       project: s.project,
@@ -89,6 +93,7 @@ export function SandboxCanvas({ className }: { className?: string }) {
       selection: s.view.selection,
       locale: getLocale() === 'en' ? 'en' : 'zh',
       canEdit: s.canEdit(),
+      mine: mineRef.current,
     });
   };
 
@@ -124,6 +129,18 @@ export function SandboxCanvas({ className }: { className?: string }) {
                 ? { result: JSON.parse(JSON.stringify(r.result ?? null)) }
                 : { error: { code: r.error?.code ?? 'error', message: r.error?.message ?? '' } }),
             };
+          }
+          post({ type: 'reply', id: msg.id, reply });
+          return;
+        }
+        case 'mydata': {
+          // One of the person's own modules keeps its data in their settings, not in the design
+          let reply: CallReply;
+          try {
+            await changeMyCanvas(page => setCanvasData(page, msg.module, msg.data));
+            reply = { ok: true, result: { module: msg.module } };
+          } catch (err) {
+            reply = { ok: false, error: { code: 'error', message: (err as Error).message } };
           }
           post({ type: 'reply', id: msg.id, reply });
           return;
@@ -169,6 +186,12 @@ export function SandboxCanvas({ className }: { className?: string }) {
     t.selection = selection;
     post({ type: 'selection', ids: selection });
   }, [selection]);
+  useEffect(() => {
+    const t = told.current;
+    if (!t.started || t.mine === mine) return;
+    t.mine = mine;
+    post({ type: 'mine', page: mine });
+  }, [mine]);
   useEffect(() => {
     const t = told.current;
     if (!t.started || t.canEdit === canEdit) return;

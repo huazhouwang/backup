@@ -72,6 +72,7 @@ The canvas can also be a sandboxed web page built from ready-made code, the whee
 - One module per feature, saved with canvas_module_put; it is tried in the page first, so read the error it returns, fix it and try again, at most twice.
 - Keep what people make with the module in its data (canvas.data.set), never only in variables: that is what undoes, saves and is shared.
 - Label text in the project's language; colours from theme variables only.
+- A module belongs to the design (canvas_module_put: everyone who opens the design has it). Only when the user wants a tool for themselves in all their designs, save it as their own with canvas_my_module_put (canvas_my_modules lists them).
 
 ## Comments
 Family members leave comments on objects. When handling comments, first read them with comments_list. If you can make the change directly, do it, then use comment_reply to say what you did and mark it resolved. If the homeowner must decide, list two or three options and the cost of each in the reply and mark it pending-confirm (awaiting the homeowner's confirmation).

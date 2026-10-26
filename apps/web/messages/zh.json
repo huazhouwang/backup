@@ -884,5 +884,7 @@
   "sun_time": "时间",
   "sun_now": "现在",
   "sun_position": "太阳高度 {elevation}°，方位 {azimuth}°",
-  "sun_below": "太阳在地平线下"
+  "sun_below": "太阳在地平线下",
+  "editor_my_canvas_signed_out": "登录后才能保存自己的画布模块",
+  "editor_my_canvas_failed": "模块在画布页面里出错：{error}"
 }

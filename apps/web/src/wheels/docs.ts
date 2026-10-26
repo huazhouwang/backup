@@ -22,8 +22,9 @@ Colours: use theme variables only, e.g. var(--foreground), var(--canvas-selectio
 - select(ids): select (the design's objects are selected in the editor too; your own ids stay in the page)
 - call(name, input): run a capability as the person (wall_add, wall_move, furniture_move, …) → {ok, result?, error?}. Edits are checked by the building rules and undo like any other.
 
-## canvas.data — your module's state, kept in the design
-- get(): your JSON (undefined at first). set(value): save it (canvas_data_set: undoable, shared with the design). on(fn): hear changes (undo, other people).
+## canvas.data — your module's state, kept where the module is
+- get(): your JSON (undefined at first). set(value): save it. on(fn): hear changes (undo, other people).
+- A design's module keeps it in the design (canvas_data_set: undoable, shared). A user's own module (canvas.scope === 'me') keeps it in their settings.
 Keep everything the user makes with your module here, never only in variables.
 
 ## canvas.view — the plan

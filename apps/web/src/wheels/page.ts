@@ -7,7 +7,7 @@ import type { Point } from '@plinth/core';
 import { overwriteGetLocale } from '@/paraglide/runtime';
 import { m } from '@/lib/i18n';
 import { dragCall, draggable as canDrag } from '@/features/editor/plan/plan-drag';
-import { bridge, connect, onTry, post } from './bridge';
+import { bridge, connect, onMine, onTry, post } from './bridge';
 import { syncModules, tryModule } from './modules';
 import { addSnaps, draggable, isSelected, onSelection, selectable, snap, SNAP_PX, snapPoints, type SnapProvider } from './interact';
 import { mount, svgEl, type PlanView } from './plan';
@@ -154,7 +154,13 @@ export async function start(): Promise<Canvas> {
     modules = p.canvas?.modules;
     void syncModules(canvas);
   });
-  onTry((id, source) => tryModule(canvas, id, source));
+  let mine = init.mine.modules;
+  onMine(page => {
+    if (page.modules === mine) return;
+    mine = page.modules;
+    void syncModules(canvas);
+  });
+  onTry((scope, id, source) => tryModule(canvas, scope, id, source));
   requestAnimationFrame(() =>
     post({
       type: 'ready',

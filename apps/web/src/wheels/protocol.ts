@@ -4,7 +4,7 @@
  * fields whose value changed, and for lists of objects with ids (walls, spaces, furniture…) the items that changed, the ids that
  * went and the new order. Changes are found by identity, which the editor's immutable updates keep for whatever didn't change.
  */
-import type { Project } from '@plinth/core';
+import type { CanvasPage, Project } from '@plinth/core';
 
 /** What a capability call answers (the registry's result, as plain data) */
 export interface CallReply {
@@ -19,7 +19,12 @@ export interface Init {
   selection: string[];
   locale: 'zh' | 'en';
   canEdit: boolean;
+  /** The person's own canvas modules (from their settings), run in every design they open */
+  mine: CanvasPage;
 }
+
+/** Where a module is kept: in the design, or in the person's own settings */
+export type ModuleScope = 'design' | 'me';
 
 export type HostMessage =
   | ({ type: 'init' } & Init)
@@ -28,12 +33,16 @@ export type HostMessage =
   | { type: 'selection'; ids: string[] }
   | { type: 'canEdit'; canEdit: boolean }
   | { type: 'reply'; id: number; reply: CallReply }
-  /** Run a module briefly before it is saved (canvas_module_put) */
-  | { type: 'try'; reqId: number; id: string; source: string };
+  /** The person's own modules changed */
+  | { type: 'mine'; page: CanvasPage }
+  /** Run a module briefly before it is saved (canvas_module_put, canvas_my_module_put) */
+  | { type: 'try'; reqId: number; scope: ModuleScope; id: string; source: string };
 
 export type PageMessage =
   | { type: 'ready'; perf: { firstDrawMs: number; bundleBytes: number } }
   | { type: 'call'; id: number; name: string; input: unknown }
+  /** One of the person's own modules saves its data (in their settings, not the design); answered by a reply */
+  | { type: 'mydata'; id: number; module: string; data: unknown }
   | { type: 'select'; ids: string[] }
   | { type: 'perf'; name: string; ms: number }
   /** A key pressed in the page that the page didn't use, for the editor's shortcuts (undo, Esc…) */

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { defineEdit, defineRead, type CapabilityContext } from './capability.js';
 import { TxError } from '../session/session.js';
 import { text } from '../i18n.js';
-import type { CanvasModule, Project } from '../model/schema.js';
+import type { CanvasModule, CanvasPage, Project } from '../model/schema.js';
 
 /** Implemented by the editor while a canvas page is open: runs a module there briefly and says whether it threw */
 export interface CanvasHost {
@@ -22,11 +22,67 @@ const zId = z
   .describe('kebab-case id, e.g. structural-grid');
 
 const modules = (p: Project) => p.canvas?.modules ?? [];
-const moduleOf = (p: Project, id: string) => {
-  const m = modules(p).find(x => x.id === id);
+
+/*
+ * Changing a canvas page, wherever it is kept: a design's (project.canvas) or a person's own, in their settings (modules they add
+ * for themselves, run in every design they open)
+ */
+const moduleIn = (page: CanvasPage | undefined, id: string) => {
+  const m = page?.modules.find(x => x.id === id);
   if (!m) throw new TxError('not-found', text('err_canvas_module_not_found', 'No canvas module {id} in this design', { id }));
   return m;
 };
+
+/** The page with a module added or replaced (same id; its version goes up) */
+export function putCanvasModule(page: CanvasPage | undefined, i: { id: string; name: string; description?: string; source: string }) {
+  const list = page?.modules ?? [];
+  const old = list.find(m => m.id === i.id);
+  if (!old && list.length >= CANVAS_LIMITS.modules)
+    throw new TxError('invalid-input', text('err_canvas_modules_full', 'At most {n} canvas modules', { n: CANVAS_LIMITS.modules }));
+  const m: CanvasModule = {
+    id: i.id,
+    name: i.name,
+    ...(i.description ? { description: i.description } : {}),
+    source: i.source,
+    version: (old?.version ?? 0) + 1,
+  };
+  return { page: { ...page, modules: old ? list.map(x => (x.id === i.id ? m : x)) : [...list, m] }, module: m };
+}
+
+/** The page without a module, nor the data it kept */
+export function removeCanvasModule(page: CanvasPage | undefined, id: string): CanvasPage {
+  moduleIn(page, id);
+  const { [id]: _gone, ...data } = page?.data ?? {};
+  return { modules: page!.modules.filter(m => m.id !== id), ...(Object.keys(data).length ? { data } : {}) };
+}
+
+/** The page with a module's data replaced */
+export function setCanvasData(page: CanvasPage | undefined, id: string, value: unknown): CanvasPage {
+  moduleIn(page, id);
+  const json = JSON.stringify(value ?? null);
+  if (json.length > CANVAS_LIMITS.data)
+    throw new TxError('invalid-input', text('err_canvas_data_size', 'Module data is limited to {n} characters', { n: CANVAS_LIMITS.data }));
+  return { ...page!, data: { ...page!.data, [id]: JSON.parse(json) } };
+}
+
+/** A canvas page as the server accepts it (a person's own modules) */
+export const canvasPageSchema: z.ZodType<CanvasPage> = z.object({
+  modules: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z][a-z0-9-]{0,47}$/),
+        name: z.string().min(1).max(80),
+        description: z.string().max(1000).optional(),
+        source: z.string().min(1).max(CANVAS_LIMITS.source),
+        version: z.number().int().min(1),
+      }),
+    )
+    .max(CANVAS_LIMITS.modules),
+  data: z
+    .record(z.string(), z.unknown())
+    .refine(d => JSON.stringify(d).length <= CANVAS_LIMITS.data * CANVAS_LIMITS.modules)
+    .optional(),
+});
 
 export const canvasModules = defineRead({
   name: 'canvas_modules',
@@ -73,18 +129,8 @@ export const canvasModulePut = defineEdit({
     tried.set(i, r.tried);
   },
   apply: (p, i) => {
-    const list = modules(p);
-    const old = list.find(m => m.id === i.id);
-    if (!old && list.length >= CANVAS_LIMITS.modules)
-      throw new TxError('invalid-input', text('err_canvas_modules_full', 'At most {n} canvas modules', { n: CANVAS_LIMITS.modules }));
-    const m: CanvasModule = {
-      id: i.id,
-      name: i.name,
-      ...(i.description ? { description: i.description } : {}),
-      source: i.source,
-      version: (old?.version ?? 0) + 1,
-    };
-    p.canvas = { ...p.canvas, modules: old ? list.map(x => (x.id === i.id ? m : x)) : [...list, m] };
+    const { page, module: m } = putCanvasModule(p.canvas, i);
+    p.canvas = page;
     return { id: m.id, version: m.version, tried: tried.get(i) ?? false };
   },
 });
@@ -98,9 +144,7 @@ export const canvasModuleRemove = defineEdit({
   input: z.object({ id: zId }),
   label: (i, p) => text('log_canvas_module_remove', 'Remove canvas module “{name}”', { name: modules(p).find(m => m.id === i.id)?.name ?? i.id }),
   apply: (p, i) => {
-    moduleOf(p, i.id);
-    const { [i.id]: _gone, ...data } = p.canvas?.data ?? {};
-    p.canvas = { modules: modules(p).filter(m => m.id !== i.id), ...(Object.keys(data).length ? { data } : {}) };
+    p.canvas = removeCanvasModule(p.canvas, i.id);
     return { id: i.id };
   },
 });
@@ -112,11 +156,7 @@ export const canvasDataSet = defineEdit({
   input: z.object({ module: zId, data: z.unknown() }),
   label: (i, p) => text('log_canvas_data_set', 'Change “{name}”', { name: modules(p).find(m => m.id === i.module)?.name ?? i.module }),
   apply: (p, i) => {
-    moduleOf(p, i.module);
-    const json = JSON.stringify(i.data ?? null);
-    if (json.length > CANVAS_LIMITS.data)
-      throw new TxError('invalid-input', text('err_canvas_data_size', 'Module data is limited to {n} characters', { n: CANVAS_LIMITS.data }));
-    p.canvas = { ...p.canvas!, data: { ...p.canvas?.data, [i.module]: JSON.parse(json) } };
+    p.canvas = setCanvasData(p.canvas, i.module, i.data);
     return { module: i.module };
   },
 });

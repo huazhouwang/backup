@@ -884,5 +884,7 @@
   "sun_time": "Time",
   "sun_now": "Now",
   "sun_position": "Sun {elevation}° high, bearing {azimuth}°",
-  "sun_below": "The sun is below the horizon"
+  "sun_below": "The sun is below the horizon",
+  "editor_my_canvas_signed_out": "Sign in to keep canvas modules of your own",
+  "editor_my_canvas_failed": "The module failed in the canvas page: {error}"
 }
