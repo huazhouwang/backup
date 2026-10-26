@@ -26,3 +26,18 @@ test('the Tips tab shows what to expect at the baby’s age, and a tip in full',
   await page.getByRole('link', { name: '贴士' }).first().click()
   await expect(page).toHaveURL(/\/tips/)
 })
+
+test('milestones tick off when tapped, and stay ticked on this device', async ({ page }) => {
+  await onboard(page)
+  await page.goto('/tips')
+  const smile = page.getByRole('checkbox', { name: '对着你笑' })
+  await expect(smile).not.toBeChecked()
+  await page.getByText('对着你笑').click()
+  await expect(smile).toBeChecked()
+  await page.reload()
+  await expect(page.getByRole('checkbox', { name: '对着你笑' })).toBeChecked()
+  await expect(page.getByRole('checkbox', { name: '手能张开' })).not.toBeChecked()
+  // Tapped again: off.
+  await page.getByText('对着你笑').click()
+  await expect(page.getByRole('checkbox', { name: '对着你笑' })).not.toBeChecked()
+})

@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 
 import { Card, CardTitle } from '../../components/ui/Card'
+import { CheckIcon } from '../../components/ui/CheckIcon'
 import { Chevron } from '../../components/ui/Chevron'
 import { ChipGroup } from '../../components/ui/ToggleChip'
 import { TopicIcon } from '../../components/ui/TopicIcon'
@@ -15,6 +16,7 @@ import { typingDots } from '../voice/ChangingText'
 import { tipsQueries } from './api'
 import { type Comparison, compareWithUsual } from './compare'
 import { tipById } from './library'
+import { useMilestoneChecks } from './milestone-checks'
 import { STAGES, type Stage, doctorSignsFor, milestonesFor, stageFor } from './stages'
 import { TOPIC_STYLE } from './topic-style'
 
@@ -58,7 +60,7 @@ export function TipsPage({
       {isCurrent && <Observation baby={baby} day={today} />}
       {isCurrent && <Records baby={baby} now={now} />}
       <Usual stage={stage} />
-      <Milestones stage={stage} />
+      <Milestones stage={stage} babyId={baby.id} />
       <Tips stage={stage} />
       <Doctor stage={stage} />
       <p className="m-0 text-caption text-fg-muted">{m.tipsSources()}</p>
@@ -179,16 +181,28 @@ function Usual({ stage }: { stage: Stage }) {
   )
 }
 
-function Milestones({ stage }: { stage: Stage }) {
+/** What most babies do by the next checkpoint; tapping one ticks it off (on this device). */
+function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
   const checkpoint = milestonesFor(stage)
+  const { isChecked, toggle } = useMilestoneChecks(babyId)
   return (
     <section className="flex flex-col gap-2">
       <CardTitle small>{m.tipsMilestonesTitle({ months: checkpoint.by })}</CardTitle>
-      <Card className="py-1">
+      <Card className="overflow-hidden py-0">
         <ul className="m-0 flex list-none flex-col divide-y-2 divide-border p-0">
           {checkpoint.items.map((item) => (
-            <li key={item} className="flex min-h-12 items-center py-2 font-bold">
-              {item}
+            <li key={item}>
+              <label className="-mx-4 flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-primary-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
+                {item}
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={isChecked(item)}
+                  onChange={() => toggle(item)}
+                />
+                {/* Ticked: the row turns light green, with a dark green tick. */}
+                <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
+              </label>
             </li>
           ))}
         </ul>
