@@ -304,6 +304,10 @@ export function TabMic() {
     if (talk.recording) talk.drop()
     openChat()
   }
+  // Why a recording came to nothing (too short, or not heard), once the overlay has gone.
+  useEffect(() => {
+    if (talk.error) showToast(talk.error)
+  }, [talk.error])
   // Open: the page behind stays put, even under a sliding finger, and Escape closes it.
   useEffect(() => (open ? lockScroll() : undefined), [open])
   useEffect(() => {

@@ -4,6 +4,8 @@
  * spot (no audio files), round and quiet; on iPhone they follow the ring/silent switch, the
  * tap doesn't.
  */
+import { audioContext } from './audio'
+
 export type Cue = 'start' | 'send' | 'cancel'
 
 /** Each cue's notes: pitch (Hz) and length (s), played one after another. */
@@ -22,13 +24,10 @@ const VOLUME = 0.12
 /** How long the start cue sounds, so the microphone can leave it out. */
 export const START_CUE_MS = 180
 
-let context: AudioContext | null = null
-
 /** Plays a cue. Called within a tap, as browsers only let sound start from one. */
 export function playCue(cue: Cue) {
   try {
-    context ??= new AudioContext()
-    void context.resume()
+    const context = audioContext()
     let at = context.currentTime
     for (const [pitch, length] of NOTES[cue]) {
       const tone = context.createOscillator()

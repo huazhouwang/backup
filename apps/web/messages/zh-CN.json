@@ -739,6 +739,7 @@
   "voiceMicSend": "说完了，发送",
   "voiceMicTapToSend": "点麦克风发送",
   "voiceMicTooShort": "太短了，按住说完再松开",
+  "voiceMicUnheard": "没录到声音，请再试一次",
   "voiceNeverUsed": "还没用过",
   "voiceNo": "取消",
   "voicePhraseLabel": "叫法",

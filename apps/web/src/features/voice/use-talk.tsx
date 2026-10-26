@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 
+import { wakeAudioOnTaps } from '../../lib/audio'
 import { START_CUE_MS, playCue, tapPhone } from '../../lib/cues'
 import { hideHint, isHintHidden } from '../../lib/hints'
 import { m } from '../../paraglide/messages.js'
@@ -67,17 +68,19 @@ export function useTalk({
   const down = useRef<{ x: number; y: number; at: number } | null>(null)
 
   const recorder = useRecorder()
+  // The audio is woken by taps ahead of time, so it runs from the start of a recording.
+  useEffect(() => wakeAudioOnTaps(), [])
   const done = () => {
     setMode('off')
     setAiming(null)
-    const said = recorder.finish()
+    const recording = recorder.finish()
     tapPhone()
-    if (said) {
+    if (recording.said) {
       playCue('send')
-      onSpoken(said)
+      onSpoken(recording.said)
     } else {
       playCue('cancel')
-      setError(m.voiceMicTooShort())
+      setError(recording.why === 'unheard' ? m.voiceMicUnheard() : m.voiceMicTooShort())
       onDrop()
     }
   }
