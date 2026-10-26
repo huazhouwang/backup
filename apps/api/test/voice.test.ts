@@ -374,7 +374,7 @@ describe('siri voice logging', () => {
 
   it('takes a message whose recent lines are long, using only their start', async () => {
     fake.setResponses([{ text: '换尿布了。' }, { text: '好。' }])
-    const long = `Bobo: ${'今天喝奶五次。'.repeat(60)}`
+    const long = `Assistant: ${'今天喝奶五次。'.repeat(60)}`
     const res = await t.request('/api/voice/chat', {
       method: 'POST',
       headers: {
@@ -385,7 +385,7 @@ describe('siri voice logging', () => {
       body: JSON.stringify({
         text: '换尿布了',
         spoken: true,
-        recent: ['User: 一', 'Bobo: 二', 'User: 三', long, 'User: 五'],
+        recent: ['User: 一', 'Assistant: 二', 'User: 三', long, 'User: 五'],
       }),
     })
     expect(res.status).toBe(200)

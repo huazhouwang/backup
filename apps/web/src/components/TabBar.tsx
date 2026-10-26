@@ -29,7 +29,7 @@ export function TabBar() {
       {tabs.slice(0, 2).map((tab) => (
         <TabLink key={tab.to} tab={tab} pathname={pathname} />
       ))}
-      {/* Talking to Bobo, from any page: in the middle and standing out. */}
+      {/* Talking to the AI, from any page: in the middle and standing out. */}
       <div className="flex flex-1 justify-center">{hydrated && <TabMic />}</div>
       {tabs.slice(2).map((tab) => (
         <TabLink key={tab.to} tab={tab} pathname={pathname} />

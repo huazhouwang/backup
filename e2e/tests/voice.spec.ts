@@ -87,7 +87,7 @@ async function standInApi(page: Page) {
   }
 }
 
-test('talks to Bobo on its own page, by holding the microphone or tapping it', async ({
+test('talks to the AI on its own page, by holding the microphone or tapping it', async ({
   browser,
 }) => {
   const { context, page } = await newDevice(browser)
@@ -98,10 +98,10 @@ test('talks to Bobo on its own page, by holding the microphone or tapping it', a
   await page.goto('/')
   await page
     .locator('main')
-    .getByRole('button', { name: /和 Bobo 说/ })
+    .getByRole('button', { name: /对话记录/ })
     .click()
   await expect(page).toHaveURL(/\/chat/)
-  await expect(page.getByRole('heading', { name: '和 Bobo 说' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '对话记录' })).toBeVisible()
   // A page of its own, covering the tab bar.
   await expect(page.getByRole('navigation')).toHaveCount(0)
   const mic = page.getByRole('button', { name: '按住说话' })
@@ -176,14 +176,14 @@ test('explains the microphone before the system asks, and how to turn it back on
   await page.goto('/')
   await page
     .locator('main')
-    .getByRole('button', { name: /和 Bobo 说/ })
+    .getByRole('button', { name: /对话记录/ })
     .click()
   const mic = page.getByRole('button', { name: '按住说话' })
   await page.waitForTimeout(500)
 
   // Not decided yet: the explanation comes first; "暂不" leaves the system's question unasked.
   await mic.click()
-  const explain = page.getByRole('dialog', { name: '和 Bobo 说话需要用麦克风' })
+  const explain = page.getByRole('dialog', { name: '需要打开麦克风' })
   await expect(explain).toBeVisible()
   await expect(explain.getByText('在 Safari 里打开', { exact: false })).toBeVisible()
   await explain.getByRole('button', { name: '暂不' }).click()
@@ -225,10 +225,10 @@ test('explains the microphone once until the app is opened again', async ({ brow
   await page.goto('/')
   await page
     .locator('main')
-    .getByRole('button', { name: /和 Bobo 说/ })
+    .getByRole('button', { name: /对话记录/ })
     .click()
   const mic = page.getByRole('button', { name: '按住说话' })
-  const explain = page.getByRole('dialog', { name: '和 Bobo 说话需要用麦克风' })
+  const explain = page.getByRole('dialog', { name: '需要打开麦克风' })
   await page.waitForTimeout(500)
 
   // Explained once, gone on: recording starts; dropped, then pressed again, no explanation.
@@ -261,7 +261,7 @@ test('says how to turn the microphone back on once it was refused', async ({ bro
   await page.goto('/')
   await page
     .locator('main')
-    .getByRole('button', { name: /和 Bobo 说/ })
+    .getByRole('button', { name: /对话记录/ })
     .click()
   await page.waitForTimeout(500)
   await page.getByRole('button', { name: '按住说话' }).click()
@@ -273,7 +273,7 @@ test('says how to turn the microphone back on once it was refused', async ({ bro
   await context.close()
 })
 
-test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }) => {
+test('talks to the AI from the tab bar, over the blurred page', async ({ browser }) => {
   const { context, page } = await newDevice(browser)
   await context.grantPermissions(['microphone'])
   await onboard(page)
@@ -291,10 +291,10 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   const micsTaken = () => page.evaluate(() => Number(Reflect.get(window, 'micsTaken')))
   const api = await standInApi(page)
   await page.goto('/')
-  const mic = page.getByRole('navigation').getByRole('button', { name: '和 Bobo 说话' })
+  const mic = page.getByRole('navigation').getByRole('button', { name: '语音' })
   await expect(mic).toBeVisible()
   // Signed in and settled: the Today bar shows once the account is known.
-  await expect(page.locator('main').getByRole('button', { name: /和 Bobo 说/ })).toBeVisible()
+  await expect(page.locator('main').getByRole('button', { name: /对话记录/ })).toBeVisible()
   await page.waitForTimeout(500)
   const box = await mic.boundingBox()
   if (!box) throw new Error('no microphone')

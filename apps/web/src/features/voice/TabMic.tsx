@@ -176,7 +176,7 @@ function SideButton({
 const userBubble =
   'max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-3 text-body font-bold text-on-accent wrap-anywhere'
 
-/** One message said and Bobo's answer to it. */
+/** One message said and the AI's answer to it. */
 interface Turn {
   id: number
   said: string
@@ -215,7 +215,7 @@ const recentLines = (page: InfiniteData<ChatPage, string | null> | undefined) =>
   page?.pages[0]?.lines.slice(-4) ?? []
 
 /**
- * The microphone in the middle of the tab bar: hold it (or tap it) to talk to Bobo from any
+ * The microphone in the middle of the tab bar: hold it (or tap it) to talk to the AI from any
  * page. Everything behind blurs and the microphone stays where it is, with the chat on its
  * left and cancel on its right to slide onto. What is heard grows in the middle, and the
  * answer appears there too, so a quick "换尿布了" never leaves the page. The same
@@ -259,7 +259,7 @@ export function TabMic() {
     setPhase('replying')
     try {
       const recent = history().map(
-        (line) => `${line.role === 'user' ? 'User' : 'Bobo'}: ${line.text}`,
+        (line) => `${line.role === 'user' ? 'User' : 'Assistant'}: ${line.text}`,
       )
       const answer = await voiceApi.stream(
         { text, spoken, recent },

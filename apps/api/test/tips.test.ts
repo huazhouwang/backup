@@ -9,7 +9,7 @@ const HOUR = 3_600_000
 /** Today's noon in Shanghai (UTC+8), so a day's records never cross its midnight. */
 const noon = () => Math.floor((Date.now() + 8 * HOUR) / DAY) * DAY - 8 * HOUR + 12 * HOUR
 
-describe("Bobo's observation", () => {
+describe('the weekly observation', () => {
   let t: Awaited<ReturnType<typeof createTestApp>>
   let headers: Headers
   let babyId: string
@@ -46,21 +46,21 @@ describe("Bobo's observation", () => {
   })
   afterAll(() => t.dispose())
 
-  it('asks nothing of the model with too few days logged', async () => {
+  it('needs an AI to write it, however few days are logged', async () => {
     await log([1, 2])
+    expect(await (await observation()).json()).toMatchObject({ text: null, reason: 'noAi' })
+  })
+
+  it('asks nothing of the model with too few days logged', async () => {
+    await t.saveAi(headers, 'sk-or-v1-0123456789')
     expect(await (await observation()).json()).toMatchObject({ text: null, reason: 'sparse' })
     expect(fake.state.callCount).toBe(0)
   })
 
-  it('needs an AI to write it', async () => {
+  it('writes it once a day, telling the model which days may be incomplete', async () => {
     await log([3, 4])
     // One day with a single record: marked as probably not fully logged.
     await log([5], 1)
-    expect(await (await observation()).json()).toMatchObject({ text: null, reason: 'noAi' })
-  })
-
-  it('writes it once a day, telling the model which days may be incomplete', async () => {
-    await t.saveAi(headers, 'sk-or-v1-0123456789')
     fake.setResponses([
       ({ request }) => {
         prompt = JSON.stringify([request.systemPrompts, request.messages])

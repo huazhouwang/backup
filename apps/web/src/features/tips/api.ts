@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query'
 
 import { apiFetch } from '../../lib/api'
 
-/** Bobo's observation on a baby's week, or why there is none today. */
+/** The AI's observation on a baby's week, or why there is none today. */
 export type Observation =
   | { day: string; text: string }
   | { day: string; text: null; reason: 'sparse' | 'noAi' | 'limited' | 'failed' }

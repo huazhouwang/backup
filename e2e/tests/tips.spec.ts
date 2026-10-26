@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { newDevice, onboard, signIn } from '../support/app'
+import { newDevice, onboard, signIn, syncNow } from '../support/app'
 
 test('the Tips tab shows what to expect at the baby’s age, and a tip in full', async ({ page }) => {
   await onboard(page)
@@ -12,7 +12,7 @@ test('the Tips tab shows what to expect at the baby’s age, and a tip in full',
   await expect(page.getByText('大部分时间都在睡')).toBeVisible()
   await expect(page.getByText('遇到这些，带宝宝问问医生')).toBeVisible()
   // Signed out: no observation; the records need more days first.
-  await expect(page.getByText('Bobo 的观察')).toHaveCount(0)
+  await expect(page.getByText('本周观察')).toHaveCount(0)
   await expect(page.getByText('多记几天，这里会把宝宝的记录')).toBeVisible()
 
   // Another stage, from the chips.
@@ -63,7 +63,7 @@ test('milestones tick off when tapped, and stay ticked on this device', async ({
   await expect(confetti).toHaveCount(0, { timeout: 5000 })
 })
 
-test('asking Bobo about a tip offers questions, and tells Bobo which tip it is', async ({
+test('asking about a tip offers questions, and tells the AI which tip it is', async ({
   browser,
 }) => {
   const { context, page } = await newDevice(browser)
@@ -92,8 +92,15 @@ test('asking Bobo about a tip offers questions, and tells Bobo which tip it is',
       body: `event: done\ndata: ${JSON.stringify({ reply, done: false, confirming: false })}\n\n`,
     })
   })
+  // Signed in without an AI: no observation card, not even a hint to set one up.
+  await syncNow(page)
+  const observed = page.waitForResponse('**/api/tips/observation?*')
+  await page.goto('/tips')
+  expect((await (await observed).json()) as unknown).toMatchObject({ reason: 'noAi' })
+  await expect(page.getByText('本周观察')).toHaveCount(0)
+
   await page.goto('/tips/safe-sleep')
-  await page.getByRole('button', { name: '问问 Bobo' }).click()
+  await page.getByRole('button', { name: '问一问' }).click()
   await expect(page).toHaveURL(/\/chat\?tip=safe-sleep/)
   // Nothing half-written in the field: questions to tap instead.
   await expect(page.getByLabel('想说的话')).toHaveValue('')

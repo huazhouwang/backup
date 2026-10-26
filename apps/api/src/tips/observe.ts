@@ -15,7 +15,7 @@ const SPARSE_DAY = 3
 const TIMEOUT_MS = 15_000
 const MAX_CHARS = 300
 
-const INSTRUCTIONS = `你是 Bobo，一个温和、靠谱的育儿助手。根据宝宝过去一周的记录，给爸妈写一段简短的观察。
+const INSTRUCTIONS = `你是一位温和、靠谱的育儿顾问。根据宝宝过去一周的记录，给爸妈写一段简短的观察。
 
 要求：
 - 两到三句话，不超过 120 个字，纯文本，不用列表、标题或表情。
@@ -88,7 +88,7 @@ export function weekLines(events: readonly Event[], now: number, timeZone: strin
 }
 
 /**
- * Bobo's observation on the week, written by the family's AI; null when it fails, so the
+ * The AI's observation on the week, written by the family's AI; null when it fails, so the
  * next visit tries again.
  */
 export async function observe(

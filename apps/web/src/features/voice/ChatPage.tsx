@@ -47,7 +47,7 @@ export function ChatPage({
 }: {
   /** Opened to say something: the keyboard comes up. */
   focus: boolean
-  /** Opened from a tip to ask about it: its id. Bobo is told which tip it is. */
+  /** Opened from a tip to ask about it: its id. the AI is told which tip it is. */
   tip?: string
 }) {
   const tip = tipId ? tipById(tipId) : undefined
@@ -102,7 +102,7 @@ export function ChatPage({
       await queryClient.cancelQueries({ queryKey: voiceKeys.chat })
       const recent = messages
         .slice(-4)
-        .map((message) => `${message.role === 'user' ? 'User' : 'Bobo'}: ${message.text}`)
+        .map((message) => `${message.role === 'user' ? 'User' : 'Assistant'}: ${message.text}`)
       const mine = append({ role: 'user', text: said })
       let reply: string | null = null
       const turn = await voiceApi.stream(
@@ -346,9 +346,8 @@ function Bubble({ message }: { message: ChatMessage }) {
   return (
     // Long unbroken text (a link, an id) wraps instead of widening the page.
     <p className={bubbleClass(mine)}>
-      <span className="sr-only">
-        {mine ? m.voiceChatSpeakerMe() : m.voiceChatSpeakerAssistant()}
-      </span>
+      {/* Only your own lines are marked; the rest are the replies. */}
+      {mine && <span className="sr-only">{m.voiceChatSpeakerMe()}</span>}
       <ChangingText text={message.text} />
     </p>
   )

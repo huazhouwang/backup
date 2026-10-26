@@ -24,7 +24,7 @@ function List({ title, items }: { title: string; items: string[] }) {
   )
 }
 
-/** One tip in full, with a way to ask Bobo more about it. */
+/** One tip in full, with a way to ask the AI more about it. */
 export function TipDetail({ tipId }: { tipId: string }) {
   const tip = tipById(tipId)
   const { userId } = useAccess()
@@ -72,7 +72,7 @@ export function TipDetail({ tipId }: { tipId: string }) {
       {userId && (
         <Button size="lg" block onClick={ask} className="gap-2">
           <ChatIcon className="size-6" />
-          {m.tipAskBobo()}
+          {m.tipAskMore()}
         </Button>
       )}
       <p className="m-0 text-caption text-fg-muted">{m.tipSource({ source: tip.source })}</p>

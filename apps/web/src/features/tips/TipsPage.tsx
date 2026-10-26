@@ -33,7 +33,7 @@ import { useMilestoneChecks } from './milestone-checks'
 import { TOPIC_STYLE } from './topic-style'
 
 /**
- * What to expect at the baby's stage, from birth to 24 months: the stage's summary, Bobo's
+ * What to expect at the baby's stage, from birth to 24 months: the stage's summary, the AI's
  * observation and the baby's records next to what is usual (both for the current stage only),
  * usual feeding and sleep, milestones, tips and when to see a doctor. Other stages can be
  * browsed from the chips.
@@ -80,7 +80,10 @@ export function TipsPage({
   )
 }
 
-/** Bobo's observation on the week: signed in only, as the family's AI writes it. */
+/**
+ * The AI's observation on the week: signed in only, as the family's AI writes it, and not
+ * shown at all without one.
+ */
 function Observation({ baby, day }: { baby: Baby; day: string }) {
   const { userId } = useAccess()
   const { data, isPending, isError } = useQuery({
@@ -88,7 +91,7 @@ function Observation({ baby, day }: { baby: Baby; day: string }) {
     enabled: Boolean(userId),
   })
   const reason = data && data.text === null ? data.reason : null
-  if (!userId || isError || reason === 'failed' || reason === 'limited') return null
+  if (!userId || isError || (reason && reason !== 'sparse')) return null
   return (
     <Card as="section" className="flex flex-col gap-2">
       <CardTitle small>{m.tipsObservationTitle()}</CardTitle>
@@ -102,13 +105,6 @@ function Observation({ baby, day }: { baby: Baby; day: string }) {
           <p className="m-0">{data.text}</p>
           <p className="m-0 text-caption text-fg-muted">{m.tipsObservationAi()}</p>
         </>
-      ) : reason === 'noAi' ? (
-        <p className="m-0 text-fg-muted">
-          {m.tipsObservationNoAi()}{' '}
-          <Link to="/settings/ai" className="font-bold text-primary-text">
-            {m.tipsObservationSetUp()}
-          </Link>
-        </p>
       ) : (
         <p className="m-0 text-fg-muted">{m.tipsObservationSparse()}</p>
       )}

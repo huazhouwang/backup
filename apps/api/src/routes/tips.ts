@@ -61,15 +61,16 @@ export function tipsRoutes(adapterFor: AdapterFor) {
       .first<{ text: string }>()
     if (kept) return c.json({ day, text: kept.text })
 
-    const events = await recentEvents(db, [baby.id], now - (WEEK + 2) * 86_400_000, null, 1000)
-    const { lines, logged } = weekLines(events, now, timeZone)
-    // Too little to go on: nothing is asked of the model.
-    if (logged < MIN_LOGGED_DAYS) return missing('sparse')
-
+    // Without an AI there is no observation at all, however much is recorded.
     const ai = await aiForUser(db, userId, access)
     const adapter =
       ai && ai.familyIds.includes(baby.familyId) ? await adapterFor(c.env, ai.ai) : null
     if (!ai || !adapter) return missing('noAi')
+
+    const events = await recentEvents(db, [baby.id], now - (WEEK + 2) * 86_400_000, null, 1000)
+    const { lines, logged } = weekLines(events, now, timeZone)
+    // Too little to go on: nothing is asked of the model.
+    if (logged < MIN_LOGGED_DAYS) return missing('sparse')
     const settings = await readSettings(db, userId)
     // It calls the model like a message does, so it counts towards the same daily limit.
     if ((await countMessage(db, userId, settings, now)) > DAILY_LIMIT) return missing('limited')
