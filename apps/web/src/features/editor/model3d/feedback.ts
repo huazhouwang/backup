@@ -80,8 +80,14 @@ const stippleMaterial = new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
 });
 
+/**
+ * Each part's dots, kept here rather than in its userData: the components pass userData as a prop, and every render replaces it,
+ * which would lose the dots of an object just deselected and leave them showing
+ */
+const dotsOf = new WeakMap<THREE.Mesh, THREE.Mesh>();
+
 function stipple(part: THREE.Mesh, on: boolean, color: THREE.Color) {
-  let dots = part.userData.dots as THREE.Mesh | undefined;
+  let dots = dotsOf.get(part);
   if (!on && !dots) return;
   if (!dots) {
     dots = new THREE.Mesh(part.geometry, stippleMaterial);
@@ -89,7 +95,7 @@ function stipple(part: THREE.Mesh, on: boolean, color: THREE.Color) {
     dots.userData = { mark: true, noEdges: true };
     dots.renderOrder = 1;
     part.add(dots);
-    part.userData.dots = dots;
+    dotsOf.set(part, dots);
   }
   if (dots.geometry !== part.geometry) dots.geometry = part.geometry;
   stippleMaterial.uniforms.color.value.copy(color);

@@ -57,20 +57,50 @@ test('selection', async ({ browser: b }) => {
   await page.mouse.click(iframe.x + 10, iframe.y + iframe.height - 10);
   await page.getByRole('button', { name: '切换到三维' }).click();
   await page.waitForTimeout(7000);
-  let found = null;
-  for (let y = 0.2; y < 0.8 && !found; y += 0.03)
-    for (let x = 0.15; x < 0.85 && !found; x += 0.03) {
+  // A door or window, and a floor (a large surface, to see its stipple go when something else is selected)
+  let found = null,
+    floor = null;
+  for (let y = 0.2; y < 0.8 && !(found && floor); y += 0.03)
+    for (let x = 0.15; x < 0.85 && !(found && floor); x += 0.03) {
       const q = [iframe.x + iframe.width * x, iframe.y + iframe.height * y];
       await page.mouse.move(...q);
       await page.waitForTimeout(40);
       const id = await frame.evaluate(() => document.querySelector('[data-hover-id]')?.getAttribute('data-hover-id'));
-      if (id && /-o\d+$/.test(id)) found = { q, id };
+      if (id && /-o\d+$/.test(id) && !found) found = { q, id };
+      if (id && /-s\d+$/.test(id) && !floor) floor = { q, id };
     }
   if (found) {
     await page.waitForTimeout(800);
     found.tip = await tip();
   }
   check(!!found && /窗|门/.test(found.tip ?? ''), `in 3D the mouse over a door or window names it (${found?.id}: ${found?.tip})`);
+  // Selecting something else clears the stipple of what was selected (it used to stay on walls, floors and roofs)
+  const away = [iframe.x + 6, iframe.y + 6];
+  const bluePixels = async () => {
+    await page.mouse.move(...away);
+    await page.waitForTimeout(600);
+    const png = await page.screenshot({ clip: iframe });
+    return page.evaluate(async b64 => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+      const g = c.getContext('2d');
+      g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i + 2] > d[i] + 60 && d[i + 2] > d[i + 1] + 30) n++;
+      return n;
+    }, png.toString('base64'));
+  };
+  if (found && floor) {
+    const none = await bluePixels();
+    await page.mouse.click(...floor.q);
+    const onFloor = (await bluePixels()) - none;
+    await page.mouse.click(...found.q);
+    const afterwards = (await bluePixels()) - none;
+    check(onFloor > 500 && afterwards < onFloor / 3, `selecting a window clears the floor's stipple (${onFloor} blue pixels, then ${afterwards})`);
+  } else check(false, `found a floor to select in 3D (${floor?.id})`);
   if (found) {
     await page.mouse.click(...found.q);
     await page.waitForTimeout(600);
