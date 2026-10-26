@@ -95,9 +95,15 @@ test('selection', async ({ browser: b }) => {
   };
   if (found && floor) {
     const none = await bluePixels();
+    // Under load the 3D view can lag: wait for each click to select before counting
+    const selected = async id => {
+      for (let i = 0; i < 40 && JSON.stringify(await selection()) !== JSON.stringify([id]); i++) await page.waitForTimeout(150);
+    };
     await page.mouse.click(...floor.q);
+    await selected(floor.id);
     const onFloor = (await bluePixels()) - none;
     await page.mouse.click(...found.q);
+    await selected(found.id);
     const afterwards = (await bluePixels()) - none;
     check(onFloor > 500 && afterwards < onFloor / 3, `selecting a window clears the floor's stipple (${onFloor} blue pixels, then ${afterwards})`);
   } else check(false, `found a floor to select in 3D (${floor?.id})`);

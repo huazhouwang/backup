@@ -20,6 +20,7 @@ type Ui = Pick<
   | 'sun'
   | 'sunOpen'
   | 'widgetsOpen'
+  | 'sandboxCanvas'
   | 'northRequest'
 > &
   Pick<
@@ -36,7 +37,18 @@ type Ui = Pick<
     | 'faceNorth'
     | 'setSunOpen'
     | 'setWidgetsOpen'
+    | 'setSandboxCanvas'
   >;
+
+/** The sample room (issue 171): the plan drawn by the sandboxed canvas page instead of the editor's own; remembered in this browser */
+const SANDBOX_KEY = 'plinth.sandboxCanvas';
+function readSandboxCanvas() {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem(SANDBOX_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
   compare: false,
@@ -52,6 +64,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   sun: { day: dayOfYear(new Date()), minutes: 15 * 60 },
   sunOpen: false,
   widgetsOpen: false,
+  sandboxCanvas: readSandboxCanvas(),
   northRequest: 0,
 
   setCompare(on) {
@@ -99,6 +112,14 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
     set({ sunOpen });
   },
 
+  setSandboxCanvas(on) {
+    try {
+      localStorage.setItem(SANDBOX_KEY, on ? '1' : '');
+    } catch {
+      // Storage blocked: the choice lasts for this page only
+    }
+    set({ sandboxCanvas: on });
+  },
   setWidgetsOpen(widgetsOpen) {
     set({ widgetsOpen });
   },

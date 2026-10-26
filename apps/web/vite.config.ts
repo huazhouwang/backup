@@ -39,6 +39,39 @@ function sandboxWorker(): Plugin {
 }
 
 /**
+ * `virtual:canvas-wheels`: the wheels (src/wheels/index.ts), bundled as one ES module, as a string. The sandboxed canvas page
+ * (#171) gets it inlined under the import name `plinth`; it can't load the app's own modules from its opaque origin. Paths
+ * resolve through tsconfig.json (`@/…`).
+ */
+function canvasWheels(): Plugin {
+  const id = 'virtual:canvas-wheels';
+  const here = fileURLToPath(new URL('.', import.meta.url));
+  return {
+    name: 'plinth-canvas-wheels',
+    resolveId: source => (source === id ? `\0${id}` : undefined),
+    async load(source) {
+      if (source !== `\0${id}`) return;
+      const out = await build({
+        entryPoints: [resolve(here, 'src/wheels/index.ts')],
+        absWorkingDir: here,
+        tsconfig: resolve(here, 'tsconfig.json'),
+        bundle: true,
+        write: false,
+        format: 'esm',
+        platform: 'browser',
+        target: 'es2022',
+        jsx: 'automatic',
+        minify: true,
+        metafile: true,
+        define: { 'process.env.NODE_ENV': '"production"' },
+      });
+      for (const file of Object.keys(out.metafile.inputs)) this.addWatchFile(resolve(here, file));
+      return `export default ${JSON.stringify(out.outputFiles[0].text)};`;
+    },
+  };
+}
+
+/**
  * Frontend: a TanStack Router SPA, built to static assets.
  * Server: the Worker contains only Hono (/api/*), no React, keeping bundle size and cold start small enough for the free plan's 3 MB / 10 ms limits.
  */
@@ -58,5 +91,6 @@ export default defineConfig({
     tailwindcss(),
     cloudflare(),
     sandboxWorker(),
+    canvasWheels(),
   ],
 });

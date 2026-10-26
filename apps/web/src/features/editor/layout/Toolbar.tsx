@@ -1,7 +1,14 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowLeftIcon, DownloadIcon, EllipsisIcon, ImageIcon, LayoutPanelLeftIcon, Redo2Icon, Share2Icon, ShapesIcon, Undo2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { roleLabel } from '@/lib/api';
 import { m } from '@/lib/i18n';
@@ -27,6 +34,8 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
   const canEdit = useEditor(s => s.canEdit());
   const session = useEditor(s => s.session);
   const setWidgetsOpen = useEditor(s => s.setWidgetsOpen);
+  const sandboxCanvas = useEditor(s => s.sandboxCanvas);
+  const setSandboxCanvas = useEditor(s => s.setSandboxCanvas);
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(project, null, 1)], { type: 'application/json' });
@@ -78,6 +87,9 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
           <DropdownMenuItem onClick={() => setWidgetsOpen(true)}>
             <ShapesIcon /> {m.editor_widgets()}
           </DropdownMenuItem>
+          <DropdownMenuCheckboxItem checked={sandboxCanvas} onCheckedChange={on => setSandboxCanvas(!!on)}>
+            {m.editor_sandbox_canvas()}
+          </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
           {(['furniture', 'labels', 'dimensions'] as const).map(k => (
             <DropdownMenuItem key={k} onClick={() => setView({ layers: { ...view.layers, [k]: !view.layers[k] } })}>

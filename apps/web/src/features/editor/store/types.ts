@@ -81,6 +81,8 @@ export interface EditorState {
   sunOpen: boolean;
   /** The widgets panel is open (from the ⋯ menu) */
   widgetsOpen: boolean;
+  /** The plan is drawn by the sandboxed canvas page (issue 171), an experiment beside the editor's own plan */
+  sandboxCanvas: boolean;
   /** Asks the 3D view to turn to look north (the time of the request) */
   northRequest: number;
 }
@@ -100,6 +102,7 @@ export interface EditorActions {
   faceNorth(): void;
   setSunOpen(open: boolean): void;
   setWidgetsOpen(open: boolean): void;
+  setSandboxCanvas(on: boolean): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;
