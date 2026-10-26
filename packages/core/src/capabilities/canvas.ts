@@ -11,7 +11,7 @@ import type { CanvasModule, CanvasPage, Project } from '../model/schema.js';
 
 /** Implemented by the editor while a canvas page is open: runs a module there briefly and says whether it threw */
 export interface CanvasHost {
-  tryModule(id: string, source: string): Promise<{ ok: true; tried: boolean } | { ok: false; error: string }>;
+  tryModule(id: string, source: string): Promise<{ ok: true; tried: boolean; drawn?: unknown } | { ok: false; error: string }>;
 }
 
 export const CANVAS_LIMITS = { source: 60000, modules: 30, data: 200000 };
@@ -118,7 +118,8 @@ export const canvasModulePut = defineEdit({
     'ready-made code, the wheels; a module is an ES module run on top of the default page: `export default function (canvas) { … }`.',
     'Read canvas_wheels first and use the wheels (plan layers, selectable, draggable, snap lines, the wall tool, data) rather than rewriting them.',
     'One module per feature, a few hundred lines at most. The page has no network. The module is tried in the open page before it is saved:',
-    "an error comes back to fix. Keep the module's own state with canvas.data.set (canvas_data_set), so it undoes and is shared with the design.",
+    'an error comes back to fix; otherwise the result says what it put on the page (drawn: elements by tag, texts, buttons, snaps).',
+    "Keep the module's own state with canvas.data.set (canvas_data_set), so it undoes and is shared with the design.",
   ].join(' '),
   input: z.object({
     id: zId,
@@ -136,16 +137,17 @@ export const canvasModulePut = defineEdit({
     if (!host) return;
     const r = await host.tryModule(i.id, i.source);
     if (!r.ok) throw new TxError('invalid-input', text('err_canvas_module_failed', 'The module failed in the canvas page: {error}', { error: r.error }));
-    tried.set(i, r.tried);
+    tried.set(i, { tried: r.tried, drawn: r.drawn });
   },
   apply: (p, i) => {
     const { page, module: m } = putCanvasModule(p.canvas, i);
     p.canvas = page;
-    return { id: m.id, version: m.version, tried: tried.get(i) ?? false };
+    const t = tried.get(i);
+    return { id: m.id, version: m.version, tried: t?.tried ?? false, ...(t?.drawn ? { drawn: t.drawn } : {}) };
   },
 });
 /** Whether the module was tried in an open page before being saved */
-const tried = new WeakMap<object, boolean>();
+const tried = new WeakMap<object, { tried: boolean; drawn?: unknown }>();
 
 export const canvasModuleRemove = defineEdit({
   name: 'canvas_module_remove',

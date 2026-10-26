@@ -67,7 +67,24 @@ export function SandboxCanvas({ className }: { className?: string }) {
 
   const post = (msg: HostMessage) => ref.current?.contentWindow?.postMessage(msg, '*');
   // Trying modules before they are saved: the page answers each request
-  const tries = useRef(new Map<number, (r: { ok: true } | { ok: false; error: string }) => void>());
+  const tries = useRef(new Map<number, (r: { ok: true; drawn?: unknown } | { ok: false; error: string }) => void>());
+  // Screenshots (view_screenshot, image export): the page renders itself
+  const captures = useRef(new Map<number, (r: Extract<PageMessage, { type: 'captured' }>) => void>());
+  const setCapture = useEditor(s => s.setCapture);
+  useEffect(() => {
+    if (!ready) return;
+    let n = 0;
+    setCapture(
+      () =>
+        new Promise((resolve, reject) => {
+          const reqId = ++n;
+          captures.current.set(reqId, r => (r.dataUrl ? resolve({ dataUrl: r.dataUrl, width: r.width!, height: r.height! }) : reject(new Error(r.error))));
+          post({ type: 'capture', reqId });
+          setTimeout(() => captures.current.has(reqId) && (captures.current.delete(reqId), reject(new Error(m.editor_plan_not_ready()))), 10000);
+        }),
+    );
+    return () => setCapture(null);
+  }, [ready, setCapture]);
   useEffect(() => {
     if (!ready) return;
     let n = 0;
@@ -103,8 +120,12 @@ export function SandboxCanvas({ className }: { className?: string }) {
       const msg = e.data;
       switch (msg.type) {
         case 'tried':
-          tries.current.get(msg.reqId)?.(msg.ok ? { ok: true } : { ok: false, error: msg.error ?? 'failed' });
+          tries.current.get(msg.reqId)?.(msg.ok ? { ok: true, drawn: msg.drawn } : { ok: false, error: msg.error ?? 'failed' });
           tries.current.delete(msg.reqId);
+          return;
+        case 'captured':
+          captures.current.get(msg.reqId)?.(msg);
+          captures.current.delete(msg.reqId);
           return;
         case 'ready':
           setReady(true);

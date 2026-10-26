@@ -15,32 +15,12 @@ import { useRun } from '../panels/common';
 import { useEditor } from '../store';
 import { setHover } from '../hover';
 import { m } from '@/lib/i18n';
-import { standaloneSvg } from '@/lib/theme';
 import { useBuildsVersion } from '@/lib/builds';
 import { PlanWidgets } from '../widgets/PlanWidgets';
 import { useWidgetCommit } from '../widgets/mine';
 import { snapPoints, useWidgetOutputs, type ParamOverrides } from '../widgets/outputs';
 
 const pts = (p: Point[]) => p.map(([x, y]) => `${x},${y}`).join(' ');
-
-/** Render the SVG to PNG (screenshots, image export) */
-export async function svgToPng(svg: SVGSVGElement, width = 2000) {
-  const vb = svg.viewBox.baseVal;
-  const height = Math.round((width * vb.height) / vb.width);
-  const cs = svg.ownerDocument.defaultView!.getComputedStyle(svg);
-  const data = standaloneSvg(svg, { width: String(width), height: String(height) });
-  const img = new Image();
-  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data)}`;
-  await img.decode();
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = cs.getPropertyValue('--background');
-  ctx.fillRect(0, 0, width, height);
-  ctx.drawImage(img, 0, 0, width, height);
-  return { dataUrl: canvas.toDataURL('image/png'), width, height };
-}
 
 export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | null> }) {
   const project = useEditor(s => s.project);

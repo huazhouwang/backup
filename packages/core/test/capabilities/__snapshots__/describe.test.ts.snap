@@ -17,7 +17,7 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Project overview",
   },
   {
-    "description": "Search walls, spaces, openings, furniture, elements and installed widgets by name keyword, type and level. Returns ID, name, type and level.",
+    "description": "Search walls, spaces, openings, furniture, elements and installed widgets by name keyword, type and level. Returns ID, name, type and level; walls also their kind (bearing, partition…), start, end and thickness, and spaces their kind, so one call lists e.g. the bearing walls of a level.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -64,14 +64,15 @@ exports[`capability descriptions are stable 1`] = `
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {
+        "id": {
+          "description": "Same as ref",
+          "type": "string",
+        },
         "ref": {
           "description": "Object ID or name",
           "type": "string",
         },
       },
-      "required": [
-        "ref",
-      ],
       "type": "object",
     },
     "kind": "query",
@@ -1880,7 +1881,7 @@ exports[`capability descriptions are stable 1`] = `
     "title": "List canvas modules",
   },
   {
-    "description": "Add a module to this design's canvas page, or replace one (same id; its version goes up). The canvas is a sandboxed web page drawn from ready-made code, the wheels; a module is an ES module run on top of the default page: \`export default function (canvas) { … }\`. Read canvas_wheels first and use the wheels (plan layers, selectable, draggable, snap lines, the wall tool, data) rather than rewriting them. One module per feature, a few hundred lines at most. The page has no network. The module is tried in the open page before it is saved: an error comes back to fix. Keep the module's own state with canvas.data.set (canvas_data_set), so it undoes and is shared with the design.",
+    "description": "Add a module to this design's canvas page, or replace one (same id; its version goes up). The canvas is a sandboxed web page drawn from ready-made code, the wheels; a module is an ES module run on top of the default page: \`export default function (canvas) { … }\`. Read canvas_wheels first and use the wheels (plan layers, selectable, draggable, snap lines, the wall tool, data) rather than rewriting them. One module per feature, a few hundred lines at most. The page has no network. The module is tried in the open page before it is saved: an error comes back to fix; otherwise the result says what it put on the page (drawn: elements by tag, texts, buttons, snaps). Keep the module's own state with canvas.data.set (canvas_data_set), so it undoes and is shared with the design.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

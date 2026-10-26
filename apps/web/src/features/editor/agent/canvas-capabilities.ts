@@ -71,7 +71,7 @@ export const canvasMyModulePut = defineRead({
       version = next.module.version;
       return next.page;
     });
-    return { id: i.id, version, tried: r.tried };
+    return { id: i.id, version, tried: r.tried, ...(r.ok && r.drawn ? { drawn: r.drawn } : {}) };
   },
 });
 

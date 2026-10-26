@@ -39,11 +39,15 @@ addEventListener('keydown', e => {
   post({ type: 'key', key, code, shiftKey, ctrlKey, metaKey, altKey, repeat });
 });
 
-type TryResult = { ok: true } | { ok: false; error: string };
+type TryResult = { ok: true; drawn?: unknown } | { ok: false; error: string };
 type Trier = (scope: ModuleScope, id: string, source: string) => Promise<TryResult>;
 let tryHandler: Trier | null = null;
 /** How the page tries a module the editor is about to save (set by the page once it runs modules) */
 export const onTry = (fn: Trier) => (tryHandler = fn);
+
+let captureHandler: (() => Promise<{ dataUrl: string; width: number; height: number }>) | null = null;
+/** How the page renders itself to an image when the editor asks (view_screenshot) */
+export const onCapture = (fn: typeof captureHandler) => (captureHandler = fn);
 
 const mineListeners = new Set<(page: CanvasPage) => void>();
 /** The person's own modules and their data (not part of the design) */
@@ -92,6 +96,12 @@ export function connect(): Promise<Init> {
           state.canEdit = m.canEdit;
           emit('canEdit', m.canEdit);
           return;
+        case 'capture':
+          void captureHandler?.().then(
+            c => post({ type: 'captured', reqId: m.reqId, ...c }),
+            e => post({ type: 'captured', reqId: m.reqId, error: String(e) }),
+          );
+          return;
         case 'mine':
           if (!state) return;
           state.mine = m.page;
@@ -109,7 +119,7 @@ export function connect(): Promise<Init> {
           return;
         case 'try':
           void (tryHandler ? tryHandler(m.scope, m.id, m.source) : Promise.resolve({ ok: false as const, error: 'the page is not ready' })).then(r =>
-            post({ type: 'tried', reqId: m.reqId, ok: r.ok, ...(r.ok ? {} : { error: r.error }) }),
+            post({ type: 'tried', reqId: m.reqId, ok: r.ok, ...(r.ok ? { drawn: r.drawn } : { error: r.error }) }),
           );
       }
     });

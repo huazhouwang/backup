@@ -39,6 +39,10 @@ export interface PlanView {
   shapes(): LevelShapes;
   /** Let a tool take the pointer (null gives it back to selecting and panning) */
   setTool(tool: Tool | null): void;
+  /** The tool that has the pointer, if any (while one does, what modules made draggable stays put) */
+  tool(): Tool | null;
+  /** Hear when the tool changes (e.g. to show which button's tool is on) */
+  onTool(fn: (tool: Tool | null) => void): () => void;
   /** Fit the level in view */
   fit(): void;
   /** Listen for redraws (after the design, level or zoom changed) */
@@ -61,6 +65,7 @@ export function mount(container: HTMLElement): PlanView {
   let shapes: LevelShapes = levelShapes(bridge.project(), bridge.level());
   let tool: Tool | null = null;
   const drawListeners = new Set<() => void>();
+  const toolListeners = new Set<(t: Tool | null) => void>();
   const named = new Map<string, SVGGElement>();
 
   const size = () => ({ width: svg.clientWidth || 1, height: svg.clientHeight || 1 });
@@ -180,6 +185,7 @@ export function mount(container: HTMLElement): PlanView {
     tool?.stop?.();
     tool = t;
     svg.style.cursor = t?.cursor ?? '';
+    for (const fn of toolListeners) fn(t);
   };
 
   bridge.on('project', p => {
@@ -212,6 +218,11 @@ export function mount(container: HTMLElement): PlanView {
     pxMm,
     shapes: () => shapes,
     setTool,
+    tool: () => tool,
+    onTool(fn) {
+      toolListeners.add(fn);
+      return () => void toolListeners.delete(fn);
+    },
     fit,
     onDraw(fn) {
       drawListeners.add(fn);

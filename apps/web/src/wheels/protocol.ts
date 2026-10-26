@@ -36,7 +36,9 @@ export type HostMessage =
   /** The person's own modules changed */
   | { type: 'mine'; page: CanvasPage }
   /** Run a module briefly before it is saved (canvas_module_put, canvas_my_module_put) */
-  | { type: 'try'; reqId: number; scope: ModuleScope; id: string; source: string };
+  | { type: 'try'; reqId: number; scope: ModuleScope; id: string; source: string }
+  /** Render the page to an image (view_screenshot) */
+  | { type: 'capture'; reqId: number };
 
 export type PageMessage =
   | { type: 'ready'; perf: { firstDrawMs: number; bundleBytes: number } }
@@ -48,7 +50,9 @@ export type PageMessage =
   /** A key pressed in the page that the page didn't use, for the editor's shortcuts (undo, Esc…) */
   | { type: 'key'; key: string; code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean }
   | { type: 'error'; source: string; message: string }
-  | { type: 'tried'; reqId: number; ok: boolean; error?: string };
+  /** A tried module: whether it threw, and if not what it put on the page */
+  | { type: 'tried'; reqId: number; ok: boolean; error?: string; drawn?: unknown }
+  | { type: 'captured'; reqId: number; dataUrl?: string; width?: number; height?: number; error?: string };
 
 type Item = { id: string };
 const isList = (v: unknown): v is Item[] =>

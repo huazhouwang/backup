@@ -91,40 +91,42 @@ export const SNAP_PX = 10;
 
 /**
  * Let an element be dragged: `move` hears the pointer in plan millimetres (snapped, unless snap is false) while it is held, `end`
- * where it was let go (null if it never moved, i.e. a click)
+ * where it was let go (null if it never moved, i.e. a click). Once pressed, the drag follows the pointer anywhere, so the element
+ * may be redrawn (replaced) while it is dragged. While a tool has the pointer (view.setTool), the element can't be dragged.
  */
 export function draggable(
   view: PlanView,
   el: Element,
   opts: { start?(p: Point): void; move(s: Snapped, e: PointerEvent): void; end(s: Snapped | null, e: PointerEvent): void; snap?: boolean },
 ) {
-  let held: { id: number; at: Point; moved: boolean } | null = null;
   const at = (e: PointerEvent): Snapped => {
     const p = view.toModel(e);
     return opts.snap === false ? { point: p, kind: null, guides: [] } : snap(p, SNAP_PX * view.pxMm());
   };
   el.addEventListener('pointerdown', ev => {
     const e = ev as PointerEvent;
-    if (e.button !== 0) return;
+    if (e.button !== 0 || view.tool()) return;
     // Marked as taken: the plan won't pan, and a click without moving still selects
     e.preventDefault();
-    (el as Element).setPointerCapture(e.pointerId);
-    held = { id: e.pointerId, at: view.toModel(e), moved: false };
+    const held = { id: e.pointerId, at: view.toModel(e), moved: false };
     opts.start?.(held.at);
-  });
-  el.addEventListener('pointermove', ev => {
-    const e = ev as PointerEvent;
-    if (!held || held.id !== e.pointerId) return;
-    if (!held.moved && len(sub(view.toModel(e), held.at)) < 3 * view.pxMm()) return;
-    held.moved = true;
-    opts.move(at(e), e);
-  });
-  el.addEventListener('pointerup', ev => {
-    const e = ev as PointerEvent;
-    if (!held || held.id !== e.pointerId) return;
-    const moved = held.moved;
-    held = null;
-    if (moved) e.stopPropagation();
-    opts.end(moved ? at(e) : null, e);
+    const onMove = (m: PointerEvent) => {
+      if (m.pointerId !== held.id) return;
+      if (!held.moved && len(sub(view.toModel(m), held.at)) < 3 * view.pxMm()) return;
+      held.moved = true;
+      opts.move(at(m), m);
+    };
+    // Captured first, so a drag that moved doesn't also count as a click on whatever is under the pointer
+    const onUp = (u: PointerEvent) => {
+      if (u.pointerId !== held.id) return;
+      removeEventListener('pointermove', onMove, true);
+      removeEventListener('pointerup', onUp, true);
+      removeEventListener('pointercancel', onUp, true);
+      if (held.moved) u.stopPropagation();
+      opts.end(held.moved && u.type === 'pointerup' ? at(u) : null, u);
+    };
+    addEventListener('pointermove', onMove, true);
+    addEventListener('pointerup', onUp, true);
+    addEventListener('pointercancel', onUp, true);
   });
 }

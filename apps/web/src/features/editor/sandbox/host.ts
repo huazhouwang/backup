@@ -5,17 +5,21 @@
 import type { CanvasHost } from '@plinth/core';
 import type { ModuleScope } from '@/wheels/protocol';
 
-type Trier = (scope: ModuleScope, id: string, source: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+type Trier = (scope: ModuleScope, id: string, source: string) => Promise<{ ok: true; drawn?: unknown } | { ok: false; error: string }>;
 let page: Trier | null = null;
 
 /** Called by the open page (SandboxCanvas) with how to try a module there; null when it goes */
 export const setCanvasPage = (t: Trier | null) => (page = t);
 
 /** Try a module in the open page, if there is one */
-export async function tryModule(scope: ModuleScope, id: string, source: string): Promise<{ ok: true; tried: boolean } | { ok: false; error: string }> {
+export async function tryModule(
+  scope: ModuleScope,
+  id: string,
+  source: string,
+): Promise<{ ok: true; tried: boolean; drawn?: unknown } | { ok: false; error: string }> {
   if (!page) return { ok: true, tried: false };
   const r = await page(scope, id, source);
-  return r.ok ? { ok: true, tried: true } : r;
+  return r.ok ? { ok: true, tried: true, ...(r.drawn ? { drawn: r.drawn } : {}) } : r;
 }
 
 export const canvasHost: CanvasHost = { tryModule: (id, source) => tryModule('design', id, source) };

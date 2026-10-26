@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { m } from '@/lib/i18n';
 import { ChatPanel } from '../ChatPanel';
 import { AreasPanel, CommentsPanel, PropsPanel, VersionsPanel } from '../panels';
-import { svgToPng } from '../plan/Plan2D';
+import { svgToPng } from '@/lib/theme';
 import { ShareDialog } from '../ShareDialog';
 import { useEditor } from '../store';
 import { download } from '@/lib/download';
@@ -59,13 +59,14 @@ export function Workspace() {
   const [sheet, setSheet] = useState(false);
   const [share, setShare] = useState(false);
 
-  // In plan mode the SVG provides the screenshot
+  // In plan mode the SVG provides the screenshot (the sample-room page provides its own)
+  const sandbox = useEditor(s => s.sandboxCanvas);
   useEffect(() => {
-    if (view.mode === '2d') {
+    if (view.mode === '2d' && !sandbox) {
       setCapture(() => (svgRef.current ? svgToPng(svgRef.current) : Promise.reject(new Error(m.editor_plan_not_ready()))));
       return () => setCapture(null);
     }
-  }, [view.mode]);
+  }, [view.mode, sandbox]);
 
   const capture = useEditor(s => s.capture);
   const exportImage = async () => {

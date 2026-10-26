@@ -3,7 +3,7 @@ import { findObject } from '@plinth/core';
 import type { EditorState } from '@/features/editor/store';
 import type { AgentContext } from './prompt';
 
-export function agentContext({ project: p, role, view }: Pick<EditorState, 'project' | 'role' | 'view'>): AgentContext {
+export function agentContext({ project: p, role, view, sandboxCanvas }: Pick<EditorState, 'project' | 'role' | 'view' | 'sandboxCanvas'>): AgentContext {
   return {
     projectName: p.name,
     role,
@@ -16,5 +16,6 @@ export function agentContext({ project: p, role, view }: Pick<EditorState, 'proj
     levels: p.levels.map(l => ({ id: l.id, name: l.name, spaces: p.spaces.filter(x => x.level === l.id).map(x => x.name) })),
     brief: p.brief,
     constraints: p.constraints.length,
+    ...(sandboxCanvas ? { sandboxCanvas: true } : {}),
   };
 }

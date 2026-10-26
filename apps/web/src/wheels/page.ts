@@ -7,11 +7,12 @@ import type { Point } from '@plinth/core';
 import { overwriteGetLocale } from '@/paraglide/runtime';
 import { m } from '@/lib/i18n';
 import { dragCall, draggable as canDrag } from '@/features/editor/plan/plan-drag';
-import { bridge, connect, onMine, onTry, post } from './bridge';
-import { syncModules, tryModule } from './modules';
+import { bridge, connect, onCapture, onMine, onTry, post } from './bridge';
+import { svgToPng } from '@/lib/theme';
+import { settled, syncModules, tryModule } from './modules';
 import { addSnaps, draggable, isSelected, onSelection, selectable, snap, SNAP_PX, snapPoints, type SnapProvider } from './interact';
 import { mount, svgEl, type PlanView } from './plan';
-import { button, toolbar } from './ui';
+import { button, toolbar, type Button } from './ui';
 import { wallTool } from './walls';
 
 /** What a page and its modules work with */
@@ -25,9 +26,12 @@ export interface Canvas {
   isSelected: typeof isSelected;
   onSelection: typeof onSelection;
   wallTool: (opts?: Parameters<typeof wallTool>[1]) => ReturnType<typeof wallTool>;
-  /** The page's toolbar (bottom centre), where modules may add buttons too */
+  /** Select these ids (the design's objects and a module's own; same as bridge.select) */
+  select: typeof bridge.select;
+  /** The page's toolbar (bottom centre) */
   toolbar: HTMLElement;
-  button: typeof button;
+  /** Add a button to the toolbar; returns it (b.setPressed(on) shows a toggle on or off; b.remove() takes it away) */
+  button(label: string, onClick: () => void, opts?: { pressed?: boolean; title?: string }): Button;
 }
 
 /** The design's own snaps: wall ends */
@@ -108,15 +112,13 @@ export function defaultPage(root: HTMLElement): Canvas {
   addSnaps(wallEnds);
   modelDrag(view);
 
+  let walls: ReturnType<typeof wallTool> | null = null;
   const select = button(m.wheels_select(), () => view.setTool(null), { pressed: true });
-  const wall = button(m.wheels_wall(), () => {
-    view.setTool(wallTool(view));
-    select.setAttribute('aria-pressed', 'false');
-    wall.setAttribute('aria-pressed', 'true');
-  });
-  select.addEventListener('click', () => {
-    select.setAttribute('aria-pressed', 'true');
-    wall.setAttribute('aria-pressed', 'false');
+  const wall = button(m.wheels_wall(), () => view.setTool((walls = wallTool(view))), { pressed: false });
+  // Which tool is on shows on its button; a module's own tool leaves both off
+  view.onTool(t => {
+    select.setPressed(t === null);
+    wall.setPressed(t !== null && t === walls);
   });
   const sync = () => (wall.disabled = !bridge.canEdit());
   sync();
@@ -134,8 +136,13 @@ export function defaultPage(root: HTMLElement): Canvas {
     isSelected,
     onSelection,
     wallTool: opts => wallTool(view, opts),
+    select: ids => bridge.select(ids),
     toolbar: bar,
-    button,
+    button(label, onClick, opts) {
+      const b = button(label, onClick, opts);
+      bar.appendChild(b);
+      return b;
+    },
   };
 }
 
@@ -161,6 +168,11 @@ export async function start(): Promise<Canvas> {
     void syncModules(canvas);
   });
   onTry((scope, id, source) => tryModule(canvas, scope, id, source));
+  onCapture(async () => {
+    await settled();
+    await new Promise(r => requestAnimationFrame(r));
+    return svgToPng(canvas.view.svg);
+  });
   requestAnimationFrame(() =>
     post({
       type: 'ready',

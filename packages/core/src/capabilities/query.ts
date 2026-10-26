@@ -54,7 +54,8 @@ export const projectSummary = defineRead({
 export const findObjects = defineRead({
   name: 'find_objects',
   title: 'Find objects',
-  description: 'Search walls, spaces, openings, furniture, elements and installed widgets by name keyword, type and level. Returns ID, name, type and level.',
+  description:
+    'Search walls, spaces, openings, furniture, elements and installed widgets by name keyword, type and level. Returns ID, name, type and level; walls also their kind (bearing, partition…), start, end and thickness, and spaces their kind, so one call lists e.g. the bearing walls of a level.',
   input: z.object({
     query: z
       .string()
@@ -72,20 +73,35 @@ export const findObjects = defineRead({
       .flatMap(k =>
         projectIndex(p)
           .of(k)
-          .map(o => ({ id: o.id, name: o.name, type: k, level: o.level })),
+          .map(o => ({ id: o.id, name: o.name, type: k, level: o.level, ...facts(p, k, o.id) })),
       )
       .filter(o => (!lv || o.level === lv) && (!query || o.name.includes(query) || o.id === query))
       .slice(0, limit);
   },
 });
 
+/** What find_objects adds for walls and spaces, so a level's bearing walls or rooms take one call */
+function facts(p: Project, kind: Kind, id: string) {
+  if (kind === 'wall') {
+    const w = p.walls.find(x => x.id === id);
+    return w ? { kind: w.kind, start: w.start, end: w.end, thickness: w.thickness } : {};
+  }
+  if (kind === 'space') {
+    const sp = p.spaces.find(x => x.id === id);
+    return sp ? { kind: sp.kind } : {};
+  }
+  return {};
+}
+
 export const getObject = defineRead({
   name: 'get_object',
   title: 'View object',
   description:
     'Get details of one object. Space: usable area, bounds, surrounding walls and their directions, neighboring spaces, furniture. Wall: endpoints, length, thickness, spaces on each side, openings. Opening: host wall, position, connected spaces.',
-  input: z.object({ ref: z.string().describe('Object ID or name') }),
-  run: ({ ref }, { session }) => objectInfo(session.project, findAny(session.project, ref)),
+  input: z
+    .object({ ref: z.string().optional().describe('Object ID or name'), id: z.string().optional().describe('Same as ref') })
+    .refine(i => i.ref ?? i.id, { message: 'ref: the object ID or name is required' }),
+  run: ({ ref, id }, { session }) => objectInfo(session.project, findAny(session.project, (ref ?? id)!)),
 });
 
 export const areaReportCap = defineRead({

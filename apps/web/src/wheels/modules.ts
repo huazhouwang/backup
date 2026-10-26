@@ -64,6 +64,8 @@ function moduleCanvas(canvas: Canvas, scope: ModuleScope, id: string) {
   const dataOf = () => (scope === 'me' ? myCanvas().data : bridge.project().canvas?.data)?.[id];
   const undo: (() => void)[] = [];
   const layers = new Map<string, SVGGElement>();
+  const buttons = new Set<HTMLButtonElement>();
+  const snaps = new Set<Parameters<Canvas['addSnaps']>[0]>();
   const track = (fn: () => void) => (undo.push(fn), fn);
   const ctx: ModuleCanvas = {
     ...canvas,
@@ -73,7 +75,11 @@ function moduleCanvas(canvas: Canvas, scope: ModuleScope, id: string) {
       ...canvas.bridge,
       on: ((event, fn) => track(canvas.bridge.on(event, fn))) as typeof bridge.on,
     },
-    addSnaps: p => track(canvas.addSnaps(p)),
+    addSnaps: p => {
+      snaps.add(p);
+      const off = canvas.addSnaps(p);
+      return track(() => (snaps.delete(p), off()));
+    },
     layer(name = 'main') {
       let g = layers.get(name);
       if (!g) {
@@ -85,10 +91,17 @@ function moduleCanvas(canvas: Canvas, scope: ModuleScope, id: string) {
     view: {
       ...canvas.view,
       onDraw: fn => track(canvas.view.onDraw(fn)),
+      onTool: fn => track(canvas.view.onTool(fn)),
+      // A tool of the module's still active when it stops is ended with it
+      setTool(t) {
+        canvas.view.setTool(t);
+        if (t) track(() => canvas.view.tool() === t && canvas.view.setTool(null));
+      },
     },
     button(label, onClick, opts) {
       const b = canvas.button(label, onClick, opts);
-      track(() => b.remove());
+      buttons.add(b);
+      track(() => (buttons.delete(b), b.remove()));
       return b;
     },
     data: {
@@ -108,8 +121,34 @@ function moduleCanvas(canvas: Canvas, scope: ModuleScope, id: string) {
     for (const fn of undo.splice(0).reverse()) fn();
     for (const g of layers.values()) g.replaceChildren();
   };
-  return { ctx, stop };
+  /** What the module has put on the page: drawn elements, their text, its buttons and the snaps it offers */
+  const describe = () => {
+    const els = [...layers.values()].flatMap(g => [...g.querySelectorAll('*')]);
+    const byTag: Record<string, number> = {};
+    for (const e of els) byTag[e.tagName] = (byTag[e.tagName] ?? 0) + 1;
+    const texts = [...new Set(els.filter(e => e.tagName === 'text').map(e => e.textContent ?? ''))];
+    const count = (f: (p: Parameters<Canvas['addSnaps']>[0]) => unknown[] | undefined) => [...snaps].reduce((n, p) => n + (f(p)?.length ?? 0), 0);
+    let points = 0,
+      lines = 0;
+    try {
+      points = count(p => p.points?.());
+      lines = count(p => p.lines?.());
+    } catch {
+      // reported when the snaps are used
+    }
+    return {
+      elements: els.length,
+      byTag,
+      texts: texts.slice(0, 20),
+      ...(texts.length > 20 ? { moreTexts: texts.length - 20 } : {}),
+      buttons: [...buttons].map(b => b.textContent ?? ''),
+      snaps: { points, lines },
+    };
+  };
+  return { ctx, stop, describe };
 }
+
+export type ModuleSummary = ReturnType<ReturnType<typeof moduleCanvas>['describe']>;
 
 /**
  * Import a module from its source. The import runs from a small inline script rather than from here: a dynamic import resolves
@@ -134,13 +173,14 @@ function importSource(source: string): Promise<{ default?: unknown }> {
 }
 
 /** Load and start a module; resolves with its stop function, or throws what it threw */
-async function start(canvas: Canvas, scope: ModuleScope, id: string, source: string): Promise<() => void> {
-  const { ctx, stop } = moduleCanvas(canvas, scope, id);
+async function start(canvas: Canvas, scope: ModuleScope, id: string, source: string, seen?: (s: ModuleSummary) => void): Promise<() => void> {
+  const { ctx, stop, describe } = moduleCanvas(canvas, scope, id);
   try {
     const mod = await importSource(source);
     if (typeof mod.default !== 'function') throw new Error('a canvas module must `export default function (canvas) { … }`');
     const cleanup = await (mod.default as (c: ModuleCanvas) => unknown)(ctx);
     return () => {
+      seen?.(describe());
       try {
         if (typeof cleanup === 'function') cleanup();
       } finally {
@@ -160,6 +200,9 @@ const serial = <T>(job: () => Promise<T>): Promise<T> => {
   queue = next.catch(() => undefined);
   return next;
 };
+
+/** Resolves once module work queued so far (syncs, trials) is done: a screenshot waits for it, so it shows the modules just saved */
+export const settled = () => serial(async () => undefined);
 
 const message = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e));
 
@@ -207,7 +250,12 @@ async function syncOne(canvas: Canvas, { key, scope, module: m }: Entry) {
  */
 export const tryModule = (canvas: Canvas, scope: ModuleScope, id: string, source: string) => serial(() => trial(canvas, scope, id, source));
 
-async function trial(canvas: Canvas, scope: ModuleScope, id: string, source: string): Promise<{ ok: true } | { ok: false; error: string }> {
+async function trial(
+  canvas: Canvas,
+  scope: ModuleScope,
+  id: string,
+  source: string,
+): Promise<{ ok: true; drawn?: ModuleSummary } | { ok: false; error: string }> {
   const key = keyOf(scope, id);
   let late: string | null = null;
   const onError = (e: ErrorEvent) => (late ??= message(e.error ?? e.message));
@@ -218,10 +266,11 @@ async function trial(canvas: Canvas, scope: ModuleScope, id: string, source: str
   const current = running.get(key);
   current?.stop();
   try {
-    const stop = await start(canvas, scope, id, source);
+    let drawn: ModuleSummary | undefined;
+    const stop = await start(canvas, scope, id, source, s => (drawn = s));
     await new Promise(r => setTimeout(r, 300));
     stop();
-    return late ? { ok: false, error: late } : { ok: true };
+    return late ? { ok: false, error: late } : { ok: true, drawn };
   } catch (e) {
     return { ok: false, error: message(e) };
   } finally {

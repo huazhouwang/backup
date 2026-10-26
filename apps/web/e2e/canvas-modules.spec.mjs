@@ -13,6 +13,7 @@ test('canvas modules', async ({ browser: b }) => {
   await page.getByRole('button', { name: /打开样例方案/ }).click();
   await page.waitForURL(/\/p\//);
   await page.waitForFunction(() => window.artifact?.ready);
+  const project = () => page.evaluate(() => window.artifact.project());
   const call = (name, input) => page.evaluate(([n, i]) => window.artifact.call(n, i), [name, input]);
 
   // With the sample room off, a module is saved untried
@@ -86,6 +87,54 @@ test('canvas modules', async ({ browser: b }) => {
     async () => (await frame.locator('[data-probe]').count()) === 0 && (await frame.getByRole('button', { name: '+1' }).count()) === 0,
     'removing it removes what it added',
   );
+
+  // What the trial put on the page comes back with the save, and the page can be screenshotted
+  const DRAG = `export default function (canvas) {
+    const g = canvas.layer();
+    let x = null;
+    const at = () => x ?? (canvas.data.get() ?? {}).x ?? 0;
+    const draw = () => {
+      g.replaceChildren();
+      const k = canvas.view.pxMm();
+      const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      for (const [a, v] of Object.entries({ x: at(), y: 0, width: 60 * k, height: 60 * k, fill: 'var(--chart-2)', 'data-dragme': '' })) r.setAttribute(a, v);
+      // Redrawn on every move: the drag must survive its element being replaced
+      canvas.draggable(r, { snap: false, move(s) { x = Math.round(s.point[0]); draw(); }, end(s) { if (s) canvas.data.set({ x }); x = null; } });
+      g.appendChild(r);
+    };
+    canvas.data.on(draw);
+    canvas.view.onDraw(draw);
+    draw();
+    canvas.button('拖我', () => {});
+  }`;
+  const dragger = await call('canvas_module_put', { id: 'dragger', name: '拖动', source: DRAG });
+  const drawn = dragger.result?.drawn;
+  check(drawn?.byTag?.rect === 1 && drawn.buttons?.includes('拖我'), `the save says what the trial drew (${JSON.stringify(drawn)})`);
+  await until(async () => (await frame.getByRole('button', { name: '拖我' }).count()) === 1, 'a module button appears in the toolbar by itself');
+  const shot = await call('view_screenshot', {});
+  check(shot.ok && shot.result.image.startsWith('data:image/png;base64,'), 'view_screenshot shows the sample room');
+
+  const rect = async () => frame.locator('[data-dragme]').boundingBox();
+  const r0 = await rect();
+  const fromX = r0.x + r0.width / 2,
+    fromY = r0.y + r0.height / 2;
+  // While a tool has the pointer, pressing on it doesn't drag it
+  await frame.getByRole('button', { name: '画墙' }).click();
+  await page.mouse.move(fromX, fromY);
+  await page.mouse.down();
+  await page.mouse.move(fromX + 60, fromY, { steps: 6 });
+  await page.mouse.up();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check((await project()).canvas.data?.dragger === undefined, 'nothing is dragged while the wall tool is on');
+  await frame.getByRole('button', { name: '选择' }).click();
+  await page.mouse.move(fromX, fromY);
+  await page.mouse.down();
+  await page.mouse.move(fromX + 30, fromY, { steps: 5 });
+  await page.mouse.move(fromX + 80, fromY, { steps: 5 });
+  await page.mouse.up();
+  await until(async () => ((await project()).canvas.data?.dragger?.x ?? 0) > 0, 'a drag keeps going when the module redraws on every move');
+  await call('canvas_module_remove', { id: 'dragger' });
 
   // The agent's reference is there
   const doc = await call('canvas_wheels', {});
