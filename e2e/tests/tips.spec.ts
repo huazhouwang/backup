@@ -51,5 +51,14 @@ test('milestones tick off when tapped, and stay ticked on this device', async ({
   await page.getByText('手能张开').click()
   await expect(confetti.first()).toBeAttached()
   await expect(page.getByText('都做到啦！')).toBeAttached()
+  // Unticking one while the pieces fly doesn't send them off again.
+  await page.waitForTimeout(300)
+  await page.getByText('手能张开').click()
+  await expect(page.getByRole('checkbox', { name: '手能张开' })).not.toBeChecked()
+  const flights = await confetti
+    .first()
+    .evaluate((piece) => piece.getAnimations().map((flight) => Number(flight.currentTime)))
+  expect(flights).toHaveLength(1)
+  expect(flights[0]).toBeGreaterThan(250)
   await expect(confetti).toHaveCount(0, { timeout: 5000 })
 })
