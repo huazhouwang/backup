@@ -39,6 +39,13 @@ export const rowInOut = {
   exit: { opacity: 0, height: 0 },
 } as const
 
+/** A message arriving at the end of a conversation: rises into place, pushing the earlier up. */
+export const riseIn = {
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0 },
+} as const
+
 /** A highlight laid over something new, fading out once it has been noticed. */
 export const glowOnce = {
   initial: { opacity: 1 },

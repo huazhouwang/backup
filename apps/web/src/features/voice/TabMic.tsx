@@ -2,6 +2,7 @@ import { APP_NAME } from '@bobo/shared'
 import { type InfiniteData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
+import { AnimatePresence, m as motion } from 'motion/react'
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -11,12 +12,13 @@ import { MicIcon } from '../../components/ui/MicIcon'
 import { StopIcon } from '../../components/ui/StopIcon'
 import { showToast } from '../../components/ui/Toast'
 import { useBounce } from '../../lib/bounce'
+import { riseIn } from '../../lib/motion'
 import { lockScroll } from '../../lib/scroll-lock'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { requestSync } from '../../sync/runner'
 import { useAccess } from '../../sync/use-access'
-import { type ChatPage, type ChatTurn, voiceApi } from './api'
+import { type ChatPage, voiceApi } from './api'
 import { ChangingText, typingDots } from './ChangingText'
 import { voiceKeys, voiceQueries } from './queries'
 import { type TalkAim, useTalk } from './use-talk'
@@ -165,8 +167,26 @@ function SideButton({
   )
 }
 
-/** Bobo's answer, scrolling (and bouncing) when it is long. */
-function Answer({ children }: { children: ReactNode }) {
+/** A user's message, as in the chat. */
+const userBubble =
+  'max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-3 text-body font-bold text-on-accent wrap-anywhere'
+
+/** One message said and Bobo's answer to it. */
+interface Turn {
+  id: number
+  said: string
+  reply: string
+  problem: string | null
+  /** A change waits for a yes or no. */
+  confirming: boolean
+}
+
+/**
+ * The conversation since the overlay opened, down by the microphone where the frost is
+ * thickest. Long, it scrolls (and bounces), keeping the newest in view whenever `follow`
+ * changes.
+ */
+function History({ follow, children }: { follow: string; children: ReactNode }) {
   const scroller = useRef<HTMLDivElement>(null)
   useBounce(scroller, { axes: ['y'] })
   return (
@@ -174,10 +194,14 @@ function Answer({ children }: { children: ReactNode }) {
       ref={scroller}
       data-scrolls
       className="-mx-4 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4"
+      role="log"
       aria-live="polite"
     >
-      {/* Down by the microphone, where the frost is thickest. */}
-      <div className="mt-auto flex flex-col gap-3 py-2">{children}</div>
+      <div className="mt-auto flex flex-col gap-3 py-2">
+        {children}
+        {/* Remounts when something changes at the end, scrolling it into view. */}
+        <div key={follow} ref={(node) => node?.scrollIntoView({ block: 'end' })} />
+      </div>
     </div>
   )
 }
@@ -200,10 +224,17 @@ export function TabMic() {
   const queryClient = useQueryClient()
 
   const [phase, setPhase] = useState<Phase>('idle')
-  const [said, setSaid] = useState('')
-  const [reply, setReply] = useState('')
-  const [turn, setTurn] = useState<ChatTurn | null>(null)
+  // What was said and answered since the overlay opened, oldest first; talking again adds on.
+  const [turns, setTurns] = useState<Turn[]>([])
+  // What is being said (or heard) right now, before it becomes a turn.
+  const [live, setLive] = useState('')
+  // Why the last recording came to nothing.
   const [problem, setProblem] = useState<string | null>(null)
+  // Whether there is a conversation to go back to when a recording is dropped.
+  const hasTurns = useRef(false)
+  useEffect(() => {
+    hasTurns.current = turns.length > 0
+  })
   // The middle of the tab bar's microphone on screen: the overlay's sits right on top of it.
   const button = useRef<HTMLButtonElement>(null)
   const [spot, setSpot] = useState({ x: 0, y: 0 })
@@ -213,32 +244,41 @@ export function TabMic() {
     recentLines(queryClient.getQueryData<InfiniteData<ChatPage, string | null>>(voiceKeys.chat))
 
   const send = async (text: string, spoken: boolean) => {
+    // Turns are numbered in order; nothing else is sent while one is answered.
+    const id = turns.length
+    const change = (next: Partial<Turn>) =>
+      setTurns((all) => all.map((turn) => (turn.id === id ? { ...turn, ...next } : turn)))
+    setLive('')
+    setProblem(null)
+    setTurns((all) => [...all, { id, said: text, reply: '', problem: null, confirming: false }])
     setPhase('replying')
-    setSaid(text)
-    setReply('')
-    setTurn(null)
     try {
       const recent = history().map(
         (line) => `${line.role === 'user' ? 'User' : 'Bobo'}: ${line.text}`,
       )
       const answer = await voiceApi.stream(
         { text, spoken, recent },
-        { heard: setSaid, text: setReply },
+        { heard: (said) => change({ said }), text: (reply) => change({ reply }) },
       )
-      setReply(answer.reply)
-      setTurn(answer)
+      change({ reply: answer.reply, confirming: answer.confirming })
       // The agent writes on the server; pull now so the records show without waiting.
       void requestSync()
     } catch {
-      setProblem(m.actionFailed())
+      change({ problem: m.actionFailed() })
     } finally {
       setPhase('done')
       void queryClient.invalidateQueries({ queryKey: voiceKeys.chat })
     }
   }
+  const reset = () => {
+    setPhase('idle')
+    setTurns([])
+    setLive('')
+    setProblem(null)
+  }
   const lastReply = () => history().findLast((line) => line.role === 'assistant')?.text
   const openChat = () => {
-    setPhase('idle')
+    reset()
     void navigate({ to: '/chat' })
   }
 
@@ -261,9 +301,7 @@ export function TabMic() {
           y: bar.top + at.offsetTop + at.offsetHeight / 2,
         })
       }
-      setSaid('')
-      setReply('')
-      setTurn(null)
+      setLive('')
       setProblem(null)
       setPhase('talking')
     },
@@ -271,34 +309,34 @@ export function TabMic() {
       const { text } = await voiceApi
         .transcribe(soFar, { partial: true, recent: lastReply() })
         .catch(() => ({ text: null }))
-      if (text && talking.current) setSaid(text)
+      if (text && talking.current) setLive(text)
     },
+    // Dropped: back to the conversation so far, or closed when there is none.
     onDrop: () => {
       talking.current = false
-      setPhase('idle')
+      setLive('')
+      if (hasTurns.current) setPhase('done')
+      else reset()
     },
     onSpoken: (recording) => {
       talking.current = false
       setPhase('hearing')
+      const failed = (why: string) => {
+        setLive('')
+        setProblem(why)
+        setPhase('done')
+      }
       voiceApi
         .transcribe(recording, { recent: lastReply() })
-        .then(({ text }) => {
-          if (text) return send(text, true)
-          setProblem(m.voiceUnheard())
-          setPhase('done')
-          return undefined
-        })
-        .catch(() => {
-          setProblem(m.actionFailed())
-          setPhase('done')
-        })
+        .then(({ text }) => (text ? send(text, true) : failed(m.voiceUnheard())))
+        .catch(() => failed(m.actionFailed()))
     },
   })
 
   const open = phase !== 'idle'
   const close = () => {
     if (talk.recording) talk.drop()
-    setPhase('idle')
+    reset()
   }
   const leaveForChat = () => {
     if (talk.recording) talk.drop()
@@ -345,13 +383,16 @@ export function TabMic() {
     }
   }
   const ready = Boolean(userId) && !noAi
-  const answering = phase === 'replying' || phase === 'done'
   // Tapped, the microphone turning into stop says it all.
   const hint = talk.mode === 'hold' ? m.tabMicHint() : phase === 'done' ? m.tabMicMore() : null
+  const last = turns.at(-1)
+  // Talking or being heard, after a first turn: on its way as the next message.
+  const pending = phase === 'talking' || phase === 'hearing'
   return (
     <>
-      <span className="relative -mt-8 flex">
-        {/* The tab bar's top edge, bulging over the microphone's top half. */}
+      {/* Its own size, not the tab bar's height, so the bulge below is a circle. */}
+      <span className="relative -mt-8 flex self-start">
+        {/* The tab bar's top edge, bulging over the microphone's top half and meeting it. */}
         <span
           aria-hidden
           className="pointer-events-none absolute -inset-1.5 rounded-full border-2 border-border bg-bg [clip-path:inset(0_0_50%_0)]"
@@ -381,67 +422,111 @@ export function TabMic() {
             }}
           >
             <Frost />
-            {answering ? (
-              <Answer>
-                <p className="m-0 max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-3 text-body font-bold text-on-accent wrap-anywhere">
-                  <span className="sr-only">{m.voiceChatSpeakerMe()}</span>
-                  <ChangingText text={said} />
-                </p>
-                <div className="flex max-w-[90%] flex-col gap-2 self-start rounded-2xl rounded-bl-md border-2 border-border bg-bg px-4 py-3">
-                  <span className="text-caption font-extrabold text-primary-text">{APP_NAME}</span>
-                  {reply ? (
-                    <p className="m-0 wrap-anywhere">
-                      <ChangingText text={reply} />
-                    </p>
-                  ) : problem ? null : (
-                    <span className="text-fg-muted">
-                      {typingDots}
-                      <span className="sr-only">{m.voiceThinking()}</span>
-                    </span>
+            {turns.length > 0 ? (
+              <History follow={`${turns.length}-${last?.said}-${last?.reply}-${live}-${phase}`}>
+                <AnimatePresence initial={false}>
+                  {turns.flatMap((turn) => [
+                    <motion.div
+                      key={`${turn.id}-said`}
+                      layout="position"
+                      {...riseIn}
+                      className={userBubble}
+                    >
+                      <span className="sr-only">{m.voiceChatSpeakerMe()}</span>
+                      <ChangingText text={turn.said} />
+                    </motion.div>,
+                    <motion.div
+                      key={`${turn.id}-reply`}
+                      layout="position"
+                      {...riseIn}
+                      className="flex max-w-[90%] flex-col gap-2 self-start rounded-2xl rounded-bl-md border-2 border-border bg-bg px-4 py-3"
+                    >
+                      <span className="text-caption font-extrabold text-primary-text">
+                        {APP_NAME}
+                      </span>
+                      {turn.reply ? (
+                        <p className="m-0 wrap-anywhere">
+                          <ChangingText text={turn.reply} />
+                        </p>
+                      ) : turn.problem ? null : (
+                        <span className="text-fg-muted">
+                          {typingDots}
+                          <span className="sr-only">{m.voiceThinking()}</span>
+                        </span>
+                      )}
+                      {turn.problem && (
+                        <p className="m-0 font-bold text-danger-text">{turn.problem}</p>
+                      )}
+                      {turn === last && turn.confirming && phase === 'done' && (
+                        <div className="flex gap-2">
+                          <Button className="flex-1" onClick={() => void send(m.voiceYes(), false)}>
+                            {m.voiceYes()}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => void send(m.voiceNo(), false)}
+                          >
+                            {m.voiceNo()}
+                          </Button>
+                        </div>
+                      )}
+                    </motion.div>,
+                  ])}
+                  {/* The next message on its way; it stays put as it becomes the turn. */}
+                  {pending && (
+                    <motion.div
+                      key={`${turns.length}-said`}
+                      layout="position"
+                      {...riseIn}
+                      className={clsx(userBubble, talk.aiming && 'line-through opacity-60')}
+                    >
+                      <span className={live ? 'sr-only' : 'mr-2 text-caption'}>
+                        {phase === 'hearing' ? m.voiceHearing() : m.voiceListening()}
+                      </span>
+                      {live && <ChangingText text={live} />} {typingDots}
+                    </motion.div>
                   )}
-                  {problem && <p className="m-0 font-bold text-danger-text">{problem}</p>}
-                  {turn?.confirming && phase === 'done' && (
-                    <div className="flex gap-2">
-                      <Button className="flex-1" onClick={() => void send(m.voiceYes(), false)}>
-                        {m.voiceYes()}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => void send(m.voiceNo(), false)}
-                      >
-                        {m.voiceNo()}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Answer>
+                </AnimatePresence>
+                {problem && !pending && (
+                  <p className="m-0 text-center font-bold text-danger-text">{problem}</p>
+                )}
+              </History>
             ) : (
               <div
                 // Down by the microphone, where the frost is thickest.
                 className="flex flex-1 flex-col items-center justify-end gap-4 pb-4 text-center"
                 aria-live="polite"
               >
-                <span className="text-caption font-extrabold tracking-wide text-primary-text">
-                  {phase === 'hearing' ? (
-                    m.voiceHearing()
-                  ) : (
-                    <>
-                      {m.voiceListening()}
-                      {' · '}
-                      <Elapsed since={talk.startedAt} />
-                    </>
-                  )}
-                </span>
+                {pending && (
+                  <span className="text-caption font-extrabold tracking-wide text-primary-text">
+                    {phase === 'hearing' ? (
+                      m.voiceHearing()
+                    ) : (
+                      <>
+                        {m.voiceListening()}
+                        {' · '}
+                        <Elapsed since={talk.startedAt} />
+                      </>
+                    )}
+                  </span>
+                )}
                 <p
                   className={clsx(
                     'm-0 text-[28px] leading-10 font-extrabold wrap-anywhere',
                     talk.aiming && 'text-fg-muted/60 line-through',
+                    problem && !pending && 'text-danger-text',
                   )}
                 >
-                  {said ? <ChangingText text={said} /> : m.tabMicSpeak()}
+                  {problem && !pending ? (
+                    problem
+                  ) : live ? (
+                    <ChangingText text={live} />
+                  ) : (
+                    m.tabMicSpeak()
+                  )}
                 </p>
-                {typingDots}
+                {pending && typingDots}
               </div>
             )}
             {hint && (
