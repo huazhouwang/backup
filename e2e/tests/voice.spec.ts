@@ -285,9 +285,10 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   await expect(mic).toBeVisible()
   await page.waitForTimeout(500)
 
-  // A tap records hands-free, the microphone turning into send; "打开对话" goes to the chat.
+  // A tap records hands-free, the microphone turning into stop; "打开对话" goes to the chat.
   await mic.click()
-  await expect(page.getByText('说完点一下发送')).toBeVisible()
+  await expect(page.getByText('正在听')).toBeVisible()
+  await expect(page.getByText('松开发送')).toHaveCount(0)
   await page.waitForTimeout(1000)
   await page.getByRole('button', { name: '说完了，发送' }).click()
   await expect.poll(() => api.uploads.length).toBe(2)

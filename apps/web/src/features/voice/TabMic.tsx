@@ -8,11 +8,10 @@ import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { ChatIcon } from '../../components/ui/ChatIcon'
 import { MicIcon } from '../../components/ui/MicIcon'
-import { SendIcon } from '../../components/ui/SendIcon'
+import { StopIcon } from '../../components/ui/StopIcon'
 import { showToast } from '../../components/ui/Toast'
 import { useBounce } from '../../lib/bounce'
 import { lockScroll } from '../../lib/scroll-lock'
-import { THEME_COLORS } from '../../lib/theme'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { requestSync } from '../../sync/runner'
@@ -23,18 +22,12 @@ import { voiceKeys, voiceQueries } from './queries'
 import { type TalkAim, useTalk } from './use-talk'
 
 /** Slid this far (px) sideways while holding, the finger is on the button that side. */
-const AIM_DISTANCE = 56
-
-/**
- * The page seen through the overlay (`rgb(19 31 36 / 0.62)` over the page's background),
- * for the status bar above it, which the overlay can't reach.
- */
-const SEEN_THROUGH = { light: '#6d7477', dark: THEME_COLORS.dark }
+const AIM_DISTANCE = 72
 
 /** The microphone; held down it looks pressed, like the tab bar's under the finger. */
 const micLook = (pressed: boolean) =>
   clsx(
-    'flex size-14 touch-none items-center justify-center rounded-full bg-primary text-on-accent select-none [-webkit-touch-callout:none]',
+    'flex size-16 touch-none items-center justify-center rounded-full bg-primary text-on-accent select-none [-webkit-touch-callout:none]',
     'transition-[translate,box-shadow] duration-75',
     // The darker edge sits inside the white ring, so nothing peeks out below it.
     pressed
@@ -89,6 +82,43 @@ function Rings({ analyser }: { analyser: AnalyserNode | null }) {
   )
 }
 
+/**
+ * Frosted glass that is thickest at the microphone and thins out towards the top, so the
+ * page above ends in itself (and the status bar) with no edge. A backdrop blur can't vary
+ * across an element, so blurs of growing strength are stacked, each over less of the screen.
+ * Layers are [blur px, fully on below this %, gone above this %], measured from the bottom.
+ */
+const FROST = [
+  [2, 50, 100],
+  [5, 40, 85],
+  [10, 25, 70],
+  [20, 0, 50],
+] as const
+
+function Frost() {
+  return (
+    <>
+      {FROST.map(([blur, from, to]) => (
+        <div
+          key={blur}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            backdropFilter: `blur(${blur}px)`,
+            WebkitBackdropFilter: `blur(${blur}px)`,
+            maskImage: `linear-gradient(to top, black ${from}%, transparent ${to}%)`,
+          }}
+        />
+      ))}
+      {/* The page's own colour over it, the same way: nearly solid at the bottom, none on top. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_top,color-mix(in_oklab,var(--color-bg)_97%,transparent),color-mix(in_oklab,var(--color-bg)_92%,transparent)_40%,color-mix(in_oklab,var(--color-bg)_60%,transparent)_62%,color-mix(in_oklab,var(--color-bg)_15%,transparent)_85%,transparent)]"
+      />
+    </>
+  )
+}
+
 /** A round button beside the microphone, with what it does under it. */
 function SideButton({
   label,
@@ -108,27 +138,29 @@ function SideButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-24 flex-col items-center gap-2 text-caption font-extrabold"
+      className="flex w-20 flex-col items-center gap-2 text-caption font-extrabold"
     >
       <span
         className={clsx(
-          'flex size-13 items-center justify-center rounded-full transition-[scale,background-color,color] duration-150',
+          // Smaller than the microphone, and level with its middle.
+          'mt-2.5 flex size-11 items-center justify-center rounded-full border-2 transition-[scale,background-color,border-color,color] duration-150',
           aimed
             ? [
                 'scale-125 text-on-accent',
-                tone === 'danger' && 'bg-danger',
+                tone === 'danger' && 'border-danger bg-danger',
                 // The bubble's dots take the button's colour.
-                tone === 'primary' && 'bg-primary [--color-surface:var(--color-primary)]',
+                tone === 'primary' &&
+                  'border-primary bg-primary [--color-surface:var(--color-primary)]',
               ]
             : [
-                'bg-bg shadow-[0_4px_0_var(--color-border)]',
+                'border-border bg-bg shadow-[0_3px_0_var(--color-border)]',
                 tone === 'danger' ? 'text-fg' : 'text-primary',
               ],
         )}
       >
         {children}
       </span>
-      <span className={aimed ? 'text-white' : 'text-white/80'}>{label}</span>
+      <span className={aimed ? 'text-fg' : 'text-fg-muted'}>{label}</span>
     </button>
   )
 }
@@ -144,7 +176,8 @@ function Answer({ children }: { children: ReactNode }) {
       className="-mx-4 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4"
       aria-live="polite"
     >
-      <div className="my-auto flex flex-col gap-3 py-2">{children}</div>
+      {/* Down by the microphone, where the frost is thickest. */}
+      <div className="mt-auto flex flex-col gap-3 py-2">{children}</div>
     </div>
   )
 }
@@ -283,17 +316,6 @@ export function TabMic() {
     document.addEventListener('touchmove', still, { passive: false })
     return () => document.removeEventListener('touchmove', still)
   }, [open])
-  // The status bar is outside the page: it takes on the blurred page's colour meanwhile.
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (!open || !meta) return undefined
-    const before = meta.getAttribute('content')
-    const dark = document.documentElement.dataset.theme === 'dark'
-    meta.setAttribute('content', dark ? SEEN_THROUGH.dark : SEEN_THROUGH.light)
-    return () => {
-      if (before) meta.setAttribute('content', before)
-    }
-  }, [open])
   const latestClose = useRef(close)
   useEffect(() => {
     latestClose.current = close
@@ -320,46 +342,48 @@ export function TabMic() {
   }
   const ready = Boolean(userId) && !noAi
   const answering = phase === 'replying' || phase === 'done'
-  const hint =
-    talk.mode === 'hold'
-      ? m.tabMicHint()
-      : talk.mode === 'free'
-        ? m.tabMicTapToSend()
-        : phase === 'done'
-          ? m.tabMicMore()
-          : null
+  // Tapped, the microphone turning into stop says it all.
+  const hint = talk.mode === 'hold' ? m.tabMicHint() : phase === 'done' ? m.tabMicMore() : null
   return (
     <>
-      <button
-        ref={button}
-        type="button"
-        data-sheet-still
-        aria-label={m.tabMicLabel()}
-        className={clsx('-mt-7', micLook(false))}
-        {...(ready ? talk.buttonProps : { onClick: setUp })}
-      >
-        <MicIcon className="size-8" />
-      </button>
+      <span className="relative -mt-8 flex">
+        {/* The tab bar's top edge, bulging over the microphone's top half. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -inset-1.5 rounded-full border-2 border-border bg-bg [clip-path:inset(0_0_50%_0)]"
+        />
+        <button
+          ref={button}
+          type="button"
+          data-sheet-still
+          aria-label={m.tabMicLabel()}
+          className={clsx('relative', micLook(false))}
+          {...(ready ? talk.buttonProps : { onClick: setUp })}
+        >
+          <MicIcon className="size-9" />
+        </button>
+      </span>
       {talk.sheets}
       {open &&
         createPortal(
           // Clicks on the blurred page itself close it, once the answer is there.
           // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
           <div
-            className="fixed inset-0 z-50 flex animate-[fade-in-up_160ms_ease-out_both] flex-col bg-[rgb(19_31_36/0.62)] pt-safe-4 pr-safe-4 pl-safe-4 text-white backdrop-blur-md"
+            className="fixed inset-0 z-50 flex animate-[fade-in-up_160ms_ease-out_both] flex-col pt-safe-4 pr-safe-4 pl-safe-4 text-fg"
             // Room below for the hint, the microphone and the buttons beside it.
             style={{ paddingBottom: `calc(100dvh - ${spot.y}px + 7rem)` }}
             onClick={(event) => {
               if (phase === 'done' && event.target === event.currentTarget) close()
             }}
           >
+            <Frost />
             {answering ? (
               <Answer>
-                <p className="m-0 max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-3 text-body font-bold wrap-anywhere">
+                <p className="m-0 max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-3 text-body font-bold text-on-accent wrap-anywhere">
                   <span className="sr-only">{m.voiceChatSpeakerMe()}</span>
                   <ChangingText text={said} />
                 </p>
-                <div className="flex max-w-[90%] flex-col gap-2 self-start rounded-2xl rounded-bl-md bg-bg px-4 py-3 text-fg">
+                <div className="flex max-w-[90%] flex-col gap-2 self-start rounded-2xl rounded-bl-md border-2 border-border bg-bg px-4 py-3">
                   <span className="text-caption font-extrabold text-primary-text">{APP_NAME}</span>
                   {reply ? (
                     <p className="m-0 wrap-anywhere">
@@ -390,10 +414,11 @@ export function TabMic() {
               </Answer>
             ) : (
               <div
-                className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
+                // Down by the microphone, where the frost is thickest.
+                className="flex flex-1 flex-col items-center justify-end gap-4 pb-4 text-center"
                 aria-live="polite"
               >
-                <span className="text-caption font-extrabold tracking-wide text-primary-soft">
+                <span className="text-caption font-extrabold tracking-wide text-primary-text">
                   {phase === 'hearing' ? (
                     m.voiceHearing()
                   ) : (
@@ -407,7 +432,7 @@ export function TabMic() {
                 <p
                   className={clsx(
                     'm-0 text-[28px] leading-10 font-extrabold wrap-anywhere',
-                    talk.aiming && 'text-white/45 line-through',
+                    talk.aiming && 'text-fg-muted/60 line-through',
                   )}
                 >
                   {said ? <ChangingText text={said} /> : m.tabMicSpeak()}
@@ -417,16 +442,16 @@ export function TabMic() {
             )}
             {hint && (
               <span
-                className="absolute inset-x-0 text-center text-caption font-extrabold text-white/80"
-                style={{ top: spot.y - 92 }}
+                className="absolute inset-x-0 text-center text-caption font-extrabold text-fg-muted"
+                style={{ top: spot.y - 100 }}
               >
                 {hint}
               </span>
             )}
             {/* Chat, microphone, cancel: the microphone right where the tab bar's is. */}
             <div
-              className="absolute flex -translate-x-1/2 items-start gap-5"
-              style={{ left: spot.x, top: spot.y - 28 }}
+              className="absolute flex -translate-x-1/2 items-start gap-12"
+              style={{ left: spot.x, top: spot.y - 32 }}
             >
               <SideButton
                 label={talk.aiming === 'chat' ? m.tabMicReleaseToChat() : m.tabMicOpenChat()}
@@ -434,9 +459,9 @@ export function TabMic() {
                 tone="primary"
                 onClick={leaveForChat}
               >
-                <ChatIcon className="size-7" />
+                <ChatIcon className="size-6" />
               </SideButton>
-              <span className="relative flex size-14 items-center justify-center">
+              <span className="relative flex size-16 items-center justify-center">
                 {talk.recording && !talk.aiming && (
                   <span aria-hidden className="pointer-events-none absolute -inset-12">
                     <Rings analyser={talk.analyser} />
@@ -450,11 +475,11 @@ export function TabMic() {
                   className={clsx('relative disabled:opacity-60', micLook(talk.mode === 'hold'))}
                   {...talk.buttonProps}
                 >
-                  {/* Tapped: the next tap sends. */}
+                  {/* Tapped: the next tap stops and sends. */}
                   {talk.mode === 'free' ? (
-                    <SendIcon className="size-8" />
+                    <StopIcon className="size-9" />
                   ) : (
-                    <MicIcon className="size-8" />
+                    <MicIcon className="size-9" />
                   )}
                 </button>
               </span>
@@ -470,7 +495,7 @@ export function TabMic() {
                 tone="danger"
                 onClick={close}
               >
-                <svg aria-hidden viewBox="0 0 24 24" className="size-6">
+                <svg aria-hidden viewBox="0 0 24 24" className="size-5">
                   <path
                     d="M6 6l12 12M18 6 6 18"
                     fill="none"

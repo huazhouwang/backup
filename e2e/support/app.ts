@@ -79,5 +79,7 @@ export const todayRows = (page: Page) => page.getByRole('button', { name: /^编�
 export async function syncNow(page: Page) {
   await page.goto('/settings/account')
   await page.getByRole('button', { name: '立即同步' }).click()
+  // "已同步" may still show from an earlier sync; nothing left to upload means this one ran.
   await expect(page.getByText(/已同步/)).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/条改动待上传/)).toHaveCount(0, { timeout: 15_000 })
 }

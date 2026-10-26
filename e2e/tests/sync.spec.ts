@@ -30,9 +30,12 @@ test('syncs records between two devices and deletes a baby everywhere', async ({
   await forever.click()
   await syncNow(a.page)
 
-  await syncNow(b.page)
-  await b.page.goto('/settings/babies')
-  await expect(b.page.locator('main').getByText('小米粒')).toHaveCount(0)
+  // A pull may still be on its way when "已同步" shows: sync again until the baby is gone.
+  await expect(async () => {
+    await syncNow(b.page)
+    await b.page.goto('/settings/babies')
+    await expect(b.page.locator('main').getByText('小米粒')).toHaveCount(0, { timeout: 3000 })
+  }).toPass({ timeout: 30_000 })
 
   await a.context.close()
   await b.context.close()
