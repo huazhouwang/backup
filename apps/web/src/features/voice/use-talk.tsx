@@ -12,7 +12,7 @@ import { START_CUE_MS, playCue, tapPhone } from '../../lib/cues'
 import { hideHint, isHintHidden } from '../../lib/hints'
 import { m } from '../../paraglide/messages.js'
 import { MicDeniedSheet, MicExplainSheet } from './MicSheets'
-import { MAX_RECORDING_MS, useMicPermission, useRecorder } from './recorder'
+import { MAX_RECORDING_MS, type Startup, useMicPermission, useRecorder } from './recorder'
 
 /** Let go sooner than this (ms) and it was a tap: record hands-free until the next tap. */
 const TAP_MS = 300
@@ -38,8 +38,8 @@ export interface TalkOptions {
   onPartial: (soFar: Blob) => Promise<void>
   /** Recording ended with nothing to send: dropped, too short or failed. */
   onDrop: () => void
-  /** The whole recording, to send. */
-  onSpoken: (recording: Blob) => void
+  /** The whole recording, to send, and how long it took to start. */
+  onSpoken: (recording: Blob, startup: Startup) => void
 }
 
 /**
@@ -61,7 +61,6 @@ export function useTalk({
 }: TalkOptions) {
   const [mode, setMode] = useState<TalkMode>('off')
   const [aiming, setAiming] = useState<TalkAim>(null)
-  const [startedAt, setStartedAt] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [permission, setPermission] = useMicPermission()
   const [sheet, setSheet] = useState<'explain' | 'denied' | null>(null)
@@ -77,7 +76,7 @@ export function useTalk({
     tapPhone()
     if (recording.said) {
       playCue('send')
-      onSpoken(recording.said)
+      onSpoken(recording.said, recording.startup)
     } else {
       playCue('cancel')
       setError(recording.why === 'unheard' ? m.voiceMicUnheard() : m.voiceMicTooShort())
@@ -101,6 +100,13 @@ export function useTalk({
     latestPartial.current = onPartial
   })
   const { state: recorderState, snapshot } = recorder
+  // Only once it really records does it say so: the start sound (which the recording leaves
+  // out) and a tap. Taking the microphone can take a moment after the press.
+  useEffect(() => {
+    if (recorderState !== 'recording') return
+    playCue('start')
+    tapPhone()
+  }, [recorderState])
   useEffect(() => {
     if (recorderState !== 'recording') return undefined
     let busy = false
@@ -125,11 +131,7 @@ export function useTalk({
   const begin = (next: TalkMode) => {
     setError(null)
     setMode(next)
-    setStartedAt(Date.now())
     onBegin()
-    // The start sound plays first; the recording leaves it out.
-    playCue('start')
-    tapPhone()
     recorder.start(START_CUE_MS).catch((reason: unknown) => {
       setMode('off')
       onDrop()
@@ -205,9 +207,13 @@ export function useTalk({
   return {
     mode,
     recording,
+    /** Recording for real; before, the microphone is still being taken. */
+    ready: recorderState === 'recording',
+    keepMic: recorder.keepMic,
     aiming,
     dropping: aiming === 'drop',
-    startedAt,
+    /** When it really started listening (epoch ms). */
+    startedAt: recorder.startedAt,
     analyser: recorder.analyser,
     error,
     drop,

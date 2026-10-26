@@ -48,39 +48,43 @@ function Elapsed({ since }: { since: number }) {
   )
 }
 
-/** Two rings around the microphone that swell with the voice. */
-function Rings({ analyser }: { analyser: AnalyserNode | null }) {
-  const outer = useRef<HTMLSpanElement>(null)
-  const inner = useRef<HTMLSpanElement>(null)
+/**
+ * Rings rippling out from the microphone while it listens, one after another; the louder the
+ * voice, the further and stronger they go. With reduced motion, one still ring follows it.
+ */
+function Waves({ analyser }: { analyser: AnalyserNode | null }) {
+  const reach = useRef<HTMLSpanElement>(null)
   useEffect(() => {
     if (!analyser) return undefined
     const samples = new Uint8Array(analyser.fftSize)
+    let level = 0
     let frame = 0
     const draw = () => {
       analyser.getByteTimeDomainData(samples)
       let peak = 0
       for (const sample of samples) peak = Math.max(peak, Math.abs(sample - 128) / 128)
-      const level = Math.min(1, peak * 3)
-      if (outer.current) outer.current.style.transform = `scale(${0.85 + level * 0.3})`
-      if (inner.current) inner.current.style.transform = `scale(${0.9 + level * 0.2})`
+      // Eased, so the rings swell and settle rather than flicker.
+      level += (Math.min(1, peak * 3) - level) * 0.2
+      if (reach.current) {
+        reach.current.style.scale = String(0.75 + level * 0.6)
+        reach.current.style.opacity = String(0.5 + level * 0.5)
+      }
       frame = requestAnimationFrame(draw)
     }
     frame = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(frame)
   }, [analyser])
   return (
-    <>
-      <span
-        ref={outer}
-        aria-hidden
-        className="absolute inset-0 rounded-full bg-primary/25 transition-transform duration-100"
-      />
-      <span
-        ref={inner}
-        aria-hidden
-        className="absolute inset-6 rounded-full bg-primary/40 transition-transform duration-100"
-      />
-    </>
+    <span ref={reach} aria-hidden className="pointer-events-none absolute inset-0">
+      {[0, 700, 1400].map((delay) => (
+        <span
+          key={delay}
+          className="absolute inset-0 animate-ripple rounded-full border-[3px] border-primary bg-primary/15 motion-reduce:hidden"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+      ))}
+      <span className="absolute -inset-5 hidden rounded-full bg-primary/30 motion-reduce:block" />
+    </span>
   )
 }
 
@@ -318,7 +322,7 @@ export function TabMic() {
       if (hasTurns.current) setPhase('done')
       else reset()
     },
-    onSpoken: (recording) => {
+    onSpoken: (recording, startup) => {
       talking.current = false
       setPhase('hearing')
       const failed = (why: string) => {
@@ -327,7 +331,7 @@ export function TabMic() {
         setPhase('done')
       }
       voiceApi
-        .transcribe(recording, { recent: lastReply() })
+        .transcribe(recording, { recent: lastReply(), startup })
         .then(({ text }) => (text ? send(text, true) : failed(m.voiceUnheard())))
         .catch(() => failed(m.actionFailed()))
     },
@@ -342,6 +346,9 @@ export function TabMic() {
     if (talk.recording) talk.drop()
     openChat()
   }
+  // Open, the microphone stays taken, so the next turn records at once; closed, it is let go.
+  const { keepMic } = talk
+  useEffect(() => keepMic(open), [keepMic, open])
   // Why a recording came to nothing (too short, or not heard), once the overlay has gone.
   useEffect(() => {
     if (talk.error) showToast(talk.error)
@@ -482,7 +489,11 @@ export function TabMic() {
                       className={clsx(userBubble, talk.aiming && 'line-through opacity-60')}
                     >
                       <span className={live ? 'sr-only' : 'mr-2 text-caption'}>
-                        {phase === 'hearing' ? m.voiceHearing() : m.voiceListening()}
+                        {phase === 'hearing'
+                          ? m.voiceHearing()
+                          : talk.ready
+                            ? m.voiceListening()
+                            : m.voiceMicPreparing()}
                       </span>
                       {live && <ChangingText text={live} />} {typingDots}
                     </motion.div>
@@ -502,12 +513,14 @@ export function TabMic() {
                   <span className="text-caption font-extrabold tracking-wide text-primary-text">
                     {phase === 'hearing' ? (
                       m.voiceHearing()
-                    ) : (
+                    ) : talk.ready ? (
                       <>
                         {m.voiceListening()}
                         {' · '}
                         <Elapsed since={talk.startedAt} />
                       </>
+                    ) : (
+                      m.voiceMicPreparing()
                     )}
                   </span>
                 )}
@@ -551,11 +564,7 @@ export function TabMic() {
                 <ChatIcon className="size-6" />
               </SideButton>
               <span className="relative flex size-16 items-center justify-center">
-                {talk.recording && !talk.aiming && (
-                  <span aria-hidden className="pointer-events-none absolute -inset-12">
-                    <Rings analyser={talk.analyser} />
-                  </span>
-                )}
+                {talk.ready && !talk.aiming && <Waves analyser={talk.analyser} />}
                 <button
                   type="button"
                   data-sheet-still
@@ -566,11 +575,32 @@ export function TabMic() {
                 >
                   {/* Tapped: the next tap stops and sends. */}
                   {talk.mode === 'free' ? (
-                    <StopIcon className="size-9" />
+                    <StopIcon className={clsx('size-9', !talk.ready && 'animate-breathe')} />
                   ) : (
-                    <MicIcon className="size-9" />
+                    <MicIcon
+                      className={clsx('size-9', talk.recording && !talk.ready && 'animate-breathe')}
+                    />
                   )}
                 </button>
+                {/* Taking the microphone: an arc runs round it until it listens. */}
+                {talk.recording && !talk.ready && (
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 96 96"
+                    className="pointer-events-none absolute -inset-4 size-24 animate-spin [animation-duration:1.2s] motion-reduce:animate-none"
+                  >
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="44"
+                      fill="none"
+                      stroke="var(--color-primary)"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeDasharray="70 300"
+                    />
+                  </svg>
+                )}
               </span>
               <SideButton
                 label={

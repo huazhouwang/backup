@@ -6,6 +6,7 @@ import { FormError } from '../../components/ui/FormError'
 import { MicIcon } from '../../components/ui/MicIcon'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
+import type { Startup } from './recorder'
 import { useTalk } from './use-talk'
 
 /** Slid up this far (px) while holding, letting go drops the recording. */
@@ -88,7 +89,7 @@ export function TalkRow({
   /** Recording ended with nothing to send: dropped, too short or failed. */
   onDrop: () => void
   /** The whole recording, to send. */
-  onSpoken: (recording: Blob) => void
+  onSpoken: (recording: Blob, startup: Startup) => void
 }) {
   const talk = useTalk({
     disabled,
@@ -100,11 +101,13 @@ export function TalkRow({
     onSpoken,
   })
   const { mode, recording, dropping, startedAt, error } = talk
-  const status = dropping
-    ? m.voiceMicReleaseToCancel()
-    : mode === 'hold'
-      ? m.voiceMicReleaseToSend()
-      : m.voiceMicTapToSend()
+  const status = !talk.ready
+    ? m.voiceMicPreparing()
+    : dropping
+      ? m.voiceMicReleaseToCancel()
+      : mode === 'hold'
+        ? m.voiceMicReleaseToSend()
+        : m.voiceMicTapToSend()
 
   return (
     <div className="flex flex-col gap-2">

@@ -16,7 +16,7 @@ import { requestSync } from '../../sync/runner'
 import { type ChatMessage, type ChatTurn, voiceApi } from './api'
 import { ChangingText, typingDots as dots } from './ChangingText'
 import { voiceKeys } from './queries'
-import { canRecord } from './recorder'
+import { type Startup, canRecord } from './recorder'
 import { TalkRow } from './TalkRow'
 import { useChatHistory } from './use-chat-history'
 
@@ -136,7 +136,8 @@ export function ChatPage({
     send.mutate({ text: said, spoken })
   }
   const hear = useMutation({
-    mutationFn: (recording: Blob) => voiceApi.transcribe(recording, { recent: lastReply }),
+    mutationFn: ({ recording, startup }: { recording: Blob; startup: Startup }) =>
+      voiceApi.transcribe(recording, { recent: lastReply, startup }),
     onMutate: () => setUnheard(false),
     onSuccess: ({ text: heard }) => {
       setLive(null)
@@ -163,10 +164,10 @@ export function ChatPage({
       talking.current = false
       setLive(null)
     },
-    onSpoken: (recording: Blob) => {
+    onSpoken: (recording: Blob, startup: Startup) => {
       talking.current = false
       setLive((current) => ({ phase: 'hearing', text: current?.text ?? '' }))
-      hear.mutate(recording)
+      hear.mutate({ recording, startup })
     },
   }
   const busy = send.isPending || hear.isPending

@@ -733,6 +733,7 @@
   "voiceLoadFailed": "联网后才能设置。",
   "voiceMicCancel": "取消",
   "voiceMicHold": "按住说话",
+  "voiceMicPreparing": "准备中…",
   "voiceMicRecording": "正在录音",
   "voiceMicReleaseToCancel": "松开取消",
   "voiceMicReleaseToSend": "松开发送，上滑取消",

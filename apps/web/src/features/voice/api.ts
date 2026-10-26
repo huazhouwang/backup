@@ -1,5 +1,6 @@
 import { HttpError, apiFetch } from '../../lib/api'
 import { getLocale } from '../../lib/i18n'
+import type { Startup } from './recorder'
 
 /**
  * The Siri shortcut, shared from iCloud (docs/siri.md). Opening it shows the Shortcuts
@@ -127,14 +128,24 @@ export const voiceApi = {
   /**
    * What was said in a recording (WAV), likely in the app's language: the whole of it, or a
    * `partial` one while the user is still talking. `recent` is the
-   * assistant's last line, which it may answer.
+   * assistant's last line, which it may answer; `startup`, how long recording took to start,
+   * is logged to see where the wait goes.
    */
-  transcribe: (recording: Blob, options: { partial?: boolean; recent?: string } = {}) =>
+  transcribe: (
+    recording: Blob,
+    options: { partial?: boolean; recent?: string; startup?: Startup } = {},
+  ) =>
     apiFetch<{ text: string | null }>(
       `/api/voice/transcribe?${new URLSearchParams({
         speech: getLocale(),
         ...(options.recent ? { recent: options.recent.slice(0, 300) } : {}),
         ...(options.partial ? { partial: '1' } : {}),
+        ...(options.startup
+          ? {
+              ready: String(options.startup.readyMs),
+              mic: options.startup.micMs === null ? 'kept' : String(options.startup.micMs),
+            }
+          : {}),
       })}`,
       { method: 'POST', body: recording, headers: { 'Content-Type': 'audio/wav' } },
     ),

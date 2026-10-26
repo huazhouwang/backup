@@ -102,9 +102,16 @@ function at16k(blocks: Float32Array[], rate: number) {
 
 export type RecorderState = 'idle' | 'starting' | 'recording'
 
+/** How long recording took to start (ms): from the press, and taking the microphone. */
+export interface Startup {
+  readyMs: number
+  /** Null when the microphone was still held from the turn before. */
+  micMs: number | null
+}
+
 /** How a recording ended: what was said, or why there is nothing to send. */
 export type Recording =
-  | { said: Blob }
+  | { said: Blob; startup: Startup }
   /** Let go too soon. */
   | { said: null; why: 'short' }
   /** Long enough, but no sound came through: the audio wasn't running. */
@@ -117,6 +124,7 @@ interface Session {
   nodes: AudioNode[]
   /** Runs the context again whenever it stops while recording. */
   keepRunning: () => void
+  startup: Startup
   /** The microphone's samples so far, at the context's rate. */
   blocks: Float32Array[]
   startedAt: number
@@ -175,9 +183,19 @@ const tapped = new WeakSet<AudioContext>()
 export function useRecorder() {
   const [state, setState] = useState<RecorderState>('idle')
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
+  // When the latest recording really started (epoch ms), once the microphone was taken.
+  const [startedAt, setStartedAt] = useState(0)
   const session = useRef<Session | null>(null)
   // Set when the recording is dropped while the microphone is still being asked for.
   const abandoned = useRef(false)
+  // Kept between recordings while `keepMic` is on: taking the microphone is most of the wait.
+  const kept = useRef<MediaStream | null>(null)
+  const keeping = useRef(false)
+
+  const letGoOf = useCallback((stream: MediaStream) => {
+    for (const track of stream.getTracks()) track.stop()
+    setAudioUse('sounds')
+  }, [])
 
   const release = useCallback(() => {
     const current = session.current
@@ -185,65 +203,97 @@ export function useRecorder() {
     setState('idle')
     setAnalyser(null)
     if (!current) return null
-    for (const track of current.stream.getTracks()) track.stop()
     for (const node of current.nodes) node.disconnect()
     current.context.removeEventListener('statechange', current.keepRunning)
-    setAudioUse('sounds')
+    if (keeping.current) kept.current = current.stream
+    else letGoOf(current.stream)
     return current
-  }, [])
+  }, [letGoOf])
 
-  /** `quietMs`: how long from now to leave out, while a cue sounds that it shouldn't hear. */
-  const start = useCallback(async (quietMs = 0) => {
-    if (session.current) return
-    const quietUntil = performance.now() + quietMs
-    abandoned.current = false
-    setState('starting')
-    // Asked to run within the press, before anything is awaited; usually an earlier tap
-    // already woke it.
-    const context = audioContext()
-    setAudioUse('recording')
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
-      })
-      if (abandoned.current) {
-        for (const track of stream.getTracks()) track.stop()
+  /**
+   * Keeps the microphone between recordings (on), so the next one starts at once, or lets go
+   * of it (off). The system shows it is in use all the while.
+   */
+  const keepMic = useCallback(
+    (on: boolean) => {
+      keeping.current = on
+      if (on || session.current || !kept.current) return
+      letGoOf(kept.current)
+      kept.current = null
+    },
+    [letGoOf],
+  )
+
+  /**
+   * `quietMs`: how long to leave out once recording starts, while the start cue sounds,
+   * which the recording shouldn't hear.
+   */
+  const start = useCallback(
+    async (quietMs = 0) => {
+      if (session.current) return
+      const pressedAt = performance.now()
+      let quietUntil = Number.POSITIVE_INFINITY
+      abandoned.current = false
+      setState('starting')
+      // Asked to run within the press, before anything is awaited; usually an earlier tap
+      // already woke it.
+      const context = audioContext()
+      setAudioUse('recording')
+      try {
+        const held = kept.current?.getAudioTracks().some((track) => track.readyState === 'live')
+          ? kept.current
+          : null
+        kept.current = null
+        const stream =
+          held ??
+          (await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true },
+          }))
+        const micMs = held ? null : Math.round(performance.now() - pressedAt)
+        if (abandoned.current) {
+          if (keeping.current) kept.current = stream
+          else letGoOf(stream)
+          return
+        }
+        // Taking the microphone switches the phone's audio over, which can stop the context,
+        // and nothing would come through. With the microphone on it may run again without a
+        // tap, so it is restarted now and whenever it stops while recording.
+        const keepRunning = () => {
+          if (context.state !== 'running') void context.resume()
+        }
+        keepRunning()
+        const source = context.createMediaStreamSource(stream)
+        const levels = context.createAnalyser()
+        levels.fftSize = 256
+        source.connect(levels)
+        const blocks: Float32Array[] = []
+        const nodes = await tap(context, source, (samples) => {
+          if (performance.now() >= quietUntil) blocks.push(samples)
+        })
+        nodes.push(levels)
+        context.addEventListener('statechange', keepRunning)
+        const readyAt = performance.now()
+        quietUntil = readyAt + quietMs
+        session.current = {
+          stream,
+          context,
+          nodes,
+          keepRunning,
+          startup: { readyMs: Math.round(readyAt - pressedAt), micMs },
+          blocks,
+          startedAt: readyAt,
+        }
+        setAnalyser(levels)
+        setStartedAt(Date.now())
+        setState('recording')
+      } catch (error) {
         setAudioUse('sounds')
-        return
+        setState('idle')
+        throw error
       }
-      // Taking the microphone switches the phone's audio over, which can stop the context,
-      // and nothing would come through. With the microphone on it may run again without a
-      // tap, so it is restarted now and whenever it stops while recording.
-      const keepRunning = () => {
-        if (context.state !== 'running') void context.resume()
-      }
-      keepRunning()
-      const source = context.createMediaStreamSource(stream)
-      const levels = context.createAnalyser()
-      levels.fftSize = 256
-      source.connect(levels)
-      const blocks: Float32Array[] = []
-      const nodes = await tap(context, source, (samples) => {
-        if (performance.now() >= quietUntil) blocks.push(samples)
-      })
-      nodes.push(levels)
-      context.addEventListener('statechange', keepRunning)
-      session.current = {
-        stream,
-        context,
-        nodes,
-        keepRunning,
-        blocks,
-        startedAt: performance.now(),
-      }
-      setAnalyser(levels)
-      setState('recording')
-    } catch (error) {
-      setAudioUse('sounds')
-      setState('idle')
-      throw error
-    }
-  }, [])
+    },
+    [letGoOf],
+  )
 
   const snapshot = useCallback(() => {
     const current = session.current
@@ -263,7 +313,7 @@ export function useRecorder() {
     }
     const samples = at16k(current.blocks, current.context.sampleRate)
     if (samples.length < MIN_HEARD_S * SAMPLE_RATE) return { said: null, why: 'unheard' }
-    return { said: wav(samples) }
+    return { said: wav(samples), startup: current.startup }
   }, [release])
 
   const cancel = useCallback(() => {
@@ -271,8 +321,14 @@ export function useRecorder() {
     release()
   }, [release])
 
-  // Leaving mid-recording lets go of the microphone.
-  useEffect(() => cancel, [cancel])
+  // Leaving lets go of the microphone, mid-recording or kept.
+  useEffect(
+    () => () => {
+      cancel()
+      keepMic(false)
+    },
+    [cancel, keepMic],
+  )
 
-  return { state, analyser, start, snapshot, finish, cancel }
+  return { state, analyser, startedAt, start, snapshot, finish, cancel, keepMic }
 }

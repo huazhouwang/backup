@@ -230,6 +230,17 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   await context.grantPermissions(['microphone'])
   await onboard(page)
   await signIn(context, 'tabMic')
+  // A phone takes a moment to hand over the microphone; count how often it is taken.
+  await page.addInitScript(() => {
+    const take = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+    Reflect.set(window, 'micsTaken', 0)
+    navigator.mediaDevices.getUserMedia = async (constraints) => {
+      Reflect.set(window, 'micsTaken', Number(Reflect.get(window, 'micsTaken')) + 1)
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      return take(constraints)
+    }
+  })
+  const micsTaken = () => page.evaluate(() => Number(Reflect.get(window, 'micsTaken')))
   const api = await standInApi(page)
   await page.goto('/')
   const mic = page.getByRole('navigation').getByRole('button', { name: '和 Bobo 说话' })
@@ -245,6 +256,9 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   // Held: the page blurs, what is said so far shows; let go, it is heard and answered there.
   await page.mouse.move(x, y)
   await page.mouse.down()
+  // Getting ready until the microphone is taken, then listening.
+  await expect(page.getByText('准备中…')).toBeVisible()
+  await expect(page.getByText(/正在听/)).toBeVisible()
   await expect(page.getByText('松开发送')).toBeVisible()
   await expect(page.getByText('正在说的话')).toBeVisible()
   // The overlay's microphone sits right on top of the tab bar's.
@@ -273,6 +287,10 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   api.answer()
   await expect(page.getByText('已记录：换尿布 2。还有吗？')).toBeVisible()
   await expect(page.getByText('我说：换尿布 1')).toBeVisible()
+  // The microphone was kept for the second turn; both say how long they took to start.
+  expect(await micsTaken()).toBe(1)
+  expect(Number(api.uploads[0]?.query.get('ready'))).toBeGreaterThanOrEqual(800)
+  expect(api.uploads[1]?.query.get('mic')).toBe('kept')
   await page.getByRole('button', { name: '关闭' }).click()
   await expect(page.getByText(/已记录：换尿布/)).toHaveCount(0)
 

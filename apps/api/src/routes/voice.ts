@@ -88,6 +88,15 @@ const speechQuerySchema = z.object({
     .transform((line) => line.slice(0, MAX_TEXT))
     .optional(),
   partial: z.literal('1').optional(),
+  /** How long recording took to start on the device (ms), and taking the microphone. */
+  ready: z
+    .string()
+    .regex(/^\d{1,6}$/)
+    .optional(),
+  mic: z
+    .string()
+    .regex(/^(\d{1,6}|kept)$/)
+    .optional(),
 })
 /** Foods and medicines logged within this long help recognise speech. */
 const WORDS_SINCE_MS = 30 * 86_400_000
@@ -455,6 +464,8 @@ export function voiceRoutes(adapterFor: AdapterFor) {
       if (!partial && (await countMessage(db, userId, settings, now)) > DAILY_LIMIT) {
         return c.json({ text: null }, 429)
       }
+      const { ready, mic } = query.data
+      if (ready) console.log('Recording startup', { readyMs: Number(ready), mic })
       const hints = { ...(await speechHints(db, access, now)), recent: query.data.recent }
       try {
         return c.json({ text: await transcribe(ai, audio, query.data.speech, hints) })
