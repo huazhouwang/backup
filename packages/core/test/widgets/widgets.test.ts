@@ -52,6 +52,7 @@ const def = (script: string, params: WidgetDef['params'] = {}): WidgetDef => ({
 describe('widget library files', () => {
   it('parses the built-in library, with the grid', () => {
     expect(BUILTIN_WIDGET_LIBRARIES.map(l => l.id)).toEqual(['builtin-widgets']);
+    expect(Object.keys(BUILTIN_WIDGET_LIBRARIES[0].widgets)).toEqual(['grid', 'axes']);
     expect(grid.name).toEqual({ zh: '轴网', en: 'Grid' });
     expect(Object.keys(grid.params!)).toEqual(['spacing', 'originX', 'originY', 'snap']);
   });
@@ -105,6 +106,18 @@ describe('params and output', () => {
 describe('running widgets', () => {
   beforeEach(() => setScriptSandbox(createEngine(wasm)));
   afterEach(() => setScriptSandbox(null));
+
+  it('draws the coordinate system: two axes with ticks, x and y, the origin handle', async () => {
+    const p = sample();
+    const axes = findWidget('builtin-widgets', 'axes')!.def;
+    const r = await runWidget(BUILTIN, 'axes', axes, p, { length: 3000, tick: 1000 }, ctx(p.levels[0].id));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.items.filter(i => i.type === 'label').map(i => (i as { text: string }).text)).toEqual(['x', 'y']);
+    expect(r.items.filter(i => i.type === 'handle')).toHaveLength(1);
+    // Origin and two ticks on each axis
+    expect(r.items.filter(i => i.type === 'snap')).toHaveLength(5);
+  });
 
   it('draws the grid over the sample: axes, labels, the origin handle and snaps', async () => {
     const p = sample();

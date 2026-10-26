@@ -1,10 +1,11 @@
 /**
  * Floor plan: SVG in millimetres. Picking, zoom/pan, selection and change highlights, compare with before, dimensions (see
- * dimensions.ts), and dragging the selected wall, door or window, or piece of furniture (see plan-drag.ts).
+ * dimensions.ts), dragging the selected wall, door or window, or piece of furniture (see plan-drag.ts), and what the installed
+ * widgets draw, with their handles and snap points (see widgets/).
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { wallBody, type Point, type Project } from '@plinth/core';
+import { wallBody, type ParamValue, type Point, type Project } from '@plinth/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
 import { placeCall, type PlaceResult } from './plan-place';
 import { exteriorDimensions, selectionDimensions } from '@/graphics/plan/dimensions';
@@ -16,6 +17,8 @@ import { setHover } from '../hover';
 import { m } from '@/lib/i18n';
 import { standaloneSvg } from '@/lib/theme';
 import { useBuildsVersion } from '@/lib/builds';
+import { PlanWidgets } from '../widgets/PlanWidgets';
+import { snapPoints, useWidgetOutputs, type ParamOverrides } from '../widgets/outputs';
 
 const pts = (p: Point[]) => p.map(([x, y]) => `${x},${y}`).join(' ');
 
@@ -44,7 +47,13 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   const select = useEditor(s => s.select);
   const compare = useEditor(s => s.compare);
   const lastChange = useEditor(s => s.lastChange);
-  const drag = useDrag();
+  // What the widgets draw on this level; a dragged handle's params stand in until the change is made
+  const [overrides, setOverrides] = useState<ParamOverrides>({});
+  const widgetOutputs = useWidgetOutputs(project, view.level, 'plan', overrides);
+  const snaps = useMemo(() => snapPoints(widgetOutputs, view.level), [widgetOutputs, view.level]);
+  const snapsRef = useRef(snaps);
+  snapsRef.current = snaps;
+  const drag = useDrag(snapsRef);
   // Furniture symbols come from builds that finish later (packages/core/src/looks/cache.ts)
   const builds = useBuildsVersion();
   const shapes = useMemo(() => levelShapes(drag.preview ?? project, view.level), [drag.preview, project, view.level, builds]);
@@ -156,10 +165,16 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   };
   const cutLine = cutFrom && cutHover && Math.hypot(cutHover[0] - cutFrom[0], cutHover[1] - cutFrom[1]) > 1 ? ([cutFrom, cutHover] as const) : null;
 
+  const setOverride = (id: string, params: Record<string, ParamValue> | null) =>
+    setOverrides(o => {
+      const { [id]: _old, ...rest } = o;
+      return params ? { ...rest, [id]: params } : rest;
+    });
+
   const place = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!placing) return;
-    const r = placeCall(project, view.level, placing, pointMm(e), SNAP_PX * pxMm);
+    const r = placeCall(project, view.level, placing, pointMm(e), SNAP_PX * pxMm, snaps);
     if (!r) return;
     const done = await run(r.name, r.input);
     if (!done.ok) return;
@@ -328,6 +343,19 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             </g>
           )}
 
+          <PlanWidgets
+            outputs={widgetOutputs}
+            level={view.level}
+            pxMm={pxMm}
+            toMm={pointMm}
+            editable={canEdit && !compare}
+            onPreview={(id, params) => setOverride(id, params)}
+            onCommit={async (id, params) => {
+              await run('widget_configure', { widget: id, params });
+              setOverride(id, null);
+            }}
+          />
+
           {exterior.length > 0 && <PlanDimensions chains={exterior} size={scale.size} line={screenLine} />}
           {temporary.length > 0 && (
             <g data-feedback>
@@ -399,7 +427,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
                 height={frame.h * 3}
                 fill="transparent"
                 className="cursor-crosshair"
-                onPointerMove={e => setGhost(placeCall(project, view.level, placing, pointMm(e), SNAP_PX * pxMm))}
+                onPointerMove={e => setGhost(placeCall(project, view.level, placing, pointMm(e), SNAP_PX * pxMm, snaps))}
                 onPointerLeave={() => setGhost(null)}
                 onClick={place}
               />
@@ -421,7 +449,7 @@ const SNAP_PX = 8;
  * Dragging the selected object: each move previews the capability call it maps to (on a scratch copy, so connected walls and
  * room areas follow live); releasing runs it once, as one undoable edit.
  */
-function useDrag() {
+function useDrag(snaps: React.RefObject<Point[]>) {
   const project = useEditor(s => s.project);
   const preview = useEditor(s => s.preview);
   const run = useRun();
@@ -474,7 +502,7 @@ function useDrag() {
       // A small wobble on press is a click, not a drag
       if (!a.moved && Math.hypot(delta[0], delta[1]) < 4 * mmPerPx) return;
       a.moved = true;
-      const r = a.rotate ? rotateCall(project, a.id, at) : dragCall(project, a.id, delta, SNAP_PX * mmPerPx);
+      const r = a.rotate ? rotateCall(project, a.id, at) : dragCall(project, a.id, delta, SNAP_PX * mmPerPx, snaps.current);
       latest.current = r;
       setState(s => ({ ...s, result: r, pointer: at, mmPerPx }));
       const key = r ? JSON.stringify(r.input) : '';

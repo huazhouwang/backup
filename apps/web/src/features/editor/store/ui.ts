@@ -8,7 +8,19 @@ import type { EditorActions, EditorState } from './types';
 
 type Ui = Pick<
   EditorState,
-  'compare' | 'capture' | 'ask' | 'fitRequest' | 'leave3D' | 'planUntil3D' | 'placing' | 'sectioning' | 'camera3d' | 'sun' | 'sunOpen' | 'northRequest'
+  | 'compare'
+  | 'capture'
+  | 'ask'
+  | 'fitRequest'
+  | 'leave3D'
+  | 'planUntil3D'
+  | 'placing'
+  | 'sectioning'
+  | 'camera3d'
+  | 'sun'
+  | 'sunOpen'
+  | 'widgetsOpen'
+  | 'northRequest'
 > &
   Pick<
     EditorActions,
@@ -23,6 +35,7 @@ type Ui = Pick<
     | 'setSun'
     | 'faceNorth'
     | 'setSunOpen'
+    | 'setWidgetsOpen'
   >;
 
 export const uiSlice = ({ set }: StoreContext): Ui => ({
@@ -38,6 +51,7 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   // Today at three in the afternoon
   sun: { day: dayOfYear(new Date()), minutes: 15 * 60 },
   sunOpen: false,
+  widgetsOpen: false,
   northRequest: 0,
 
   setCompare(on) {
@@ -83,5 +97,9 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
 
   setSunOpen(sunOpen) {
     set({ sunOpen });
+  },
+
+  setWidgetsOpen(widgetsOpen) {
+    set({ widgetsOpen });
   },
 });

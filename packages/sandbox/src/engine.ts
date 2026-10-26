@@ -18,7 +18,7 @@ import {
   type QuickJSSyncVariant,
   type QuickJSWASMModule,
 } from 'quickjs-emscripten-core';
-import { SandboxError, type Realm, type Sandbox, type SandboxOptions, type Script } from './types.js';
+import { DEFAULTS, SandboxError, type Realm, type Sandbox, type SandboxOptions, type Script } from './types.js';
 
 /**
  * The language features a context gets. Left out:
@@ -29,8 +29,6 @@ import { SandboxError, type Realm, type Sandbox, type SandboxOptions, type Scrip
  * Eval stays: the host evaluates scripts through it.
  */
 const INTRINSICS = { BaseObjects: true, Date: true, Eval: true, StringNormalize: true, RegExp: true, RegExpCompiler: true, JSON: true, MapSet: true };
-
-export const DEFAULTS: Required<SandboxOptions> = { memoryMB: 32, stackKB: 512, deadlineMs: 200, maxOutputKB: 4096 };
 
 /**
  * Defined in every context before its script, so it holds the built-ins as they were: data is parsed and deep-frozen, results

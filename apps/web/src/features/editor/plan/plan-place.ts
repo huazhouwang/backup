@@ -1,7 +1,8 @@
 /**
  * Placing from the add palette, as SketchUp places a component: what is being placed follows the pointer in the plan, and a
  * click puts it down with the capability call that makes it. Furniture at its default size, on a 50 mm step, pushed out of any
- * wall it would stand in; a door or window onto the nearest wall it can go in, snapped to the wall's middle.
+ * wall it would stand in, its centre on a widget's snap point (a grid's intersection) when near one; a door or window onto the
+ * nearest wall it can go in, snapped to the wall's middle.
  */
 import { dot, OPENING_DEFAULTS, pointAt, sub, wallDir, wallLength, wallNormal, type Point, type Project, type Wall } from '@plinth/core';
 import type { Placing } from '../store/types';
@@ -58,13 +59,17 @@ function clearOfWalls(walls: Wall[], c: Point, w: number, d: number): Point {
   return out;
 }
 
-export function placeCall(p: Project, level: string, placing: Placing, at: Point, tol: number): PlaceResult | null {
+export function placeCall(p: Project, level: string, placing: Placing, at: Point, tol: number, snaps: Point[] = []): PlaceResult | null {
   const walls = p.walls.filter(w => w.level === level);
   if (placing.kind === 'furniture') {
     const size = p.library.furniture[placing.type]?.size ?? { w: 600, d: 600, h: 750 };
+    const near = snaps.reduce<Point | null>(
+      (b, s) => (Math.hypot(s[0] - at[0], s[1] - at[1]) < (b ? Math.hypot(b[0] - at[0], b[1] - at[1]) : tol) ? s : b),
+      null,
+    );
     const c = clearOfWalls(
       walls.filter(w => STOREY.includes(w.kind)),
-      [snap(at[0]), snap(at[1])],
+      near ? [near[0], near[1]] : [snap(at[0]), snap(at[1])],
       size.w,
       size.d,
     );

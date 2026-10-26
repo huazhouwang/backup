@@ -11,6 +11,9 @@ export interface SandboxOptions {
   maxOutputKB?: number;
 }
 
+/** Defaults for the options */
+export const DEFAULTS: Required<SandboxOptions> = { memoryMB: 32, stackKB: 512, deadlineMs: 200, maxOutputKB: 4096 };
+
 /**
  * Why a sandbox operation failed:
  * - script: the guest threw;

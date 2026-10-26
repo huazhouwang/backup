@@ -79,6 +79,8 @@ export interface EditorState {
   sun: { day: number; minutes: number };
   /** The sun's day and time settings are open */
   sunOpen: boolean;
+  /** The widgets panel is open (from the ⋯ menu) */
+  widgetsOpen: boolean;
   /** Asks the 3D view to turn to look north (the time of the request) */
   northRequest: number;
 }
@@ -97,6 +99,7 @@ export interface EditorActions {
   setSun(patch: Partial<EditorState['sun']>): void;
   faceNorth(): void;
   setSunOpen(open: boolean): void;
+  setWidgetsOpen(open: boolean): void;
   select(ids: string[]): void;
   focus(ids: string[], highlight?: boolean): ViewState;
   undo(): void;

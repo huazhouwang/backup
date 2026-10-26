@@ -22,9 +22,9 @@ Errors are `SandboxError` with a `kind`:
 
 - **In place**: `createEngine(wasmModule, options)` from `@plinth/sandbox`, given the compiled module (compile it once).
 - **Cloudflare Workers**: `createSandbox(options)` from `@plinth/sandbox/workerd`. Workers can't compile wasm from bytes, so the module is imported (wrangler's CompiledWasm rule).
-- **Browser**: `createBrowserSandbox({ workerUrl, wasmUrl, ...options })` from `@plinth/sandbox/browser`.
+- **Browser**: `createBrowserSandbox({ worker, wasmUrl, ...options })` from `@plinth/sandbox/browser`.
   - The engine runs in a dedicated worker started from a hidden iframe with an opaque origin (`sandbox="allow-scripts"`, no `allow-same-origin`). A Content Security Policy allows no network.
-  - `workerUrl` is `src/worker.ts` bundled as a classic script (IIFE): a module worker can't start from an opaque origin.
+  - `worker` is `src/worker.ts` bundled as a classic script (IIFE), given as its source or a same-origin URL: a module worker can't start from an opaque origin.
   - A watchdog replaces a worker that stops answering. The next request starts a new one, remaking its scripts from source and sending their data again.
 
 ## Guarantees and their tests

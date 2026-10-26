@@ -7,13 +7,15 @@
  * iframe and its worker are removed and every pending request fails with 'crash'. The next request starts a new worker, remaking
  * its script from source and sending its data again.
  */
-import { DEFAULTS } from './engine.js';
 import type { Request, Response } from './serve.js';
-import { SandboxError, type Realm, type Sandbox, type SandboxOptions, type Script } from './types.js';
+import { DEFAULTS, SandboxError, type Realm, type Sandbox, type SandboxOptions, type Script } from './types.js';
 
 export interface BrowserSandboxOptions extends SandboxOptions {
-  /** The worker script (src/worker.ts) bundled as a classic script (IIFE; a module worker can't start from an opaque origin), same origin */
-  workerUrl: string | URL;
+  /**
+   * The worker script (src/worker.ts) bundled as a classic script (IIFE; a module worker can't start from an opaque origin): its
+   * source, or a same-origin URL to fetch it from
+   */
+  worker: { source: string } | { url: string | URL };
   /** The QuickJS wasm file, same origin */
   wasmUrl: string | URL;
   /** How long a request may go unanswered before the worker is replaced; default 5 deadlines plus 2 s */
@@ -52,7 +54,11 @@ export function createBrowserSandbox(options: BrowserSandboxOptions): BrowserSan
   let nextId = 1;
   const pending = new Map<number, Pending>();
 
-  const load = () => (assets ??= Promise.all([fetch(options.workerUrl).then(r => r.text()), fetch(options.wasmUrl).then(r => r.arrayBuffer())]));
+  const load = () =>
+    (assets ??= Promise.all([
+      'source' in options.worker ? options.worker.source : fetch(options.worker.url).then(r => r.text()),
+      fetch(options.wasmUrl).then(r => r.arrayBuffer()),
+    ]));
 
   function replace(reason: string) {
     if (!worker) return;
@@ -96,7 +102,7 @@ export function createBrowserSandbox(options: BrowserSandboxOptions): BrowserSan
       });
     });
     w.ready.catch(() => worker === w && replace('sandbox worker did not start'));
-    document.body.append(frame);
+    document.body.appendChild(frame);
     worker = w;
     return w;
   }

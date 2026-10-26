@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeftIcon, DownloadIcon, EllipsisIcon, ImageIcon, LayoutPanelLeftIcon, Redo2Icon, Share2Icon, Undo2Icon } from 'lucide-react';
+import { ArrowLeftIcon, DownloadIcon, EllipsisIcon, ImageIcon, LayoutPanelLeftIcon, Redo2Icon, Share2Icon, ShapesIcon, Undo2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -26,6 +26,7 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
   const redo = useEditor(s => s.redo);
   const canEdit = useEditor(s => s.canEdit());
   const session = useEditor(s => s.session);
+  const setWidgetsOpen = useEditor(s => s.setWidgetsOpen);
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(project, null, 1)], { type: 'application/json' });
@@ -72,6 +73,10 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
           </DropdownMenuItem>
           <DropdownMenuItem onClick={exportJson}>
             <DownloadIcon /> {m.editor_download_json()}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setWidgetsOpen(true)}>
+            <ShapesIcon /> {m.editor_widgets()}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {(['furniture', 'labels', 'dimensions'] as const).map(k => (

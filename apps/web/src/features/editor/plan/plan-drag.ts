@@ -4,7 +4,8 @@
  * drag is one undoable edit, the same one the agent or the props panel would make.
  *
  * Snapping, within a few screen pixels: a wall to the line of a parallel wall (on its floor, or the floors above and below), a
- * door or window to the middle of its wall, furniture against a wall face. Otherwise to a 50 mm step.
+ * door or window to the middle of its wall, furniture against a wall face; walls and furniture to the snap points widgets give
+ * (a grid's intersections). Otherwise to a 50 mm step.
  */
 import {
   directionOf,
@@ -42,14 +43,14 @@ const UNIT: Record<'north' | 'south' | 'east' | 'west', Point> = { north: [0, -1
 const metres = (mm: number) => `${(mm / 1000).toFixed(2)} m`;
 
 /**
- * The call for moving `id` by `delta` (mm). `tol` is the snapping distance in mm (a few screen pixels at the current zoom).
- * Null when it hasn't moved.
+ * The call for moving `id` by `delta` (mm). `tol` is the snapping distance in mm (a few screen pixels at the current zoom);
+ * `snaps` are the widgets' snap points on its level. Null when it hasn't moved.
  */
-export function dragCall(p: Project, id: string, delta: Point, tol: number): DragResult | null {
+export function dragCall(p: Project, id: string, delta: Point, tol: number, snaps: Point[] = []): DragResult | null {
   const e = findObject(p, id);
-  if (e?.kind === 'wall') return dragWall(p, e.obj, delta, tol);
+  if (e?.kind === 'wall') return dragWall(p, e.obj, delta, tol, snaps);
   if (e?.kind === 'opening' && e.wall) return dragOpening(e.wall, e.obj.id, delta, tol);
-  if (e?.kind === 'furniture') return dragFurniture(p, e.obj, delta, tol);
+  if (e?.kind === 'furniture') return dragFurniture(p, e.obj, delta, tol, snaps);
   return null;
 }
 
@@ -60,7 +61,7 @@ function nearLevels(p: Project, level: string) {
   return new Set([sorted[i - 1]?.id, level, sorted[i + 1]?.id].filter(Boolean));
 }
 
-function dragWall(p: Project, w: Wall, delta: Point, tol: number): DragResult | null {
+function dragWall(p: Project, w: Wall, delta: Point, tol: number, snaps: Point[]): DragResult | null {
   const n = wallNormal(w),
     d = wallDir(w);
   const c0 = dot(w.start, n);
@@ -73,13 +74,24 @@ function dragWall(p: Project, w: Wall, delta: Point, tol: number): DragResult | 
     const c = dot(o.start, n);
     if (Math.abs(c - want) < tol && (!best || Math.abs(c - want) < Math.abs(best.c - want))) best = { c, o };
   }
-  const k = best ? best.c - c0 : snapStep(want - c0);
+  // A snap point on its centreline: the nearest one, unless a parallel wall's line is nearer
+  let onSnap: number | null = null;
+  for (const s of snaps) {
+    const c = dot(s, n);
+    if (
+      Math.abs(c - want) < tol &&
+      (onSnap === null || Math.abs(c - want) < Math.abs(onSnap - want)) &&
+      (!best || Math.abs(c - want) < Math.abs(best.c - want))
+    )
+      onSnap = c;
+  }
+  const k = onSnap !== null ? onSnap - c0 : best ? best.c - c0 : snapStep(want - c0);
   if (Math.abs(k) < 1) return null;
   // wall_move takes a compass direction: the one nearest the normal, with the distance that projects onto the normal as k
   const dir = directionOf([n[0] * Math.sign(k), n[1] * Math.sign(k)]);
   const distance = Math.abs(k) / Math.abs(dot(UNIT[dir], n));
   const guides: [Point, Point][] = [];
-  if (best) {
+  if (best && onSnap === null) {
     // Along the shared line, spanning both walls
     const along = [w.start, w.end, best.o.start, best.o.end].map(q => dot(q, d));
     const a = Math.min(...along),
@@ -117,7 +129,7 @@ function dragOpening(w: Wall, id: string, delta: Point, tol: number): DragResult
   };
 }
 
-function dragFurniture(p: Project, f: Project['furniture'][number], delta: Point, tol: number): DragResult | null {
+function dragFurniture(p: Project, f: Project['furniture'][number], delta: Point, tol: number, snaps: Point[]): DragResult | null {
   let pos: Point = [f.position[0] + delta[0], f.position[1] + delta[1]];
   const box = (q: Point) => {
     const r = furnitureFootprint({ ...f, position: q }).outer;
@@ -157,6 +169,17 @@ function dragFurniture(p: Project, f: Project['furniture'][number], delta: Point
             [hi, face],
           ],
     );
+  }
+  // Its edges or middle on a snap point's line, per axis (a grid's axes)
+  for (const ax of [0, 1]) {
+    if (snapped[ax]) continue;
+    const [b0, b1] = ax === 0 ? [x0, x1] : [y0, y1];
+    let shift: number | null = null;
+    for (const s of snaps)
+      for (const d of [s[ax] - b0, s[ax] - b1, s[ax] - (b0 + b1) / 2]) if (Math.abs(d) < tol && (shift === null || Math.abs(d) < Math.abs(shift))) shift = d;
+    if (shift === null) continue;
+    pos = ax === 0 ? [pos[0] + shift, pos[1]] : [pos[0], pos[1] + shift];
+    snapped[ax] = true;
   }
   pos = [snapped[0] ? pos[0] : f.position[0] + snapStep(pos[0] - f.position[0]), snapped[1] ? pos[1] : f.position[1] + snapStep(pos[1] - f.position[1])];
   if (Math.abs(pos[0] - f.position[0]) < 1 && Math.abs(pos[1] - f.position[1]) < 1) return null;

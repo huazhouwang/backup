@@ -18,6 +18,16 @@ describe('placing from the palette', () => {
     expect((near.input.position as number[])[1]).toBe(120 + 90 + size.d / 2);
   });
 
+  it("furniture goes onto a widget's snap point near the pointer", () => {
+    const r = placeCall(p, 'L1', { kind: 'furniture', type: 'armchair' }, [6012, 2038], 100, [
+      [6080, 2000],
+      [9000, 9000],
+    ])!;
+    expect(r.input.position).toEqual([6080, 2000]);
+    // Too far from any: the usual 50 mm step
+    expect(placeCall(p, 'L1', { kind: 'furniture', type: 'armchair' }, [6012, 2038], 100, [[6500, 2000]])!.input.position).toEqual([6000, 2050]);
+  });
+
   it('a window goes onto the nearest storey wall, snapped to its middle; nothing when no wall is near', () => {
     const north = wall('L1-w01');
     const r = placeCall(p, 'L1', { kind: 'opening', opening: 'window' }, [7120, 300], 100)!;

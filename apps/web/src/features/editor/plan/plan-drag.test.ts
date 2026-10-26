@@ -37,6 +37,20 @@ describe('dragging in the plan', () => {
     expect(r.guides).toHaveLength(1);
   });
 
+  it("walls and furniture snap to widgets' snap points (a grid's intersections)", () => {
+    const w = wall(EAST_WALL);
+    // A snap point 40 mm off where the wall would land: the wall's centreline goes onto it
+    const at = w.start[0] - 1000;
+    const r = dragCall(p, w.id, [-1000 + 40, 0], TOL, [[at, w.start[1]]])!;
+    expect(r.input).toEqual({ wall: w.id, direction: 'west', distance: 1000 });
+    expect(r.guides).toEqual([]);
+    // Furniture: its middle (or an edge) on a snap point's x and y
+    const f = p.furniture.find(x => x.rotation === 0)!;
+    const target: [number, number] = [f.position[0] + 1234, f.position[1] + 777];
+    const moved = dragCall(p, f.id, [1234 + 30, 777 - 30], TOL, [target])!;
+    expect(moved.input.position).toEqual(target);
+  });
+
   it('a door or window snaps to the middle of its wall', () => {
     const w = p.walls.find(x => x.level === 'L1' && x.openings.length === 1 && x.openings[0].width < 1500)!;
     const o = w.openings[0];

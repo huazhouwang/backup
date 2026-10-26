@@ -40,6 +40,7 @@ import { FOV } from '@/graphics/three/framing';
 import { sunDirection, sunPosition } from '@/lib/solar';
 import { Sun3D } from './Sun3D';
 import { HeightDims3D } from './HeightDims3D';
+import { Widgets3D } from './Widgets3D';
 import { movedBy, useMoving } from './doors';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
@@ -100,6 +101,7 @@ export function Model3D() {
   // Redraw element materials and extras when their builds finish
   useBuildsVersion();
   const current = project.levels.find(l => l.id === view.level);
+  const canEdit = useEditor(s => s.canEdit());
   // The whole house by default; the cutaway shows the current level and below, to look into it
   const camera3d = useEditor(s => s.camera3d);
   // Walking and sections show the whole house
@@ -308,6 +310,7 @@ export function Model3D() {
           {view.layers.dimensions && current && !camera3d.walking && !camera3d.section && (
             <HeightDims3D project={project} level={current.id} shown={levels.map(l => l.id)} quality={q} growth={growth} />
           )}
+          {current && !camera3d.walking && <Widgets3D project={project} current={current.id} editable={canEdit} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

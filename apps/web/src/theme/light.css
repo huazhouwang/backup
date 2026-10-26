@@ -65,6 +65,8 @@
   --canvas-sun-disc: oklch(0.97 0.09 95);
   --canvas-skylight: oklch(0.84 0.008 85);
   --canvas-ground: oklch(0.853 0.031 103);
+  /* What widgets draw (grids, axes…): green, like Revit's reference planes */
+  --canvas-widget: oklch(0.58 0.14 150);
   /* Shadows cast on the ground in 3D */
   --canvas-shadow: oklch(0.45 0.012 85);
   /* Glass: barely tinted, so it reads as clear */

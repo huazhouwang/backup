@@ -9,6 +9,7 @@ import { Compass } from '../compass/Compass';
 import { CanvasTools } from './CanvasTools';
 import { LevelSwitcher } from './LevelSwitcher';
 import { HoverTip } from '../HoverTip';
+import { WidgetsPanel } from '../widgets/WidgetsPanel';
 
 /** 3D (three.js) is most of the plan page script; load it only when switching to 3D */
 const loadModel3D = () => import('../model3d/Model3D');
@@ -54,6 +55,7 @@ export function EditorCanvas({ svgRef }: { svgRef?: React.RefObject<SVGSVGElemen
         <LevelSwitcher className="bg-background shadow-xs" />
       </div>
       <CanvasTools className="absolute top-2 right-2" />
+      <WidgetsPanel className="absolute top-2 left-16 z-10" />
       <Compass className="absolute top-12 right-2" />
       {/* Bottom centre; on a phone below the tools, beside the level switcher and clear of the tab bar */}
       <ToolHint className="absolute bottom-3 left-1/2 w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 max-md:top-12 max-md:right-18 max-md:bottom-auto max-md:left-14 max-md:w-auto max-md:max-w-none max-md:translate-x-0" />

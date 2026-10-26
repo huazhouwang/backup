@@ -8,10 +8,10 @@
     "en": "Basic widgets"
   },
   "description": {
-    "zh": "画布上常用的辅助工具",
-    "en": "Common helpers for the canvas"
+    "zh": "画布上常用的辅助工具：轴网和坐标系",
+    "en": "Common helpers for the canvas: a structural grid and a coordinate system"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Plinth",
   "license": "CC-BY-4.0",
   "widgets": {
@@ -72,6 +72,75 @@
         }
       },
       "script": "function widget(project, params, ctx) {\n  const walls = project.walls.filter(w => w.level === ctx.level && (w.kind === 'bearing' || w.kind === 'partition'));\n  if (!walls.length) return [];\n  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;\n  for (const w of walls) for (const [x, y] of [w.start, w.end]) {\n    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);\n  }\n  const s = params.spacing;\n  const ox = params.originX ?? x0, oy = params.originY ?? y0;\n  const margin = 1500;\n  // Grid lines from the origin over the walls' extent, in both directions\n  const xs = [], ys = [];\n  for (let x = ox - Math.floor((ox - x0) / s) * s; x <= x1 + 1; x += s) xs.push(x);\n  for (let y = oy - Math.floor((oy - y0) / s) * s; y <= y1 + 1; y += s) ys.push(y);\n  const items = [];\n  xs.forEach((x, i) => {\n    items.push({ type: 'line', from: [x, y0 - margin], to: [x, y1 + margin], dash: [6, 3] });\n    items.push({ type: 'label', at: [x, y0 - margin - 600], text: String(i + 1) });\n  });\n  ys.forEach((y, i) => {\n    items.push({ type: 'line', from: [x0 - margin, y], to: [x1 + margin, y], dash: [6, 3] });\n    items.push({ type: 'label', at: [x0 - margin - 600, y], text: i < 26 ? String.fromCharCode(65 + i) : 'A' + (i - 25) });\n  });\n  items.push({ type: 'handle', at: [ox, oy], x: 'originX', y: 'originY' });\n  if (params.snap) for (const x of xs) for (const y of ys) items.push({ type: 'snap', at: [x, y] });\n  return items;\n}"
+    },
+    "axes": {
+      "name": {
+        "zh": "坐标系",
+        "en": "Coordinate system"
+      },
+      "version": "0.1.0",
+      "description": "A coordinate system on the current level: an x axis pointing east and a y axis pointing south (as the plan's), from an origin (by default the walls' north-west corner), `length` mm long, with a tick every `tick` mm. The origin and the ticks snap furniture and walls when `snap` is on. Move the origin with originX/originY (mm), or drag its handle.",
+      "permissions": [
+        "draw"
+      ],
+      "params": {
+        "length": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "maximum": 50000,
+          "title": {
+            "zh": "轴长",
+            "en": "Axis length"
+          },
+          "description": "Length of each axis, mm"
+        },
+        "tick": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 0,
+          "maximum": 10000,
+          "title": {
+            "zh": "刻度间距",
+            "en": "Tick spacing"
+          },
+          "description": "Distance between ticks, mm; 0 for none"
+        },
+        "originX": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "title": {
+            "zh": "原点 X",
+            "en": "Origin X"
+          },
+          "description": "x of the origin, mm; null for the walls' west edge"
+        },
+        "originY": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "title": {
+            "zh": "原点 Y",
+            "en": "Origin Y"
+          },
+          "description": "y of the origin, mm; null for the walls' north edge"
+        },
+        "snap": {
+          "type": "boolean",
+          "default": true,
+          "title": {
+            "zh": "吸附",
+            "en": "Snap"
+          },
+          "description": "Whether the origin and the ticks snap furniture and walls"
+        }
+      },
+      "script": "function widget(project, params, ctx) {\n  const walls = project.walls.filter(w => w.level === ctx.level);\n  let x0 = 0, y0 = 0;\n  if (walls.length) {\n    x0 = Math.min(...walls.flatMap(w => [w.start[0], w.end[0]]));\n    y0 = Math.min(...walls.flatMap(w => [w.start[1], w.end[1]]));\n  }\n  const ox = params.originX ?? x0, oy = params.originY ?? y0;\n  const L = params.length, t = params.tick, h = 120;\n  const items = [\n    { type: 'line', from: [ox, oy], to: [ox + L, oy] },\n    { type: 'line', from: [ox + L, oy], to: [ox + L - 250, oy - 120] },\n    { type: 'line', from: [ox + L, oy], to: [ox + L - 250, oy + 120] },\n    { type: 'label', at: [ox + L + 250, oy], text: 'x' },\n    { type: 'line', from: [ox, oy], to: [ox, oy + L] },\n    { type: 'line', from: [ox, oy + L], to: [ox - 120, oy + L - 250] },\n    { type: 'line', from: [ox, oy + L], to: [ox + 120, oy + L - 250] },\n    { type: 'label', at: [ox, oy + L + 250], text: 'y' },\n    { type: 'point', at: [ox, oy] },\n    { type: 'handle', at: [ox, oy], x: 'originX', y: 'originY' },\n  ];\n  if (params.snap) items.push({ type: 'snap', at: [ox, oy] });\n  if (t > 0)\n    for (let d = t; d < L - 1; d += t) {\n      items.push({ type: 'line', from: [ox + d, oy - h], to: [ox + d, oy + h] });\n      items.push({ type: 'line', from: [ox - h, oy + d], to: [ox + h, oy + d] });\n      if (params.snap) items.push({ type: 'snap', at: [ox + d, oy] }, { type: 'snap', at: [ox, oy + d] });\n    }\n  return items;\n}"
     }
   }
 }

@@ -1,10 +1,42 @@
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import viteReact from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { build } from 'esbuild';
+import { defineConfig, type Plugin } from 'vite';
+
+/**
+ * `virtual:sandbox-worker`: the sandbox's worker (packages/sandbox/src/worker.ts) bundled as a classic script, as a string. The
+ * browser sandbox starts it from an opaque-origin iframe, where a module worker can't load, so Vite's own worker bundling (a
+ * module in dev) doesn't fit. Built the same way in dev and in production.
+ */
+function sandboxWorker(): Plugin {
+  const id = 'virtual:sandbox-worker';
+  const here = fileURLToPath(new URL('.', import.meta.url));
+  const entry = resolve(here, '../../packages/sandbox/src/worker.ts');
+  return {
+    name: 'plinth-sandbox-worker',
+    resolveId: source => (source === id ? `\0${id}` : undefined),
+    async load(source) {
+      if (source !== `\0${id}`) return;
+      const out = await build({
+        entryPoints: [entry],
+        absWorkingDir: here,
+        bundle: true,
+        write: false,
+        format: 'iife',
+        platform: 'browser',
+        minify: true,
+        metafile: true,
+      });
+      for (const file of Object.keys(out.metafile.inputs)) this.addWatchFile(resolve(here, file));
+      return `export default ${JSON.stringify(out.outputFiles[0].text)};`;
+    },
+  };
+}
 
 /**
  * Frontend: a TanStack Router SPA, built to static assets.
@@ -25,5 +57,6 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
     cloudflare(),
+    sandboxWorker(),
   ],
 });

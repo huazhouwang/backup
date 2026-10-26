@@ -7,7 +7,7 @@ const frames = () => document.querySelectorAll('iframe').length;
 
 (window as unknown as { scenarios: unknown }).scenarios = {
   async basic(workerUrl: string) {
-    const box = createBrowserSandbox({ workerUrl, wasmUrl: '/quickjs.wasm' });
+    const box = createBrowserSandbox({ worker: { url: workerUrl }, wasmUrl: '/quickjs.wasm' });
     const s = await box.realm('lib').script('count', 'function count(k) { return data.walls.filter(w => w.kind === k).length }');
     await s.setData('data', { walls: [{ kind: 'bearing' }, { kind: 'bearing' }, { kind: 'partition' }] });
     const out = await s.call('count', ['bearing']);
@@ -18,7 +18,7 @@ const frames = () => document.querySelectorAll('iframe').length;
     return { out, timeout, after };
   },
   async probe(workerUrl: string, url: string) {
-    const box = createBrowserSandbox({ workerUrl, wasmUrl: '/quickjs.wasm' });
+    const box = createBrowserSandbox({ worker: { url: workerUrl }, wasmUrl: '/quickjs.wasm' });
     const out = await box.request('probe', { url });
     const frame = document.querySelector('iframe');
     const result = {
@@ -36,7 +36,7 @@ const frames = () => document.querySelectorAll('iframe').length;
     return result;
   },
   async watchdog(workerUrl: string) {
-    const box = createBrowserSandbox({ workerUrl, wasmUrl: '/quickjs.wasm', watchdogMs: 1500 });
+    const box = createBrowserSandbox({ worker: { url: workerUrl }, wasmUrl: '/quickjs.wasm', watchdogMs: 1500 });
     const s = await box.realm('lib').script('get', 'function get() { return data.n }');
     await s.setData('data', { n: 7 });
     const before = frames();
