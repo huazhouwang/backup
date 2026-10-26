@@ -74,6 +74,17 @@ test('permissions', async () => {
     const r = await owner.call('POST', `/libraries/${lib}/members`, { email, role });
     check(r.status === 200, `${who} joined the library (${role})`);
   }
+  // A widget library, with the same roles
+  const wlib = (await owner.call('POST', '/widget-libraries', { name: 'Permissions' })).data.id;
+  for (const [who, role] of [
+    ['viewer', 'viewer'],
+    ['commenter', 'viewer'],
+    ['editor', 'editor'],
+  ]) {
+    const email = (await actors[who].call('GET', '/me')).data.user.email;
+    const r = await owner.call('POST', `/widget-libraries/${wlib}/members`, { email, role });
+    check(r.status === 200, `${who} joined the widget library (${role})`);
+  }
 
   // Who may call each route: a minimum role, 'user' (any signed-in user) or 'public'
   const ROUTES = [
@@ -122,6 +133,16 @@ test('permissions', async () => {
     ['POST', `/libraries/${lib}/members`, 'owner', { email: 'not-an-email', role: 'viewer' }],
     // Only the owner removes someone else (anyone may leave; checked below)
     ['DELETE', `/libraries/${lib}/members/${otherUser}`, 'owner'],
+    ['GET', '/widget-libraries', 'user'],
+    ['GET', '/widget-libraries/files', 'user'],
+    ['POST', '/widget-libraries', 'user', { name: 'Scratch' }],
+    ['POST', '/widget-libraries/import', 'user', { file: {} }],
+    ['GET', `/widget-libraries/${wlib}`, 'viewer'],
+    ['PATCH', `/widget-libraries/${wlib}`, 'owner', { name: 'Permissions' }],
+    ['PUT', `/widget-libraries/${wlib}/widgets/nope`, 'editor', {}],
+    ['DELETE', `/widget-libraries/${wlib}/widgets/nope`, 'editor'],
+    ['POST', `/widget-libraries/${wlib}/members`, 'owner', { email: 'not-an-email', role: 'viewer' }],
+    ['DELETE', `/widget-libraries/${wlib}/members/${otherUser}`, 'owner'],
   ];
   // Least privileged first, so the owner's destructive calls come last; a route allows its minimum and everyone after it
   const ORDER = ['anon', 'stranger', 'viewer', 'commenter', 'editor', 'owner'];
@@ -135,7 +156,7 @@ test('permissions', async () => {
       const allowed = ![401, 403, 404].includes(status);
       results.push({ who, status, ok: allowed === expected });
     }
-    const label = path.replace(id, ':id').replace(lib, ':lib').replace(comment, ':comment').replace(otherUser, ':user');
+    const label = path.replace(id, ':id').replace(wlib, ':wlib').replace(lib, ':lib').replace(comment, ':comment').replace(otherUser, ':user');
     check(
       results.every(r => r.ok),
       `${method} ${label} (${min}): ${results.map(r => `${r.who} ${r.status}${r.ok ? '' : '!'}`).join(', ')}`,
@@ -176,4 +197,7 @@ test('permissions', async () => {
   check((await actors.commenter.call('DELETE', `/libraries/${lib}/members/${libViewer}`)).status === 200, 'a member can leave a library');
   check((await actors.editor.call('DELETE', `/libraries/${lib}`)).status === 403, 'an editor cannot delete a library');
   check((await owner.call('DELETE', `/libraries/${lib}`)).status === 200, 'the owner can delete a library');
+  check((await actors.commenter.call('DELETE', `/widget-libraries/${wlib}/members/${libViewer}`)).status === 200, 'a member can leave a widget library');
+  check((await actors.editor.call('DELETE', `/widget-libraries/${wlib}`)).status === 403, 'an editor cannot delete a widget library');
+  check((await owner.call('DELETE', `/widget-libraries/${wlib}`)).status === 200, 'the owner can delete a widget library');
 });

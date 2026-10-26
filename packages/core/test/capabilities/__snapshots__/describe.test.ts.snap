@@ -1999,6 +1999,28 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Remove widget",
   },
   {
+    "description": "Bring an installed widget to the newer version its library offers (widget_catalog shows update on it). Every installed copy of that widget in the design changes; parameter values the new version doesn't accept go back to its defaults. Only when the homeowner agrees: an update can change what the widget draws.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "widget": {
+          "description": "ID or name of the installed widget (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "widget",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "widget_update",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Update widget",
+  },
+  {
     "description": "Write a widget of the design's own (saved in the design, library id design) and by default install it. It is tried in the sandbox first: a script error, a timeout or bad output comes back as the error to fix. Giving the id of one of the design's own widgets replaces it (its version goes up; installed copies follow). Prefer a library widget when one fits (widget_catalog). Script: JavaScript (ES2023, no modules) defining function widget(project, params, ctx) that returns an array of items to draw. It runs in a sandbox: no DOM, network, timers, Promise, typed arrays or host functions; 5000 items at most, about 200 ms per run. project is the design (read-only): levels [{id, name, elevation, height}], walls [{id, name, level, start: [x,y], end, thickness, kind, openings}], spaces (rooms) [{id, name, level, kind, shape: [{outer: [[x,y],…], holes?}]}], furniture [{id, name, type, level, position: [x,y], rotation, size: {w,d,h}}], elements, site {boundary}. Millimetres; x points east, y points south. params holds every declared parameter (given or default). ctx is {level: the current level id, view: 'plan'|'3d', language: 'zh'|'en'} — write label text in ctx.language. Items (an item may add level: <level id>, else it shows on the current level): {type:'line', from:[x,y], to:[x,y], dash?: [mm,…]}, {type:'label', at, text} (≤200 characters), {type:'point', at}, {type:'area', outline: [[x,y],…]} (3–500 points), {type:'handle', at, x:'<number param>', y:'<number param>'} (dragging it writes its position into those two parameters), {type:'snap', at} (placing and dragging snap to it). Colours are the canvas's; a widget can't choose any.",
     "examples": [],
     "input": {

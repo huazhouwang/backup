@@ -9,7 +9,7 @@ import { levelAdd, levelRemove, levelUpdate } from './level.js';
 import { briefUpdate, constraintAdd, constraintRemove, decisionAdd } from './relation.js';
 import { historyLog, historyRedo, historyUndo } from './history.js';
 import { batchCapability, searchCapabilitiesFor } from './meta.js';
-import { widgetCatalog, widgetConfigure, widgetCreate, widgetInstall, widgetRemove } from './widget.js';
+import { widgetCatalog, widgetConfigure, widgetCreate, widgetInstall, widgetRemove, widgetUpdateCap } from './widget.js';
 import { furnitureTypeAdd, lookAdd, lookGet, lookImport, lookRemove, lookSet, lookUpdate, lookUse, paramsSet } from './look.js';
 
 export * from './query.js';
@@ -73,6 +73,7 @@ export const BUILTIN: Capability[] = [
   widgetInstall,
   widgetConfigure,
   widgetRemove,
+  widgetUpdateCap,
   widgetCreate,
 ];
 

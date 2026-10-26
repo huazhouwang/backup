@@ -12,6 +12,7 @@ import {
   realmKey,
   registerWidgetLibrary,
   resolveWidget,
+  widgetUpdate,
   runWidget,
   scriptKey,
   SCHEMA_VERSION,
@@ -417,6 +418,81 @@ describe("the design's own widgets and the agent's capabilities", () => {
   });
 });
 
+describe('library widgets copied into the design, pinned, and updated', () => {
+  const registry = createRegistry();
+  const actor = { kind: 'user' as const };
+  let session: Session;
+  const call = (name: string, input: unknown) => registry.call(name, input, { session, actor });
+  const SCRIPT = "function widget(project, params) { return [{ type: 'point', at: [params.x, 0] }] }";
+  const v1 = { ...def(SCRIPT, { x: { type: 'number', default: 0 }, size: { type: 'number', default: 1, maximum: 10 } }), version: '1.0.0' };
+  const v2: WidgetDef = {
+    ...v1,
+    version: '1.1.0',
+    description: 'now with a y',
+    params: { x: { type: 'number', default: 0 }, size: { type: 'number', default: 1, maximum: 5 }, y: { type: 'number', default: 0 } },
+  };
+  const team = { origin: 'team' as const, owner: 'u9', id: 'lib_t' };
+  beforeEach(() => {
+    session = new Session(createProject({ id: 'p1', name: '测试' }));
+    registerWidgetLibrary(team, { ...library('lib_t', { dot: v1 }), name: { zh: '团队组件' } });
+  });
+  afterEach(() => unregisterWidgetLibrary('lib_t'));
+
+  it('copies the widget into the design at the version installed, run in a realm of the design per library', async () => {
+    await call('widget_install', { library: 'lib_t', widget: 'dot', params: { size: 8 } });
+    expect(session.project.library.widgetCopies).toEqual({ 'lib_t/dot': { library: 'lib_t', widget: 'dot', libraryName: { zh: '团队组件' }, def: v1 } });
+    const found = resolveWidget(session.project, 'lib_t', 'dot')!;
+    expect(realmKey(found.origin)).toBe('design:p1/lib_t');
+    expect(realmKey(found.origin)).not.toBe(realmKey(team));
+    // Whoever opens the design without the library still draws it
+    unregisterWidgetLibrary('lib_t');
+    expect(resolveWidget(session.project, 'lib_t', 'dot')?.def).toEqual(v1);
+    // A second install uses the copy; removing the last one drops it
+    await call('widget_install', { library: 'lib_t', widget: 'dot' });
+    await call('widget_remove', { widget: 'w01' });
+    expect(session.project.library.widgetCopies?.['lib_t/dot']).toBeDefined();
+    await call('widget_remove', { widget: 'w02' });
+    expect(session.project.library.widgetCopies).toBeUndefined();
+  });
+
+  it('a design forging a copy for another library gets a realm of its own, not the library’s', () => {
+    const p = { ...session.project, library: { ...session.project.library, widgetCopies: { 'lib_t/dot': { library: 'lib_t', widget: 'dot', def: v1 } } } };
+    expect(resolveWidget(p, 'lib_t', 'dot')!.origin).toEqual({ origin: 'design', id: 'p1/lib_t' });
+    const mismatched = { ...p, library: { ...p.library, widgetCopies: { 'lib_t/dot': { library: 'other', widget: 'dot', def: v1 } } } };
+    expect(resolveWidget(mismatched, 'lib_t', 'dot')).toBeUndefined();
+  });
+
+  it('a newer version is offered with what changed, never applied until asked; params it refuses go back to defaults', async () => {
+    await call('widget_install', { library: 'lib_t', widget: 'dot', params: { size: 8, x: 100 } });
+    expect(widgetUpdate(session.project, session.project.widgets[0])).toBeUndefined();
+    registerWidgetLibrary(team, library('lib_t', { dot: v2 }));
+    // Still drawn from the copy at 1.0.0
+    expect(resolveWidget(session.project, 'lib_t', 'dot')!.def.version).toBe('1.0.0');
+    const cat = (await call('widget_catalog', {})).result as any;
+    expect(cat.installed[0].update).toEqual({
+      from: '1.0.0',
+      to: '1.1.0',
+      description: 'now with a y',
+      script: false,
+      paramsAdded: ['y'],
+      paramsRemoved: [],
+      permissionsAdded: [],
+    });
+    const r = await call('widget_update', { widget: 'w01' });
+    expect(r.result).toMatchObject({ from: '1.0.0', to: '1.1.0', reset: { w01: ['size'] } });
+    expect(session.project.widgets[0]).toMatchObject({ widget: { version: '1.1.0' }, params: { x: 100 } });
+    expect(session.project.library.widgetCopies!['lib_t/dot'].def).toEqual(v2);
+    expect((await call('widget_update', { widget: 'w01' })).error?.code).toBe('invalid-input');
+    await call('history_undo', {});
+    expect(session.project.library.widgetCopies!['lib_t/dot'].def.version).toBe('1.0.0');
+  });
+
+  it('built-in widgets are not copied', async () => {
+    await call('widget_install', { library: 'builtin-widgets', widget: 'grid' });
+    expect(session.project.library.widgetCopies).toBeUndefined();
+  });
+});
+
 describe('migration', () => {
   it('v15 adds widgets to older projects', () => {
     const old = { ...sampleFile(), version: 14 };
@@ -426,9 +502,10 @@ describe('migration', () => {
     expect(p.widgets).toEqual([]);
   });
 
-  it("v16 keeps a design's own widgets", () => {
+  it("v16 keeps a design's own widgets, v17 its library copies", () => {
     const p = migrate({ ...sampleFile(), version: 15 });
-    expect(p.version).toBe(16);
+    expect(p.version).toBe(SCHEMA_VERSION);
+    expect(p.library.widgetCopies).toBeUndefined();
     expect(p.library.widgets).toBeUndefined();
   });
 });

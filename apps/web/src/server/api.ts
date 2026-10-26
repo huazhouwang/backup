@@ -16,6 +16,7 @@ import * as libraries from './routes/libraries';
 import * as models from './routes/models';
 import * as projects from './routes/projects';
 import * as sharing from './routes/sharing';
+import * as widgetLibraries from './routes/widget-libraries';
 
 export const api = new Hono<AppEnv>().basePath('/api');
 
@@ -33,7 +34,7 @@ api.on(['GET', 'POST'], '/auth/*', async c => {
 
 api.use('/*', session);
 
-for (const r of [account.routes, projects.routes, sharing.routes, models.routes, libraries.routes]) api.route('/', r);
+for (const r of [account.routes, projects.routes, sharing.routes, models.routes, libraries.routes, widgetLibraries.routes]) api.route('/', r);
 for (const r of [projects.projectRoutes, sharing.projectRoutes, comments.projectRoutes, models.projectRoutes, agent.projectRoutes])
   api.route('/projects/:id', r);
 

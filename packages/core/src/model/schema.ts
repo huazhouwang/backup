@@ -9,12 +9,12 @@
  *   and is promoted to a proper field on its second use. Fields are added, removed or changed via `version` + a migration function (see migrate.ts).
  */
 
-import type { Material } from '../looks/material.js';
+import type { Material, Names } from '../looks/material.js';
 import type { ParamValue, Recipe } from '../looks/script.js';
 import type { WidgetDef } from '../widgets/format.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 16 as const;
+export const SCHEMA_VERSION = 17 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -245,6 +245,21 @@ export interface Library {
    * (widgets/libraries.ts). Added in v16.
    */
   widgets?: Record<string, WidgetDef>;
+  /**
+   * Widgets installed from a user's or a team's widget library, copied at the version installed (key `<library>/<widget>`), like
+   * fonts embedded in a document: whoever opens the design draws them, and a newer version in the library is offered, never
+   * applied. Added in v17.
+   */
+  widgetCopies?: Record<string, WidgetCopy>;
+}
+
+/** A widget library's widget as the design keeps it (see Library.widgetCopies) */
+export interface WidgetCopy {
+  library: string;
+  widget: string;
+  /** The library's name when it was copied, to show where it came from */
+  libraryName?: Names;
+  def: WidgetDef;
 }
 
 /** A look: a recipe and the targets it can draw */

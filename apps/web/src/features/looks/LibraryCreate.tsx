@@ -8,16 +8,17 @@ import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { m } from '@/lib/i18n';
 
-export function LibraryCreate() {
+/** Create a library of the user's and open it: a look library, or a widget library with `widgets` */
+export function LibraryCreate({ widgets }: { widgets?: boolean }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const create = useMutation({
-    mutationFn: () => api<{ id: string }>('/libraries', { method: 'POST', json: { name: name.trim() } }),
+    mutationFn: () => api<{ id: string }>(widgets ? '/widget-libraries' : '/libraries', { method: 'POST', json: { name: name.trim() } }),
     onSuccess: r => {
       setName('');
-      void qc.invalidateQueries({ queryKey: ['libraries'] });
-      void navigate({ to: '/looks/$libraryId', params: { libraryId: r.id } });
+      void qc.invalidateQueries({ queryKey: [widgets ? 'widget-libraries' : 'libraries'] });
+      void navigate(widgets ? { to: '/widgets/$libraryId', params: { libraryId: r.id } } : { to: '/looks/$libraryId', params: { libraryId: r.id } });
     },
     onError: e => toast.error(e.message),
   });
@@ -32,12 +33,12 @@ export function LibraryCreate() {
       <Input
         value={name}
         onChange={e => setName(e.target.value)}
-        placeholder={m.libraries_new_placeholder()}
-        aria-label={m.libraries_new_placeholder()}
+        placeholder={widgets ? m.widget_libraries_new_placeholder() : m.libraries_new_placeholder()}
+        aria-label={widgets ? m.widget_libraries_new_placeholder() : m.libraries_new_placeholder()}
         className="sm:w-80"
       />
       <Button type="submit" variant="outline" disabled={!name.trim() || create.isPending}>
-        <PlusIcon /> {m.libraries_new()}
+        <PlusIcon /> {widgets ? m.widget_libraries_new() : m.libraries_new()}
       </Button>
     </form>
   );

@@ -21,13 +21,73 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { api } from '@/lib/api';
 import { m, uiName } from '@/lib/i18n';
 import { useMe } from '@/lib/query';
-import type { LibraryDetail } from '@/shared/looks';
+import type { LibraryDetail, LibraryRole } from '@/shared/looks';
 import { libraryRoleLabel } from './library-role';
 
-/** Rename, looks, members and sharing, delete or leave: what the viewer's role allows on a library of their own or shared with them */
+/** A look library's settings */
 export function LibraryManage({ detail }: { detail: LibraryDetail }) {
-  const lib = { ...detail, id: detail.library.id, name: uiName(detail.library.name) };
-  const looks = Object.entries(detail.library.looks);
+  return (
+    <LibraryAdmin
+      lib={{
+        id: detail.library.id,
+        name: uiName(detail.library.name),
+        role: detail.role,
+        members: detail.members,
+        items: Object.entries(detail.library.looks).map(([id, k]) => ({ id, name: uiName(k.name), version: k.version })),
+      }}
+      kind="looks"
+    />
+  );
+}
+
+/** A library as its settings need it: look and widget libraries alike */
+export interface AdminLibrary {
+  id: string;
+  name: string;
+  role: LibraryRole;
+  members: LibraryDetail['members'];
+  items: { id: string; name: string; version: string }[];
+}
+
+/** Where each kind of library lives in the API, the query cache and the site, and how the UI names it */
+const KINDS = {
+  looks: {
+    base: '/libraries',
+    itemsPath: 'looks',
+    queryKeys: { list: 'libraries', detail: 'library' },
+    back: '/looks',
+    text: {
+      removeItem: (name: string) => m.libraries_remove_look({ name }),
+      name: () => m.libraries_name(),
+      remove: () => m.libraries_delete(),
+      removeTitle: (name: string) => m.libraries_delete_title({ name }),
+      removeDescription: () => m.libraries_delete_description(),
+      leave: () => m.libraries_leave(),
+    },
+  },
+  widgets: {
+    base: '/widget-libraries',
+    itemsPath: 'widgets',
+    queryKeys: { list: 'widget-libraries', detail: 'widget-library' },
+    back: '/widgets',
+    text: {
+      removeItem: (name: string) => m.widget_libraries_remove_widget({ name }),
+      name: () => m.widget_libraries_name(),
+      remove: () => m.widget_libraries_delete(),
+      removeTitle: (name: string) => m.widget_libraries_delete_title({ name }),
+      removeDescription: () => m.widget_libraries_delete_description(),
+      leave: () => m.widget_libraries_leave(),
+    },
+  },
+} as const;
+
+/**
+ * Rename, items (looks or widgets), members and sharing, delete or leave: what the viewer's role allows on a library of their own
+ * or shared with them
+ */
+export function LibraryAdmin({ lib, kind }: { lib: AdminLibrary; kind: keyof typeof KINDS }) {
+  const { base, itemsPath, queryKeys, back, text } = KINDS[kind];
+  const looks = lib.items;
   const qc = useQueryClient();
   const navigate = useNavigate();
   const me = useMe();
@@ -36,35 +96,33 @@ export function LibraryManage({ detail }: { detail: LibraryDetail }) {
     editor = owner || lib.role === 'editor';
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'viewer' | 'editor'>('viewer');
-  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['libraries'] }), qc.invalidateQueries({ queryKey: ['library', lib.id] })]);
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: [queryKeys.list] }), qc.invalidateQueries({ queryKey: [queryKeys.detail, lib.id] })]);
   const call = (path: string, init: Parameters<typeof api>[1]) =>
     api(path, init)
       .then(refresh)
       .catch((e: Error) => toast.error(e.message));
   const gone = () =>
-    api(lib.role === 'owner' ? `/libraries/${lib.id}` : `/libraries/${lib.id}/members/${userId}`, { method: 'DELETE' })
-      .then(() => qc.invalidateQueries({ queryKey: ['libraries'] }))
-      .then(() => navigate({ to: '/looks' }))
+    api(lib.role === 'owner' ? `${base}/${lib.id}` : `${base}/${lib.id}/members/${userId}`, { method: 'DELETE' })
+      .then(() => qc.invalidateQueries({ queryKey: [queryKeys.list] }))
+      .then(() => navigate({ to: back }))
       .catch((e: Error) => toast.error(e.message));
   return (
     <div className="space-y-5">
       {owner && (
         <Input
           defaultValue={lib.name}
-          aria-label={m.libraries_name()}
+          aria-label={text.name()}
           onBlur={e =>
-            e.target.value.trim() &&
-            e.target.value !== lib.name &&
-            void call(`/libraries/${lib.id}`, { method: 'PATCH', json: { name: e.target.value.trim() } })
+            e.target.value.trim() && e.target.value !== lib.name && void call(`${base}/${lib.id}`, { method: 'PATCH', json: { name: e.target.value.trim() } })
           }
         />
       )}
       {looks.length > 0 && (
         <ItemGroup className="gap-1">
-          {looks.map(([id, k]) => (
-            <Item key={id} size="xs" variant="outline">
+          {looks.map(k => (
+            <Item key={k.id} size="xs" variant="outline">
               <ItemContent>
-                <ItemTitle>{uiName(k.name)}</ItemTitle>
+                <ItemTitle>{k.name}</ItemTitle>
                 <ItemDescription>v{k.version}</ItemDescription>
               </ItemContent>
               {editor && (
@@ -72,8 +130,8 @@ export function LibraryManage({ detail }: { detail: LibraryDetail }) {
                   <Button
                     size="icon-xs"
                     variant="ghost"
-                    aria-label={m.libraries_remove_look({ name: uiName(k.name) })}
-                    onClick={() => void call(`/libraries/${lib.id}/looks/${id}`, { method: 'DELETE' })}
+                    aria-label={text.removeItem(k.name)}
+                    onClick={() => void call(`${base}/${lib.id}/${itemsPath}/${k.id}`, { method: 'DELETE' })}
                   >
                     <Trash2Icon />
                   </Button>
@@ -96,7 +154,7 @@ export function LibraryManage({ detail }: { detail: LibraryDetail }) {
               </ItemContent>
               {owner && u.role !== 'owner' && (
                 <ItemActions>
-                  <Button size="xs" variant="ghost" onClick={() => void call(`/libraries/${lib.id}/members/${u.user_id}`, { method: 'DELETE' })}>
+                  <Button size="xs" variant="ghost" onClick={() => void call(`${base}/${lib.id}/members/${u.user_id}`, { method: 'DELETE' })}>
                     {m.libraries_remove_member()}
                   </Button>
                 </ItemActions>
@@ -109,7 +167,7 @@ export function LibraryManage({ detail }: { detail: LibraryDetail }) {
             className="flex flex-wrap gap-2"
             onSubmit={e => {
               e.preventDefault();
-              if (email) void call(`/libraries/${lib.id}/members`, { method: 'POST', json: { email, role } }).then(() => setEmail(''));
+              if (email) void call(`${base}/${lib.id}/members`, { method: 'POST', json: { email, role } }).then(() => setEmail(''));
             }}
           >
             <Input
@@ -138,12 +196,12 @@ export function LibraryManage({ detail }: { detail: LibraryDetail }) {
       {owner ? (
         <AlertDialog>
           <AlertDialogTrigger render={<Button variant="outline" size="sm" className="text-destructive" />}>
-            <Trash2Icon /> {m.libraries_delete()}
+            <Trash2Icon /> {text.remove()}
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{m.libraries_delete_title({ name: lib.name })}</AlertDialogTitle>
-              <AlertDialogDescription>{m.libraries_delete_description()}</AlertDialogDescription>
+              <AlertDialogTitle>{text.removeTitle(lib.name)}</AlertDialogTitle>
+              <AlertDialogDescription>{text.removeDescription()}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{m.settings_cancel()}</AlertDialogCancel>
@@ -155,7 +213,7 @@ export function LibraryManage({ detail }: { detail: LibraryDetail }) {
         </AlertDialog>
       ) : (
         <Button variant="outline" size="sm" disabled={!userId} onClick={() => void gone()}>
-          {m.libraries_leave()}
+          {text.leave()}
         </Button>
       )}
     </div>

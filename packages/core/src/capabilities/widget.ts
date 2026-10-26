@@ -13,7 +13,7 @@ import { resolve } from '../model/refs.js';
 import type { WidgetInstance } from '../model/schema.js';
 import type { Project } from '../model/schema.js';
 import { WIDGET_LIMITS, widgetDefSchema, type WidgetDef, type WidgetItem } from '../widgets/format.js';
-import { DESIGN_WIDGETS, resolveWidget, widgetLibraries } from '../widgets/libraries.js';
+import { copyKey, DESIGN_WIDGETS, findWidget, isBuiltinWidgetLibrary, resolveWidget, widgetLibraries, widgetUpdate } from '../widgets/libraries.js';
 import { runWidget, widgetParams } from '../widgets/run.js';
 import { zRef } from './inputs.js';
 
@@ -66,6 +66,12 @@ export const widgetInstall = defineEdit({
     text('log_widget_install', 'Install {name}', { name: i.name ?? nameIn(resolveWidget(p, i.library, i.widget)?.def.name, p.language) ?? i.widget }),
   apply: (p, i) => {
     const { def } = widgetOf(p, i.library, i.widget);
+    // A user's or team's library widget is copied into the design (once: more copies install the version it already has)
+    if (i.library !== DESIGN_WIDGETS && !isBuiltinWidgetLibrary(i.library) && !Object.hasOwn(p.library.widgetCopies ?? {}, copyKey(i.library, i.widget)))
+      p.library.widgetCopies = {
+        ...p.library.widgetCopies,
+        [copyKey(i.library, i.widget)]: { library: i.library, widget: i.widget, libraryName: findWidget(i.library, i.widget)?.library.name, def },
+      };
     return install(p, i.library, i.widget, def, i.params ?? {}, i.name);
   },
 });
@@ -109,7 +115,52 @@ export const widgetRemove = defineEdit({
   apply: (p, i) => {
     const w = resolve(p, 'widget', i.widget).obj;
     p.widgets.splice(p.widgets.indexOf(w), 1);
+    dropUnusedCopy(p, w.widget.library, w.widget.id);
     return { id: w.id };
+  },
+});
+
+/** A library widget's copy goes with the last installed widget using it */
+function dropUnusedCopy(p: Project, library: string, widget: string) {
+  const key = copyKey(library, widget);
+  if (!p.library.widgetCopies || !Object.hasOwn(p.library.widgetCopies, key)) return;
+  if (p.widgets.some(w => w.widget.library === library && w.widget.id === widget)) return;
+  const { [key]: _gone, ...rest } = p.library.widgetCopies;
+  p.library.widgetCopies = Object.keys(rest).length ? rest : undefined;
+}
+
+export const widgetUpdateCap = defineEdit({
+  name: 'widget_update',
+  title: 'Update widget',
+  description:
+    "Bring an installed widget to the newer version its library offers (widget_catalog shows update on it). Every installed copy of that widget in the design changes; parameter values the new version doesn't accept go back to its defaults. Only when the homeowner agrees: an update can change what the widget draws.",
+  input: z.object({ widget: zRef('installed widget') }),
+  label: (i, p) => text('log_widget_update', 'Update {name}', { name: resolve(p, 'widget', i.widget).name }),
+  apply: (p, i) => {
+    const w = resolve(p, 'widget', i.widget).obj;
+    const update = widgetUpdate(p, w);
+    if (!update) throw new TxError('invalid-input', text('err_widget_no_update', 'No newer version of {name} is available', { name: w.name }));
+    const { library, widget } = { library: w.widget.library, widget: w.widget.id };
+    if (!isBuiltinWidgetLibrary(library))
+      p.library.widgetCopies = {
+        ...p.library.widgetCopies,
+        [copyKey(library, widget)]: { library, widget, libraryName: update.library.name, def: update.def },
+      };
+    const reset: Record<string, string[]> = {};
+    for (const x of p.widgets.filter(x => x.widget.library === library && x.widget.id === widget)) {
+      x.widget = { ...x.widget, version: update.def.version };
+      const kept = Object.entries(x.params).filter(([k, v]) => {
+        try {
+          widgetParams(update.def, { [k]: v });
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      if (kept.length !== Object.keys(x.params).length) reset[x.id] = Object.keys(x.params).filter(k => !kept.some(([j]) => j === k));
+      x.params = Object.fromEntries(kept);
+    }
+    return { ...update.changes, reset };
   },
 });
 
@@ -160,6 +211,7 @@ export const widgetCatalog = defineRead({
         params: w.params,
         visible: w.visible,
         ...(resolveWidget(p, w.widget.library, w.widget.id) ? {} : { unknown: true }),
+        ...(widgetUpdate(p, w) ? { update: widgetUpdate(p, w)!.changes } : {}),
       })),
     };
   },

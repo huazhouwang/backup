@@ -1,0 +1,158 @@
+/**
+ * A widget library's page, the same for every library: what its file says about it, then a card per widget with its description,
+ * version, what it may do and its parameters. Export downloads the file; the owner and editors manage it from the sheet.
+ */
+import type { WidgetDef } from '@plinth/core';
+import { useQuery } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
+import { ArrowLeftIcon, DownloadIcon, SettingsIcon } from 'lucide-react';
+import { LibraryBadge } from '@/features/looks/LibraryBadge';
+import { LibraryAdmin } from '@/features/looks/LibraryManage';
+import { SiteFooter, SiteHeader } from '@/features/site/SiteHeader';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { m, uiName } from '@/lib/i18n';
+import { downloadWidgetLibrary, getWidgetLibrary } from '@/lib/widget-libraries';
+import type { WidgetLibraryDetail } from '@/shared/widgets';
+import { permissionLabel } from './labels';
+
+const route = getRouteApi('/widgets/$libraryId');
+
+export function WidgetLibraryPage() {
+  const { libraryId } = route.useParams();
+  const detail = useQuery({ queryKey: ['widget-library', libraryId], queryFn: () => getWidgetLibrary(libraryId) });
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-6">
+        <Button variant="link" size="sm" className="h-auto px-0" nativeButton={false} render={<Link to="/widgets" />}>
+          <ArrowLeftIcon /> {m.widget_libraries_back()}
+        </Button>
+        {detail.isLoading ? (
+          <Skeleton className="h-40" />
+        ) : !detail.data ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{detail.error?.message ?? m.server_err_widget_library_not_found()}</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <WidgetLibrary detail={detail.data} />
+        )}
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+function WidgetLibrary({ detail }: { detail: WidgetLibraryDetail }) {
+  const lib = detail.library;
+  const widgets = Object.entries(lib.widgets);
+  const facts = [
+    `v${lib.version}`,
+    lib.author && m.libraries_by({ author: lib.author }),
+    lib.license && m.libraries_license({ license: lib.license }),
+    m.widget_libraries_count({ count: widgets.length }),
+  ].filter(Boolean);
+  return (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="truncate text-xl font-semibold">{uiName(lib.name)}</h1>
+            <LibraryBadge lib={detail} />
+          </div>
+          {lib.description && <p className="max-w-2xl text-sm text-muted-foreground">{uiName(lib.description)}</p>}
+          <p className="text-xs text-muted-foreground">{facts.join(' · ')}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => downloadWidgetLibrary(lib)}>
+            <DownloadIcon /> {m.libraries_export()}
+          </Button>
+          {!detail.builtin && (
+            <Sheet>
+              <SheetTrigger render={<Button size="sm" variant="outline" />}>
+                <SettingsIcon /> {m.libraries_manage()}
+              </SheetTrigger>
+              <SheetContent className="overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>{uiName(lib.name)}</SheetTitle>
+                </SheetHeader>
+                <div className="px-4 pb-4">
+                  <LibraryAdmin
+                    kind="widgets"
+                    lib={{
+                      id: lib.id,
+                      name: uiName(lib.name),
+                      role: detail.role,
+                      members: detail.members,
+                      items: widgets.map(([id, w]) => ({ id, name: uiName(w.name), version: w.version })),
+                    }}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
+      </div>
+      {widgets.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{m.widget_libraries_empty()}</p>
+      ) : (
+        <ul className="grid gap-4 md:grid-cols-2">
+          {widgets.map(([id, w]) => (
+            <li key={id}>
+              <WidgetCard id={id} def={w} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function WidgetCard({ id, def }: { id: string; def: WidgetDef }) {
+  const params = Object.entries(def.params ?? {});
+  return (
+    <Card size="sm" data-widget-card={id}>
+      <CardHeader>
+        <CardTitle>{uiName(def.name)}</CardTitle>
+        <CardAction>
+          <Badge variant="secondary">v{def.version}</Badge>
+        </CardAction>
+        <CardDescription className="whitespace-pre-line">{def.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-xs text-muted-foreground">
+          {m.widget_libraries_permissions({ list: def.permissions.map(permissionLabel).join(m.panels_list_separator()) })}
+        </p>
+        {params.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{m.widget_libraries_param()}</TableHead>
+                <TableHead>{m.widget_libraries_param_default()}</TableHead>
+                <TableHead>{m.widget_libraries_param_range()}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {params.map(([k, d]) => (
+                <TableRow key={k}>
+                  <TableCell>{d.title ? uiName(d.title) : k}</TableCell>
+                  <TableCell className="font-mono text-xs">{JSON.stringify(d.default)}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {d.enum ? d.enum.map(v => JSON.stringify(v)).join(' / ') : [d.minimum ?? '', d.maximum ?? ''].join(' – ').replace(/^ – $/, '')}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
