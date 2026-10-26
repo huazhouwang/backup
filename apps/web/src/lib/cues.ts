@@ -6,7 +6,7 @@
  */
 import { audioContext } from './audio'
 
-export type Cue = 'start' | 'send' | 'cancel'
+export type Cue = 'start' | 'send' | 'cancel' | 'reply' | 'error'
 
 /** Each cue's notes: pitch (Hz) and length (s), played one after another. */
 const NOTES: Record<Cue, Array<[number, number]>> = {
@@ -19,6 +19,17 @@ const NOTES: Record<Cue, Array<[number, number]>> = {
     [660, 0.09],
   ],
   cancel: [[300, 0.12]],
+  // An answer has come: a soft rise and a lingering top note.
+  reply: [
+    [587, 0.08],
+    [784, 0.08],
+    [1047, 0.16],
+  ],
+  // Something went wrong: two falling low notes.
+  error: [
+    [392, 0.1],
+    [262, 0.16],
+  ],
 }
 const VOLUME = 0.12
 /** How long the start cue sounds, so the microphone can leave it out. */

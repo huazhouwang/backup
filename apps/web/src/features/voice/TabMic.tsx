@@ -12,6 +12,7 @@ import { MicIcon } from '../../components/ui/MicIcon'
 import { StopIcon } from '../../components/ui/StopIcon'
 import { showToast } from '../../components/ui/Toast'
 import { useBounce } from '../../lib/bounce'
+import { playCue } from '../../lib/cues'
 import { riseIn } from '../../lib/motion'
 import { lockScroll } from '../../lib/scroll-lock'
 import { useNow } from '../../lib/use-now'
@@ -265,9 +266,12 @@ export function TabMic() {
         { heard: (said) => change({ said }), text: (reply) => change({ reply }) },
       )
       change({ reply: answer.reply, confirming: answer.confirming })
+      // Heard as the answer completes, for a parent not looking at the screen.
+      playCue('reply')
       // The agent writes on the server; pull now so the records show without waiting.
       void requestSync()
     } catch {
+      playCue('error')
       change({ problem: m.actionFailed() })
     } finally {
       setPhase('done')
@@ -326,6 +330,7 @@ export function TabMic() {
       talking.current = false
       setPhase('hearing')
       const failed = (why: string) => {
+        playCue('error')
         setLive('')
         setProblem(why)
         setPhase('done')

@@ -1,7 +1,8 @@
 import type { Event } from '@bobo/shared'
 
+import { formatTime } from '../../lib/i18n'
 import { m } from '../../paraglide/messages.js'
-import { fromDateTimeLocal } from './time'
+import { formatDayTime, fromDateTimeLocal } from './time'
 
 /** Small allowance so "now" picked in the form is not rejected a few seconds later. */
 const FUTURE_TOLERANCE_MS = 60_000
@@ -13,15 +14,15 @@ export function validateTime(value: string, now: number): { at: number } | { err
   return { at: Math.min(at, now) }
 }
 
-/** Whether [startAt, endAt] overlaps another sleep of the same baby (running sleeps count to now). */
-export function overlapsSleep(
+/** The other sleep of the same baby [startAt, endAt] overlaps, if any (running ones count to now). */
+export function clashingSleep(
   events: readonly Event[],
   startAt: number,
   endAt: number,
   now: number,
   ignoreId?: string,
-): boolean {
-  return events.some(
+): Event | undefined {
+  return events.find(
     (event) =>
       event.type === 'sleep' &&
       event.id !== ignoreId &&
@@ -29,4 +30,16 @@ export function overlapsSleep(
       event.startAt < endAt &&
       (event.endAt ?? now) > startAt,
   )
+}
+
+/** Whether [startAt, endAt] overlaps another sleep of the same baby. */
+export const overlapsSleep = (...args: Parameters<typeof clashingSleep>) =>
+  clashingSleep(...args) !== undefined
+
+/** Says which sleep a new or changed one overlaps, so it isn't taken for itself. */
+export function sleepOverlapMessage(clash: Event, now: number): string {
+  const from = formatDayTime(clash.startAt, now)
+  return clash.endAt === null
+    ? m.sleepOverlapRunning({ from })
+    : m.sleepOverlap({ from, to: formatTime(clash.endAt) })
 }

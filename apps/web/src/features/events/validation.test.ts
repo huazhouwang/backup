@@ -2,7 +2,7 @@ import { newId } from '@bobo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { logSleep, startSleep } from './records'
-import { overlapsSleep, validateTime } from './validation'
+import { clashingSleep, overlapsSleep, sleepOverlapMessage, validateTime } from './validation'
 
 const BABY = newId()
 const H = 3_600_000
@@ -27,5 +27,15 @@ describe('overlapsSleep', () => {
 
   it('ignores the event being edited', () => {
     expect(overlapsSleep([nap], T0 - 3 * H, T0 - 2 * H, T0, nap.id)).toBe(false)
+  })
+})
+
+describe('sleepOverlapMessage', () => {
+  it('names the sleep a change clashes with, so it is not taken for itself', () => {
+    const nap = logSleep(BABY, T0 - 3 * H, T0 - 2 * H, T0)
+    const clash = clashingSleep([nap], T0 - 2.5 * H, T0 - 1.5 * H, T0)
+    expect(clash).toBe(nap)
+    expect(sleepOverlapMessage(nap, T0)).toMatch(/09:00.*10:00/)
+    expect(sleepOverlapMessage(startSleep(BABY, T0 - H), T0)).toMatch(/11:00.*还没结束/)
   })
 })

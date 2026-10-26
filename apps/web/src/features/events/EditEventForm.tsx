@@ -61,7 +61,7 @@ import { DURATION_LOOK, type DurationKind, durationTone, isDurationKind } from '
 import { optionsOf, sleepKindLabel } from './labels'
 import { deleteEvent, moveEventStart, setBreastSides, setEventNote, stopEvent } from './records'
 import { TimeRow } from './TimeRow'
-import { overlapsSleep } from './validation'
+import { clashingSleep, sleepOverlapMessage } from './validation'
 
 type Errors = Partial<
   Record<
@@ -208,9 +208,8 @@ export function EditEventForm({
     else next = timing.event
     if (next.type === 'sleep') {
       next = { ...next, data: { kind: sleepKind } }
-      if (overlapsSleep(events, next.startAt, next.endAt ?? current, current, next.id)) {
-        nextErrors.form = m.sleepOverlap()
-      }
+      const clash = clashingSleep(events, next.startAt, next.endAt ?? current, current, next.id)
+      if (clash) nextErrors.form = sleepOverlapMessage(clash, current)
     }
     const parsed = parseData(next)
     if ('errors' in parsed) Object.assign(nextErrors, parsed.errors)

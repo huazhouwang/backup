@@ -60,7 +60,8 @@ function withTotal(times: DurationTimes, total: number): DurationTimes {
 /**
  * - "N 分钟前" for the end, and a new end while the start is not picked, keep the duration
  *   and work the start out back from the end;
- * - a new start keeps the duration (the end moves with it);
+ * - a first start keeps the duration (the end moves with it); a start that moves an
+ *   already picked one keeps the end ("he only fell asleep at 00:39"), unless it passes it;
  * - a new duration keeps the start, or, while the start is not picked, keeps the end;
  * - a new end keeps a picked start and changes the duration; an end before the start moves
  *   the start instead, keeping the duration.
@@ -69,8 +70,14 @@ export function timesReducer(times: DurationTimes, action: DurationTimesAction):
   switch (action.type) {
     case 'endedAgo':
       return { ...times, startAt: null, endedAgo: action.minutes }
-    case 'start':
-      return { ...times, startAt: action.at, endedAgo: null }
+    case 'start': {
+      const moved = { ...times, startAt: action.at, endedAgo: null }
+      const total = totalMinutes(times)
+      if (times.startAt === null || total === null) return moved
+      const endAt = times.startAt + total * MINUTE
+      if (action.at >= endAt) return moved
+      return withTotal(moved, Math.round((endAt - action.at) / MINUTE))
+    }
     case 'minutes':
       return { ...times, minutes: action.minutes }
     case 'side':

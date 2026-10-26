@@ -28,7 +28,7 @@ describe('timesReducer', () => {
     expect(resolveTimes(times, NOW).startAt).toBe(NOW - 80 * MINUTE)
   })
 
-  it('keeps the duration when a picked start moves, and the start when the duration changes', () => {
+  it('keeps the duration when the start is first picked, and the start when the duration changes', () => {
     let times = timesReducer(newTimes('bottle', 15, 'left'), {
       type: 'start',
       at: NOW - 60 * MINUTE,
@@ -37,8 +37,34 @@ describe('timesReducer', () => {
     expect(resolveTimes(times, NOW).endAt).toBe(NOW - 45 * MINUTE)
     times = timesReducer(times, { type: 'minutes', minutes: 30 })
     expect(resolveTimes(times, NOW).endAt).toBe(NOW - 30 * MINUTE)
-    times = timesReducer(times, { type: 'start', at: NOW - 120 * MINUTE })
-    expect(resolveTimes(times, NOW).endAt).toBe(NOW - 90 * MINUTE)
+  })
+
+  it('keeps the end when a picked start moves, unless it moves past it', () => {
+    const start = NOW - 140 * MINUTE
+    // A sleep from 00:38 to 02:55: it really began a minute later.
+    let times = storedTimes('sleep', start, 137 * MINUTE, null, 'left')
+    times = timesReducer(times, { type: 'start', at: start + MINUTE })
+    expect(resolveTimes(times, NOW)).toEqual({
+      startAt: start + MINUTE,
+      endAt: start + 137 * MINUTE,
+    })
+    expect(times.minutes).toBe(136)
+    // Past the end, the duration is kept and the end moves.
+    times = timesReducer(times, { type: 'start', at: start + 200 * MINUTE })
+    expect(resolveTimes(times, NOW).endAt).toBe(start + 336 * MINUTE)
+  })
+
+  it('keeps a breastfeed’s end when its start moves, from the side fed last', () => {
+    const start = NOW - 60 * MINUTE
+    const times = storedTimes(
+      'breast',
+      start,
+      20 * MINUTE,
+      { left: 12 * MINUTE, right: 8 * MINUTE },
+      'left',
+    )
+    const later = timesReducer(times, { type: 'start', at: start + 5 * MINUTE })
+    expect(later.sides).toEqual({ left: 12, right: 3 })
   })
 
   it('changes the duration from a new end, or moves the start for an end before it', () => {

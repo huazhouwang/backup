@@ -27,7 +27,7 @@ import { optionsOf, sideLabel } from './labels'
 import { parseVolume } from './measure-input'
 import { type DurationDetails, logRecord, startRecord, suggestedBreastSide } from './records'
 import { useEventsByBaby } from './use-events'
-import { overlapsSleep } from './validation'
+import { clashingSleep, overlapsSleep, sleepOverlapMessage } from './validation'
 
 type Errors = Partial<Record<'amount' | 'food' | 'start' | 'end' | 'duration' | 'form', string>>
 type PumpingSide = 'left' | 'right' | 'both'
@@ -149,9 +149,13 @@ export function DurationForm({
     const to = endAt ?? from
     if (!next.start && !next.end && !next.duration) {
       if (kind === 'sleep') {
-        const clash = babyIds.find((id) => overlapsSleep(eventsOf(id), from, to, current))
-        if (clash === babyIds[0]) next.form = m.sleepOverlap()
-        else if (clash) next.form = m.sleepOverlapFor({ name: store.babies.get(clash)?.name ?? '' })
+        // This baby's own clash names the sleep; another baby logged together, the baby.
+        const [first, ...others] = babyIds
+        const own =
+          first === undefined ? undefined : clashingSleep(eventsOf(first), from, to, current)
+        const other = others.find((id) => overlapsSleep(eventsOf(id), from, to, current))
+        if (own) next.form = sleepOverlapMessage(own, current)
+        else if (other) next.form = m.sleepOverlapFor({ name: store.babies.get(other)?.name ?? '' })
       }
     }
     setErrors(next)

@@ -4,6 +4,7 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { useMemo } from 'react'
 
 import { useLocalStore } from '../../db'
+import { newestFirst } from './order'
 
 const NO_EVENTS: Event[] = []
 
@@ -18,7 +19,7 @@ export function useBabyEvents(babyId: string): Event[] {
         .orderBy(({ event }) => event.startAt, 'desc'),
     [events, babyId],
   )
-  return data ?? NO_EVENTS
+  return useMemo(() => (data ? data.toSorted(newestFirst) : NO_EVENTS), [data])
 }
 
 /** Ids of babies that have a timer running, for indicators across babies. */
@@ -52,7 +53,9 @@ export function useEventsByBaby(babyIds: readonly string[]): ReadonlyMap<string,
   )
   return useMemo(() => {
     const byBaby = new Map<string, Event[]>(key.split(',').map((id) => [id, []]))
-    for (const event of data ?? NO_EVENTS) byBaby.get(event.babyId)?.push(event)
+    for (const event of (data ?? NO_EVENTS).toSorted(newestFirst)) {
+      byBaby.get(event.babyId)?.push(event)
+    }
     return byBaby
   }, [data, key])
 }

@@ -8,6 +8,7 @@ import { Chevron } from '../../components/ui/Chevron'
 import { FormError } from '../../components/ui/FormError'
 import { Input } from '../../components/ui/Input'
 import { useBounce } from '../../lib/bounce'
+import { playCue } from '../../lib/cues'
 import { formatDate, formatTime } from '../../lib/i18n'
 import { useVisibleArea } from '../../lib/keyboard'
 import { lockScroll } from '../../lib/scroll-lock'
@@ -119,10 +120,13 @@ export function ChatPage({
       return turn
     },
     onSuccess: (turn) => {
+      // Heard as the answer completes, for a parent not looking at the screen.
+      playCue('reply')
       setConfirming(turn.confirming)
       // The agent writes on the server; pull now so the records show without waiting.
       void requestSync()
     },
+    onError: () => playCue('error'),
     // Back in step with the server: which conversation the messages went to.
     onSettled: () => {
       setAnswering(false)
