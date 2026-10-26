@@ -1,5 +1,5 @@
 /** Widget libraries: a user's own and shared ones, each stored as its library file, and their members */
-import { WIDGETLIB_FORMAT, WIDGETLIB_FORMAT_VERSION, type WidgetDef, type WidgetLibrary } from '@plinth/core';
+import { WIDGETLIB_FORMAT, WIDGETLIB_FORMAT_VERSION, type MyWidgets, type WidgetDef, type WidgetLibrary } from '@plinth/core';
 import type { LibraryRole } from '@/shared/looks';
 import type { WidgetLibrarySummary } from '@/shared/widgets';
 import { uiName } from '@/lib/i18n';
@@ -120,3 +120,15 @@ export function withWidget(file: WidgetLibrary, id: string, def: WidgetDef): Wid
   if (saved === file.widgets[id]) return file;
   return { ...file, version: nextPatch(file.version), widgets: { ...file.widgets, [id]: saved } };
 }
+
+/** The user's own widgets ("for me"), empty when they have none */
+export async function getMyWidgets(userId: string): Promise<MyWidgets> {
+  const r = await db().prepare('select widgets from user_pref where user_id = ?').bind(userId).first<{ widgets: string | null }>();
+  return r?.widgets ? (JSON.parse(r.widgets) as MyWidgets) : { widgets: [] };
+}
+
+export const putMyWidgets = (userId: string, set: MyWidgets) =>
+  db()
+    .prepare('insert into user_pref (user_id, widgets) values (?, ?) on conflict (user_id) do update set widgets = excluded.widgets')
+    .bind(userId, JSON.stringify(set))
+    .run();

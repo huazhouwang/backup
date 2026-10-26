@@ -3,10 +3,11 @@
  * core by project, params and context, so redrawing the same state runs nothing). The previous drawing stays until the new one
  * arrives. `overrides` stand in for params while a handle is being dragged.
  */
-import { resolveWidget, runWidget, type ParamValue, type Project, type WidgetItem } from '@plinth/core';
+import { resolveMyWidget, resolveWidget, runWidget, type ParamValue, type Project, type WidgetItem } from '@plinth/core';
 import { useEffect, useState } from 'react';
 // Lets core start the sandbox when a widget first runs
 import './sandbox';
+import { useMyWidgets } from './mine';
 
 export interface WidgetOutput {
   /** The installed widget */
@@ -21,13 +22,16 @@ export type ParamOverrides = Record<string, Record<string, ParamValue>>;
 export function useWidgetOutputs(project: Project, level: string, view: 'plan' | '3d', overrides: ParamOverrides = {}): WidgetOutput[] {
   const [outputs, setOutputs] = useState<WidgetOutput[]>([]);
   const overridesKey = JSON.stringify(overrides);
+  // The user's own widgets ("for me") draw with the design's
+  const { set: mine } = useMyWidgets();
   useEffect(() => {
-    const shown = project.widgets.filter(w => w.visible);
+    const own = new Set(mine.widgets.map(w => w.id));
+    const shown = [...project.widgets, ...mine.widgets].filter(w => w.visible);
     if (!shown.length) return setOutputs([]);
     let live = true;
     void Promise.all(
       shown.map(async (w): Promise<WidgetOutput> => {
-        const found = resolveWidget(project, w.widget.library, w.widget.id);
+        const found = own.has(w.id) ? resolveMyWidget(mine, w.widget.library, w.widget.id) : resolveWidget(project, w.widget.library, w.widget.id);
         if (!found) return { id: w.id, items: [], error: 'unknown widget' };
         const r = await runWidget(
           found.origin,
@@ -43,7 +47,7 @@ export function useWidgetOutputs(project: Project, level: string, view: 'plan' |
     return () => {
       live = false;
     };
-  }, [project, level, view, overridesKey]);
+  }, [project, mine, level, view, overridesKey]);
   return outputs;
 }
 

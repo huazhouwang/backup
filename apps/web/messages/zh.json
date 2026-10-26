@@ -44,6 +44,8 @@
   "widgets_title": "小组件",
   "widgets_empty": "还没有添加小组件，可从下面添加。",
   "widgets_available": "可添加",
+  "widgets_mine": "我的小组件（在我打开的所有方案里都显示，只有我看得到）",
+  "widgets_add_mine": "{name}：添加到我的所有方案",
   "widgets_add": "添加 {name}",
   "widgets_visible": "显示 {name}",
   "widgets_remove": "移除 {name}",

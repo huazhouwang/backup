@@ -1,5 +1,13 @@
 /** Widget libraries: built-in and users' own, their widgets and members (like look libraries, ./libraries.ts) */
-import { BUILTIN_WIDGET_LIBRARIES, parseWidgetLibrary, widgetDefSchema, WIDGETLIB_FORMAT, WIDGETLIB_FORMAT_VERSION, type WidgetLibrary } from '@plinth/core';
+import {
+  BUILTIN_WIDGET_LIBRARIES,
+  myWidgetsSchema,
+  parseWidgetLibrary,
+  widgetDefSchema,
+  WIDGETLIB_FORMAT,
+  WIDGETLIB_FORMAT_VERSION,
+  type WidgetLibrary,
+} from '@plinth/core';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
@@ -131,5 +139,16 @@ routes.delete('/widget-libraries/:lib/members/:userId', async c => {
   // The owner removes others; anyone can leave, except a built-in library
   if ((c.req.param('userId') !== user.id && role !== 'owner') || builtin(id)) throw new HTTPException(403, { message: m.server_err_forbidden() });
   await repo.removeWidgetLibraryMember(id, c.req.param('userId'));
+  return c.json({ ok: true });
+});
+
+/** The user's own widgets ("for me"), drawn in every design they open */
+routes.get('/me/widgets', async c => c.json(await repo.getMyWidgets(requireUser(c).id)));
+
+routes.put('/me/widgets', async c => {
+  const u = requireUser(c);
+  const set = myWidgetsSchema.safeParse(await c.req.json().catch(() => null));
+  if (!set.success) throw fileProblem(set.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; '));
+  await repo.putMyWidgets(u.id, set.data);
   return c.json({ ok: true });
 });

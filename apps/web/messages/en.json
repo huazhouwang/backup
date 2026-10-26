@@ -91,6 +91,8 @@
   "widgets_title": "Widgets",
   "widgets_empty": "No widgets yet; add one below.",
   "widgets_available": "Available",
+  "widgets_mine": "My widgets (shown in every design I open, only to me)",
+  "widgets_add_mine": "{name}: add to all my designs",
   "widgets_add": "Add {name}",
   "widgets_visible": "Show {name}",
   "widgets_remove": "Remove {name}",

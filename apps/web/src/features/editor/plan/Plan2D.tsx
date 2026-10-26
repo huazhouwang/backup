@@ -18,6 +18,7 @@ import { m } from '@/lib/i18n';
 import { standaloneSvg } from '@/lib/theme';
 import { useBuildsVersion } from '@/lib/builds';
 import { PlanWidgets } from '../widgets/PlanWidgets';
+import { useWidgetCommit } from '../widgets/mine';
 import { snapPoints, useWidgetOutputs, type ParamOverrides } from '../widgets/outputs';
 
 const pts = (p: Point[]) => p.map(([x, y]) => `${x},${y}`).join(' ');
@@ -50,6 +51,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
   // What the widgets draw on this level; a dragged handle's params stand in until the change is made
   const [overrides, setOverrides] = useState<ParamOverrides>({});
   const widgetOutputs = useWidgetOutputs(project, view.level, 'plan', overrides);
+  const commitWidget = useWidgetCommit();
   const snaps = useMemo(() => snapPoints(widgetOutputs, view.level), [widgetOutputs, view.level]);
   const snapsRef = useRef(snaps);
   snapsRef.current = snaps;
@@ -351,7 +353,7 @@ export function Plan2D({ svgRef }: { svgRef?: React.RefObject<SVGSVGElement | nu
             editable={canEdit && !compare}
             onPreview={(id, params) => setOverride(id, params)}
             onCommit={async (id, params) => {
-              await run('widget_configure', { widget: id, params });
+              await commitWidget(id, params);
               setOverride(id, null);
             }}
           />

@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { M } from '@/graphics/three/scene';
 import { themeColor } from '@/lib/theme';
-import { useEditorStore } from '../store';
+import { useWidgetCommit } from '../widgets/mine';
 import { itemsOn, useWidgetOutputs, type ParamOverrides } from '../widgets/outputs';
 
 const none = () => null;
@@ -32,7 +32,7 @@ export function Widgets3D({ project, current, editable }: { project: Project; cu
   const heightOf = useMemo(() => new Map(project.levels.map(l => [l.id, l.elevation * M + LIFT])), [project.levels]);
   const at = (p: Point, level: string) => new THREE.Vector3(p[0] * M, heightOf.get(level) ?? LIFT, p[1] * M);
   const items = project.levels.flatMap(l => itemsOn(outputs, l.id, current).map(x => ({ ...x, level: l.id })));
-  useHandleDrag(editable, setOverrides);
+  useHandleDrag(editable, setOverrides, useWidgetCommit());
 
   const segments: THREE.Vector3[] = [];
   const dashed: THREE.Vector3[] = [];
@@ -99,9 +99,15 @@ export function Widgets3D({ project, current, editable }: { project: Project; cu
  * Dragging handles: a press on a handle is ours (taken in the capture phase, so the orbit controls and the picker
  * never see it); the pointer then moves on the handle's floor plane, previewing the params, and releasing commits them.
  */
-function useHandleDrag(editable: boolean, setOverrides: React.Dispatch<React.SetStateAction<ParamOverrides>>) {
+function useHandleDrag(
+  editable: boolean,
+  setOverrides: React.Dispatch<React.SetStateAction<ParamOverrides>>,
+  commit: (widget: string, params: Record<string, ParamValue>) => Promise<unknown>,
+) {
   const { gl, camera, scene, raycaster, controls, invalidate } = useThree();
-  const store = useEditorStore();
+  // The latest commit, without re-binding the listeners on every render
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
   const active = useRef<{ handle: HandleData; pointerId: number; last: Record<string, ParamValue> | null } | null>(null);
   useEffect(() => {
     if (!editable) return;
@@ -148,7 +154,7 @@ function useHandleDrag(editable: boolean, setOverrides: React.Dispatch<React.Set
       e.stopImmediatePropagation();
       active.current = null;
       if (orbit) orbit.enabled = true;
-      if (a.last) await store.getState().call('widget_configure', { widget: a.handle.widget, params: a.last });
+      if (a.last) await commitRef.current(a.handle.widget, a.last);
       setOverride(a.handle.widget, null);
     };
     el.addEventListener('pointerdown', onDown, { capture: true });
@@ -162,5 +168,5 @@ function useHandleDrag(editable: boolean, setOverrides: React.Dispatch<React.Set
       el.removeEventListener('pointercancel', end, { capture: true });
       if (orbit) orbit.enabled = true;
     };
-  }, [editable, gl, camera, scene, raycaster, controls, invalidate, store, setOverrides]);
+  }, [editable, gl, camera, scene, raycaster, controls, invalidate, setOverrides]);
 }

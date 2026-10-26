@@ -3,6 +3,7 @@ import { m } from '@/lib/i18n';
 import { db } from './db';
 import { listApiKeys, listModels } from './models';
 import { getLibrary } from './libraries';
+import { getMyWidgets, getWidgetLibrary } from './widget-libraries';
 
 /** Data export: account info + the latest version of each owned project */
 export async function exportUserData(userId: string) {
@@ -17,6 +18,8 @@ export async function exportUserData(userId: string) {
   const [keys, models] = await Promise.all([listApiKeys(userId), listModels(userId)]);
   const { results: owned } = await db().prepare('select id from look_library where owner_id = ?').bind(userId).all<{ id: string }>();
   const libraries = await Promise.all(owned.map(l => getLibrary(l.id)));
+  const { results: ownedWidgets } = await db().prepare('select id from widget_library where owner_id = ?').bind(userId).all<{ id: string }>();
+  const widgetLibraries = await Promise.all(ownedWidgets.map(l => getWidgetLibrary(l.id)));
   return {
     exportedAt: new Date().toISOString(),
     user,
@@ -25,5 +28,7 @@ export async function exportUserData(userId: string) {
     apiKeys: keys.map(({ key_hint, ...rest }) => ({ ...rest, key: m.server_export_key_withheld({ hint: key_hint }) })),
     models,
     lookLibraries: libraries.filter(Boolean).map(l => l!.library),
+    widgetLibraries: widgetLibraries.filter(Boolean).map(l => l!.library),
+    myWidgets: await getMyWidgets(userId),
   };
 }

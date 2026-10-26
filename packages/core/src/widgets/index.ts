@@ -2,3 +2,4 @@
 export * from './format.js';
 export * from './libraries.js';
 export * from './run.js';
+export * from './mine.js';
