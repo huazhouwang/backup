@@ -25,8 +25,14 @@ const cueMode = createStoredValue<CueMode>('bobo.cues', cueModeCodec, 'switch')
 export const useCueMode = () => useStore(cueMode)
 export const setCueMode = (mode: CueMode) => cueMode.set(mode)
 
-/** Each cue's notes: pitch (Hz) and length (s), played one after another. */
-const NOTES: Record<Cue, Array<[number, number]>> = {
+/** A note in place of a pitch: a short burst of noise, like a party popper going off. */
+const POP = 0
+
+/**
+ * Each cue's notes: pitch (Hz, or a pop) and length (s), played one after another, and how
+ * loud against the others (1 if left out).
+ */
+const NOTES: Record<Cue, Array<[number, number, number?]>> = {
   start: [
     [660, 0.07],
     [880, 0.09],
@@ -52,12 +58,15 @@ const NOTES: Record<Cue, Array<[number, number]>> = {
     [1047, 0.05],
     [1319, 0.12],
   ],
-  // Everything ticked off: a rising arpeggio, the last note held.
+  // Everything ticked off: a party popper's pop, then glittering high notes, fading.
   celebrate: [
-    [523, 0.08],
-    [659, 0.08],
-    [784, 0.08],
-    [1047, 0.3],
+    [POP, 0.08, 1.6],
+    [2093, 0.07, 0.6],
+    [3136, 0.07, 0.55],
+    [2637, 0.07, 0.5],
+    [3520, 0.07, 0.45],
+    [2794, 0.07, 0.4],
+    [4186, 0.22, 0.35],
   ],
 }
 const VOLUME = 0.12
@@ -99,23 +108,50 @@ function sound(cue: Cue, mode: CueMode) {
     if (mode === 'always') soundThroughSilent(cueLength(cue) + 300)
     const context = audioContext()
     let at = context.currentTime
-    for (const [pitch, length] of NOTES[cue]) {
-      const tone = context.createOscillator()
+    for (const [pitch, length, loudness = 1] of NOTES[cue]) {
+      const { source, out } = pitch === POP ? pop(context, length) : tone(context, pitch)
       const level = context.createGain()
-      tone.type = 'triangle'
-      tone.frequency.value = pitch
       // A quick rise, then a fall away: a soft "ding" rather than a beep.
       level.gain.setValueAtTime(0, at)
-      level.gain.linearRampToValueAtTime(VOLUME, at + 0.01)
+      level.gain.linearRampToValueAtTime(VOLUME * loudness, at + 0.005)
       level.gain.exponentialRampToValueAtTime(0.0001, at + length)
-      tone.connect(level).connect(context.destination)
-      tone.start(at)
-      tone.stop(at + length)
+      out.connect(level).connect(context.destination)
+      source.start(at)
+      source.stop(at + length)
       at += length * 0.85
     }
   } catch {
     // No sound where audio isn't available; the screen still shows what happened.
   }
+}
+
+/** A note's sound: what starts and stops, and what to take it from. */
+interface Voice {
+  source: AudioScheduledSourceNode
+  out: AudioNode
+}
+
+/** A soft round tone at `pitch`. */
+function tone(context: AudioContext, pitch: number): Voice {
+  const source = context.createOscillator()
+  source.type = 'triangle'
+  source.frequency.value = pitch
+  return { source, out: source }
+}
+
+/** A pop: a burst of noise, its hiss taken out so it sounds like a paper popper. */
+function pop(context: AudioContext, length: number): Voice {
+  const samples = Math.ceil(context.sampleRate * length)
+  const buffer = context.createBuffer(1, samples, context.sampleRate)
+  const data = buffer.getChannelData(0)
+  for (let i = 0; i < samples; i++) data[i] = Math.random() * 2 - 1
+  const source = context.createBufferSource()
+  source.buffer = buffer
+  const body = context.createBiquadFilter()
+  body.type = 'bandpass'
+  body.frequency.value = 1400
+  body.Q.value = 0.8
+  return { source, out: source.connect(body) }
 }
 
 let haptic: HTMLLabelElement | null = null

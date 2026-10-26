@@ -2,6 +2,7 @@ import { type Baby, ageNorms, babyAge, localDateString } from '@bobo/shared'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { clsx } from 'clsx'
+import { useRef } from 'react'
 
 import { Card, CardTitle } from '../../components/ui/Card'
 import { CheckIcon } from '../../components/ui/CheckIcon'
@@ -188,6 +189,7 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
   const checkpoint = milestonesFor(stage)
   const { isChecked, toggle } = useMilestoneChecks(babyId)
   const { confetti, fire } = useConfetti()
+  const list = useRef<HTMLDivElement>(null)
   const allDone = checkpoint.items.every(isChecked)
   // Ticking one off dings; ticking off the last one celebrates.
   const tick = (item: string) => {
@@ -196,55 +198,58 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
     if (!ticking) return
     if (checkpoint.items.every((other) => other === item || isChecked(other))) {
       playCue('celebrate')
-      fire()
+      fire(list.current)
     } else playCue('tick')
   }
   return (
     <section className="flex flex-col gap-2">
       <CardTitle small>{m.tipsMilestonesTitle({ months: checkpoint.by })}</CardTitle>
-      <Card className="overflow-hidden px-0 py-0">
-        <ul className="m-0 flex list-none flex-col p-0">
-          {checkpoint.items.map((item, index) => {
-            const ticked = isChecked(item)
-            const above = index > 0 && isChecked(checkpoint.items[index - 1] ?? '')
-            return (
-              <li key={item}>
-                {/* The colour change parts a ticked row from the rest; two ticked rows get
+      {/* All ticked off: confetti bursts out from behind the list. */}
+      <div ref={list} className="relative">
+        <Card className="relative z-10 overflow-hidden px-0 py-0">
+          <ul className="m-0 flex list-none flex-col p-0">
+            {checkpoint.items.map((item, index) => {
+              const ticked = isChecked(item)
+              const above = index > 0 && isChecked(checkpoint.items[index - 1] ?? '')
+              return (
+                <li key={item}>
+                  {/* The colour change parts a ticked row from the rest; two ticked rows get
                     a faint green line across, two plain ones the usual divider. */}
-                {index > 0 && (
-                  <span
-                    aria-hidden
-                    className={clsx(
-                      'block h-0.5',
-                      ticked && above
-                        ? 'bg-primary/20'
-                        : ticked || above
-                          ? 'bg-transparent'
-                          : 'mx-4 bg-border',
-                    )}
-                  />
-                )}
-                <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-primary-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
-                  {item}
-                  <input
-                    type="checkbox"
-                    className="peer sr-only"
-                    checked={ticked}
-                    onChange={() => tick(item)}
-                  />
-                  {/* Ticked: the row turns light green, with a dark green tick. */}
-                  <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
-                </label>
-              </li>
-            )
-          })}
-        </ul>
-      </Card>
+                  {index > 0 && (
+                    <span
+                      aria-hidden
+                      className={clsx(
+                        'block h-0.5',
+                        ticked && above
+                          ? 'bg-primary/20'
+                          : ticked || above
+                            ? 'bg-transparent'
+                            : 'mx-4 bg-border',
+                      )}
+                    />
+                  )}
+                  <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-primary-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
+                    {item}
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={ticked}
+                      onChange={() => tick(item)}
+                    />
+                    {/* Ticked: the row turns light green, with a dark green tick. */}
+                    <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+        </Card>
+        {confetti}
+      </div>
       <p className="m-0 text-caption text-fg-muted">{m.tipsMilestonesNote()}</p>
       <p className="sr-only" aria-live="polite">
         {allDone ? m.tipsMilestonesDone() : ''}
       </p>
-      {confetti}
     </section>
   )
 }
