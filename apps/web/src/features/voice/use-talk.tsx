@@ -209,7 +209,6 @@ export function useTalk({
     recording,
     /** Recording for real; before, the microphone is still being taken. */
     ready: recorderState === 'recording',
-    keepMic: recorder.keepMic,
     aiming,
     dropping: aiming === 'drop',
     /** When it really started listening (epoch ms). */

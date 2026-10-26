@@ -287,10 +287,12 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   api.answer()
   await expect(page.getByText('已记录：换尿布 2。还有吗？')).toBeVisible()
   await expect(page.getByText('我说：换尿布 1')).toBeVisible()
-  // The microphone was kept for the second turn; both say how long they took to start.
-  expect(await micsTaken()).toBe(1)
-  expect(Number(api.uploads[0]?.query.get('ready'))).toBeGreaterThanOrEqual(800)
-  expect(api.uploads[1]?.query.get('mic')).toBe('kept')
+  // Each turn takes the microphone afresh (it is let go in between) and says how long that took.
+  expect(await micsTaken()).toBe(2)
+  for (const upload of api.uploads.slice(0, 2)) {
+    expect(Number(upload.query.get('ready'))).toBeGreaterThanOrEqual(800)
+    expect(Number(upload.query.get('mic'))).toBeGreaterThanOrEqual(800)
+  }
   await page.getByRole('button', { name: '关闭' }).click()
   await expect(page.getByText(/已记录：换尿布/)).toHaveCount(0)
 

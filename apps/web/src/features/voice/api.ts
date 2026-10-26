@@ -143,7 +143,7 @@ export const voiceApi = {
         ...(options.startup
           ? {
               ready: String(options.startup.readyMs),
-              mic: options.startup.micMs === null ? 'kept' : String(options.startup.micMs),
+              mic: String(options.startup.micMs),
             }
           : {}),
       })}`,

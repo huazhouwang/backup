@@ -346,9 +346,6 @@ export function TabMic() {
     if (talk.recording) talk.drop()
     openChat()
   }
-  // Open, the microphone stays taken, so the next turn records at once; closed, it is let go.
-  const { keepMic } = talk
-  useEffect(() => keepMic(open), [keepMic, open])
   // Why a recording came to nothing (too short, or not heard), once the overlay has gone.
   useEffect(() => {
     if (talk.error) showToast(talk.error)

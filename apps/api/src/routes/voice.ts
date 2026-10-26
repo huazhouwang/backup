@@ -95,7 +95,7 @@ const speechQuerySchema = z.object({
     .optional(),
   mic: z
     .string()
-    .regex(/^(\d{1,6}|kept)$/)
+    .regex(/^\d{1,6}$/)
     .optional(),
 })
 /** Foods and medicines logged within this long help recognise speech. */
@@ -343,7 +343,9 @@ async function turn(
   let text = said
   if (options.spoken) {
     const hints = await speechHints(db, access, now)
-    text = await correctHeard(adapter, scope.modelOptions, said, {
+    // Workers AI where the Worker has it: quick, and no cost to the user's key.
+    const corrector = env.AI ? { ai: env.AI } : { adapter, modelOptions: scope.modelOptions }
+    text = await correctHeard(corrector, said, {
       ...hints,
       conversation: options.spoken.recent,
     })
@@ -465,7 +467,7 @@ export function voiceRoutes(adapterFor: AdapterFor) {
         return c.json({ text: null }, 429)
       }
       const { ready, mic } = query.data
-      if (ready) console.log('Recording startup', { readyMs: Number(ready), mic })
+      if (ready) console.log('Recording startup', { readyMs: Number(ready), micMs: Number(mic) })
       const hints = { ...(await speechHints(db, access, now)), recent: query.data.recent }
       try {
         return c.json({ text: await transcribe(ai, audio, query.data.speech, hints) })
