@@ -11,9 +11,10 @@
 
 import type { Material } from '../looks/material.js';
 import type { ParamValue, Recipe } from '../looks/script.js';
+import type { WidgetDef } from '../widgets/format.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 15 as const;
+export const SCHEMA_VERSION = 16 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -239,6 +240,11 @@ export interface Library {
   looks?: Record<Id, Look>;
   /** The look each target uses in this design, instead of the default: 'furniture:sofa3' → a look ID. Added in v4. */
   use?: Record<string, Id>;
+  /**
+   * Widgets of this design's own (made by the agent with widget_create), installed from the widget library id 'design'
+   * (widgets/libraries.ts). Added in v16.
+   */
+  widgets?: Record<string, WidgetDef>;
 }
 
 /** A look: a recipe and the targets it can draw */

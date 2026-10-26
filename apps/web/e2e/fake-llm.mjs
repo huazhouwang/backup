@@ -46,6 +46,45 @@ function next(body) {
       },
     };
   if (/方凳/.test(text) && toolsSoFar === 1) return { text: '做好了一个方凳。' };
+  // Widgets: install a library widget, tune it, write one of the design's own
+  if (/加一个.*轴网/.test(text) && toolsSoFar === 0) return { tool: { name: 'widget_catalog', args: {} } };
+  if (/加一个.*轴网/.test(text) && toolsSoFar === 1)
+    return { tool: { name: 'widget_install', args: { library: 'builtin-widgets', widget: 'grid', params: { spacing: 3600 } } } };
+  if (/加一个.*轴网/.test(text) && toolsSoFar === 2) return { text: '加好了：3.6 米的轴网，原点上的圆点可以拖动。' };
+  if (/东南角/.test(text) && toolsSoFar === 0) return { tool: { name: 'project_summary', args: {} } };
+  if (/东南角/.test(text) && toolsSoFar === 1) {
+    const b = String(last.content).match(/"bounds":\[(-?[\d.]+),(-?[\d.]+),(-?[\d.]+),(-?[\d.]+)\]/);
+    if (!b) return { text: '没找到房子的范围。' };
+    return { tool: { name: 'widget_configure', args: { widget: '轴网', params: { originX: Number(b[3]), originY: Number(b[4]) } } } };
+  }
+  if (/东南角/.test(text) && toolsSoFar === 2) return { text: '好了，轴网原点挪到了房子的东南角。' };
+  if (/房间中心/.test(text) && toolsSoFar === 0)
+    return {
+      tool: {
+        name: 'widget_create',
+        args: {
+          name: '房间中心',
+          description: 'Marks the centre of every room on the current level (the average of its outline points); labels shows the room names.',
+          params: { labels: { type: 'boolean', default: true, title: { zh: '显示房间名', en: 'Room names' } } },
+          script: `function widget(project, params, ctx) {
+  const out = [];
+  for (const s of project.spaces) {
+    if (s.level !== ctx.level || s.kind === 'void' || !s.shape.length) continue;
+    const ring = s.shape[0].outer;
+    const x = ring.reduce((a, p) => a + p[0], 0) / ring.length;
+    const y = ring.reduce((a, p) => a + p[1], 0) / ring.length;
+    out.push({ type: 'point', at: [x, y] }, { type: 'snap', at: [x, y] });
+    if (params.labels) out.push({ type: 'label', at: [x, y + 350], text: s.name });
+  }
+  return out;
+}`,
+        },
+      },
+    };
+  if (/房间中心/.test(text) && toolsSoFar === 1) {
+    const n = String(last.content).match(/"point":(\d+)/);
+    return { text: n ? `做好了：标出了 ${n[1]} 个房间的中心，也可以吸附到这些点。` : `没做成：${String(last.content).slice(0, 80)}` };
+  }
   if (Array.isArray(user?.content) && user.content.some(c => c.type === 'image_url')) return { text: '看到图片了：一个两门的柜子。' };
   if (/扩到|调到/.test(text) && toolsSoFar === 0) return { tool: { name: 'space_set_area', args: { space: '一层·老人房一', area: 12.5 } } };
   if (/扩到|调到/.test(text) && toolsSoFar === 1) return { tool: { name: 'view_focus', args: { ids: ['L1-s15'] } } };

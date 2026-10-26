@@ -7,11 +7,20 @@ import { derived } from '../model/derived.js';
 import { projectIndex } from '../model/project-index.js';
 import { findAny, resolveLevel, type Kind } from '../model/refs.js';
 import { r2, objectInfo } from '../model/info.js';
+import type { Project } from '../model/schema.js';
+
+/** The extent of walls' centrelines, [minX, minY, maxX, maxY], or null without walls */
+function wallBounds(walls: Project['walls']) {
+  const xs = walls.flatMap(w => [w.start[0], w.end[0]]),
+    ys = walls.flatMap(w => [w.start[1], w.end[1]]);
+  return walls.length ? [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] : null;
+}
 
 export const projectSummary = defineRead({
   name: 'project_summary',
   title: 'Project overview',
-  description: 'Project name, levels, gross area per level, object counts, brief and constraint overview. Call this before starting work.',
+  description:
+    'Project name, levels (gross area, rooms, and bounds: the extent of their wall centrelines as [minX, minY, maxX, maxY] in mm, x east, y south), object counts, brief and constraint overview. Call this before starting work.',
   input: z.object({}),
   run: (_, { session }) => {
     const p = session.project;
@@ -26,6 +35,7 @@ export const projectSummary = defineRead({
         roof: !!l.roof,
         gross: r2(rep.levels.find(x => x.id === l.id)!.gross),
         spaces: p.spaces.filter(s => s.level === l.id).map(s => s.name),
+        bounds: wallBounds(p.walls.filter(w => w.level === l.id)),
       })),
       totalGross: r2(rep.totalGross),
       counts: { walls: p.walls.length, spaces: p.spaces.length, furniture: p.furniture.length, elements: p.elements.length, constraints: p.constraints.length },

@@ -3,7 +3,7 @@
  * installed on this design (show or hide, their settings generated from their params, remove) and the ones the widget libraries
  * offer to add. Every change is a capability call (widget_install / widget_configure / widget_remove), the same the agent makes.
  */
-import { findWidget, widgetLibraries, type ParamValue } from '@plinth/core';
+import { DESIGN_WIDGETS, resolveWidget, widgetLibraries, type ParamValue } from '@plinth/core';
 import { ChevronDownIcon, EyeIcon, EyeOffIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { cn } from 'cn';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -30,7 +30,15 @@ export function WidgetsPanel({ className }: { className?: string }) {
   const outputs = useWidgetOutputs(project, view.level, view.mode === '3d' ? '3d' : 'plan');
   if (!open) return null;
 
-  const available = widgetLibraries().flatMap(({ library }) => Object.entries(library.widgets).map(([id, def]) => ({ library: library.id, id, def })));
+  const available = [
+    ...widgetLibraries().flatMap(({ library }) => Object.entries(library.widgets).map(([id, def]) => ({ library: library.id, id, def }))),
+    // The design's own (written by the agent), when not on the canvas
+    ...Object.keys(project.library.widgets ?? {}).flatMap(id => {
+      const found = resolveWidget(project, DESIGN_WIDGETS, id);
+      const installed = project.widgets.some(w => w.widget.library === DESIGN_WIDGETS && w.widget.id === id);
+      return found && !installed ? [{ library: DESIGN_WIDGETS, id, def: found.def }] : [];
+    }),
+  ];
   const setParam = (widget: string, name: string, value: ParamValue) =>
     // null brings a param back to its default (ParamControls' reset, or a field left empty where automatic is allowed)
     run('widget_configure', value === null ? { widget, reset: [name] } : { widget, params: { [name]: value } });
@@ -49,7 +57,7 @@ export function WidgetsPanel({ className }: { className?: string }) {
         {project.widgets.length === 0 && <p className="text-sm text-muted-foreground">{m.widgets_empty()}</p>}
         <ItemGroup>
           {project.widgets.map(w => {
-            const found = findWidget(w.widget.library, w.widget.id);
+            const found = resolveWidget(project, w.widget.library, w.widget.id);
             const error = outputs.find(o => o.id === w.id)?.error;
             return (
               <Collapsible key={w.id} data-widget-row={w.id}>

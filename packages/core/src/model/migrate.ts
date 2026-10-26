@@ -52,6 +52,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   13: ({ guides: _guides, ...doc }) => doc,
   // v15 adds widgets
   14: doc => ({ ...doc, widgets: doc.widgets ?? [] }),
+  // v16 adds the design's own widgets (library.widgets); optional, nothing to convert
+  15: doc => doc,
 };
 
 /**

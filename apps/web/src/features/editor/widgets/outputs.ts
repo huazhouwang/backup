@@ -3,9 +3,10 @@
  * core by project, params and context, so redrawing the same state runs nothing). The previous drawing stays until the new one
  * arrives. `overrides` stand in for params while a handle is being dragged.
  */
-import { findWidget, runWidget, type ParamValue, type Project, type WidgetItem } from '@plinth/core';
+import { resolveWidget, runWidget, type ParamValue, type Project, type WidgetItem } from '@plinth/core';
 import { useEffect, useState } from 'react';
-import { ensureWidgetSandbox } from './sandbox';
+// Lets core start the sandbox when a widget first runs
+import './sandbox';
 
 export interface WidgetOutput {
   /** The installed widget */
@@ -24,23 +25,21 @@ export function useWidgetOutputs(project: Project, level: string, view: 'plan' |
     const shown = project.widgets.filter(w => w.visible);
     if (!shown.length) return setOutputs([]);
     let live = true;
-    void ensureWidgetSandbox().then(() =>
-      Promise.all(
-        shown.map(async (w): Promise<WidgetOutput> => {
-          const found = findWidget(w.widget.library, w.widget.id);
-          if (!found) return { id: w.id, items: [], error: 'unknown widget' };
-          const r = await runWidget(
-            found.origin,
-            w.widget.id,
-            found.def,
-            project,
-            { ...w.params, ...overrides[w.id] },
-            { level, view, language: project.language },
-          );
-          return r.ok ? { id: w.id, items: r.items } : { id: w.id, items: [], error: r.error.message };
-        }),
-      ).then(out => live && setOutputs(out)),
-    );
+    void Promise.all(
+      shown.map(async (w): Promise<WidgetOutput> => {
+        const found = resolveWidget(project, w.widget.library, w.widget.id);
+        if (!found) return { id: w.id, items: [], error: 'unknown widget' };
+        const r = await runWidget(
+          found.origin,
+          w.widget.id,
+          found.def,
+          project,
+          { ...w.params, ...overrides[w.id] },
+          { level, view, language: project.language },
+        );
+        return r.ok ? { id: w.id, items: r.items } : { id: w.id, items: [], error: r.error.message };
+      }),
+    ).then(out => live && setOutputs(out));
     return () => {
       live = false;
     };

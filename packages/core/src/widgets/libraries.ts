@@ -4,7 +4,8 @@
  */
 import basicFile from '../../../../libraries/basic.widgetlib.json' with { type: 'json' };
 import type { LibraryOrigin } from '../scripts/runner.js';
-import { parseWidgetLibrary, type WidgetDef, type WidgetLibrary } from './format.js';
+import type { Project } from '../model/schema.js';
+import { parseWidgetLibrary, widgetDefSchema, type WidgetDef, type WidgetLibrary } from './format.js';
 
 export interface KnownWidgetLibrary {
   origin: LibraryOrigin;
@@ -18,7 +19,8 @@ const registered = new Map<string, KnownWidgetLibrary>();
 
 /** Make a user's or a team's widget library known (replacing one with the same id) */
 export function registerWidgetLibrary(origin: Exclude<LibraryOrigin, { origin: 'builtin' }>, library: WidgetLibrary) {
-  if (BUILTIN_WIDGET_LIBRARIES.some(l => l.id === library.id)) throw new Error(`widget library id ${library.id} is a built-in one`);
+  if (library.id === DESIGN_WIDGETS || BUILTIN_WIDGET_LIBRARIES.some(l => l.id === library.id))
+    throw new Error(`widget library id ${library.id} is a built-in one`);
   registered.set(library.id, { origin, library });
 }
 
@@ -38,4 +40,24 @@ export function findWidget(library: string, widget: string): (KnownWidgetLibrary
   const lib = findWidgetLibrary(library);
   const def = lib?.library.widgets[widget];
   return lib && def ? { ...lib, def } : undefined;
+}
+
+/** The widget library id an installed widget names when it is one of the design's own (library.widgets) */
+export const DESIGN_WIDGETS = 'design';
+
+/**
+ * The widget an installed widget names, with where it comes from: one of the design's own (checked against the format, since a
+ * design file may come from anywhere), else one of a known library.
+ */
+export function resolveWidget(p: Project, library: string, widget: string): { origin: LibraryOrigin; def: WidgetDef } | undefined {
+  if (library !== DESIGN_WIDGETS) return findWidget(library, widget);
+  const def = Object.hasOwn(p.library.widgets ?? {}, widget) ? p.library.widgets![widget] : undefined;
+  return def && checkedDef(def) ? { origin: { origin: 'design', id: p.id }, def } : undefined;
+}
+
+const checked = new WeakMap<WidgetDef, boolean>();
+function checkedDef(def: WidgetDef) {
+  let ok = checked.get(def);
+  if (ok === undefined) checked.set(def, (ok = widgetDefSchema.safeParse(def).success));
+  return ok;
 }

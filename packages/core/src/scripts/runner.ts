@@ -14,8 +14,8 @@ export interface ScriptSandbox {
   };
 }
 
-/** Where a library comes from: shipped with the app, a user's own, or a team's */
-export type LibraryOrigin = { origin: 'builtin'; id: string } | { origin: 'user' | 'team'; owner: string; id: string };
+/** Where a library comes from: shipped with the app, a user's own, a team's, or a design's own widgets (id: the project's) */
+export type LibraryOrigin = { origin: 'builtin' | 'design'; id: string } | { origin: 'user' | 'team'; owner: string; id: string };
 
 /** A script to run: its library (who wrote it), what it is, and its source */
 export interface ScriptRef {
@@ -37,7 +37,7 @@ export class ScriptError extends Error {
   }
 }
 
-export const realmKey = (l: LibraryOrigin) => (l.origin === 'builtin' ? `builtin:${l.id}` : `${l.origin}:${l.owner}:${l.id}`);
+export const realmKey = (l: LibraryOrigin) => ('owner' in l ? `${l.origin}:${l.owner}:${l.id}` : `${l.origin}:${l.id}`);
 
 /** FNV-1a, 32 bits, as hex: tells sources apart, not a security measure (a library's scripts share its realm anyway) */
 export function sourceHash(s: string): string {
@@ -52,6 +52,8 @@ export function sourceHash(s: string): string {
 export const scriptKey = (s: Pick<ScriptRef, 'kind' | 'id' | 'version' | 'source'>) => `${s.kind}:${s.id}@${s.version}#${sourceHash(s.source)}`;
 
 let sandbox: ScriptSandbox | null = null;
+let loader: (() => Promise<ScriptSandbox>) | null = null;
+let loading: Promise<ScriptSandbox> | null = null;
 /** Data last sent to each script, by realm, script and name: sent again only when it changes (by identity) */
 let sent = new Map<string, unknown>();
 
@@ -63,11 +65,33 @@ export function setScriptSandbox(s: ScriptSandbox | null) {
 
 export const hasScriptSandbox = () => sandbox !== null;
 
+/** How to start the sandbox when a script first needs one (the browser loads its worker and the wasm only then) */
+export function setScriptSandboxLoader(load: (() => Promise<ScriptSandbox>) | null) {
+  loader = load;
+  loading = null;
+}
+
+async function currentSandbox(): Promise<ScriptSandbox | null> {
+  if (sandbox || !loader) return sandbox;
+  loading ??= loader().then(
+    s => {
+      sandbox ??= s;
+      return sandbox;
+    },
+    e => {
+      loading = null;
+      throw new ScriptError('unavailable', `the script sandbox failed to start: ${e instanceof Error ? e.message : String(e)}`);
+    },
+  );
+  return loading;
+}
+
 /**
  * Runs a function of a script with data kept inside it (sent again only when the value changes) and JSON arguments. Sandbox
  * errors come back as ScriptErrors of the same kind.
  */
 export async function runSandboxed(ref: ScriptRef, data: Record<string, unknown>, fn: string, args: unknown[]): Promise<unknown> {
+  const sandbox = await currentSandbox();
   if (!sandbox) throw new ScriptError('unavailable', 'no script sandbox is set');
   const realm = realmKey(ref.library),
     key = scriptKey(ref);
