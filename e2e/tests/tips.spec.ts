@@ -112,3 +112,21 @@ test('asking Bobo about a tip offers questions, and tells Bobo which tip it is',
   // Asked: the questions make way for the conversation.
   await expect(questions).toHaveCount(0)
 })
+
+test('opening a tip slides the page itself, leaving nothing behind', async ({ page }) => {
+  await onboard(page)
+  await page.goto('/tips')
+  await page
+    .getByRole('link', { name: /按需喂养/ })
+    .first()
+    .click()
+  // The page left stays as a frozen copy while it moves out, hidden from assistive tech.
+  const leaving = page.locator('[data-leaving-page]')
+  await expect(leaving).toHaveAttribute('aria-hidden', 'true')
+  await expect(page.getByRole('heading', { name: '按需喂养' })).toBeVisible()
+  await expect(leaving).toHaveCount(0)
+  await expect(page.locator('main')).not.toHaveAttribute('style', /.+/)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    await page.evaluate(() => window.innerWidth),
+  )
+})

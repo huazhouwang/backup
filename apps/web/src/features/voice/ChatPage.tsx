@@ -212,10 +212,9 @@ export function ChatPage({
     <div
       ref={page}
       data-own-scroll
-      className={clsx(
-        'fixed inset-x-0 top-[var(--visible-top,0px)] z-20 mx-auto flex h-[var(--visible,100dvh)] max-w-app flex-col bg-bg',
-        '[view-transition-name:chat]',
-      )}
+      // Slides up over the page as it opens (lib/page-change.ts).
+      data-cover
+      className="fixed inset-x-0 top-[var(--visible-top,0px)] z-20 mx-auto flex h-[var(--visible,100dvh)] max-w-app flex-col bg-bg"
     >
       <header className="flex items-center gap-1 border-b-2 border-border pt-safe-2 pr-safe-4 pb-2 pl-safe-2">
         <button

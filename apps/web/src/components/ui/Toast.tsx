@@ -20,10 +20,8 @@ export function Toaster() {
         unstyled: true,
         classNames: {
           // A card with a solid bottom edge, like the rest of the app; colours come per tone.
-          // Each toast gets its own transition layer so it stays above a page animating
-          // underneath (styles/app.css).
           toast:
-            '[view-transition-name:match-element] [view-transition-class:toast] flex w-full items-center justify-between gap-3 rounded-xl border-2 border-b-4 px-4 py-3 font-bold',
+            'flex w-full items-center justify-between gap-3 rounded-xl border-2 border-b-4 px-4 py-3 font-bold',
           icon: 'shrink-0',
           content: 'flex-1',
           actionButton:

@@ -307,36 +307,9 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes page-in-right {
-  from {
-    translate: 100% 0;
-  }
-}
-@keyframes page-out-right {
-  to {
-    translate: 100% 0;
-  }
-}
-@keyframes page-in-left {
-  from {
-    translate: -25% 0;
-    opacity: 0;
-  }
-}
-@keyframes page-out-left {
-  to {
-    translate: -25% 0;
-    opacity: 0;
-  }
-}
 @keyframes fade-in-up {
   from {
     translate: 0 0.5rem;
-    opacity: 0;
-  }
-}
-@keyframes fade-out {
-  to {
     opacity: 0;
   }
 }
@@ -413,93 +386,6 @@
 }
 
 /*
- * Page changes (router view transitions): only the page moves. The tab bar and toasts have
- * their own layers, painted above the page and left still, so page content never shows
- * through them mid-animation.
- */
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-group(page),
-::view-transition-group(tab-bar),
-::view-transition-old(tab-bar),
-::view-transition-new(tab-bar),
-::view-transition-group(*.toast),
-::view-transition-new(*.toast) {
-  animation: none;
-}
-::view-transition-old(tab-bar),
-::view-transition-old(*.toast) {
-  display: none;
-}
-::view-transition-group(tab-bar),
-::view-transition-group(*.toast) {
-  z-index: 1;
-}
-html:active-view-transition-type(forward) {
-  &::view-transition-old(page) {
-    animation: 280ms var(--ease-out) both page-out-left;
-  }
-  &::view-transition-new(page) {
-    animation: 280ms var(--ease-out) both page-in-right;
-  }
-}
-html:active-view-transition-type(back) {
-  &::view-transition-old(page) {
-    z-index: 1;
-    animation: 280ms var(--ease-out) both page-out-right;
-  }
-  &::view-transition-new(page) {
-    animation: 280ms var(--ease-out) both page-in-left;
-  }
-}
-html:active-view-transition-type(tab) {
-  &::view-transition-old(page) {
-    animation: 120ms ease-out both fade-out;
-  }
-  &::view-transition-new(page) {
-    animation: 220ms var(--ease-out) 60ms both fade-in-up;
-  }
-}
-
-/*
- * The chat covers the app: it slides up over the page left in place (with the same little
- * bounce as a sheet), and back down off it. The page underneath doesn't move.
- */
-@keyframes cover-in {
-  from {
-    translate: 0 100%;
-  }
-}
-@keyframes cover-out {
-  to {
-    translate: 0 100%;
-  }
-}
-::view-transition-group(chat) {
-  z-index: 2;
-}
-html:active-view-transition-type(up) {
-  &::view-transition-old(page),
-  &::view-transition-new(page) {
-    animation: none;
-  }
-  &::view-transition-new(chat) {
-    animation: 380ms cubic-bezier(0.2, 1.15, 0.35, 1) both cover-in;
-  }
-}
-html:active-view-transition-type(down) {
-  &::view-transition-old(page) {
-    display: none;
-  }
-  &::view-transition-new(page) {
-    animation: none;
-  }
-  &::view-transition-old(chat) {
-    animation: 300ms var(--ease-out) both cover-out;
-  }
-}
-
-/*
  * Bottom sheets: Sheet slides them in with a little bounce and plays the same slide
  * backwards to close. The backdrop fades along with it.
  */
@@ -526,22 +412,6 @@ html:active-view-transition-type(down) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html:active-view-transition-type(forward, back, tab) {
-    &::view-transition-old(page) {
-      animation: 150ms ease-out both fade-out;
-    }
-    &::view-transition-new(page) {
-      animation: 150ms ease-out reverse both fade-out;
-    }
-  }
-  html:active-view-transition-type(up, down) {
-    &::view-transition-new(chat) {
-      animation: 150ms ease-out reverse both fade-out;
-    }
-    &::view-transition-old(chat) {
-      animation: 150ms ease-out both fade-out;
-    }
-  }
   .animate-celebrate,
   .animate-typing,
   .animate-text-in,

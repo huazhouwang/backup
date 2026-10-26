@@ -6,6 +6,7 @@ import {
   Scripts,
   createRootRouteWithContext,
   useHydrated,
+  useRouter,
 } from '@tanstack/react-router'
 import { type ReactNode, Suspense, useEffect, useRef } from 'react'
 
@@ -16,6 +17,7 @@ import { useBounce } from '../lib/bounce'
 import { getLocale } from '../lib/i18n'
 import { KeyboardKeeper } from '../lib/keyboard'
 import { MotionProvider } from '../lib/motion'
+import { animatePageChanges } from '../lib/page-change'
 import { splashLinks } from '../lib/splash'
 import { THEME_COLORS, themeInitScript } from '../lib/theme'
 import { watchTheme } from '../lib/use-theme'
@@ -101,14 +103,14 @@ function RootLayout() {
   // pull-to-refresh owns the top.
   const main = useRef<HTMLElement>(null)
   useBounce(null, { axes: ['y'], content: main, ignore: pageOwnsNot })
+  const router = useRouter()
+  useEffect(() => (main.current ? animatePageChanges(router, main.current) : undefined), [router])
 
   return (
     <MotionProvider>
-      <div className="mx-auto flex min-h-dvh max-w-app flex-col">
-        <main
-          ref={main}
-          className="flex-1 [view-transition-name:page] pt-safe-4 pr-safe-4 pb-above-tab-bar pl-safe-4"
-        >
+      {/* Clipped across: a page sliding in from the side doesn't widen the app. */}
+      <div className="mx-auto flex min-h-dvh max-w-app flex-col overflow-x-clip">
+        <main ref={main} className="flex-1 pt-safe-4 pr-safe-4 pb-above-tab-bar pl-safe-4">
           {/* Pages suspend while the local store opens (a few ms on startup). */}
           {hydrated && (
             <Suspense>
