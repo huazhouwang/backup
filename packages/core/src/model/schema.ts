@@ -10,10 +10,10 @@
  */
 
 import type { Material } from '../looks/material.js';
-import type { Recipe } from '../looks/script.js';
+import type { ParamValue, Recipe } from '../looks/script.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 14 as const;
+export const SCHEMA_VERSION = 15 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -47,6 +47,8 @@ export interface Project {
   elements: Element[];
   furniture: Furniture[];
   constraints: Constraint[];
+  /** Widgets installed on this design's canvas (added in v15) */
+  widgets: WidgetInstance[];
   brief: Brief;
   decisions: Decision[];
   library: Library;
@@ -176,6 +178,19 @@ export interface Furniture {
   /** Values for its look's parameters (the look's defaults for the rest) */
   lookParams?: Record<string, string | number | boolean | null>;
   extras?: Extras;
+}
+
+/**
+ * A widget installed on the canvas (see widgets/format.ts): which widget of which widget library, at the version installed
+ * (updates are offered, never applied silently), its parameter values (missing ones take the widget's defaults) and whether it
+ * shows. Not part of the building: no rule checks it.
+ */
+export interface WidgetInstance {
+  id: Id;
+  name: string;
+  widget: { library: string; id: string; version: string };
+  params: Record<string, ParamValue>;
+  visible: boolean;
 }
 
 export const CONSTRAINT_TYPES = ['align', 'center', 'size-target', 'spacing', 'reference', 'rule'] as const;

@@ -50,6 +50,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   12: ({ axes: _axes, ...doc }) => ({ ...doc, guides: (doc.guides ?? []).map(({ axis: _axis, ...g }: any) => g) }),
   // v14: guides are gone
   13: ({ guides: _guides, ...doc }) => doc,
+  // v15 adds widgets
+  14: doc => ({ ...doc, widgets: doc.widgets ?? [] }),
 };
 
 /**

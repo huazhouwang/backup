@@ -66,6 +66,7 @@ export function validate(p: Project): ValidationIssue[] {
     if (!(f.type in lib.furniture))
       issues.push({ path: at, message: text('validate_unknown_furniture', 'Furniture type {type} is not registered', { type: f.type }) });
   });
+  (p.widgets ?? []).forEach((w, i) => claim(w.id, `widgets[${i}] (${w.name})`));
   // Looks: references must exist (a missing look would silently fall back to the default)
   const looks = lib.looks ?? {};
   for (const [target, id] of Object.entries(lib.use ?? {}))

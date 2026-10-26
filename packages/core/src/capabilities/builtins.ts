@@ -9,6 +9,7 @@ import { levelAdd, levelRemove, levelUpdate } from './level.js';
 import { briefUpdate, constraintAdd, constraintRemove, decisionAdd } from './relation.js';
 import { historyLog, historyRedo, historyUndo } from './history.js';
 import { batchCapability, searchCapabilitiesFor } from './meta.js';
+import { widgetConfigure, widgetInstall, widgetRemove } from './widget.js';
 import { furnitureTypeAdd, lookAdd, lookGet, lookImport, lookRemove, lookSet, lookUpdate, lookUse, paramsSet } from './look.js';
 
 export * from './query.js';
@@ -21,6 +22,7 @@ export * from './relation.js';
 export * from './history.js';
 export * from './meta.js';
 export * from './look.js';
+export * from './widget.js';
 export { resolve, resolveLevel } from '../model/refs.js';
 export { objectInfo, type ObjectInfo } from '../model/info.js';
 
@@ -67,6 +69,9 @@ export const BUILTIN: Capability[] = [
   lookImport,
   paramsSet,
   furnitureTypeAdd,
+  widgetInstall,
+  widgetConfigure,
+  widgetRemove,
 ];
 
 /** Built-in capability registry (including batch and search_capabilities) */

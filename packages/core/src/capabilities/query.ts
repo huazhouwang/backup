@@ -44,20 +44,20 @@ export const projectSummary = defineRead({
 export const findObjects = defineRead({
   name: 'find_objects',
   title: 'Find objects',
-  description: 'Search walls, spaces, openings, furniture and elements by name keyword, type and level. Returns ID, name, type and level.',
+  description: 'Search walls, spaces, openings, furniture, elements and installed widgets by name keyword, type and level. Returns ID, name, type and level.',
   input: z.object({
     query: z
       .string()
       .optional()
       .describe('Name keyword in the language the project data uses, e.g. “Bedroom”, “north wall”, “Window” (or “老人房”, “北墙”, “窗”)'),
-    type: z.enum(['wall', 'space', 'opening', 'furniture', 'element', 'level', 'constraint']).optional(),
+    type: z.enum(['wall', 'space', 'opening', 'furniture', 'element', 'level', 'constraint', 'widget']).optional(),
     level: z.string().optional().describe('Level ID or name'),
     limit: z.number().int().min(1).max(200).default(50),
   }),
   run: ({ query, type, level, limit }, { session }) => {
     const p = session.project;
     const lv = level ? resolveLevel(p, level).id : undefined;
-    const kinds: Kind[] = type ? [type] : ['space', 'wall', 'opening', 'furniture', 'element', 'level', 'constraint'];
+    const kinds: Kind[] = type ? [type] : ['space', 'wall', 'opening', 'furniture', 'element', 'level', 'constraint', 'widget'];
     return kinds
       .flatMap(k =>
         projectIndex(p)

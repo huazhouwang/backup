@@ -48,6 +48,7 @@ export function createProject(o: NewProjectOptions): Project {
     elements: [],
     furniture: [],
     constraints: [],
+    widgets: [],
     brief: {},
     decisions: [],
     library: {

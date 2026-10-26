@@ -4,9 +4,9 @@
  * (an immer draft that the recipe is still changing) it is rebuilt on every call.
  */
 import { isDraft } from 'immer';
-import type { Constraint, Element, Furniture, Id, Level, Opening, Project, Space, Wall } from './schema.js';
+import type { Constraint, Element, Furniture, Id, Level, Opening, Project, Space, Wall, WidgetInstance } from './schema.js';
 
-export type ObjectKind = 'level' | 'wall' | 'opening' | 'space' | 'furniture' | 'element' | 'constraint';
+export type ObjectKind = 'level' | 'wall' | 'opening' | 'space' | 'furniture' | 'element' | 'constraint' | 'widget';
 
 interface ObjectOf {
   level: Level;
@@ -16,6 +16,7 @@ interface ObjectOf {
   furniture: Furniture;
   element: Element;
   constraint: Constraint;
+  widget: WidgetInstance;
 }
 
 export type IndexEntry<K extends ObjectKind = ObjectKind> = {
@@ -48,6 +49,7 @@ function build(p: Project): ProjectIndex {
     furniture: p.furniture.map(f => ({ kind: 'furniture', id: f.id, name: f.name, level: f.level, obj: f })),
     element: p.elements.map(e => ({ kind: 'element', id: e.id, name: e.name, level: e.level, obj: e })),
     constraint: p.constraints.map(c => ({ kind: 'constraint', id: c.id, name: c.note ?? c.id, obj: c })),
+    widget: (p.widgets ?? []).map(w => ({ kind: 'widget', id: w.id, name: w.name, obj: w })),
   };
   const byId = new Map<Id, IndexEntry>();
   for (const list of Object.values(byKind)) for (const e of list) if (!byId.has(e.id)) byId.set(e.id, e);

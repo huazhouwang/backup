@@ -12,7 +12,7 @@ The UI is available in Chinese (default) and English, chosen in Settings → Lan
 | `packages/core` | Pure TypeScript core, no browser dependencies: data schema, operation layer (transactions, undo), capability registry, rule checks, constraint solver, areas, 3D wall segmentation |
 | `packages/sandbox` | Runs untrusted JavaScript (widget and, later, look scripts): QuickJS compiled to WebAssembly, isolated by realm and script, with in-place, Workers and browser hosts; see its README |
 | `apps/web` | Website: TanStack Router SPA + Cloudflare Worker (Hono), D1 storage, Better Auth sign-in, TanStack AI chat |
-| `libraries` | Look libraries as files (`*.looklib.json`, format in `looklib.schema.json`): the default library (furniture, doors and windows, railings, elements, and every material) and the Chinese pieces |
+| `libraries` | Look libraries as files (`*.looklib.json`, format in `looklib.schema.json`): the default library (furniture, doors and windows, railings, elements, and every material) and the Chinese pieces. Widget libraries (`*.widgetlib.json`, format in `widgetlib.schema.json`): the built-in widgets (a structural grid so far) |
 | `samples/wushi-10` | Test sample: Wushi courtyard, scheme 10 |
 
 Key conventions:
@@ -33,7 +33,7 @@ npm run dev                            # http://localhost:3000; OTP codes are pr
 ## Testing
 
 ```sh
-npm test                               # core: area reference values, capability contracts, constraints; sandbox: rules, limits, isolation, workerd (repo root)
+npm test                               # core: area reference values, capability contracts, constraints, widgets (run in the sandbox); sandbox: rules, limits, isolation, workerd (repo root)
 npm run test:browser -w @plinth/sandbox  # sandbox's browser host in Chromium: opaque-origin worker, no network, watchdog
 npm run bench                          # core: transaction timings on the sample project
 npm run lint && npm run format:check   # oxlint, oxfmt (npm run format writes)

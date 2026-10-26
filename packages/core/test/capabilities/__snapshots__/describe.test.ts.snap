@@ -17,7 +17,7 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Project overview",
   },
   {
-    "description": "Search walls, spaces, openings, furniture and elements by name keyword, type and level. Returns ID, name, type and level.",
+    "description": "Search walls, spaces, openings, furniture, elements and installed widgets by name keyword, type and level. Returns ID, name, type and level.",
     "examples": [],
     "input": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -45,6 +45,7 @@ exports[`capability descriptions are stable 1`] = `
             "element",
             "level",
             "constraint",
+            "widget",
           ],
           "type": "string",
         },
@@ -1859,6 +1860,124 @@ exports[`capability descriptions are stable 1`] = `
     "permission": "reversible",
     "runtime": "any",
     "title": "Add a furniture type",
+  },
+  {
+    "description": "Install a widget from a widget library on the design's canvas (a structural grid, a coordinate system…). params sets some of its parameters; the rest take their defaults. The installed version is pinned.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "library": {
+          "description": "Widget library id, e.g. builtin-widgets",
+          "type": "string",
+        },
+        "name": {
+          "description": "Display name, in the language the project data uses; by default the widget’s name",
+          "type": "string",
+        },
+        "params": {
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null",
+            ],
+          },
+          "description": "Parameter values, by name; see the widget’s params",
+          "propertyNames": {
+            "type": "string",
+          },
+          "type": "object",
+        },
+        "widget": {
+          "description": "Widget id in that library, e.g. grid",
+          "type": "string",
+        },
+      },
+      "required": [
+        "library",
+        "widget",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "widget_install",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Install widget",
+  },
+  {
+    "description": "Change an installed widget: set some parameters (null where the parameter allows it; reset brings back defaults), show or hide it, rename it.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "name": {
+          "type": "string",
+        },
+        "params": {
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null",
+            ],
+          },
+          "description": "Parameter values to set, by name",
+          "propertyNames": {
+            "type": "string",
+          },
+          "type": "object",
+        },
+        "reset": {
+          "description": "Parameters to bring back to their defaults",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "visible": {
+          "type": "boolean",
+        },
+        "widget": {
+          "description": "ID or name of the installed widget (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "widget",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "widget_configure",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Configure widget",
+  },
+  {
+    "description": "Remove an installed widget from the design's canvas.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "widget": {
+          "description": "ID or name of the installed widget (names may take a level prefix, e.g. “Level 2·Bedroom” or “二层·主卧”)",
+          "type": "string",
+        },
+      },
+      "required": [
+        "widget",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "widget_remove",
+    "permission": "reversible",
+    "runtime": "any",
+    "title": "Remove widget",
   },
   {
     "description": "Run several edit capabilities as one step: all succeed or all roll back, and they undo together. Use for large changes or building a design from scratch.",
