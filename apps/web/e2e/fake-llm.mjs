@@ -1,6 +1,7 @@
 // Fake LLM for tests (OpenAI Chat Completions streaming API). Follows a script: call tools first, then reply with text.
 // Usage: node e2e/fake-llm.mjs [port=8787]
 import { createServer } from 'node:http';
+import { GRID_MODULE } from './grid-module.mjs';
 
 const port = Number(process.argv[2] ?? 8787);
 export const requests = [];
@@ -46,6 +47,56 @@ function next(body) {
       },
     };
   if (/方凳/.test(text) && toolsSoFar === 1) return { text: '做好了一个方凳。' };
+  // The canvas page (issue 171): look for a wheel, read the wheels, write a grid module; publish it; import it in another design
+  const result = () => {
+    try {
+      return JSON.parse(String(last.content));
+    } catch {
+      return null;
+    }
+  };
+  if (/按承重墙排一套轴网/.test(text) && toolsSoFar === 0) return { tool: { name: 'canvas_wheel_list', args: {} } };
+  if (/按承重墙排一套轴网/.test(text) && toolsSoFar === 1) return { tool: { name: 'canvas_wheels', args: {} } };
+  if (/按承重墙排一套轴网/.test(text) && toolsSoFar === 2)
+    return {
+      tool: {
+        name: 'canvas_module_put',
+        args: {
+          id: 'structural-grid',
+          name: '结构轴网',
+          description:
+            'Axis lines on the bearing walls of each level (1, 2, 3… across, A, B, C… down). Select, drag, double-click a bubble to rename; everything snaps to the axes. Edits are kept per level in its data.',
+          source: GRID_MODULE,
+        },
+      },
+    };
+  if (/按承重墙排一套轴网/.test(text) && toolsSoFar === 3)
+    return {
+      text: /"tried":true/.test(String(last.content))
+        ? '轴网排好了：按承重墙定位，可以点选、拖动，双击圆圈改名，画墙会吸附到轴线上。'
+        : '轴网模块没有保存成功。',
+    };
+  if (/发布到组件库/.test(text) && toolsSoFar === 0) return { tool: { name: 'canvas_wheel_list', args: {} } };
+  if (/发布到组件库/.test(text) && toolsSoFar === 1) {
+    const libs = result()?.result ?? result();
+    const lib = Array.isArray(libs) ? libs.find(l => l.canPublish) : null;
+    if (!lib) return { text: '没有可以发布的组件库。' };
+    return { tool: { name: 'canvas_wheel_publish', args: { module: 'structural-grid', library: lib.library } } };
+  }
+  if (/发布到组件库/.test(text) && toolsSoFar === 2) return { text: /"version":\d/.test(String(last.content)) ? '轴网已发布到组件库。' : '发布没有成功。' };
+  if (/从组件库导入轴网/.test(text) && toolsSoFar === 0) return { tool: { name: 'canvas_wheel_list', args: {} } };
+  if (/从组件库导入轴网/.test(text) && toolsSoFar === 1) {
+    const libs = result()?.result ?? result();
+    const lib = Array.isArray(libs) ? libs.find(l => l.wheels.some(w => w.module === 'structural-grid')) : null;
+    if (!lib) return { text: '组件库里没有轴网。' };
+    return { tool: { name: 'canvas_wheel_get', args: { library: lib.library, module: 'structural-grid' } } };
+  }
+  if (/从组件库导入轴网/.test(text) && toolsSoFar === 2) {
+    const w = result()?.result ?? result();
+    if (!w?.source) return { text: '读不到轴网。' };
+    return { tool: { name: 'canvas_module_put', args: w } };
+  }
+  if (/从组件库导入轴网/.test(text) && toolsSoFar === 3) return { text: /"tried":true/.test(String(last.content)) ? '已从组件库导入轴网。' : '导入没有成功。' };
   // Widgets: install a library widget, tune it, write one of the design's own
   if (/加一个.*轴网/.test(text) && toolsSoFar === 0) return { tool: { name: 'widget_catalog', args: {} } };
   if (/加一个.*轴网/.test(text) && toolsSoFar === 1)

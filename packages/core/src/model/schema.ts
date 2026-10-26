@@ -14,7 +14,7 @@ import type { ParamValue, Recipe } from '../looks/script.js';
 import type { WidgetDef } from '../widgets/format.js';
 
 export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 18 as const;
+export const SCHEMA_VERSION = 19 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -216,6 +216,8 @@ export interface CanvasModule {
   source: string;
   /** Bumped on every change */
   version: number;
+  /** Where it was imported from: a wheel in a library, at the version taken (the copy never changes with the library) */
+  origin?: { library: string; module: string; version: number };
 }
 
 export const CONSTRAINT_TYPES = ['align', 'center', 'size-target', 'spacing', 'reference', 'rule'] as const;

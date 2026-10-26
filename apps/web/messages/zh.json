@@ -886,5 +886,8 @@
   "sun_position": "太阳高度 {elevation}°，方位 {azimuth}°",
   "sun_below": "太阳在地平线下",
   "editor_my_canvas_signed_out": "登录后才能保存自己的画布模块",
-  "editor_my_canvas_failed": "模块在画布页面里出错：{error}"
+  "editor_my_canvas_failed": "模块在画布页面里出错：{error}",
+  "editor_wheel_not_found": "没有找到画布模块 {module}",
+  "widget_libraries_canvas_modules": "画布模块（轮子）",
+  "widget_libraries_canvas_module_version": "v{version} · {size} KB"
 }

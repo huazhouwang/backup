@@ -1,6 +1,7 @@
 /** Widget libraries: built-in and users' own, their widgets and members (like look libraries, ./libraries.ts) */
 import {
   BUILTIN_WIDGET_LIBRARIES,
+  libraryCanvasModuleSchema,
   myWidgetsSchema,
   parseWidgetLibrary,
   widgetDefSchema,
@@ -121,6 +122,31 @@ routes.delete('/widget-libraries/:lib/widgets/:widget', async c => {
   const lib = (await repo.getWidgetLibrary(id))!.library;
   const { [c.req.param('widget')]: _gone, ...widgets } = lib.widgets;
   await repo.putWidgetLibrary({ ...lib, widgets });
+  return c.json({ ok: true });
+});
+
+/**
+ * Publish a canvas module as a wheel (issue 171): a new one, or a new version when its source changed. Body: { name, description?,
+ * source }; the library keeps the version.
+ */
+routes.put('/widget-libraries/:lib/canvas-modules/:module', async c => {
+  const { id } = await access(c, 'editor');
+  const module = c.req.param('module');
+  if (!WIDGET_ID.test(module)) throw fileProblem(`canvas module id ${module}`);
+  const lib = (await repo.getWidgetLibrary(id))!.library;
+  const old = lib.canvasModules?.[module];
+  const b = await c.req.json().catch(() => null);
+  const next = libraryCanvasModuleSchema.safeParse({ ...b, version: old ? old.version + (old.source === b?.source ? 0 : 1) : 1 });
+  if (!next.success) throw fileProblem(next.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; '));
+  await repo.putWidgetLibrary({ ...lib, canvasModules: { ...lib.canvasModules, [module]: next.data } });
+  return c.json({ library: id, module, version: next.data.version });
+});
+
+routes.delete('/widget-libraries/:lib/canvas-modules/:module', async c => {
+  const { id } = await access(c, 'editor');
+  const lib = (await repo.getWidgetLibrary(id))!.library;
+  const { [c.req.param('module')]: _gone, ...canvasModules } = lib.canvasModules ?? {};
+  await repo.putWidgetLibrary({ ...lib, canvasModules });
   return c.json({ ok: true });
 });
 

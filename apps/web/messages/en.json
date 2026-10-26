@@ -886,5 +886,8 @@
   "sun_position": "Sun {elevation}° high, bearing {azimuth}°",
   "sun_below": "The sun is below the horizon",
   "editor_my_canvas_signed_out": "Sign in to keep canvas modules of your own",
-  "editor_my_canvas_failed": "The module failed in the canvas page: {error}"
+  "editor_my_canvas_failed": "The module failed in the canvas page: {error}",
+  "editor_wheel_not_found": "No canvas module {module}",
+  "widget_libraries_canvas_modules": "Canvas modules (wheels)",
+  "widget_libraries_canvas_module_version": "v{version} · {size} KB"
 }

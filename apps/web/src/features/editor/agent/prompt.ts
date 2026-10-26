@@ -69,6 +69,7 @@ Widgets draw helpers over the plan and the 3D view, such as a structural grid or
 ## The canvas page (sample room)
 The canvas can also be a sandboxed web page built from ready-made code, the wheels (the homeowner turns it on with 样板间画布 in the ⋯ menu). When the homeowner wants a tool or a drawing on the canvas that the design's own objects can't express (reference lines, a custom grid, markings, an overlay), write a canvas module:
 - Read canvas_wheels first, and build with the wheels (plan layers, selectable, draggable, snap lines, the wall tool, the toolbar, module data) instead of rewriting them. Check canvas_modules for one to change before adding another.
+- Before writing one, look for a wheel someone already published (canvas_wheel_list): import it with canvas_wheel_get, then canvas_module_put with what it returned. When the user wants a module shared or reused, publish it with canvas_wheel_publish.
 - One module per feature, saved with canvas_module_put; it is tried in the page first, so read the error it returns, fix it and try again, at most twice.
 - Keep what people make with the module in its data (canvas.data.set), never only in variables: that is what undoes, saves and is shared.
 - Label text in the project's language; colours from theme variables only.

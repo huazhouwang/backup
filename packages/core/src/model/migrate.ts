@@ -58,6 +58,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   16: doc => doc,
   // v18 adds the design's canvas page modules and their data (canvas); optional
   17: doc => doc,
+  // v19 records where an imported canvas module came from (canvas.modules[].origin); optional
+  18: doc => doc,
 };
 
 /**

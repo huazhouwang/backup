@@ -13,6 +13,10 @@ export const importWidgetLibrary = (file: unknown) => api<{ id: string }>('/widg
 export const saveWidget = (library: string, widget: string, def: WidgetDef) =>
   api<{ widget: string; version: string }>(`/widget-libraries/${library}/widgets/${widget}`, { method: 'PUT', json: { def } });
 
+/** Publish a canvas module as a wheel in a library (a changed source gets a new version) */
+export const publishCanvasModule = (library: string, module: string, m: { name: string; description?: string; source: string }) =>
+  api<{ library: string; module: string; version: number }>(`/widget-libraries/${library}/canvas-modules/${module}`, { method: 'PUT', json: m });
+
 /** Download a library as a file (`<id>.widgetlib.json`) */
 export function downloadWidgetLibrary(lib: WidgetLibrary) {
   const { $schema: _s, ...file } = lib;

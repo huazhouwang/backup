@@ -34,7 +34,10 @@ const moduleIn = (page: CanvasPage | undefined, id: string) => {
 };
 
 /** The page with a module added or replaced (same id; its version goes up) */
-export function putCanvasModule(page: CanvasPage | undefined, i: { id: string; name: string; description?: string; source: string }) {
+export function putCanvasModule(
+  page: CanvasPage | undefined,
+  i: { id: string; name: string; description?: string; source: string; origin?: CanvasModule['origin'] },
+) {
   const list = page?.modules ?? [];
   const old = list.find(m => m.id === i.id);
   if (!old && list.length >= CANVAS_LIMITS.modules)
@@ -45,6 +48,7 @@ export function putCanvasModule(page: CanvasPage | undefined, i: { id: string; n
     ...(i.description ? { description: i.description } : {}),
     source: i.source,
     version: (old?.version ?? 0) + 1,
+    ...(i.origin ? { origin: i.origin } : {}),
   };
   return { page: { ...page, modules: old ? list.map(x => (x.id === i.id ? m : x)) : [...list, m] }, module: m };
 }
@@ -75,6 +79,7 @@ export const canvasPageSchema: z.ZodType<CanvasPage> = z.object({
         description: z.string().max(1000).optional(),
         source: z.string().min(1).max(CANVAS_LIMITS.source),
         version: z.number().int().min(1),
+        origin: z.object({ library: z.string().max(64), module: z.string().max(64), version: z.number().int().min(1) }).optional(),
       }),
     )
     .max(CANVAS_LIMITS.modules),
@@ -97,6 +102,7 @@ export const canvasModules = defineRead({
       name: m.name,
       description: m.description,
       version: m.version,
+      ...(m.origin ? { origin: m.origin } : {}),
       bytes: m.source.length,
       hasData: p.canvas?.data?.[m.id] !== undefined,
       ...(i.sources ? { source: m.source } : {}),
@@ -119,6 +125,10 @@ export const canvasModulePut = defineEdit({
     name: z.string().min(1).max(80).describe('Display name, in the language the project data uses'),
     description: z.string().max(1000).optional().describe('What it does (English)'),
     source: z.string().min(1).max(CANVAS_LIMITS.source).describe('The module source'),
+    origin: z
+      .object({ library: z.string().max(64), module: z.string().max(64), version: z.number().int().min(1) })
+      .optional()
+      .describe('When importing a wheel: the origin canvas_wheel_get returned, passed as is (drop it when you change the source)'),
   }),
   label: i => text('log_canvas_module_put', 'Save canvas module “{name}”', { name: i.name }),
   prepare: async (i, ctx: CapabilityContext) => {

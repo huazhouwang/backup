@@ -4,6 +4,7 @@ import {
   createProject,
   createRegistry,
   migrate,
+  parseWidgetLibrary,
   putCanvasModule,
   removeCanvasModule,
   SCHEMA_VERSION,
@@ -77,5 +78,27 @@ describe("a person's own canvas page (kept in their settings)", () => {
     page = removeCanvasModule(page, 'mine');
     expect(page).toEqual({ modules: [] });
     expect(canvasPageSchema.safeParse({ modules: [{ id: 'Bad id', name: 'x', source: 'x', version: 1 }] }).success).toBe(false);
+  });
+});
+
+describe('canvas modules published as wheels', () => {
+  it('a library file keeps them, and a design keeps where its copy came from', async () => {
+    const lib = parseWidgetLibrary({
+      format: 'plinth-widgets',
+      formatVersion: 1,
+      id: 'mine',
+      name: { zh: '我的' },
+      version: '1.0.0',
+      widgets: {},
+      canvasModules: { grid: { name: '轴网', source: SOURCE, version: 2 } },
+    });
+    expect(lib.canvasModules?.grid.version).toBe(2);
+    expect(() => parseWidgetLibrary({ ...lib, canvasModules: { grid: { name: '轴网', source: SOURCE, version: 0 } } })).toThrow();
+
+    const session = new Session(createProject({ id: 'p', name: '测试' }));
+    const origin = { library: 'mine', module: 'grid', version: 2 };
+    const r = await registry.call('canvas_module_put', { id: 'grid', name: '轴网', source: SOURCE, origin }, { session, actor: { kind: 'agent' } });
+    expect(r.ok).toBe(true);
+    expect(session.project.canvas?.modules[0].origin).toEqual(origin);
   });
 });

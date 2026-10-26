@@ -53,6 +53,7 @@ export function WidgetLibraryPage() {
 function WidgetLibrary({ detail }: { detail: WidgetLibraryDetail }) {
   const lib = detail.library;
   const widgets = Object.entries(lib.widgets);
+  const modules = Object.entries(lib.canvasModules ?? {});
   const facts = [
     `v${lib.version}`,
     lib.author && m.libraries_by({ author: lib.author }),
@@ -110,6 +111,26 @@ function WidgetLibrary({ detail }: { detail: WidgetLibraryDetail }) {
             </li>
           ))}
         </ul>
+      )}
+      {modules.length > 0 && (
+        <section className="space-y-3" data-canvas-modules>
+          <h2 className="text-base font-semibold">{m.widget_libraries_canvas_modules()}</h2>
+          <ul className="grid gap-4 md:grid-cols-2">
+            {modules.map(([id, c]) => (
+              <li key={id}>
+                <Card size="sm">
+                  <CardHeader>
+                    <CardTitle>{c.name}</CardTitle>
+                    <CardDescription>
+                      <code>{id}</code> · {m.widget_libraries_canvas_module_version({ version: c.version, size: (c.source.length / 1024).toFixed(1) })}
+                    </CardDescription>
+                  </CardHeader>
+                  {c.description && <CardContent className="text-sm text-muted-foreground">{c.description}</CardContent>}
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </>
   );

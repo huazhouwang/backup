@@ -12,7 +12,8 @@ modules. A module is an ES module:
       return () => { /* optional extra cleanup */ };
     }
 
-You may also \`import { … } from 'plinth'\` (the same wheels as plain functions). Coordinates are plan millimetres: x east, y south.
+You may also \`import { … } from 'plinth'\` (the same wheels as plain functions). Modules other people published are wheels too:
+look in canvas_wheel_list before writing one, and publish yours with canvas_wheel_publish when it is worth reusing. Coordinates are plan millimetres: x east, y south.
 Colours: use theme variables only, e.g. var(--foreground), var(--canvas-selection), var(--muted-foreground), var(--chart-2).
 
 ## canvas.bridge — the design

@@ -4,53 +4,145 @@
   "title": "Plinth widget library",
   "description": "A widget library: tools people add to the canvas, each a JavaScript function run in the sandbox with JSON Schema parameters. See packages/core/src/widgets/format.ts.",
   "type": "object",
-  "required": ["format", "formatVersion", "id", "name", "version", "widgets"],
+  "required": [
+    "format",
+    "formatVersion",
+    "id",
+    "name",
+    "version",
+    "widgets"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-    "format": { "const": "plinth-widgets" },
-    "formatVersion": { "const": 1, "description": "A newer format version migrates older files" },
+    "$schema": {
+      "type": "string"
+    },
+    "format": {
+      "const": "plinth-widgets"
+    },
+    "formatVersion": {
+      "const": 1,
+      "description": "A newer format version migrates older files"
+    },
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",
       "maxLength": 64,
       "description": "Recorded in designs as the source of the widgets they install"
     },
-    "name": { "$ref": "looklib.schema.json#/$defs/names" },
-    "description": { "$ref": "looklib.schema.json#/$defs/names" },
-    "version": { "$ref": "looklib.schema.json#/$defs/semver" },
-    "author": { "type": "string" },
-    "license": { "type": "string", "description": "SPDX identifier, e.g. CC-BY-4.0" },
+    "name": {
+      "$ref": "looklib.schema.json#/$defs/names"
+    },
+    "description": {
+      "$ref": "looklib.schema.json#/$defs/names"
+    },
+    "version": {
+      "$ref": "looklib.schema.json#/$defs/semver"
+    },
+    "author": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX identifier, e.g. CC-BY-4.0"
+    },
     "widgets": {
       "type": "object",
-      "propertyNames": { "$ref": "looklib.schema.json#/$defs/key" },
-      "additionalProperties": { "$ref": "#/$defs/widget" }
+      "propertyNames": {
+        "$ref": "looklib.schema.json#/$defs/key"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/widget"
+      }
+    },
+    "canvasModules": {
+      "type": "object",
+      "description": "Canvas modules published as wheels: modules for the sandboxed canvas page that agents import into other designs",
+      "propertyNames": {
+        "$ref": "looklib.schema.json#/$defs/key"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/canvasModule"
+      }
     }
   },
   "$defs": {
     "widget": {
       "type": "object",
-      "required": ["name", "version", "description", "permissions", "script"],
+      "required": [
+        "name",
+        "version",
+        "description",
+        "permissions",
+        "script"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "$ref": "looklib.schema.json#/$defs/names" },
-        "version": { "$ref": "looklib.schema.json#/$defs/semver", "description": "Installs pin it" },
-        "description": { "type": "string", "maxLength": 2000, "description": "For the agent: what it is and how to tune it (English)" },
+        "name": {
+          "$ref": "looklib.schema.json#/$defs/names"
+        },
+        "version": {
+          "$ref": "looklib.schema.json#/$defs/semver",
+          "description": "Installs pin it"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "For the agent: what it is and how to tune it (English)"
+        },
         "permissions": {
           "type": "array",
           "minItems": 1,
-          "items": { "enum": ["draw"] },
+          "items": {
+            "enum": [
+              "draw"
+            ]
+          },
           "description": "What it may do, shown when it is installed"
         },
         "params": {
           "type": "object",
-          "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
-          "additionalProperties": { "$ref": "looklib.schema.json#/$defs/param" }
+          "propertyNames": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "looklib.schema.json#/$defs/param"
+          }
         },
         "script": {
           "type": "string",
           "maxLength": 30000,
           "description": "JavaScript defining function widget(project, params, ctx) and returning a list of items: line (from, to, dash), label (at, text), point (at), area (outline), handle (at, x, y: the number params it moves), snap (at); each may name its level. Plan millimetres, x east, y south."
+        }
+      }
+    },
+    "canvasModule": {
+      "type": "object",
+      "required": [
+        "name",
+        "source",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "What it does and how to use it (English)"
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 60000,
+          "description": "An ES module: export default function (canvas) { … }"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Goes up whenever the source changes; a design's copy records it"
         }
       }
     }

@@ -41,6 +41,22 @@ export interface WidgetLibrary {
   /** SPDX identifier */
   license?: string;
   widgets: Record<string, WidgetDef>;
+  /**
+   * Canvas modules published as wheels (issue 171): modules for the sandboxed canvas page that agents import into other designs
+   * (a copy, which keeps where it came from) instead of writing them again
+   */
+  canvasModules?: Record<string, LibraryCanvasModule>;
+}
+
+/** A canvas module kept in a library */
+export interface LibraryCanvasModule {
+  name: string;
+  /** What it does and how to use it (English), for the agents that import it */
+  description?: string;
+  /** `export default function (canvas) { … }` */
+  source: string;
+  /** Goes up whenever its source changes; a design's copy records the one it took */
+  version: number;
 }
 
 /** What the script is told besides the project and its params */
@@ -89,6 +105,13 @@ export const widgetDefSchema: z.ZodType<WidgetDef> = z.object({
   script: z.string().min(1).max(30000),
 });
 
+export const libraryCanvasModuleSchema: z.ZodType<LibraryCanvasModule> = z.object({
+  name: z.string().min(1).max(80),
+  description: z.string().max(1000).optional(),
+  source: z.string().min(1).max(60000),
+  version: z.number().int().min(1),
+});
+
 export const widgetLibrarySchema: z.ZodType<WidgetLibrary> = z.object({
   $schema: z.string().optional(),
   format: z.literal(WIDGETLIB_FORMAT),
@@ -100,6 +123,7 @@ export const widgetLibrarySchema: z.ZodType<WidgetLibrary> = z.object({
   author: z.string().max(200).optional(),
   license: z.string().max(100).optional(),
   widgets: z.record(key, widgetDefSchema),
+  canvasModules: z.record(key, libraryCanvasModuleSchema).optional(),
 });
 
 export class WidgetError extends Error {}

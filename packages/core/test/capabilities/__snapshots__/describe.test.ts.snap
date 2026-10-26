@@ -1901,6 +1901,30 @@ exports[`capability descriptions are stable 1`] = `
           "minLength": 1,
           "type": "string",
         },
+        "origin": {
+          "description": "When importing a wheel: the origin canvas_wheel_get returned, passed as is (drop it when you change the source)",
+          "properties": {
+            "library": {
+              "maxLength": 64,
+              "type": "string",
+            },
+            "module": {
+              "maxLength": 64,
+              "type": "string",
+            },
+            "version": {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          "required": [
+            "library",
+            "module",
+            "version",
+          ],
+          "type": "object",
+        },
         "source": {
           "description": "The module source",
           "maxLength": 60000,
