@@ -78,7 +78,7 @@ const textSchema = z.object({
 })
 
 /**
- * What comes with a recording: the language it is in (from the device's settings), the
+ * What comes with a recording: the language it is likely in (the app's), the
  * assistant's last line, and whether it is a part heard while the user is still talking.
  */
 const speechQuerySchema = z.object({

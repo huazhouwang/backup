@@ -255,8 +255,10 @@ describe('siri voice logging', () => {
   it('hears a recording in the speaker’s language, as text for the chat box to send', async () => {
     heard = ' how was today '
     expect(await (await hear(32_000)).json()).toEqual({ text: 'how was today' })
-    // In English, with the babies' names to spell; no Chinese vocabulary.
-    expect(whisper).toMatchObject({ language: 'en', initial_prompt: '小米粒' })
+    // The language is Whisper's to tell, given the babies' names to spell; no Chinese
+    // vocabulary for an app in English.
+    expect(whisper.language).toBeUndefined()
+    expect(whisper.initial_prompt).toBe('小米粒')
 
     // In Chinese the prompt also carries the words it should spell in simplified script,
     // after the assistant's last line, which this may answer.
@@ -264,7 +266,7 @@ describe('siri voice logging', () => {
     expect(await (await hear(32_000, 'zh-Hans-CN&recent=要删除吗？')).json()).toEqual({
       text: null,
     })
-    expect(whisper.language).toBe('zh')
+    expect(whisper.language).toBeUndefined()
     expect(whisper.initial_prompt).toMatch(/^要删除吗？ 小米粒 .*毫升/)
     // Too short to hold anything, or over the body limit.
     expect((await hear(100)).status).toBe(400)

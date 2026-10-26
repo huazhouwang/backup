@@ -17,7 +17,7 @@ function base64(bytes: ArrayBuffer) {
   return btoa(binary)
 }
 
-/** Whisper takes a language as a two-letter code; anything else is left for it to detect. */
+/** The two-letter code of a locale's language, as the vocabulary is kept by. */
 export function speechLanguage(locale: string | undefined) {
   if (!locale) return undefined
   try {
@@ -51,8 +51,10 @@ export function speechPrompt(language: string | undefined, hints: SpeechHints) {
 }
 
 /**
- * What was said in a recording (WAV, as the chat uploads it), in the user's language, or
- * null when nothing was heard.
+ * What was said in a recording (WAV, as the chat uploads it), or null when nothing was heard.
+ * `locale` is the language the app is in, so the likeliest spoken: its vocabulary goes in the
+ * prompt, but Whisper tells the language itself. Forced, a phone set to English turned
+ * Chinese speech into English, and a sentence in another language would be translated.
  */
 export async function transcribe(
   ai: Ai,
@@ -65,7 +67,6 @@ export async function transcribe(
   const result = await ai.run(MODEL, {
     audio: base64(audio),
     task: 'transcribe',
-    ...(language ? { language } : {}),
     ...(prompt ? { initial_prompt: prompt } : {}),
     vad_filter: true,
   })
