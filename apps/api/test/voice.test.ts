@@ -290,9 +290,16 @@ describe('siri voice logging', () => {
     expect(await day()).toBe((before ?? 0) + 1)
   })
 
-  it('streams the answer, correcting what was heard first', async () => {
-    corrected = '小米粒今天怎么样'
-    fake.setResponses([{ text: '今天一切都好。' }])
+  it('streams the answer, corrected first by the user’s own model', async () => {
+    let own = ''
+    corrected = '小米力今天怎么样。'
+    fake.setResponses([
+      ({ request }) => {
+        own = JSON.stringify(request.systemPrompts ?? [])
+        return { text: '小米粒今天怎么样' }
+      },
+      { text: '今天一切都好。' },
+    ])
     const res = await t.request('/api/voice/chat', {
       method: 'POST',
       headers: {
@@ -312,10 +319,10 @@ describe('siri voice logging', () => {
       event: 'done',
       data: { reply: '今天一切都好。', done: false, confirming: false },
     })
-    // The correction knew the babies and the conversation, and answered straight away; the
-    // agent got the corrected text, without the model's empty thinking.
-    expect(correction).toContain('小米粒')
-    expect(correction).toContain('还有吗？')
+    // Both models knew the babies and the conversation; the user's own answered in time, so
+    // its correction won over the quick one's.
+    expect(own).toContain('小米粒')
+    expect(own).toContain('还有吗？')
     expect(correction).toContain('<transcription>小米力今天怎么样</transcription> /no_think')
     corrected = null
     const chat = await t.request('/api/voice/chat', { headers })
@@ -323,8 +330,29 @@ describe('siri voice logging', () => {
     expect(lines.at(-2)).toMatchObject({ role: 'user', text: '小米粒今天怎么样' })
   })
 
+  it('falls back to the quick model when the user’s own fails to correct', async () => {
+    corrected = '<think>\n</think>\n大概三点半开始睡觉。'
+    fake.setResponses([
+      () => {
+        throw new Error('Provider down')
+      },
+      { text: '好的。' },
+    ])
+    const res = await t.request('/api/voice/chat', {
+      method: 'POST',
+      headers: {
+        cookie: headers.get('cookie') ?? '',
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({ text: '大三年半开始睡觉', spoken: true }),
+    })
+    expect(await res.text()).toContain('"text":"大概三点半开始睡觉。"')
+    corrected = null
+  })
+
   it('takes a message whose recent lines are long, using only their start', async () => {
-    fake.setResponses([{ text: '好。' }])
+    fake.setResponses([{ text: '换尿布了。' }, { text: '好。' }])
     const long = `Bobo: ${'今天喝奶五次。'.repeat(60)}`
     const res = await t.request('/api/voice/chat', {
       method: 'POST',

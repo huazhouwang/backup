@@ -343,9 +343,8 @@ async function turn(
   let text = said
   if (options.spoken) {
     const hints = await speechHints(db, access, now)
-    // Workers AI where the Worker has it: quick, and no cost to the user's key.
-    const corrector = env.AI ? { ai: env.AI } : { adapter, modelOptions: scope.modelOptions }
-    text = await correctHeard(corrector, said, {
+    const correctors = { own: { adapter, modelOptions: scope.modelOptions }, quick: env.AI }
+    text = await correctHeard(correctors, said, {
       ...hints,
       conversation: options.spoken.recent,
     })
