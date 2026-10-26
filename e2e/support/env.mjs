@@ -59,6 +59,13 @@ export const SESSIONS = [
     email: 'mic-explain@example.com',
   },
   {
+    key: 'micOnce',
+    token: 'e2e-mic-once',
+    userId: 'e2e-mic-once',
+    name: '测试家长',
+    email: 'mic-once@example.com',
+  },
+  {
     key: 'micDenied',
     token: 'e2e-mic-denied',
     userId: 'e2e-mic-denied',

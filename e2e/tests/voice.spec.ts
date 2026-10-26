@@ -213,6 +213,42 @@ test('explains the microphone before the system asks, and how to turn it back on
   await context.close()
 })
 
+test('explains the microphone once until the app is opened again', async ({ browser }) => {
+  const { context, page } = await newDevice(browser)
+  await page.addInitScript(() => {
+    const status = { state: 'prompt', addEventListener() {}, removeEventListener() {} }
+    Object.defineProperty(navigator.permissions, 'query', { value: async () => status })
+  })
+  await onboard(page)
+  await signIn(context, 'micOnce')
+  await standInApi(page)
+  await page.goto('/')
+  await page
+    .locator('main')
+    .getByRole('button', { name: /和 Bobo 说/ })
+    .click()
+  const mic = page.getByRole('button', { name: '按住说话' })
+  const explain = page.getByRole('dialog', { name: '和 Bobo 说话需要用麦克风' })
+  await page.waitForTimeout(500)
+
+  // Explained once, gone on: recording starts; dropped, then pressed again, no explanation.
+  await mic.click()
+  await explain.getByRole('button', { name: '继续' }).click()
+  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await page.getByRole('button', { name: '取消' }).click()
+  await mic.click()
+  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await expect(explain).toHaveCount(0)
+  await page.getByRole('button', { name: '取消' }).click()
+
+  // Opened again: explained again (the system asks again too).
+  await page.reload()
+  await page.waitForTimeout(500)
+  await page.getByRole('button', { name: '按住说话' }).click()
+  await expect(explain).toBeVisible()
+  await context.close()
+})
+
 test('says how to turn the microphone back on once it was refused', async ({ browser }) => {
   const { context, page } = await newDevice(browser)
   await page.addInitScript(() => {

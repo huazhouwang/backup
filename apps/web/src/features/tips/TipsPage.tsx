@@ -188,23 +188,42 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
   return (
     <section className="flex flex-col gap-2">
       <CardTitle small>{m.tipsMilestonesTitle({ months: checkpoint.by })}</CardTitle>
-      <Card className="overflow-hidden py-0">
-        <ul className="m-0 flex list-none flex-col divide-y-2 divide-border p-0">
-          {checkpoint.items.map((item) => (
-            <li key={item}>
-              <label className="-mx-4 flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-primary-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
-                {item}
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={isChecked(item)}
-                  onChange={() => toggle(item)}
-                />
-                {/* Ticked: the row turns light green, with a dark green tick. */}
-                <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
-              </label>
-            </li>
-          ))}
+      <Card className="overflow-hidden px-0 py-0">
+        <ul className="m-0 flex list-none flex-col p-0">
+          {checkpoint.items.map((item, index) => {
+            const ticked = isChecked(item)
+            const above = index > 0 && isChecked(checkpoint.items[index - 1] ?? '')
+            return (
+              <li key={item}>
+                {/* The colour change parts a ticked row from the rest; two ticked rows get
+                    a faint green line across, two plain ones the usual divider. */}
+                {index > 0 && (
+                  <span
+                    aria-hidden
+                    className={clsx(
+                      'block h-0.5',
+                      ticked && above
+                        ? 'bg-primary/20'
+                        : ticked || above
+                          ? 'bg-transparent'
+                          : 'mx-4 bg-border',
+                    )}
+                  />
+                )}
+                <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-primary-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
+                  {item}
+                  <input
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={ticked}
+                    onChange={() => toggle(item)}
+                  />
+                  {/* Ticked: the row turns light green, with a dark green tick. */}
+                  <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
+                </label>
+              </li>
+            )
+          })}
         </ul>
       </Card>
       <p className="m-0 text-caption text-fg-muted">{m.tipsMilestonesNote()}</p>

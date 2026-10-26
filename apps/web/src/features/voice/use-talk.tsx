@@ -21,6 +21,12 @@ const TAP_MS = 300
 const PARTIAL_EVERY_MS = 1500
 
 export type TalkMode = 'off' | 'hold' | 'free'
+
+/**
+ * The microphone was explained (and the system asked) since the app was opened: once is
+ * enough until it is closed, as the system asks at most once per run too.
+ */
+let explainedThisRun = false
 /**
  * Where a held finger has slid to: letting go there drops the recording, or drops it and
  * leaves for the chat page.
@@ -108,6 +114,8 @@ export function useTalk({
   // out) and a tap. Taking the microphone can take a moment after the press.
   useEffect(() => {
     if (recorderState !== 'recording') return
+    // It records, so the microphone may be used: no need to explain it again this run.
+    explainedThisRun = true
     playCue('start')
     tapPhone()
   }, [recorderState])
@@ -149,8 +157,9 @@ export function useTalk({
   // to turn it back on when it was refused. True when the press can go ahead.
   const mayRecord = () => {
     if (permission === 'denied') setSheet('denied')
-    else if (permission === 'prompt' && !isHintHidden('micPermission')) setSheet('explain')
-    else return true
+    else if (permission === 'prompt' && !explainedThisRun && !isHintHidden('micPermission')) {
+      setSheet('explain')
+    } else return true
     return false
   }
   const decided = (hide: boolean) => {
@@ -200,6 +209,7 @@ export function useTalk({
         open={sheet === 'explain'}
         // Agreed to: the system asks now, and recording goes on hands-free once it may.
         onContinue={(hide) => {
+          explainedThisRun = true
           decided(hide)
           begin('free')
         }}

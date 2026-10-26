@@ -5,6 +5,9 @@ import { createTestApp } from './app'
 import { baby, diaper } from './fixtures'
 
 const DAY = 86_400_000
+const HOUR = 3_600_000
+/** Today's noon in Shanghai (UTC+8), so a day's records never cross its midnight. */
+const noon = () => Math.floor((Date.now() + 8 * HOUR) / DAY) * DAY - 8 * HOUR + 12 * HOUR
 
 describe("Bobo's observation", () => {
   let t: Awaited<ReturnType<typeof createTestApp>>
@@ -20,7 +23,7 @@ describe("Bobo's observation", () => {
     t.send('POST', '/api/sync/push', headers, {
       events: daysAgo.flatMap((ago) =>
         Array.from({ length: perDay }, (_, i) =>
-          diaper(babyId, familyId, { startAt: Date.now() - ago * DAY - i * 3_600_000 }),
+          diaper(babyId, familyId, { startAt: noon() - ago * DAY - i * HOUR }),
         ),
       ),
     })
