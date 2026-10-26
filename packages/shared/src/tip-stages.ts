@@ -1,9 +1,9 @@
-import type { BabyAge } from '@bobo/shared'
+import type { BabyAge } from './age'
 
 /**
  * What a baby is like at each stage, from birth to 24 months: week by week for the first 12
  * weeks, then month by month. Content written once and checked against its sources (see
- * library.ts); milestones follow the CDC checkpoints (2022), the signs to see a doctor
+ * tips.ts); milestones follow the CDC checkpoints (2022), the signs to see a doctor
  * about follow 国家卫健委《0–6 岁儿童心理行为发育预警征象》.
  */
 export interface Stage {

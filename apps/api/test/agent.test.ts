@@ -268,6 +268,34 @@ describe('voice agent', () => {
     expect(prompt).toContain('confirmed: true')
   })
 
+  it('answers parenting questions from the tips, with the one the parent came from', async () => {
+    let prompt = ''
+    let read = ''
+    fake.setResponses([
+      ({ request }) => {
+        prompt = JSON.stringify(request.systemPrompts)
+        return {
+          toolCalls: [{ name: 'read_tips', input: { ids: ['safe-sleep'], baby: '小米粒' } }],
+        }
+      },
+      ({ request }) => {
+        read = JSON.stringify(request.messages.at(-1))
+        return { text: '每次都让宝宝仰着睡。' }
+      },
+    ])
+    const turn = await runAgent(fake, { ...scope, tip: 'safe-sleep' }, '具体可以怎么做？', LATER)
+    expect(turn.reply).toBe('每次都让宝宝仰着睡。')
+    // Every tip is listed, and the one the parent came from is there in full.
+    expect(prompt).toContain('newborn-feeding：按需喂养')
+    expect(prompt).toContain('家长是从这条贴士点进来问的')
+    expect(prompt).toContain('每次睡觉都让宝宝仰面躺下')
+    // The tool gives the tip in full and the baby's stage.
+    expect(read).toContain('每次睡觉都让宝宝仰面躺下')
+    expect(read).toContain('第 3 周')
+    // Nothing was recorded for a question.
+    expect(await events()).not.toContainEqual(expect.objectContaining({ type: 'note' }))
+  })
+
   it('asks before recording an amount that looks misheard, and records it once confirmed', async () => {
     const bottle = { ...diaper, type: 'bottle', amountMl: 500, milk: 'formula' }
     let result = ''

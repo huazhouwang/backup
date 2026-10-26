@@ -52,6 +52,13 @@ export const SESSIONS = [
     email: 'voice@example.com',
   },
   {
+    key: 'tipAsk',
+    token: 'e2e-tip-ask',
+    userId: 'e2e-tip-ask',
+    name: '测试家长',
+    email: 'tip-ask@example.com',
+  },
+  {
     key: 'micExplain',
     token: 'e2e-mic-explain',
     userId: 'e2e-mic-explain',

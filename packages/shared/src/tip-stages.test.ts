@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { tipById } from './library'
-import { STAGES, doctorSignsFor, milestonesFor, stageFor } from './stages'
+import { STAGES, doctorSignsFor, milestonesFor, stageFor } from './tip-stages'
+import { tipById } from './tips'
 
 const age = (totalDays: number, months: number) => ({ totalDays, months, days: 0 })
 const at = (id: string) => STAGES.find((stage) => stage.id === id)!

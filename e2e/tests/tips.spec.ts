@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { onboard } from '../support/app'
+import { newDevice, onboard, signIn } from '../support/app'
 
 test('the Tips tab shows what to expect at the baby’s age, and a tip in full', async ({ page }) => {
   await onboard(page)
@@ -61,4 +61,54 @@ test('milestones tick off when tapped, and stay ticked on this device', async ({
   expect(flights).toHaveLength(1)
   expect(flights[0]).toBeGreaterThan(250)
   await expect(confetti).toHaveCount(0, { timeout: 5000 })
+})
+
+test('asking Bobo about a tip offers questions, and tells Bobo which tip it is', async ({
+  browser,
+}) => {
+  const { context, page } = await newDevice(browser)
+  await onboard(page)
+  await signIn(context, 'tipAsk')
+  // A stand-in for the assistant: the local server can't reach a model.
+  const sent: unknown[] = []
+  // The conversation, as the server keeps it and the page refetches it.
+  const lines: { id: string; threadId: string; role: string; text: string }[] = []
+  await page.route('**/api/voice/chat', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        json: { lines, threads: { t: { startedAt: Date.now() } }, next: null, activeThreadId: 't' },
+      })
+      return
+    }
+    const body: unknown = route.request().postDataJSON()
+    sent.push(body)
+    const text =
+      typeof body === 'object' && body !== null && 'text' in body ? String(body.text) : ''
+    const reply = '每次睡觉都让宝宝仰着睡。'
+    lines.push({ id: 't~0', threadId: 't', role: 'user', text })
+    lines.push({ id: 't~1', threadId: 't', role: 'assistant', text: reply })
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: `event: done\ndata: ${JSON.stringify({ reply, done: false, confirming: false })}\n\n`,
+    })
+  })
+  await page.goto('/tips/safe-sleep')
+  await page.getByRole('button', { name: '问问 Bobo' }).click()
+  await expect(page).toHaveURL(/\/chat\?tip=safe-sleep/)
+  // Nothing half-written in the field: questions to tap instead.
+  await expect(page.getByLabel('想说的话')).toHaveValue('')
+  await expect(page.getByText('想了解「安全睡眠」的什么？')).toBeVisible()
+  const questions = page.getByRole('group', { name: '可以这样问' })
+  await expect(questions.getByRole('button')).toHaveText([
+    '具体可以怎么做？',
+    '怎样算正常，什么时候要担心？',
+    '结合宝宝最近的记录说说',
+  ])
+  await questions.getByRole('button', { name: '具体可以怎么做？' }).click()
+  await expect(page.getByText('每次睡觉都让宝宝仰着睡。')).toBeVisible()
+  expect(sent).toEqual([
+    expect.objectContaining({ text: '关于「安全睡眠」，具体可以怎么做？', tip: 'safe-sleep' }),
+  ])
+  // Asked: the questions make way for the conversation.
+  await expect(questions).toHaveCount(0)
 })

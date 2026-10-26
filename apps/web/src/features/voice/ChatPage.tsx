@@ -1,3 +1,4 @@
+import { tipById } from '@bobo/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { clsx } from 'clsx'
@@ -42,13 +43,14 @@ function startedLabel(at: number) {
  */
 export function ChatPage({
   focus,
-  draft = '',
+  tip: tipId,
 }: {
   /** Opened to say something: the keyboard comes up. */
   focus: boolean
-  /** Text the field starts with. */
-  draft?: string
+  /** Opened from a tip to ask about it: its id. Bobo is told which tip it is. */
+  tip?: string
 }) {
+  const tip = tipId ? tipById(tipId) : undefined
   const page = useRef<HTMLDivElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
   const field = useRef<HTMLInputElement>(null)
@@ -81,7 +83,9 @@ export function ChatPage({
     list,
   } = useChatHistory(true)
   useBounce(scroller, { axes: ['y'], content: list })
-  const [text, setText] = useState(draft)
+  const [text, setText] = useState('')
+  // A tip's questions are offered until something is asked.
+  const [asked, setAsked] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [unheard, setUnheard] = useState(false)
   // The page renders only in the browser, so this can be asked right away.
@@ -102,7 +106,7 @@ export function ChatPage({
       const mine = append({ role: 'user', text: said })
       let reply: string | null = null
       const turn = await voiceApi.stream(
-        { text: said, spoken, recent },
+        { text: said, spoken, recent, tip: tip?.id },
         {
           // What was heard, corrected: the message changes in place.
           heard: (corrected) => update(mine, corrected),
@@ -136,6 +140,7 @@ export function ChatPage({
   const say = (said: string, spoken = false) => {
     if (!said || send.isPending) return
     if (!spoken) setText('')
+    setAsked(true)
     setUnheard(false)
     send.mutate({ text: said, spoken })
   }
@@ -247,7 +252,11 @@ export function ChatPage({
           )}
           {messages.length === 0 && !busy && (
             <p className="m-0 text-fg-muted">
-              {isError ? m.voiceLoadFailed() : m.voiceChatEmpty()}
+              {isError
+                ? m.voiceLoadFailed()
+                : tip
+                  ? m.tipAskEmpty({ title: tip.title })
+                  : m.voiceChatEmpty()}
             </p>
           )}
           {rows}
@@ -283,6 +292,21 @@ export function ChatPage({
               {m.voiceNo()}
             </Button>
           </div>
+        )}
+        {tip && !asked && !busy && (
+          <fieldset className="m-0 flex flex-wrap gap-2 border-0 p-0">
+            <legend className="sr-only">{m.tipAskSuggestions()}</legend>
+            {[m.tipAskHow(), m.tipAskWorry(), m.tipAskMine()].map((question) => (
+              <Button
+                key={question}
+                variant="soft"
+                className="px-3 text-left"
+                onClick={() => say(m.tipAskQuestion({ title: tip.title, question }))}
+              >
+                {question}
+              </Button>
+            ))}
+          </fieldset>
         )}
         {unheard && <FormError size="caption">{m.voiceUnheard()}</FormError>}
         {(send.isError || hear.isError) && <FormError size="caption">{m.actionFailed()}</FormError>}

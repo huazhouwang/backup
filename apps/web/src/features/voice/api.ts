@@ -158,7 +158,7 @@ export const voiceApi = {
    * (`text`) until the answer is whole.
    */
   stream: async (
-    message: { text: string; spoken?: boolean; recent?: string[] },
+    message: { text: string; spoken?: boolean; recent?: string[]; tip?: string },
     on: { heard?: (text: string) => void; text?: (text: string) => void },
   ): Promise<ChatTurn> => {
     const res = await fetch('/api/voice/chat', {

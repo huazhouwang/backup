@@ -1,4 +1,11 @@
-import { type BreastSegment, DAY, type Event, eventSchema, hasDuration } from '@bobo/shared'
+import {
+  type BreastSegment,
+  DAY,
+  type Event,
+  eventSchema,
+  hasDuration,
+  tipById,
+} from '@bobo/shared'
 import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
 
@@ -21,7 +28,8 @@ import {
   writableBabies,
   writeChanges,
 } from './data'
-import { implausible, nextUpLines } from './guide'
+import { ageOn, implausible, nextUpLines } from './guide'
+import { stageText, tipText } from './tips'
 
 /** Everything a turn's tools act on: one user, their families, one thread. */
 export interface AgentContext {
@@ -365,6 +373,26 @@ export function agentTools(ctx: AgentContext) {
     )
   })
 
+  const readTips = toolDefinition({
+    name: 'read_tips',
+    description:
+      "The app's parenting tips, to answer parenting questions from: the tips with these ids " +
+      'in full (see the tip list in the instructions), and, for a baby, what is usual at its ' +
+      'age: the stage, its tips, milestones and when to see a doctor.',
+    inputSchema: z.object({
+      ids: z.array(z.string()).max(5).optional().meta({ description: 'Tip ids from the list' }),
+      baby: z.string().optional().meta({ description: "A baby's name, for its age's stage" }),
+    }),
+    outputSchema: z.object({ tips: z.array(z.string()), stage: z.string().optional() }),
+  }).server(async ({ ids = [], baby }) => {
+    const tips = ids.flatMap((id) => {
+      const tip = tipById(id)
+      return tip ? [tipText(tip)] : []
+    })
+    const known = baby ? (await babies()).find((item) => item.name === baby) : undefined
+    return known ? { tips, stage: stageText(ageOn(known.birthDate, now, timeZone)) } : { tips }
+  })
+
   const endConversation = toolDefinition({
     name: 'end_conversation',
     description:
@@ -377,5 +405,5 @@ export function agentTools(ctx: AgentContext) {
     return { ended: true }
   })
 
-  return [listBabies, findEvents, record, updateEvent, deleteEvent, undo, endConversation]
+  return [listBabies, findEvents, record, updateEvent, deleteEvent, undo, readTips, endConversation]
 }

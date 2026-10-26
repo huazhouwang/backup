@@ -1,4 +1,4 @@
-import type { TipTopic } from './library'
+import type { TipTopic } from '@bobo/shared'
 
 /** Each topic's colours: the soft card, its edge and its text. */
 export const TOPIC_STYLE: Record<TipTopic, { card: string; text: string; icon: string }> = {

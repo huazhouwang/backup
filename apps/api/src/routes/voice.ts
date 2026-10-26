@@ -75,6 +75,8 @@ const textSchema = z.object({
     .array(z.string().transform((line) => line.slice(0, MAX_TEXT)))
     .transform((lines) => lines.slice(-4))
     .optional(),
+  /** The tip the chat was opened from, to ask about it (a tip id). */
+  tip: z.string().max(64).optional(),
 })
 
 /**
@@ -314,6 +316,8 @@ interface TurnOptions {
   spoken?: { recent: string[]; onHeard: (text: string) => void }
   /** The reply so far, as the model writes it. */
   onText?: (text: string) => void
+  /** The tip the chat was opened from. */
+  tip?: string
 }
 
 /** One message to the user's agent, from the chat box or Siri. */
@@ -346,6 +350,7 @@ async function turn(
     phrase: settings.phrase,
     modelOptions: modelOptionsFor(ai.ai.provider, ai.ai.model),
     onText: options.onText,
+    tip: options.tip,
   }
   let text = said
   if (options.spoken) {
@@ -407,7 +412,7 @@ export function voiceRoutes(adapterFor: AdapterFor) {
       )
       .post('/chat', json(textSchema), async (c) => {
         const userId = c.get('user').id
-        const { text, timeZone, locale, spoken, recent = [] } = c.req.valid('json')
+        const { text, timeZone, locale, spoken, recent = [], tip } = c.req.valid('json')
         // The chat asks for the answer as it is written; other callers get it whole.
         if (c.req.header('Accept')?.includes('text/event-stream')) {
           return streamSSE(c, async (stream) => {
@@ -424,6 +429,7 @@ export function voiceRoutes(adapterFor: AdapterFor) {
                 result = await turn(c.env, adapterFor, userId, text, Date.now(), {
                   timeZone,
                   locale,
+                  tip,
                   spoken: spoken
                     ? { recent, onHeard: (heard) => send('heard', { text: heard }) }
                     : undefined,
@@ -443,7 +449,7 @@ export function voiceRoutes(adapterFor: AdapterFor) {
         if (burst && !burst.success) return c.json(stop(REPLIES.slowDown), 429)
         try {
           return c.json(
-            await turn(c.env, adapterFor, userId, text, Date.now(), { timeZone, locale }),
+            await turn(c.env, adapterFor, userId, text, Date.now(), { timeZone, locale, tip }),
           )
         } catch (error) {
           console.error('Voice chat failed', error)

@@ -1,4 +1,15 @@
-import { type Baby, ageNorms, babyAge, localDateString } from '@bobo/shared'
+import {
+  type Baby,
+  STAGES,
+  type Stage,
+  ageNorms,
+  babyAge,
+  doctorSignsFor,
+  localDateString,
+  milestonesFor,
+  stageFor,
+  tipById,
+} from '@bobo/shared'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { clsx } from 'clsx'
@@ -18,9 +29,7 @@ import { useBabyEvents } from '../events/use-events'
 import { typingDots } from '../voice/ChangingText'
 import { tipsQueries } from './api'
 import { type Comparison, compareWithUsual } from './compare'
-import { tipById } from './library'
 import { useMilestoneChecks } from './milestone-checks'
-import { STAGES, type Stage, doctorSignsFor, milestonesFor, stageFor } from './stages'
 import { TOPIC_STYLE } from './topic-style'
 
 /**

@@ -1,3 +1,4 @@
+import { tipById } from '@bobo/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 
@@ -6,10 +7,8 @@ import { NoticeCard } from '../../components/ui/Card'
 import { ChatIcon } from '../../components/ui/ChatIcon'
 import { Chevron } from '../../components/ui/Chevron'
 import { TopicIcon } from '../../components/ui/TopicIcon'
-import { holdKeyboard } from '../../lib/keyboard'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
-import { tipById } from './library'
 import { TOPIC_STYLE } from './topic-style'
 
 function List({ title, items }: { title: string; items: string[] }) {
@@ -48,13 +47,8 @@ export function TipDetail({ tipId }: { tipId: string }) {
     )
   }
   const style = TOPIC_STYLE[tip.topic]
-  const ask = () => {
-    holdKeyboard()
-    void navigate({
-      to: '/chat',
-      search: { say: true, draft: m.tipAskDraft({ title: tip.title }) },
-    })
-  }
+  // Questions about the tip come up ready to tap, so the keyboard stays down.
+  const ask = () => void navigate({ to: '/chat', search: { tip: tip.id } })
   return (
     <article className="flex flex-col gap-5">
       {back}
