@@ -1,16 +1,6 @@
-import {
-  CUES,
-  CUE_MODES,
-  type Cue,
-  type CueMode,
-  playCue,
-  setCueMode,
-  useCueMode,
-} from '../lib/cues'
+import { CUE_MODES, type CueMode, setCueMode, useCueMode } from '../lib/cues'
 import { m } from '../paraglide/messages.js'
-import { Button } from './ui/Button'
 import { Card, CardTitle } from './ui/Card'
-import { PlayIcon } from './ui/PlayIcon'
 import { SegmentedControl } from './ui/SegmentedControl'
 
 const modeLabel: Record<CueMode, () => string> = {
@@ -19,16 +9,13 @@ const modeLabel: Record<CueMode, () => string> = {
   off: m.cuesOff,
 }
 
-/** Each cue's name and when it sounds. */
-const cueText: Record<Cue, { name: () => string; when: () => string }> = {
-  start: { name: m.cueStart, when: m.cueStartWhen },
-  send: { name: m.cueSend, when: m.cueSendWhen },
-  cancel: { name: m.cueCancel, when: m.cueCancelWhen },
-  reply: { name: m.cueReply, when: m.cueReplyWhen },
-  error: { name: m.cueError, when: m.cueErrorWhen },
+const modeHint: Record<CueMode, () => string> = {
+  switch: m.cuesSwitchHint,
+  always: m.cuesAlwaysHint,
+  off: m.cuesOffHint,
 }
 
-/** Whether the voice cues sound, through the silent switch or not, and each to try out. */
+/** Whether the app's cues sound: following the silent switch, through it, or not at all. */
 export function CuesCard() {
   const mode = useCueMode()
   return (
@@ -40,33 +27,7 @@ export function CuesCard() {
         value={mode}
         onChange={setCueMode}
       />
-      <p className="m-0 text-caption text-fg-muted">
-        {mode === 'always'
-          ? m.cuesAlwaysHint()
-          : mode === 'off'
-            ? m.cuesOffHint()
-            : m.cuesSwitchHint()}
-      </p>
-      {mode !== 'off' && (
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {CUES.map((cue) => (
-            <li key={cue} className="flex items-center gap-3">
-              <Button
-                variant="soft"
-                className="size-touch px-0"
-                aria-label={m.cueTry({ name: cueText[cue].name() })}
-                onClick={() => playCue(cue)}
-              >
-                <PlayIcon className="size-5" />
-              </Button>
-              <span className="flex min-w-0 flex-col">
-                <span className="font-extrabold">{cueText[cue].name()}</span>
-                <span className="text-caption text-fg-muted">{cueText[cue].when()}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <p className="m-0 text-caption text-fg-muted">{modeHint[mode]()}</p>
     </Card>
   )
 }

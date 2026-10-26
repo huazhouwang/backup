@@ -16,19 +16,30 @@ const session = () =>
  * microphone. A cue that should sound through the silent switch plays back for its length,
  * which may pause other apps' audio (only "playback" passes the switch on iOS).
  */
-type AudioUse = 'sounds' | 'recording' | 'cue'
+export type AudioUse = 'sounds' | 'recording' | 'cue'
 const SESSION_TYPES: Record<AudioUse, AudioSessionType> = {
   sounds: 'ambient',
   recording: 'play-and-record',
   cue: 'playback',
 }
 let use: AudioUse = 'sounds'
+/** When the session last changed (performance.now()): iOS takes a moment to follow. */
+let changedAt = Number.NEGATIVE_INFINITY
+/** How long iOS takes to switch the session over, about. */
+export const SESSION_SETTLE_MS = 250
 
 export function setAudioUse(next: AudioUse) {
+  if (next !== use) changedAt = performance.now()
   use = next
   const current = session()
   if (current) current.type = SESSION_TYPES[next]
 }
+
+/** What the audio is for right now. */
+export const audioUse = () => use
+
+/** How long until a session change just made has taken effect (ms; 0 once it has). */
+export const untilSettled = () => Math.max(0, changedAt + SESSION_SETTLE_MS - performance.now())
 
 /** For the next `ms`, sounds play through the silent switch (recording already does). */
 export function soundThroughSilent(ms: number) {

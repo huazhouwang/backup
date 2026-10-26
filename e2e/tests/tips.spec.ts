@@ -40,4 +40,16 @@ test('milestones tick off when tapped, and stay ticked on this device', async ({
   // Tapped again: off.
   await page.getByText('对着你笑').click()
   await expect(page.getByRole('checkbox', { name: '对着你笑' })).not.toBeChecked()
+
+  // All of them ticked off: confetti falls, and it is said for screen readers.
+  const confetti = page.locator('body > div[aria-hidden="true"].fixed span')
+  for (const item of ['对着你笑', '你说话时会安静下来或看向你', '趴着能抬一下头']) {
+    // oxlint-disable-next-line no-await-in-loop -- tapped one after another
+    await page.getByText(item).click()
+  }
+  await expect(confetti).toHaveCount(0)
+  await page.getByText('手能张开').click()
+  await expect(confetti.first()).toBeAttached()
+  await expect(page.getByText('都做到啦！')).toBeAttached()
+  await expect(confetti).toHaveCount(0, { timeout: 5000 })
 })

@@ -6,8 +6,10 @@ import { clsx } from 'clsx'
 import { Card, CardTitle } from '../../components/ui/Card'
 import { CheckIcon } from '../../components/ui/CheckIcon'
 import { Chevron } from '../../components/ui/Chevron'
+import { useConfetti } from '../../components/ui/Confetti'
 import { ChipGroup } from '../../components/ui/ToggleChip'
 import { TopicIcon } from '../../components/ui/TopicIcon'
+import { playCue } from '../../lib/cues'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
@@ -185,6 +187,18 @@ function Usual({ stage }: { stage: Stage }) {
 function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
   const checkpoint = milestonesFor(stage)
   const { isChecked, toggle } = useMilestoneChecks(babyId)
+  const { confetti, fire } = useConfetti()
+  const allDone = checkpoint.items.every(isChecked)
+  // Ticking one off dings; ticking off the last one celebrates.
+  const tick = (item: string) => {
+    const ticking = !isChecked(item)
+    toggle(item)
+    if (!ticking) return
+    if (checkpoint.items.every((other) => other === item || isChecked(other))) {
+      playCue('celebrate')
+      fire()
+    } else playCue('tick')
+  }
   return (
     <section className="flex flex-col gap-2">
       <CardTitle small>{m.tipsMilestonesTitle({ months: checkpoint.by })}</CardTitle>
@@ -216,7 +230,7 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
                     type="checkbox"
                     className="peer sr-only"
                     checked={ticked}
-                    onChange={() => toggle(item)}
+                    onChange={() => tick(item)}
                   />
                   {/* Ticked: the row turns light green, with a dark green tick. */}
                   <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
@@ -227,6 +241,10 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
         </ul>
       </Card>
       <p className="m-0 text-caption text-fg-muted">{m.tipsMilestonesNote()}</p>
+      <p className="sr-only" aria-live="polite">
+        {allDone ? m.tipsMilestonesDone() : ''}
+      </p>
+      {confetti}
     </section>
   )
 }

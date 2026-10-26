@@ -4,10 +4,10 @@
  * spot (no audio files), round and quiet. On iPhone they follow the ring/silent switch
  * unless the settings say to sound through it, or are off; the tap is always on.
  */
-import { audioContext, soundThroughSilent } from './audio'
+import { audioContext, audioUse, soundThroughSilent, untilSettled } from './audio'
 import { type Codec, createStoredValue, useStore } from './store'
 
-export const CUES = ['start', 'send', 'cancel', 'reply', 'error'] as const
+const CUES = ['start', 'send', 'cancel', 'reply', 'error', 'tick', 'celebrate'] as const
 export type Cue = (typeof CUES)[number]
 
 /** Whether cues sound: following the ring/silent switch, through it, or not at all. */
@@ -47,6 +47,18 @@ const NOTES: Record<Cue, Array<[number, number]>> = {
     [392, 0.1],
     [262, 0.16],
   ],
+  // Something ticked off: a short bright ding.
+  tick: [
+    [1047, 0.05],
+    [1319, 0.12],
+  ],
+  // Everything ticked off: a rising arpeggio, the last note held.
+  celebrate: [
+    [523, 0.08],
+    [659, 0.08],
+    [784, 0.08],
+    [1047, 0.3],
+  ],
 }
 const VOLUME = 0.12
 /** How long the start cue sounds, so the microphone can leave it out. */
@@ -59,10 +71,29 @@ const cueLength = (cue: Cue) =>
     0,
   ) * 1000
 
-/** Plays a cue, as the settings say. Called within a tap, as browsers only let sound start from one. */
+/**
+ * Plays a cue as the 提示音 setting says; every cue in the app goes through here.
+ *
+ * - Off: nothing.
+ * - Following the silent switch: only while the session follows it ("ambient"). With the
+ *   microphone on, iOS records in a session that sounds through the switch, so a cue then
+ *   (the start cue) stays silent and only the phone's tap says it; just after the
+ *   microphone is let go (send, cancel) it waits for the session to switch back first.
+ * - Through the silent switch: the session plays back for the cue's length.
+ */
 export function playCue(cue: Cue) {
   const mode = cueMode.get()
   if (mode === 'off') return
+  if (mode === 'switch' && audioUse() === 'recording') return
+  const wait = mode === 'switch' ? untilSettled() : 0
+  if (wait > 0) {
+    setTimeout(() => playCue(cue), wait)
+    return
+  }
+  sound(cue, mode)
+}
+
+function sound(cue: Cue, mode: CueMode) {
   try {
     // A little longer than the cue, so its tail isn't cut.
     if (mode === 'always') soundThroughSilent(cueLength(cue) + 300)
