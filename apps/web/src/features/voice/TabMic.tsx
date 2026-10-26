@@ -358,6 +358,9 @@ export function TabMic() {
       if (!(event.target instanceof Element && event.target.closest('[data-scrolls]'))) {
         event.preventDefault()
       }
+      // Nor do the page's own gestures (its bounce, pull to refresh) hear it, on the window
+      // after the document; the conversation's scrolling, on its own element, already has.
+      event.stopPropagation()
     }
     document.addEventListener('touchmove', still, { passive: false })
     return () => document.removeEventListener('touchmove', still)

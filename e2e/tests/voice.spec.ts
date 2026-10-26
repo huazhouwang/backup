@@ -1,6 +1,7 @@
 import { type Page, expect, test } from '@playwright/test'
 
 import { newDevice, onboard, signIn } from '../support/app'
+import { drag, transformOf } from '../support/touch'
 
 /** One server-sent event. */
 const event = (name: string, data: unknown) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`
@@ -11,6 +12,17 @@ const event = (name: string, data: unknown) => `event: ${name}\ndata: ${JSON.str
  * what is shown. Parts heard while talking come back at once; the whole recording waits for
  * `hear()`, heard with a mistake, and the answer, which corrects it, waits for `answer()`.
  */
+/** A finger slid over the frost moves nothing behind it: neither the page nor its pull. */
+async function slideOverFrost(page: Page, from: [number, number], to: [number, number]) {
+  const release = await drag(page, from, to)
+  expect(await transformOf(page, 'main')).toBe('')
+  await expect(page.locator('[data-pull-to-refresh] > output')).toHaveAttribute(
+    'aria-hidden',
+    'true',
+  )
+  await release()
+}
+
 async function standInApi(page: Page) {
   const uploads: { type: string | null; head: string; query: URLSearchParams }[] = []
   let partials = 0
@@ -273,6 +285,9 @@ test('talks to Bobo from the tab bar, over the blurred page', async ({ browser }
   await expect(page.getByText('我说：换尿布 1')).toBeVisible()
   await expect(page.getByText('已记录：换尿布 1。还有吗？')).toBeVisible()
   await expect(page.getByText('按住麦克风继续说 · 点空白处关闭')).toBeVisible()
+  // Down (Today's pull to refresh) and up (the page's bounce at its end).
+  await slideOverFrost(page, [60, 150], [60, 420])
+  await slideOverFrost(page, [60, 420], [60, 150])
 
   // Held again: the first turn stays, moving up; the next shows as it is heard, then answered.
   await page.mouse.move(x, y)
