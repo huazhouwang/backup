@@ -1,12 +1,29 @@
 /**
  * Short sounds and a tap of the phone for moments the user may not be looking at the
  * screen, such as talking to the assistant with a baby in their arms. Sounds are made on the
- * spot (no audio files), round and quiet; on iPhone they follow the ring/silent switch, the
- * tap doesn't.
+ * spot (no audio files), round and quiet. On iPhone they follow the ring/silent switch
+ * unless the settings say to sound through it, or are off; the tap is always on.
  */
-import { audioContext } from './audio'
+import { audioContext, soundThroughSilent } from './audio'
+import { type Codec, createStoredValue, useStore } from './store'
 
-export type Cue = 'start' | 'send' | 'cancel' | 'reply' | 'error'
+export const CUES = ['start', 'send', 'cancel', 'reply', 'error'] as const
+export type Cue = (typeof CUES)[number]
+
+/** Whether cues sound: following the ring/silent switch, through it, or not at all. */
+export const CUE_MODES = ['switch', 'always', 'off'] as const
+export type CueMode = (typeof CUE_MODES)[number]
+
+const cueModeCodec: Codec<CueMode> = {
+  parse: (raw) => CUE_MODES.find((mode) => mode === raw) ?? 'switch',
+  // The default isn't stored.
+  serialize: (mode) => (mode === 'switch' ? null : mode),
+}
+/** Per device, like the other display settings. */
+const cueMode = createStoredValue<CueMode>('bobo.cues', cueModeCodec, 'switch')
+
+export const useCueMode = () => useStore(cueMode)
+export const setCueMode = (mode: CueMode) => cueMode.set(mode)
 
 /** Each cue's notes: pitch (Hz) and length (s), played one after another. */
 const NOTES: Record<Cue, Array<[number, number]>> = {
@@ -35,9 +52,20 @@ const VOLUME = 0.12
 /** How long the start cue sounds, so the microphone can leave it out. */
 export const START_CUE_MS = 180
 
-/** Plays a cue. Called within a tap, as browsers only let sound start from one. */
+/** How long a cue sounds, in ms. */
+const cueLength = (cue: Cue) =>
+  NOTES[cue].reduce(
+    (sum, [, length], i, notes) => sum + length * (i < notes.length - 1 ? 0.85 : 1),
+    0,
+  ) * 1000
+
+/** Plays a cue, as the settings say. Called within a tap, as browsers only let sound start from one. */
 export function playCue(cue: Cue) {
+  const mode = cueMode.get()
+  if (mode === 'off') return
   try {
+    // A little longer than the cue, so its tail isn't cut.
+    if (mode === 'always') soundThroughSilent(cueLength(cue) + 300)
     const context = audioContext()
     let at = context.currentTime
     for (const [pitch, length] of NOTES[cue]) {

@@ -6,17 +6,37 @@
 let shared: AudioContext | null = null
 
 /** Safari's Audio Session API (iOS 16.4+), not yet in TypeScript's DOM types. */
-type AudioSessionType = 'ambient' | 'play-and-record'
+type AudioSessionType = 'ambient' | 'playback' | 'play-and-record'
 const session = () =>
   (navigator as Navigator & { audioSession?: { type: AudioSessionType } }).audioSession
 
 /**
- * While nothing records, the app's audio mixes with other apps', so a running context never
- * pauses someone's music or podcast; recording takes the microphone.
+ * What the app's audio is for. Sounds mix with other apps' audio, so a running context never
+ * pauses someone's music or podcast, and so follow the ring/silent switch. Recording takes the
+ * microphone. A cue that should sound through the silent switch plays back for its length,
+ * which may pause other apps' audio (only "playback" passes the switch on iOS).
  */
-export function setAudioUse(use: 'sounds' | 'recording') {
+type AudioUse = 'sounds' | 'recording' | 'cue'
+const SESSION_TYPES: Record<AudioUse, AudioSessionType> = {
+  sounds: 'ambient',
+  recording: 'play-and-record',
+  cue: 'playback',
+}
+let use: AudioUse = 'sounds'
+
+export function setAudioUse(next: AudioUse) {
+  use = next
   const current = session()
-  if (current) current.type = use === 'recording' ? 'play-and-record' : 'ambient'
+  if (current) current.type = SESSION_TYPES[next]
+}
+
+/** For the next `ms`, sounds play through the silent switch (recording already does). */
+export function soundThroughSilent(ms: number) {
+  if (use !== 'sounds') return
+  setAudioUse('cue')
+  setTimeout(() => {
+    if (use === 'cue') setAudioUse('sounds')
+  }, ms)
 }
 
 /** The context, asked to run (it only will within a tap, on iOS). */
