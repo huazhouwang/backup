@@ -11,6 +11,7 @@ import { wakeAudioOnTaps } from '../../lib/audio'
 import { START_CUE_MS, playCue, tapPhone } from '../../lib/cues'
 import { hideHint, isHintHidden } from '../../lib/hints'
 import { m } from '../../paraglide/messages.js'
+import { voiceApi } from './api'
 import { MicDeniedSheet, MicExplainSheet } from './MicSheets'
 import { MAX_RECORDING_MS, type Startup, useMicPermission, useRecorder } from './recorder'
 
@@ -80,6 +81,9 @@ export function useTalk({
     } else {
       playCue('cancel')
       setError(recording.why === 'unheard' ? m.voiceMicUnheard() : m.voiceMicTooShort())
+      // What the audio was doing, so the logs can say why nothing came through.
+      if (recording.why === 'unheard')
+        void voiceApi.reportUnheard(recording.unheard).catch(() => {})
       onDrop()
     }
   }

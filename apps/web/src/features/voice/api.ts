@@ -1,6 +1,6 @@
 import { HttpError, apiFetch } from '../../lib/api'
 import { getLocale } from '../../lib/i18n'
-import type { Startup } from './recorder'
+import type { Startup, Unheard } from './recorder'
 
 /**
  * The Siri shortcut, shared from iCloud (docs/siri.md). Opening it shows the Shortcuts
@@ -149,6 +149,9 @@ export const voiceApi = {
       })}`,
       { method: 'POST', body: recording, headers: { 'Content-Type': 'audio/wav' } },
     ),
+  /** A recording that heard nothing: what the audio was doing, for the logs. */
+  reportUnheard: (unheard: Unheard) =>
+    apiFetch<void>('/api/voice/unheard', { method: 'POST', body: JSON.stringify(unheard) }),
   /**
    * Sends a message and follows the answer as it is written. A spoken one is corrected
    * first (`heard`), with the chat's `recent` lines as context; the reply then grows

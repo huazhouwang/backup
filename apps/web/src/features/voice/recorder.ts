@@ -114,19 +114,71 @@ export type Recording =
   /** Let go too soon. */
   | { said: null; why: 'short' }
   /** Long enough, but no sound came through: the audio wasn't running. */
-  | { said: null; why: 'unheard' }
+  | { said: null; why: 'unheard'; unheard: Unheard }
+
+/** What the audio was doing when a recording heard nothing, for the logs. */
+export interface Unheard {
+  /** The audio context's state at the end. */
+  contextState: string
+  /** The context was replaced after nothing came through at first. */
+  rebuilt: boolean
+  /** How long it waited for sound, from the microphone being granted (ms). */
+  waitedMs: number
+}
+
+/** The audio graph one recording is heard through. */
+interface Wiring {
+  context: AudioContext
+  /** What the microphone feeds, to be let go of afterwards. */
+  nodes: AudioNode[]
+  levels: AnalyserNode
+  /** Runs the context again whenever it stops while recording. */
+  keepRunning: () => void
+}
 
 interface Session {
   stream: MediaStream
-  context: AudioContext
-  /** What the microphone feeds, to be let go of afterwards; the context itself is kept. */
-  nodes: AudioNode[]
-  /** Runs the context again whenever it stops while recording. */
-  keepRunning: () => void
-  startup: Startup
+  wiring: Wiring
+  /** Granted at this moment (performance.now()): nothing may come through yet. */
+  grantedAt: number
+  /** Set once the first samples came through: then it really records. */
+  startup: Startup | null
+  rebuilt: boolean
   /** The microphone's samples so far, at the context's rate. */
   blocks: Float32Array[]
-  startedAt: number
+}
+
+/** With nothing come through by now, the audio is built again on a fresh context. */
+const NOTHING_YET_MS = 1_000
+
+/** Hears the microphone through `context`, handing its samples to `take`. */
+async function wire(
+  context: AudioContext,
+  stream: MediaStream,
+  take: (samples: Float32Array) => void,
+): Promise<Wiring> {
+  // Taking the microphone switches the phone's audio over, which can stop the context,
+  // and nothing would come through. With the microphone on it may run again without a
+  // tap, so it is restarted now and whenever it stops while recording.
+  const keepRunning = () => {
+    if (context.state !== 'running') void context.resume()
+  }
+  keepRunning()
+  const source = context.createMediaStreamSource(stream)
+  const levels = context.createAnalyser()
+  levels.fftSize = 256
+  source.connect(levels)
+  const nodes = await tap(context, source, take)
+  nodes.push(levels)
+  context.addEventListener('statechange', keepRunning)
+  return { context, nodes, levels, keepRunning }
+}
+
+/** Lets go of an audio graph; a context of its own (not the shared one) is closed too. */
+function unwire({ context, nodes, keepRunning }: Wiring) {
+  for (const node of nodes) node.disconnect()
+  context.removeEventListener('statechange', keepRunning)
+  if (context !== audioContext()) void context.close()
 }
 
 /**
@@ -194,8 +246,7 @@ export function useRecorder() {
     setState('idle')
     setAnalyser(null)
     if (!current) return null
-    for (const node of current.nodes) node.disconnect()
-    current.context.removeEventListener('statechange', current.keepRunning)
+    unwire(current.wiring)
     for (const track of current.stream.getTracks()) track.stop()
     setAudioUse('sounds')
     return current
@@ -208,7 +259,6 @@ export function useRecorder() {
   const start = useCallback(async (quietMs = 0) => {
     if (session.current) return
     const pressedAt = performance.now()
-    let quietUntil = Number.POSITIVE_INFINITY
     abandoned.current = false
     setState('starting')
     // Asked to run within the press, before anything is awaited; usually an earlier tap
@@ -225,37 +275,41 @@ export function useRecorder() {
         setAudioUse('sounds')
         return
       }
-      // Taking the microphone switches the phone's audio over, which can stop the context,
-      // and nothing would come through. With the microphone on it may run again without a
-      // tap, so it is restarted now and whenever it stops while recording.
-      const keepRunning = () => {
-        if (context.state !== 'running') void context.resume()
-      }
-      keepRunning()
-      const source = context.createMediaStreamSource(stream)
-      const levels = context.createAnalyser()
-      levels.fftSize = 256
-      source.connect(levels)
+      const grantedAt = performance.now()
       const blocks: Float32Array[] = []
-      const nodes = await tap(context, source, (samples) => {
-        if (performance.now() >= quietUntil) blocks.push(samples)
-      })
-      nodes.push(levels)
-      context.addEventListener('statechange', keepRunning)
-      const readyAt = performance.now()
-      quietUntil = readyAt + quietMs
-      session.current = {
-        stream,
-        context,
-        nodes,
-        keepRunning,
-        startup: { readyMs: Math.round(readyAt - pressedAt), micMs },
-        blocks,
-        startedAt: readyAt,
+      let quietUntil = Number.POSITIVE_INFINITY
+      // The first samples to come through, not the microphone being granted, start the
+      // recording: before them nothing is heard, so nothing may say it listens.
+      const take = (samples: Float32Array) => {
+        const now = performance.now()
+        const current = session.current
+        if (current && !current.startup) {
+          current.startup = { readyMs: Math.round(now - pressedAt), micMs }
+          quietUntil = now + quietMs
+          setStartedAt(Date.now())
+          setState('recording')
+        }
+        if (now >= quietUntil) blocks.push(samples)
       }
-      setAnalyser(levels)
-      setStartedAt(Date.now())
-      setState('recording')
+      const wiring = await wire(context, stream, take)
+      session.current = { stream, wiring, grantedAt, startup: null, rebuilt: false, blocks }
+      setAnalyser(wiring.levels)
+      // Nothing yet: a context made now, with the microphone on, usually hears it.
+      setTimeout(() => {
+        const current = session.current
+        if (!current || current.stream !== stream || current.startup) return
+        unwire(current.wiring)
+        current.rebuilt = true
+        const fresh = new AudioContext()
+        void wire(fresh, stream, take).then((rewired) => {
+          if (session.current !== current) {
+            unwire(rewired)
+            return
+          }
+          current.wiring = rewired
+          setAnalyser(rewired.levels)
+        })
+      }, NOTHING_YET_MS)
     } catch (error) {
       setAudioUse('sounds')
       setState('idle')
@@ -266,7 +320,7 @@ export function useRecorder() {
   const snapshot = useCallback(() => {
     const current = session.current
     if (!current || current.blocks.length === 0) return null
-    return wav(at16k(current.blocks, current.context.sampleRate))
+    return wav(at16k(current.blocks, current.wiring.context.sampleRate))
   }, [])
 
   const finish = useCallback((): Recording => {
@@ -276,11 +330,17 @@ export function useRecorder() {
       abandoned.current = true
       return { said: null, why: 'short' }
     }
-    if (performance.now() - current.startedAt < MIN_RECORDING_MS) {
-      return { said: null, why: 'short' }
+    const now = performance.now()
+    if (now - current.grantedAt < MIN_RECORDING_MS) return { said: null, why: 'short' }
+    const samples = at16k(current.blocks, current.wiring.context.sampleRate)
+    if (!current.startup || samples.length < MIN_HEARD_S * SAMPLE_RATE) {
+      const unheard: Unheard = {
+        contextState: current.wiring.context.state,
+        rebuilt: current.rebuilt,
+        waitedMs: Math.round(now - current.grantedAt),
+      }
+      return { said: null, why: 'unheard', unheard }
     }
-    const samples = at16k(current.blocks, current.context.sampleRate)
-    if (samples.length < MIN_HEARD_S * SAMPLE_RATE) return { said: null, why: 'unheard' }
     return { said: wav(samples), startup: current.startup }
   }, [release])
 
