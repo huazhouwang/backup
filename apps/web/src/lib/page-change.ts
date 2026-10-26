@@ -40,7 +40,11 @@ const MOTIONS: Record<PageTransition, { out?: Motion; in?: Motion; leftOnTop: bo
   },
   // Between tabs: a quick fade.
   tab: {
-    out: { keyframes: [{}, { opacity: 0 }], options: { duration: 120, easing: 'ease-out' } },
+    // Held at its end (fill), or the page left would show again under the one fading in.
+    out: {
+      keyframes: [{}, { opacity: 0 }],
+      options: { duration: 120, easing: 'ease-out', fill: 'both' },
+    },
     in: {
       keyframes: [{ translate: '0 0.5rem', opacity: 0 }, {}],
       options: { duration: 220, delay: 60, easing: EASE_OUT, fill: 'both' },
@@ -57,7 +61,10 @@ const MOTIONS: Record<PageTransition, { out?: Motion; in?: Motion; leftOnTop: bo
   },
   // And back down off it, the page already there underneath.
   down: {
-    out: { keyframes: [{}, { translate: '0 100%' }], options: { duration: 300, easing: EASE_OUT } },
+    out: {
+      keyframes: [{}, { translate: '0 100%' }],
+      options: { duration: 300, easing: EASE_OUT, fill: 'both' },
+    },
     leftOnTop: true,
   },
 }

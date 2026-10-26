@@ -130,3 +130,29 @@ test('opening a tip slides the page itself, leaving nothing behind', async ({ pa
     await page.evaluate(() => window.innerWidth),
   )
 })
+
+test('switching tabs fades the page left out for good, with no ghost of it', async ({ page }) => {
+  await onboard(page)
+  await page.goto('/tips')
+  // Stops the change as soon as it starts, at a point past the page left's fade while the
+  // new page is still fading in, and reads how much of the page left shows.
+  const seen = page.evaluate(
+    () =>
+      new Promise<string>((resolve) => {
+        const watch = new MutationObserver(() => {
+          const layer = document.querySelector('[data-leaving-page]')
+          const moving = document.getAnimations()
+          if (!layer || moving.length === 0) return
+          watch.disconnect()
+          for (const animation of moving) {
+            animation.pause()
+            animation.currentTime = 200
+          }
+          resolve(getComputedStyle(layer).opacity)
+        })
+        watch.observe(document.body, { childList: true, subtree: true, attributes: true })
+      }),
+  )
+  await page.getByRole('navigation').getByRole('link', { name: '设置' }).click()
+  expect(await seen).toBe('0')
+})
