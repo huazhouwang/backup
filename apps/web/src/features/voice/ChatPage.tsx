@@ -274,14 +274,10 @@ export function ChatPage({
           />
         </div>
       </div>
-      <div
-        className="flex flex-col gap-2 border-t-2 border-border pt-2 pr-safe-4 pl-safe-4"
-        // Clear of the home indicator, which the keyboard covers when it's up.
-        style={{
-          paddingBottom:
-            'calc(0.5rem + max(0px, env(safe-area-inset-bottom) - var(--keyboard, 0px)))',
-        }}
-      >
+      {/* Clear of the home indicator, which the keyboard covers when it's up. Typing means
+          the keyboard is up: on the Home Screen iOS shrinks the whole page for it rather
+          than covering it, so --keyboard stays 0 and only the focus tells. */}
+      <div className="flex flex-col gap-2 border-t-2 border-border pt-2 pr-safe-4 pb-[calc(0.5rem+max(0px,env(safe-area-inset-bottom)-var(--keyboard,0px)))] pl-safe-4 has-[input:focus]:pb-2">
         {confirming && !busy && (
           <div className="flex gap-2">
             <Button className="flex-1" onClick={() => say(m.voiceYes())}>
