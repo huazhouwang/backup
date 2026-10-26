@@ -54,7 +54,8 @@ export function EditorCanvas({ svgRef }: { svgRef?: React.RefObject<SVGSVGElemen
           </div>
         )}
       </CanvasFrame>
-      {sandbox && <SandboxCanvas className="absolute inset-0 size-full bg-background" />}
+      {/* On a phone it stops above the tab bar, so its own toolbar along the bottom stays in reach */}
+      {sandbox && <SandboxCanvas className="absolute inset-0 bg-background max-md:bottom-[calc(3.5rem+env(safe-area-inset-bottom))]" />}
       <div className="absolute top-2 left-2">
         <LevelSwitcher className="bg-background shadow-xs" />
       </div>

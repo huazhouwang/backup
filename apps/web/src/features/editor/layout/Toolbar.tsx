@@ -1,5 +1,16 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeftIcon, DownloadIcon, EllipsisIcon, ImageIcon, LayoutPanelLeftIcon, Redo2Icon, Share2Icon, ShapesIcon, Undo2Icon } from 'lucide-react';
+import {
+  ArrowLeftIcon,
+  DownloadIcon,
+  EllipsisIcon,
+  FlaskConicalIcon,
+  ImageIcon,
+  LayoutPanelLeftIcon,
+  Redo2Icon,
+  Share2Icon,
+  ShapesIcon,
+  Undo2Icon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -87,8 +98,8 @@ export function Toolbar({ onShare, onExport }: { onShare: () => void; onExport: 
           <DropdownMenuItem onClick={() => setWidgetsOpen(true)}>
             <ShapesIcon /> {m.editor_widgets()}
           </DropdownMenuItem>
-          <DropdownMenuCheckboxItem checked={sandboxCanvas} onCheckedChange={on => setSandboxCanvas(!!on)}>
-            {m.editor_sandbox_canvas()}
+          <DropdownMenuCheckboxItem checked={sandboxCanvas} onCheckedChange={on => setSandboxCanvas(!!on)} closeOnClick>
+            <FlaskConicalIcon /> {m.editor_sandbox_canvas()}
           </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
           {(['furniture', 'labels', 'dimensions'] as const).map(k => (

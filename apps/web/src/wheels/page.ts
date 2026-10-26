@@ -7,7 +7,7 @@ import type { Point } from '@plinth/core';
 import { overwriteGetLocale } from '@/paraglide/runtime';
 import { m } from '@/lib/i18n';
 import { dragCall, draggable as canDrag } from '@/features/editor/plan/plan-drag';
-import { bridge, connect, onCapture, onMine, onTry, post } from './bridge';
+import { bridge, connect, onCapture, onMine, onTry, post, report } from './bridge';
 import { svgToPng } from '@/lib/theme';
 import { settled, syncModules, tryModule } from './modules';
 import { addSnaps, draggable, isSelected, onSelection, selectable, snap, SNAP_PX, snapPoints, type SnapProvider } from './interact';
@@ -32,6 +32,16 @@ export interface Canvas {
   toolbar: HTMLElement;
   /** Add a button to the toolbar; returns it (b.setPressed(on) shows a toggle on or off; b.remove() takes it away) */
   button(label: string, onClick: () => void, opts?: { pressed?: boolean; title?: string }): Button;
+  /**
+   * Offer actions on the selection: provider(selectedIds) returns the actions for it (none when it isn't yours), shown as buttons
+   * in the toolbar while that selection lasts. Phones have no keyboard and no double-click: offer every such action here too.
+   */
+  actions(provider: (selection: string[]) => Action[]): () => void;
+}
+
+export interface Action {
+  label: string;
+  onClick(): void;
 }
 
 /** The design's own snaps: wall ends */
@@ -105,7 +115,31 @@ export function defaultPage(root: HTMLElement): Canvas {
   stage.style.cssText = 'position:absolute;inset:0';
   // Along the bottom: the editor keeps its own controls in the top corners
   const bar = toolbar();
-  bar.style.cssText = 'position:absolute;bottom:12px;left:50%;transform:translateX(-50%)';
+  bar.style.cssText =
+    'position:absolute;bottom:12px;left:50%;transform:translateX(-50%);flex-wrap:wrap;justify-content:center;max-width:calc(100% - 24px);width:max-content';
+  // Actions on the selection, after the tools
+  const actionsRow = document.createElement('div');
+  actionsRow.className = 'flex flex-wrap items-center gap-1 border-l border-border pl-1';
+  actionsRow.setAttribute('data-actions', '');
+  const providers = new Set<(selection: string[]) => Action[]>();
+  const showActions = () => {
+    const sel = bridge.selection();
+    const list = sel.length
+      ? [...providers].flatMap(p => {
+          try {
+            return p(sel);
+          } catch (e) {
+            report('actions', e);
+            return [];
+          }
+        })
+      : [];
+    actionsRow.replaceChildren(...list.map(a => button(a.label, a.onClick)));
+    actionsRow.hidden = !list.length;
+  };
+  showActions();
+  bridge.on('selection', showActions);
+  bridge.on('project', showActions);
   root.appendChild(stage);
   root.appendChild(bar);
   const view = mount(stage);
@@ -125,6 +159,7 @@ export function defaultPage(root: HTMLElement): Canvas {
   bridge.on('canEdit', sync);
   bar.appendChild(select);
   bar.appendChild(wall);
+  bar.appendChild(actionsRow);
 
   return {
     bridge,
@@ -140,8 +175,16 @@ export function defaultPage(root: HTMLElement): Canvas {
     toolbar: bar,
     button(label, onClick, opts) {
       const b = button(label, onClick, opts);
-      bar.appendChild(b);
+      bar.insertBefore(b, actionsRow);
       return b;
+    },
+    actions(provider) {
+      providers.add(provider);
+      showActions();
+      return () => {
+        providers.delete(provider);
+        showActions();
+      };
     },
   };
 }

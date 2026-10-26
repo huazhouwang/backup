@@ -141,10 +141,62 @@ export function mount(container: HTMLElement): PlanView {
     { passive: false },
   );
 
+  // Two fingers pinch to zoom and move to pan, whatever else is going on (phones have no wheel)
+  const fingers = new Map<number, { x: number; y: number }>();
+  let pinch: { d: number; mid: { x: number; y: number } } | null = null;
+  const spread = () => {
+    const [a, b] = [...fingers.values()];
+    return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+  };
+  svg.addEventListener(
+    'pointerdown',
+    e => {
+      if (e.pointerType !== 'touch') return;
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (fingers.size === 2) {
+        pinch = spread();
+        pan = null;
+        tool?.stop?.();
+      }
+    },
+    true,
+  );
+  svg.addEventListener(
+    'pointermove',
+    e => {
+      if (!fingers.has(e.pointerId)) return;
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!pinch || fingers.size !== 2) return;
+      e.stopImmediatePropagation();
+      const now = spread();
+      const [mx, my] = toModel({ clientX: now.mid.x, clientY: now.mid.y });
+      const f = pinch.d / now.d;
+      vb = { x: mx - (mx - vb.x) * f, y: my - (my - vb.y) * f, w: vb.w * f, h: vb.h * f };
+      const k = pxMm();
+      vb = { ...vb, x: vb.x - (now.mid.x - pinch.mid.x) * k, y: vb.y - (now.mid.y - pinch.mid.y) * k };
+      pinch = now;
+      applyViewBox();
+      drawSelection();
+      notify();
+    },
+    true,
+  );
+  const lift = (e: PointerEvent) => {
+    if (!fingers.delete(e.pointerId)) return;
+    if (pinch) {
+      if (fingers.size < 2) pinch = null;
+      // The rest of a pinch is not a click
+      e.stopImmediatePropagation();
+      pan = null;
+    }
+  };
+  svg.addEventListener('pointerup', lift, true);
+  svg.addEventListener('pointercancel', lift, true);
+
   // Pointer: a tool if one is active; else a press on an object selects it, and a drag on the background pans
   let pan: { x: number; y: number; vb: typeof vb; moved: boolean; id: number; held: boolean } | null = null;
   svg.addEventListener('pointerdown', e => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || pinch) return;
     const p = toModel(e);
     if (tool?.down?.(p, e)) return;
     if (tool) return;

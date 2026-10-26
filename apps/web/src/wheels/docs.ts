@@ -67,6 +67,9 @@ var(--canvas-selection) (selected), var(--muted-foreground), var(--background), 
   wall_add); start it with canvas.view.setTool(canvas.wallTool()). The toolbar's 画墙 button already does this.
 - canvas.button(label, onClick, {pressed?, title?}): adds a button to the toolbar and returns it; b.setPressed(true/false) shows a
   toggle on or off (e.g. canvas.view.onTool(t => b.setPressed(t === myTool))). Labels in canvas.bridge.locale().
+- canvas.actions(selection => [{label, onClick}…]): actions on the selection, shown as toolbar buttons while it lasts; return [] when
+  the selection isn't yours. People use the page on phones too, with no keyboard, no double-click and no hover: every action you
+  offer by key or double-click (delete, rename…) must also be an action here. Pointer events cover touch; two fingers zoom and pan.
 - Keys: the page gets the keyboard while the person works in it. Listen with document.addEventListener('keydown', …) (remove it in
   your cleanup) and call e.preventDefault() for keys you use; keys you leave go on to the editor (undo, Delete of its selection…).
 - Text input: no prompt(); put an <input> on the page (position: fixed at the pointer), stop its keydown from propagating so typing
@@ -130,13 +133,17 @@ var(--canvas-selection) (selected), var(--muted-foreground), var(--background), 
       const b = canvas.button(zh ? '参考线' : 'Reference line', () => canvas.view.setTool(tool));
       canvas.view.onTool(t => b.setPressed(t === tool));
 
-      // Delete removes the selected lines
+      // Deleting the selected lines: a toolbar action (phones) and the Delete key
+      const picked = selection => all().filter(l => selection.includes('ref:' + l.id));
+      const remove = () => {
+        const gone = picked(canvas.bridge.selection()).map(l => l.id);
+        if (!gone.length) return false;
+        save(all().filter(l => !gone.includes(l.id)));
+        return true;
+      };
+      canvas.actions(selection => (picked(selection).length ? [{ label: zh ? '删除参考线' : 'Delete line', onClick: remove }] : []));
       const onKey = e => {
-        if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-        const keep = all().filter(l => !canvas.isSelected('ref:' + l.id));
-        if (keep.length === all().length) return;
-        e.preventDefault();
-        save(keep);
+        if ((e.key === 'Delete' || e.key === 'Backspace') && remove()) e.preventDefault();
       };
       document.addEventListener('keydown', onKey);
 

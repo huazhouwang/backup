@@ -98,6 +98,7 @@ function moduleCanvas(canvas: Canvas, scope: ModuleScope, id: string) {
         if (t) track(() => canvas.view.tool() === t && canvas.view.setTool(null));
       },
     },
+    actions: provider => track(canvas.actions(provider)),
     button(label, onClick, opts) {
       const b = canvas.button(label, onClick, opts);
       buttons.add(b);

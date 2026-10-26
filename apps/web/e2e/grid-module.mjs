@@ -1,7 +1,8 @@
 // The canvas module the fake agent writes for "按承重墙排一套轴网" (issue 171): what a model is expected to write with the wheels.
 // Axis lines on the bearing walls of the level shown, numbered 1, 2, 3… across and lettered A, B, C… down; until someone edits
-// them they follow the walls. Click one to select it, drag it to move it, double-click its bubble to rename it; walls and every
-// other tool snap to the axes and their crossings. Edits are kept per level in the module's data, so they undo and are shared.
+// them they follow the walls. Click one to select it, drag it to move it, double-click its bubble to rename it (or use the
+// 改名 / 删除轴线 actions a selected axis gets, which is how it goes on a phone); walls and every other tool snap to the axes and
+// their crossings. Edits are kept per level in the module's data, so they undo and are shared.
 export const GRID_MODULE = `export default function (canvas) {
   const NS = 'http://www.w3.org/2000/svg';
   const el = (tag, attrs) => {
@@ -89,6 +90,20 @@ export const GRID_MODULE = `export default function (canvas) {
       axis.querySelector('circle').setAttribute('stroke', stroke);
     }
   }
+
+  canvas.actions(selection => {
+    const gr = grid();
+    const picked = gr ? gr.axes.filter(a => selection.includes('axis:' + a.id)) : [];
+    if (!picked.length) return [];
+    const at = a => {
+      const r = g.querySelector('[data-axis-label="' + a.id + '"]').getBoundingClientRect();
+      return { clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 };
+    };
+    return [
+      ...(picked.length === 1 ? [{ label: '改名', onClick: () => rename(picked[0], at(picked[0])) }] : []),
+      { label: '删除轴线', onClick: () => save({ ...gr, axes: gr.axes.filter(a => !picked.includes(a)) }) },
+    ];
+  });
 
   function rename(a, e) {
     const input = document.createElement('input');
