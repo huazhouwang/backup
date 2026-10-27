@@ -1,7 +1,14 @@
 import { MINUTE } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
-import { checkTimes, newTimes, resolveTimes, storedTimes, timesReducer } from './duration-times'
+import {
+  checkTimes,
+  newTimes,
+  resolveTimes,
+  sameTimes,
+  storedTimes,
+  timesReducer,
+} from './duration-times'
 
 const NOW = new Date(2026, 9, 23, 10, 0).getTime()
 
@@ -97,5 +104,16 @@ describe('timesReducer', () => {
     expect(checkTimes(times, NOW, true)).toEqual({ duration: expect.any(String) })
     const future = timesReducer(newTimes('sleep', 60, 'left'), { type: 'start', at: NOW })
     expect(checkTimes(future, NOW, true)).toEqual({ end: expect.any(String) })
+  })
+})
+
+describe('sameTimes', () => {
+  it('tells untouched times from changed ones, also when a change is undone', () => {
+    // A 20-second sleep: shown as 1 minute.
+    const stored = storedTimes('sleep', NOW - 20_000, 20_000, null, 'left')
+    expect(sameTimes(stored, { ...stored })).toBe(true)
+    const longer = timesReducer(stored, { type: 'minutes', minutes: 5 })
+    expect(sameTimes(longer, stored)).toBe(false)
+    expect(sameTimes(timesReducer(longer, { type: 'minutes', minutes: 1 }), stored)).toBe(true)
   })
 })

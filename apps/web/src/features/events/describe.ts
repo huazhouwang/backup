@@ -57,6 +57,14 @@ function temperatureText(celsius: number): string {
 
 const diaperLabels = { wet: m.diaperWet, dirty: m.diaperDirty, mixed: m.diaperMixed }
 
+/** How long on each side; a side not fed is left out ("左 10 分钟", not "· 右 0 分钟"). */
+function breastDetail(sides: { left: number; right: number }) {
+  const left = durationLabel(sides.left)
+  const right = durationLabel(sides.right)
+  if (sides.left > 0 && sides.right > 0) return m.breastDetail({ left, right })
+  return sides.right > 0 ? m.breastDetailRight({ right }) : m.breastDetailLeft({ left })
+}
+
 /** Title and one-line detail for an event in lists and the timeline. */
 export function describeEvent(event: Event, now: number): { title: string; detail: string } {
   const running = isRunning(event)
@@ -67,12 +75,7 @@ export function describeEvent(event: Event, now: number): { title: string; detai
         const sides = breastSideDurations(data.segments, now)
         return {
           title: m.feedBreast(),
-          detail: running
-            ? m.eventInProgress()
-            : m.breastDetail({
-                left: durationLabel(sides.left),
-                right: durationLabel(sides.right),
-              }),
+          detail: running ? m.eventInProgress() : breastDetail(sides),
         }
       }
       // A bottle or solids feed may record how long it took.

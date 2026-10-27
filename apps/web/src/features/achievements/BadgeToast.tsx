@@ -10,6 +10,8 @@ import { computeBadges } from './achievements'
 import { badgeLabel } from './badge-labels'
 
 const MEDAL = '🏅'
+/** How long the celebration stays: longer than a plain toast, there is a button to reach. */
+const BADGE_TOAST_MS = 6000
 
 const seenKey = (babyId: string) => `lullabo.seenBadges.${babyId}`
 const idList = jsonCodec(stringList)
@@ -47,7 +49,8 @@ export function BadgeToast({ baby, events }: { baby: Baby; events: readonly Even
       writeSeen(baby.id, ids)
       setSeen(new Set(ids))
     }
-    // Stays until the user opens the badges or swipes it away; either way it is seen.
+    // A few seconds, then out of the way of the page's header; it is seen however it goes.
+    // The badge itself stays under 统计 → 成就.
     showToast(m.badgeNew({ title }), {
       id: 'badge',
       tone: 'success',
@@ -56,8 +59,9 @@ export function BadgeToast({ baby, events }: { baby: Baby; events: readonly Even
           {MEDAL}
         </span>
       ),
-      duration: Infinity,
+      duration: BADGE_TOAST_MS,
       onDismiss: markSeen,
+      onAutoClose: markSeen,
       action: {
         label: m.badgeView(),
         onClick: () => {

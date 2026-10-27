@@ -33,6 +33,15 @@ export function SettingsPage({ title, children }: { title: string; children: Rea
   )
 }
 
+/** Why another page sent the user here, at the top of this one. */
+export function PageReason({ children }: { children: ReactNode }) {
+  return (
+    <Card tone="feeding">
+      <p className="m-0 font-bold">{children}</p>
+    </Card>
+  )
+}
+
 /** A titled card of rows on the settings index. */
 export function SettingsGroup({ title, children }: { title?: string; children: ReactNode }) {
   return (

@@ -32,6 +32,7 @@ import {
   type DurationTimes,
   checkTimes,
   resolveTimes,
+  sameTimes,
   storedTimes,
   timesReducer,
 } from './duration-times'
@@ -174,6 +175,8 @@ export function EditEventForm({
       if (start > current + MINUTE) return { errors: { start: m.timeInFuture() } }
       return { event: moveEventStart(event, Math.min(start, current), current) }
     }
+    // Untouched: the form shows whole minutes, the record keeps its own times.
+    if (sameTimes(times, initialTimes)) return { event }
     // Sleeps and breastfeeds always have a length; bottles, solids and pumping may not.
     const timeErrors = checkTimes(
       times,

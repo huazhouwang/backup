@@ -51,7 +51,10 @@ export interface ToastOptions {
   action?: { label: string; onClick: () => void }
   /** Milliseconds on screen; `Infinity` keeps it until acted on or swiped away. */
   duration?: number
+  /** Swiped or closed away. */
   onDismiss?: () => void
+  /** Gone on its own once `duration` passed. */
+  onAutoClose?: () => void
 }
 
 const DEFAULT_DURATION_MS = 4000
@@ -71,6 +74,7 @@ export function showToast(message: string, options: ToastOptions = {}) {
       ) : undefined),
     duration: options.duration ?? DEFAULT_DURATION_MS,
     onDismiss: options.onDismiss,
+    onAutoClose: options.onAutoClose,
     action: options.action,
   }
   return toast(message, external)

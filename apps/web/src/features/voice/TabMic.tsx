@@ -387,13 +387,9 @@ export function TabMic() {
   // Without an account or an AI, the microphone says what is missing and where to set it up.
   const setUp = (event: MouseEvent) => {
     event.preventDefault()
-    if (!userId) {
-      showToast(m.tabMicSignIn())
-      void navigate({ to: '/settings/account' })
-    } else {
-      showToast(m.tabMicNoAi())
-      void navigate({ to: '/settings/ai' })
-    }
+    // The page opened says why at its top; a toast there would cover its title.
+    if (!userId) void navigate({ to: '/settings/account', search: { from: 'mic' } })
+    else void navigate({ to: '/settings/ai', search: { from: 'mic' } })
   }
   const ready = Boolean(userId) && !noAi
   // Tapped, the microphone turning into stop says it all.

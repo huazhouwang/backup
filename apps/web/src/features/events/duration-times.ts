@@ -136,6 +136,18 @@ export function storedTimes(
   }
 }
 
+/** Whether two sets of times say the same, so nothing about them was changed. */
+export function sameTimes(a: DurationTimes, b: DurationTimes): boolean {
+  return (
+    a.startAt === b.startAt &&
+    a.endedAgo === b.endedAgo &&
+    a.minutes === b.minutes &&
+    a.sides.left === b.sides.left &&
+    a.sides.right === b.sides.right &&
+    a.firstSide === b.firstSide
+  )
+}
+
 /** What blocks saving these times: a start or end in the future, or no duration when needed. */
 export function checkTimes(
   times: DurationTimes,

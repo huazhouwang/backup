@@ -1,5 +1,6 @@
 import { Link, useHydrated, useLocation } from '@tanstack/react-router'
 
+import { useSelectedBaby } from '../features/babies/use-babies'
 import { TabMic } from '../features/voice/TabMic'
 import { m } from '../paraglide/messages.js'
 import { refreshToday } from './PullToRefresh'
@@ -18,6 +19,7 @@ export function TabBar() {
   // shell's active tab. Remounting after hydration recreates the DOM with the real state.
   const hydrated = useHydrated()
   const { pathname } = useLocation()
+  const { baby } = useSelectedBaby()
   // The chat covers the app, tab bar and all.
   if (pathname === '/chat') return null
 
@@ -29,8 +31,9 @@ export function TabBar() {
       {tabs.slice(0, 2).map((tab) => (
         <TabLink key={tab.to} tab={tab} pathname={pathname} />
       ))}
-      {/* Talking to the AI, from any page: in the middle and standing out. */}
-      <div className="flex flex-1 justify-center">{hydrated && <TabMic />}</div>
+      {/* Talking to the AI, from any page: in the middle and standing out. Not before the
+          first baby: there is nothing to record for, and the welcome form is below it. */}
+      <div className="flex flex-1 justify-center">{hydrated && baby && <TabMic />}</div>
       {tabs.slice(2).map((tab) => (
         <TabLink key={tab.to} tab={tab} pathname={pathname} />
       ))}

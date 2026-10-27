@@ -1,4 +1,4 @@
-import { type Event, isRunning } from '@lullabo/shared'
+import { type Event, MINUTE, isRunning } from '@lullabo/shared'
 
 import { RollingText } from '../../components/ui/RollingText'
 import { useNow } from '../../lib/use-now'
@@ -24,6 +24,8 @@ export function sinceText(
   }
   const at = lastActivityAt(events, category, now)
   if (at === undefined) return m.sinceNever()
+  // Within a minute, or a moment ahead of the clock: "刚刚", not "0 分钟前".
+  if (now - at < MINUTE) return category === 'sleep' ? m.sinceJustAwake() : m.timeJustNow()
   const duration = durationLabel(now - at, { short })
   return category === 'sleep' ? m.sinceAwake({ duration }) : m.timeAgo({ duration })
 }

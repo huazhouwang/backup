@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 
-import { SettingsPage } from '../components/SettingsLayout'
+import { PageReason, SettingsPage } from '../components/SettingsLayout'
 import { isSignedIn } from '../db'
 import { AccountSettings } from '../features/account/AccountSettings'
 import { accountQueries } from '../features/account/queries'
@@ -14,6 +14,8 @@ const searchSchema = z.object({
     .regex(/^\/settings\/[\w/-]+$/)
     .optional()
     .catch(undefined),
+  /** Opened by the tab bar's microphone, which needs an account. */
+  from: z.literal('mic').optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/settings/account')({
@@ -32,9 +34,10 @@ export const Route = createFileRoute('/settings/account')({
 })
 
 function AccountPage() {
-  const { returnTo } = Route.useSearch()
+  const { returnTo, from } = Route.useSearch()
   return (
     <SettingsPage title={m.accountTitle()}>
+      {from === 'mic' && <PageReason>{m.tabMicSignIn()}</PageReason>}
       <AccountSettings returnTo={returnTo} />
     </SettingsPage>
   )
