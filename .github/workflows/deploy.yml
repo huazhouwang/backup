@@ -118,19 +118,25 @@ jobs:
             # Everything in the former database, migrations table included, so the
             # migrations step finds nothing left to apply. An export lists a table's rows
             # right after the table, before the tables they refer to exist; so every table
-            # first, then the rows, their references checked once at the end. One file is
-            # one transaction: a failure leaves the new database empty, to try again.
+            # first, then the rows. Two imports: one file with both fails on D1's side
+            # ({"D1_RESET_DO":true}) though it loads in SQLite.
             schema="$RUNNER_TEMP/former-schema.sql"
             rows="$RUNNER_TEMP/former-rows.sql"
-            dump="$RUNNER_TEMP/former.sql"
-            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-data --output "$schema"
-            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-schema --output "$rows"
-            { cat "$schema"; echo 'PRAGMA defer_foreign_keys = true;'; cat "$rows"; } > "$dump"
+            # Quiet: wrangler prints a download link to the whole export, and these logs
+            # are public.
+            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-data --output "$schema" > /dev/null
+            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-schema --output "$rows" > /dev/null
             # D1 rejects broken references without naming them; this names the tables.
-            python3 -I scripts/check-dump.py "$dump"
-            pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$dump" --yes
-            rm -f "$schema" "$rows" "$dump"
-            ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"
+            python3 -I scripts/check-dump.py "$schema" "$rows"
+            if ! pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$schema" --yes ||
+              ! pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$rows" --yes ||
+              ! ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"; then
+              # Nothing has used the new database yet: removed, so the next deploy copies
+              # afresh instead of finding a half-filled one.
+              pnpm exec wrangler d1 delete "$DB_NAME" --skip-confirmation
+              exit 1
+            fi
+            rm -f "$schema" "$rows"
           fi
 
       - name: Apply database migrations

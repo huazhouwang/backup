@@ -2,15 +2,16 @@
 
 Run before importing a copy into D1, which only says the import failed: this names the
 tables whose rows refer to rows that are not there. Prints table names and counts only,
-never the rows. Usage: python3 check-dump.py <dump.sql>
+never the rows. Usage: python3 check-dump.py <schema.sql> <rows.sql>...
 """
 
 import sqlite3
 import sys
 
 db = sqlite3.connect(':memory:', isolation_level=None)
-with open(sys.argv[1], encoding='utf-8') as dump:
-    db.executescript(dump.read())
+for path in sys.argv[1:]:
+    with open(path, encoding='utf-8') as dump:
+        db.executescript(dump.read())
 
 broken = db.execute(
     'select "table", parent, count(*) from pragma_foreign_key_check group by 1, 2 order by 1, 2'
