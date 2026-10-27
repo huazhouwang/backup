@@ -1,4 +1,4 @@
-export const APP_NAME = 'Bobo'
+export const APP_NAME = 'Lullabo'
 
 export * from './age'
 export * from './age-norms'

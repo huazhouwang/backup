@@ -133,7 +133,7 @@ describe('email and password', () => {
         .status,
     ).toBe(200)
     const message = sent.at(-1)
-    expect(message?.subject).toMatch(/^Bobo 重置密码验证码：\d{6}$/)
+    expect(message?.subject).toMatch(/^Lullabo 重置密码验证码：\d{6}$/)
 
     const next = key()
     const reset = await post('/api/auth/email-otp/reset-password', {

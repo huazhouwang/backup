@@ -1,7 +1,7 @@
 // Loaded by the generated service worker (scripts/generate-sw.mjs). Shows reminders sent by
 // the server (apps/api/src/reminders.ts) and opens the app when one is tapped.
 self.addEventListener('push', (event) => {
-  let message = { title: 'Bobo', body: '', tag: 'bobo', url: '/' }
+  let message = { title: 'Lullabo', body: '', tag: 'bobo', url: '/' }
   try {
     message = { ...message, ...event.data.json() }
   } catch {

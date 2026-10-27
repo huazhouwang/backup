@@ -38,7 +38,7 @@ export const pushRoutes = new Hono<AppEnv>()
     const results = await notifyUser(
       c.env,
       c.get('user').id,
-      { title: 'Bobo', body: '通知已开启，提醒会这样出现。', tag: 'test', url: '/settings' },
+      { title: 'Lullabo', body: '通知已开启，提醒会这样出现。', tag: 'test', url: '/settings' },
       Date.now(),
     )
     return c.json({ sent: results.filter((result) => result === 'sent').length })

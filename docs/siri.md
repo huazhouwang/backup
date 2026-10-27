@@ -1,6 +1,6 @@
 # Siri voice logging
 
-Say "嘿 Siri，记录宝宝", then what happened ("小米粒换尿布了，还喝了 120 毫升奶"). Bobo records
+Say "嘿 Siri，记录宝宝", then what happened ("小米粒换尿布了，还喝了 120 毫升奶"). Lullabo records
 it, says what it did and asks "还有吗？". Ask about records ("上次喂奶是几点"), change or delete
 them, or say "没有了" to finish.
 
@@ -116,7 +116,7 @@ with the family if others should use it.
 The settings page's "添加到 Siri" button copies the user's code and opens the shortcut's iCloud
 link (`SHORTCUT_URL` in `apps/web/src/features/voice/api.ts`) in Safari: from the installed app
 through `x-safari-https://` (iOS 17+), as the app's own window could land on its not-found page.
-The Shortcuts app shows its add sheet, which asks for the code ("请粘贴 Bobo 设置里复制的口令"). The shortcut is shared under the
+The Shortcuts app shows its add sheet, which asks for the code ("请粘贴 Lullabo 设置里复制的口令"). The shortcut is shared under the
 name `SHORTCUT_NAME` ("记录宝宝", the default phrase); people with another phrase rename it.
 
 To change the shortcut:

@@ -84,7 +84,7 @@ export function createAuthOptions(env: Env) {
       // Passkeys belong to the canonical origin; other origins (workers.dev) can't use them.
       passkey({
         rpID: new URL(env.BETTER_AUTH_URL).hostname,
-        rpName: 'Bobo',
+        rpName: 'Lullabo',
         origin: env.BETTER_AUTH_URL.replace(/\/+$/, ''),
         authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
       }),

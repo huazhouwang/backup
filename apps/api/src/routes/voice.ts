@@ -126,11 +126,11 @@ const WORDS_SINCE_MS = 30 * 86_400_000
 const MIN_AUDIO_BYTES = 4000
 
 const REPLIES = {
-  invalidToken: '口令已失效，请到 Bobo 的设置 → Siri 语音记录里重新添加。',
+  invalidToken: '口令已失效，请到 Lullabo 的设置 → Siri 语音记录里重新添加。',
   limited: '今天说得太多次了，明天再试吧。',
   slowDown: '说得太快了，请稍等一下再试。',
   unavailable: '语音记录暂时不可用，请稍后再试。',
-  noAi: '还没有可用的 AI。请在 Bobo 的 设置 → 我的 AI 里填自己的 key，或请家人分享给家庭。',
+  noAi: '还没有可用的 AI。请在 Lullabo 的 设置 → 我的 AI 里填自己的 key，或请家人分享给家庭。',
   noFamily: '还没有可以记录的家庭。',
   unclear: '没听清，请再说一遍。',
 }

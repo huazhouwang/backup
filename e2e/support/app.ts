@@ -53,7 +53,7 @@ export async function sheetClosed(page: Page) {
 /** Adds the first baby through onboarding and lands on the today page. */
 export async function onboard(page: Page, name = '小米粒') {
   await page.goto('/')
-  await expect(page.getByText('欢迎来到 Bobo')).toBeVisible()
+  await expect(page.getByText('欢迎来到 Lullabo')).toBeVisible()
   await page.locator('input:not([type=date]):not([type=radio])').first().fill(name)
   await page.locator('button[type=submit]').click()
   await expect(page.getByText('今天的记录')).toBeVisible()

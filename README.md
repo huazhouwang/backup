@@ -1,4 +1,4 @@
-# Bobo
+# Lullabo
 
 A local-first baby tracker for logging feeds, sleep, diapers and growth, shared across the family. It works offline, installs as an app from the browser, and runs on Cloudflare's free plan.
 
@@ -105,4 +105,4 @@ UI strings live in `apps/web/messages/{locale}.json` and are compiled by [Paragl
 
 ## License
 
-[Apache License 2.0](LICENSE). You may use, change and sell Bobo, including in closed-source and commercial products. If you distribute it or a work based on it, keep the license and the [NOTICE](NOTICE) file, which credits this project, and say which files you changed.
+[Apache License 2.0](LICENSE). You may use, change and sell Lullabo, including in closed-source and commercial products. If you distribute it or a work based on it, keep the license and the [NOTICE](NOTICE) file, which credits this project, and say which files you changed.

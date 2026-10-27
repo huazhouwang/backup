@@ -1,4 +1,4 @@
-# Working on Bobo
+# Working on Lullabo
 
 See README.md for the stack, commands and architecture. Conventions the code doesn't show:
 

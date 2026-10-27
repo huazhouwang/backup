@@ -127,7 +127,7 @@ const shortcut = {
       Category: 'Parameter',
       DefaultValue: '',
       ParameterKey: 'WFTextActionText',
-      Text: '请粘贴 Bobo 设置里复制的口令',
+      Text: '请粘贴 Lullabo 设置里复制的口令',
     },
   ],
   WFWorkflowInputContentItemClasses: [],

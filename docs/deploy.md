@@ -10,7 +10,7 @@ There are two ways to deploy:
   Worker's **Settings → Variables and Secrets** instead of GitHub.
 - **GitHub Actions**, described here, which is how the main instance deploys.
 
-Bobo deploys from GitHub Actions (`.github/workflows/deploy.yml`): every push to `main` is
+Lullabo deploys from GitHub Actions (`.github/workflows/deploy.yml`): every push to `main` is
 built, migrated and deployed to Cloudflare. Changes reach `main` through pull requests whose CI
 passed on the merged result, so the deploy does not wait for CI to run again on `main`. Turn on
 "Require branches to be up to date before merging" in the branch protection for `main` so that
@@ -51,7 +51,7 @@ Variables:
 | Name         | Required             | Value                                                                               |
 | ------------ | -------------------- | ----------------------------------------------------------------------------------- |
 | `APP_URL`    | with a custom domain | e.g. `https://bobo.example.com`; defaults to `https://bobo.<subdomain>.workers.dev` |
-| `EMAIL_FROM` | with Resend          | e.g. `Bobo <noreply@example.com>`, on a domain verified in Resend                   |
+| `EMAIL_FROM` | with Resend          | e.g. `Lullabo <noreply@example.com>`, on a domain verified in Resend                |
 
 Changing `BETTER_AUTH_SECRET` later signs everyone out.
 

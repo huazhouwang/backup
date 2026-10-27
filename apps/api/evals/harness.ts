@@ -52,9 +52,9 @@ export function asksQuestion(reply: string): boolean {
   return /[？?]|吗|么/.test(rest)
 }
 
-/** English words in a reply, besides names said in Chinese too (Siri, Bobo) and units. */
+/** English words in a reply, besides names said in Chinese too (Siri, Lullabo) and units. */
 export const speaksEnglish = (reply: string) =>
-  /[A-Za-z]{3,}/.test(reply.replaceAll(/\b(Siri|Bobo|AI)\b/g, ''))
+  /[A-Za-z]{3,}/.test(reply.replaceAll(/\b(Siri|Lullabo|AI)\b/g, ''))
 
 /** Whether a turn did what was expected, from its reply and the records it added. */
 export function judge(

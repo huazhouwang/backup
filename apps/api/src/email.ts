@@ -25,7 +25,7 @@ const RESEND_URL = 'https://api.resend.com/emails'
  * message is only logged.
  */
 export async function sendEmail(env: Env, email: OutgoingEmail): Promise<void> {
-  const from = env.EMAIL_FROM ?? 'Bobo <noreply@example.com>'
+  const from = env.EMAIL_FROM ?? 'Lullabo <noreply@example.com>'
   if (env.EMAIL) {
     await env.EMAIL.send({ ...email, from })
     return
@@ -55,10 +55,10 @@ export async function sendEmail(env: Env, email: OutgoingEmail): Promise<void> {
 export function passwordResetEmail(to: string, code: string, minutes: number): OutgoingEmail {
   return {
     to,
-    subject: `Bobo 重置密码验证码：${code}`,
-    text: `你正在重置 Bobo 的登录密码，验证码是 ${code}，${minutes} 分钟内有效。\n\n如果不是你本人操作，请忽略这封邮件，你的密码不会改变。`,
+    subject: `Lullabo 重置密码验证码：${code}`,
+    text: `你正在重置 Lullabo 的登录密码，验证码是 ${code}，${minutes} 分钟内有效。\n\n如果不是你本人操作，请忽略这封邮件，你的密码不会改变。`,
     html: `<div style="font-family:sans-serif;font-size:16px;color:#3c3c3c">
-<p>你正在重置 Bobo 的登录密码，验证码是：</p>
+<p>你正在重置 Lullabo 的登录密码，验证码是：</p>
 <p style="font-size:32px;font-weight:800;letter-spacing:6px;color:#4152b8">${code}</p>
 <p>${minutes} 分钟内有效。如果不是你本人操作，请忽略这封邮件，你的密码不会改变。</p>
 </div>`,

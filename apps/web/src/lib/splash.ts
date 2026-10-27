@@ -1,5 +1,5 @@
 /**
- * iOS launch screens, shown while an installed Bobo starts instead of a blank page. iOS
+ * iOS launch screens, shown while an installed Lullabo starts instead of a blank page. iOS
  * only uses an image whose media query matches the device exactly, so there is one per
  * screen size (portrait, CSS pixels and pixel ratio). Rendered by
  * scripts/render-splash.mjs.

@@ -29,7 +29,7 @@ export interface Env
   EMAIL?: EmailBinding
   /** Resend API key, used to send email on the free plan (wrangler secret put RESEND_API_KEY). */
   RESEND_API_KEY?: string
-  /** Sender address, e.g. "Bobo <noreply@yourdomain.com>"; its domain must be verified. */
+  /** Sender address, e.g. "Lullabo <noreply@yourdomain.com>"; its domain must be verified. */
   EMAIL_FROM?: string
   /**
    * Encrypts secrets stored in the database, such as users' AI provider keys. Changing it
