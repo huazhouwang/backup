@@ -116,11 +116,18 @@ jobs:
           if [ "$migrated" = 0 ] && [ -n "$FORMER_DB_NAME" ] && [ -n "$(db_id "$FORMER_DB_NAME")" ]; then
             echo "copied=true" >> "$GITHUB_OUTPUT"
             # Everything in the former database, migrations table included, so the
-            # migrations step finds nothing left to apply.
+            # migrations step finds nothing left to apply. An export lists a table's rows
+            # right after the table, before the tables they refer to exist; so every table
+            # first, then the rows, their references checked once at the end. One file is
+            # one transaction: a failure leaves the new database empty, to try again.
+            schema="$RUNNER_TEMP/former-schema.sql"
+            rows="$RUNNER_TEMP/former-rows.sql"
             dump="$RUNNER_TEMP/former.sql"
-            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --output "$dump"
+            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-data --output "$schema"
+            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-schema --output "$rows"
+            { cat "$schema"; echo 'PRAGMA defer_foreign_keys = true;'; cat "$rows"; } > "$dump"
             pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$dump" --yes
-            rm -f "$dump"
+            rm -f "$schema" "$rows" "$dump"
             ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"
           fi
 
