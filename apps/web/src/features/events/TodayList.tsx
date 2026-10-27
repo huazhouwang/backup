@@ -1,4 +1,4 @@
-import { type Event, hasKnownDuration, startOfLocalDay } from '@bobo/shared'
+import { type Event, hasKnownDuration, startOfLocalDay } from '@lullabo/shared'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { useState } from 'react'
 

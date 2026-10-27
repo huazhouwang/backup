@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 import { type FormEvent, useState } from 'react'
 
 import { Button } from '../../components/ui/Button'

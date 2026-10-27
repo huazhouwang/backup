@@ -1,4 +1,4 @@
-import { type BreastSide, MINUTE } from '@bobo/shared'
+import { type BreastSide, MINUTE } from '@lullabo/shared'
 
 import { m } from '../../paraglide/messages.js'
 import type { DurationKind } from './kinds'

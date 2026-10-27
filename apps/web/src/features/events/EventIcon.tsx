@@ -1,4 +1,4 @@
-import type { Event, PoopDetails } from '@bobo/shared'
+import type { Event, PoopDetails } from '@lullabo/shared'
 import { clsx } from 'clsx'
 import type { ReactNode } from 'react'
 

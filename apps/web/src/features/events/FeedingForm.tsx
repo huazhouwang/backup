@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 import { type ReactNode, useState } from 'react'
 
 import { SegmentedControl } from '../../components/ui/SegmentedControl'

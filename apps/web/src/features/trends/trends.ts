@@ -1,4 +1,4 @@
-import { type Event, HOUR, localDateString, startOfLocalDay } from '@bobo/shared'
+import { type Event, HOUR, localDateString, startOfLocalDay } from '@lullabo/shared'
 
 import { summarizeDay } from '../events/summary'
 

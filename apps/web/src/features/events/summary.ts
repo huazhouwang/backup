@@ -1,4 +1,4 @@
-import { type Event, breastSideDurations, eventDurationMs, hasDuration } from '@bobo/shared'
+import { type Event, breastSideDurations, eventDurationMs, hasDuration } from '@lullabo/shared'
 
 export interface DaySummary {
   feedings: number

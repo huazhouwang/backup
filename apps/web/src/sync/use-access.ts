@@ -1,4 +1,4 @@
-import type { Baby, Event, FamilySummary } from '@bobo/shared'
+import type { Baby, Event, FamilySummary } from '@lullabo/shared'
 import { eq, inArray, useLiveQuery } from '@tanstack/react-db'
 import { useMemo } from 'react'
 

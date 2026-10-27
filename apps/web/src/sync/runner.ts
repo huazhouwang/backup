@@ -1,4 +1,4 @@
-import { type FamilySummary, canAddBabies } from '@bobo/shared'
+import { type FamilySummary, canAddBabies } from '@lullabo/shared'
 
 import type { LocalStore } from '../db'
 import { HttpError, apiFetch } from '../lib/api'

@@ -9,7 +9,7 @@ import {
   base64UrlEncode,
   eventSchema,
   recordKind,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 /** Position in one table's change stream: rows are ordered by (seq, id). */
 export type TableCursor = [seq: number, id: string]

@@ -1,4 +1,4 @@
-import type { FamilySummary } from '@bobo/shared'
+import type { FamilySummary } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { accessGrew, babyPermissions, canEditEvent } from './access'

@@ -27,6 +27,7 @@ export async function derivePasswordKey(
     {
       name: 'PBKDF2',
       hash: 'SHA-256',
+      // From when the app was called Bobo; a new salt would turn away every saved password.
       salt: encoder.encode(`bobo-password:${normalizeEmail(email)}`),
       iterations,
     },

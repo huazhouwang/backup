@@ -1,6 +1,6 @@
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
-// Server copies of the shared records (@bobo/shared). Timestamps are epoch milliseconds.
+// Server copies of the shared records (@lullabo/shared). Timestamps are epoch milliseconds.
 const syncColumns = {
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),

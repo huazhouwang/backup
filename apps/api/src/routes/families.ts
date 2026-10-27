@@ -8,7 +8,7 @@ import {
   renameFamilyRequestSchema,
   transferOwnershipRequestSchema,
   updateMemberRequestSchema,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { Hono } from 'hono'
 
 import {

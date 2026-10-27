@@ -1,4 +1,4 @@
-import type { PushMessage } from '@bobo/shared'
+import type { PushMessage } from '@lullabo/shared'
 
 import type { Env } from './env'
 import {

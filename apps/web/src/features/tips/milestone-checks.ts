@@ -1,7 +1,7 @@
 import { createStoredValue, jsonCodec, stringList, useStore } from '../../lib/store'
 
 /** Milestones ticked off, as "babyId:milestone", on this device only. */
-const checked = createStoredValue('bobo.milestones', jsonCodec(stringList), [] as string[])
+const checked = createStoredValue('lullabo.milestones', jsonCodec(stringList), [] as string[])
 
 const keyOf = (babyId: string, milestone: string) => `${babyId}:${milestone}`
 

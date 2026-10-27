@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 import { isNull } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import { useCallback, useMemo } from 'react'
@@ -30,7 +30,7 @@ export function useBabies(): { active: Baby[]; archived: Baby[] } {
 }
 
 // The selected baby is a per-device preference, not synced data.
-const selectedBabyId = createStoredValue('bobo.selectedBabyId', stringCodec, null)
+const selectedBabyId = createStoredValue('lullabo.selectedBabyId', stringCodec, null)
 
 export const selectBaby = (id: string) => selectedBabyId.set(id)
 

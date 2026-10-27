@@ -1,4 +1,4 @@
-import { type Baby, type Event, type FamilyRole, newId } from '@bobo/shared'
+import { type Baby, type Event, type FamilyRole, newId } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { type Access, checkBabyWrite, checkEventWrite, readScope } from '../src/access'

@@ -6,7 +6,7 @@ import {
   type PushRejectReason,
   inBabyScope,
   isManager,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { createMiddleware } from 'hono/factory'
 
 import { fail } from './http'

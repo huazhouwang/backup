@@ -3,7 +3,7 @@ import {
   type PushResponse,
   RECORDS_VERSION,
   RECORDS_VERSION_HEADER,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createTestApp } from './app'

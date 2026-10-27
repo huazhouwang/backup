@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Prerendering doesn't work inside the Playwright container, so build here.
-      - run: pnpm --filter @bobo/web build
+      - run: pnpm --filter @lullabo/web build
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
@@ -57,7 +57,7 @@ jobs:
           path: apps/web/dist
 
       - name: Update screenshots
-        run: pnpm --filter @bobo/e2e exec playwright test tests/visual.spec.ts --update-snapshots
+        run: pnpm --filter @lullabo/e2e exec playwright test tests/visual.spec.ts --update-snapshots
 
       - name: Commit
         run: |

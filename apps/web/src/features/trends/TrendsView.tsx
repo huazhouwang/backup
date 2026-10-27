@@ -1,4 +1,4 @@
-import { type Event, HOUR } from '@bobo/shared'
+import { type Event, HOUR } from '@lullabo/shared'
 import { useState } from 'react'
 
 import { Card } from '../../components/ui/Card'

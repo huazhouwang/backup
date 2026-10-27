@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 
 import { formatTime } from '../../lib/i18n'
 import { m } from '../../paraglide/messages.js'

@@ -1,4 +1,4 @@
-import { MINUTE } from '@bobo/shared'
+import { MINUTE } from '@lullabo/shared'
 import { useState } from 'react'
 
 import { FormError } from '../../components/ui/FormError'

@@ -1,4 +1,4 @@
-import { type AvatarColor, type Baby, type BabySex, newId } from '@bobo/shared'
+import { type AvatarColor, type Baby, type BabySex, newId } from '@lullabo/shared'
 
 export interface BabyInput {
   name: string

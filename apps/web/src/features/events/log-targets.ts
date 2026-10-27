@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { createStoredValue, jsonCodec, stringList, useStore } from '../../lib/store'
 
 // Babies to log for together (e.g. twins); a per-device preference, not synced data.
-const logTogether = createStoredValue<string[]>('bobo.logTogether', jsonCodec(stringList), [])
+const logTogether = createStoredValue<string[]>('lullabo.logTogether', jsonCodec(stringList), [])
 
 /**
  * Babies that are logged together with the selected one. The list is stored as a whole, so

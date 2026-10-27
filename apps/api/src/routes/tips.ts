@@ -1,4 +1,4 @@
-import { inBabyScope } from '@bobo/shared'
+import { inBabyScope } from '@lullabo/shared'
 import { Hono } from 'hono'
 import { z } from 'zod'
 

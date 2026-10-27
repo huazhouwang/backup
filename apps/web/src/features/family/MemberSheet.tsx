@@ -5,7 +5,7 @@ import {
   type MemberRole,
   assignableRoles,
   familyDisplayName,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 

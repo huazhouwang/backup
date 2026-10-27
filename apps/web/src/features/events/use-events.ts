@@ -1,4 +1,4 @@
-import { type Event, isRunning } from '@bobo/shared'
+import { type Event, isRunning } from '@lullabo/shared'
 import { and, count, eq, inArray, isNull } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import { useMemo } from 'react'

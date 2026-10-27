@@ -1,4 +1,4 @@
-import { idTime } from '@bobo/shared'
+import { idTime } from '@lullabo/shared'
 import type { AnyTextAdapter, ModelMessage } from '@tanstack/ai'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'

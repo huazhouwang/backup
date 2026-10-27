@@ -1,4 +1,4 @@
-import { APP_NAME } from '@bobo/shared'
+import { APP_NAME } from '@lullabo/shared'
 import type { QueryClient } from '@tanstack/react-query'
 import {
   HeadContent,
@@ -19,6 +19,7 @@ import { KeyboardKeeper } from '../lib/keyboard'
 import { MotionProvider } from '../lib/motion'
 import { animatePageChanges } from '../lib/page-change'
 import { splashLinks } from '../lib/splash'
+import { storageRenameScript } from '../lib/storage-rename'
 import { THEME_COLORS, themeInitScript } from '../lib/theme'
 import { watchTheme } from '../lib/use-theme'
 import { SyncRunner } from '../sync/SyncRunner'
@@ -60,6 +61,8 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Settings saved under the old name move first, so the theme finds its own. */}
+        <script dangerouslySetInnerHTML={{ __html: storageRenameScript }} />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>

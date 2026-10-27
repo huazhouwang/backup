@@ -1,4 +1,4 @@
-import { type Event, breastSideDurations, isRunning, recordKind } from '@bobo/shared'
+import { type Event, breastSideDurations, isRunning, recordKind } from '@lullabo/shared'
 import { clsx } from 'clsx'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { type FormEvent, useState } from 'react'

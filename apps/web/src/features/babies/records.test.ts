@@ -1,4 +1,4 @@
-import { babySchema } from '@bobo/shared'
+import { babySchema } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { buildBaby, nextAvatarColor, resolveSelectedBaby } from './records'

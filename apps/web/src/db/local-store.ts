@@ -1,4 +1,4 @@
-import { type Baby, type Event, babySchema, eventSchema } from '@bobo/shared'
+import { type Baby, type Event, babySchema, eventSchema } from '@lullabo/shared'
 import {
   BasicIndex,
   type Collection,
@@ -10,6 +10,7 @@ import {
 } from '@tanstack/db'
 import { z } from 'zod'
 
+/** From when the app was called Bobo; a new name would leave the records behind. */
 const DB_NAME = 'bobo'
 /** Bump when adding object stores. */
 const DB_VERSION = 2

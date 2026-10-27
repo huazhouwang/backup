@@ -1,4 +1,4 @@
-import { newId, tipById } from '@bobo/shared'
+import { newId, tipById } from '@lullabo/shared'
 import {
   type AgentLoopState,
   type AnyTextAdapter,

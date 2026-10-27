@@ -61,7 +61,7 @@ jobs:
 
       - name: Build the web app
         if: steps.config.outputs.ready == 'true'
-        run: pnpm --filter @bobo/web build
+        run: pnpm --filter @lullabo/web build
 
       - name: Resolve the app URL
         if: steps.config.outputs.ready == 'true'

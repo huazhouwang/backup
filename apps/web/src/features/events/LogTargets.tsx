@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 import { clsx } from 'clsx'
 
 import { ToggleChip } from '../../components/ui/ToggleChip'

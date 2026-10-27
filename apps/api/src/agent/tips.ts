@@ -6,7 +6,7 @@ import {
   doctorSignsFor,
   milestonesFor,
   stageFor,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 /**
  * The app's tips, for the assistant to answer parenting questions from: the same library

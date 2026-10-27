@@ -1,4 +1,4 @@
-import type { DiaperEvent, PeeDetails, PoopDetails } from '@bobo/shared'
+import type { DiaperEvent, PeeDetails, PoopDetails } from '@lullabo/shared'
 import type { ReactNode } from 'react'
 
 import { SegmentedControl } from '../../components/ui/SegmentedControl'

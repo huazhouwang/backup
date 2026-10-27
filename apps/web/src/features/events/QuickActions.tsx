@@ -1,4 +1,4 @@
-import type { Baby, Event } from '@bobo/shared'
+import type { Baby, Event } from '@lullabo/shared'
 import { useId, useState } from 'react'
 
 import { Button } from '../../components/ui/Button'

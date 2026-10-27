@@ -1,4 +1,4 @@
-import { tipById } from '@bobo/shared'
+import { tipById } from '@lullabo/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { clsx } from 'clsx'

@@ -3,7 +3,7 @@
  * Native apps will deliver through APNs / FCM instead; reminder scheduling doesn't depend on
  * this module.
  */
-import { base64UrlDecode, base64UrlEncode } from '@bobo/shared'
+import { base64UrlDecode, base64UrlEncode } from '@lullabo/shared'
 
 export interface PushTarget {
   endpoint: string

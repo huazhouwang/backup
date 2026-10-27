@@ -1,4 +1,4 @@
-import { localDateString, localMidnight, shiftDay } from '@bobo/shared'
+import { localDateString, localMidnight, shiftDay } from '@lullabo/shared'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'

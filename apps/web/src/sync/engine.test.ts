@@ -7,7 +7,7 @@ import {
   type PushRequest,
   type PushResponse,
   newId,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { IDBFactory } from 'fake-indexeddb'
 import { describe, expect, it } from 'vitest'
 

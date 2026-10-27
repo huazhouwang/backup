@@ -1,4 +1,4 @@
-import { type PushSubscriptionInput, type Reminder, base64UrlDecode } from '@bobo/shared'
+import { type PushSubscriptionInput, type Reminder, base64UrlDecode } from '@lullabo/shared'
 
 import { apiFetch } from '../../lib/api'
 import { isIos, isStandalone } from '../../lib/pwa'

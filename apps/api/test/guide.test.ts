@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { ageLabel, implausible, nextUpLines } from '../src/agent/guide'

@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 
 import { Sheet } from '../../components/ui/Sheet'
 import { m } from '../../paraglide/messages.js'

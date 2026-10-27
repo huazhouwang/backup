@@ -1,4 +1,4 @@
-import { eventSchema, isRunning, newId, sleepKindFor } from '@bobo/shared'
+import { eventSchema, isRunning, newId, sleepKindFor } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import {

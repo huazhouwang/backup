@@ -1,4 +1,4 @@
-import { type FamilySummary, familyDisplayName } from '@bobo/shared'
+import { type FamilySummary, familyDisplayName } from '@lullabo/shared'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 

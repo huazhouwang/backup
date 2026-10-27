@@ -1,4 +1,4 @@
-import { MINUTE, type PushMessage, type ReminderKind } from '@bobo/shared'
+import { MINUTE, type PushMessage, type ReminderKind } from '@lullabo/shared'
 
 import { memberSeesBaby } from './access'
 import type { Env } from './env'

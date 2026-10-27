@@ -4,11 +4,12 @@ import {
   type PullResponse,
   type PushResponse,
   RECORDS_VERSION,
+  LEGACY_RECORDS_VERSION_HEADER,
   RECORDS_VERSION_HEADER,
   SYNC_PULL_LIMIT,
   SYNC_PUSH_LIMIT,
   pushRequestSchema,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { Hono } from 'hono'
 
 import { checkBabyWrite, checkEventWrite, loadAccess, readScope, toSummaries } from '../access'
@@ -77,7 +78,9 @@ export const syncRoutes = new Hono<AppEnv>()
       (baby, current) => checkBabyWrite(access, baby, current),
       userId,
     )
-    const upToDate = c.req.header(RECORDS_VERSION_HEADER) === RECORDS_VERSION
+    const version =
+      c.req.header(RECORDS_VERSION_HEADER) ?? c.req.header(LEGACY_RECORDS_VERSION_HEADER)
+    const upToDate = version === RECORDS_VERSION
     const eventPlan = planWrites<Event>(
       events,
       upToDate ? parseEvent : parseLegacyEvent,

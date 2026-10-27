@@ -9,7 +9,7 @@ import {
   milestonesFor,
   stageFor,
   tipById,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { clsx } from 'clsx'

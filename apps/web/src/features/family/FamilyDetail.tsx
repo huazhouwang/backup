@@ -1,4 +1,4 @@
-import { type FamilySummary, canManageMember, familyDisplayName, isManager } from '@bobo/shared'
+import { type FamilySummary, canManageMember, familyDisplayName, isManager } from '@lullabo/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'

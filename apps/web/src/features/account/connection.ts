@@ -1,4 +1,4 @@
-import { type FamilySummary } from '@bobo/shared'
+import { type FamilySummary } from '@lullabo/shared'
 
 import type { LocalStore } from '../../db'
 import { createStore, useStore } from '../../lib/store'

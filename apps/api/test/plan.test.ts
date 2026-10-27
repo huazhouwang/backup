@@ -1,4 +1,4 @@
-import { type Event, newId } from '@bobo/shared'
+import { type Event, newId } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import type { VoiceAction } from '../src/voice/action'

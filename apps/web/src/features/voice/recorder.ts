@@ -48,7 +48,7 @@ export function useMicPermission(): [MicPermission, (state: MicPermission) => vo
  * Hands each block of microphone samples to the page, as it comes. Running with nothing coming
  * in (a microphone that sends nothing) it says so now and then, with an empty block.
  */
-const TAP = `registerProcessor('bobo-tap', class extends AudioWorkletProcessor {
+const TAP = `registerProcessor('lullabo-tap', class extends AudioWorkletProcessor {
   empty = 0
   process(inputs) {
     const samples = inputs[0] && inputs[0][0]
@@ -239,7 +239,7 @@ async function tap(
       }
       tapped.add(context)
     }
-    const node = new AudioWorkletNode(context, 'bobo-tap')
+    const node = new AudioWorkletNode(context, 'lullabo-tap')
     node.port.addEventListener('message', (event: MessageEvent<Float32Array>) => {
       take(event.data)
     })

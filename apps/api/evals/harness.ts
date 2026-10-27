@@ -1,4 +1,4 @@
-import { type Event, newId } from '@bobo/shared'
+import { type Event, newId } from '@lullabo/shared'
 import type { AnyTextAdapter } from '@tanstack/ai'
 
 import { loadAccess } from '../src/access'

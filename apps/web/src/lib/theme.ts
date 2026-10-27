@@ -1,9 +1,9 @@
 export type ThemePreference = 'system' | 'light' | 'dark'
 export type ResolvedTheme = 'light' | 'dark'
 
-export const THEME_STORAGE_KEY = 'bobo.theme'
+export const THEME_STORAGE_KEY = 'lullabo.theme'
 
-/** Browser chrome color per theme; must match `--bobo-bg` in app.css. */
+/** Browser chrome color per theme; must match `--lullabo-bg` in app.css. */
 export const THEME_COLORS: Record<ResolvedTheme, string> = {
   light: '#fffdf8',
   dark: '#161d38',

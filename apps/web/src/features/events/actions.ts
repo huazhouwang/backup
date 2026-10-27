@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 
 import type { LocalStore } from '../../db'
 import { markDirty, writeLocal } from '../../sync/local'

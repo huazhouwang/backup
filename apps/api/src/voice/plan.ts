@@ -6,7 +6,7 @@ import {
   newId,
   recordKind,
   sleepKindFor,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import { TIMED_TYPES, type TimedType, type VoiceAction } from './action'
 

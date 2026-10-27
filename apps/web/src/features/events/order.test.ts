@@ -1,4 +1,4 @@
-import { MINUTE, newId } from '@bobo/shared'
+import { MINUTE, newId } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { newestFirst } from './order'

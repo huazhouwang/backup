@@ -1,4 +1,4 @@
-import type { GrowthEvent } from '@bobo/shared'
+import type { GrowthEvent } from '@lullabo/shared'
 
 import { type Quantity, inputValue, parseQuantity, rangeParams } from '../../lib/units'
 import { m } from '../../paraglide/messages.js'

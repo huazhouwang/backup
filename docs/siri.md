@@ -52,7 +52,7 @@ failure.
 - In GitHub: Actions → Agent evals → Run workflow (models, runs and a name filter are inputs).
   It also runs every Monday. It needs the `EVAL_OPENROUTER_API_KEY` secret (or
   `EVAL_OPENAI_API_KEY`), and skips without one. The report is in the run summary.
-- Locally: `EVAL_OPENROUTER_API_KEY=… pnpm --filter @bobo/api eval`, with `EVAL_MODELS`,
+- Locally: `EVAL_OPENROUTER_API_KEY=… pnpm --filter @lullabo/api eval`, with `EVAL_MODELS`,
   `EVAL_RUNS` and `EVAL_ONLY` to narrow it. The report is written to `eval-report.md`.
 - Re-run it after changing the instructions, the tools or `agent/guide.ts`, and compare.
 - `test/eval-harness.test.ts` keeps the harness itself working in CI.

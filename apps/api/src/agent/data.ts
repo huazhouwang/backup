@@ -1,4 +1,4 @@
-import { type Event, inBabyScope, isRunning, newId } from '@bobo/shared'
+import { type Event, inBabyScope, isRunning, newId } from '@lullabo/shared'
 
 import { type Access, type FamilyAccess, checkEventWrite } from '../access'
 import { parseEvent } from '../sync/protocol'

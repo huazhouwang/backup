@@ -4,7 +4,7 @@ import {
   type PushResponse,
   RECORDS_VERSION,
   RECORDS_VERSION_HEADER,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import { apiFetch } from '../lib/api'
 import type { SyncApi } from './engine'

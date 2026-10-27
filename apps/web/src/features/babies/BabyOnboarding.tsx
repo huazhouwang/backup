@@ -1,4 +1,4 @@
-import { localDateString } from '@bobo/shared'
+import { localDateString } from '@lullabo/shared'
 
 import { Bun } from '../../components/ui/Bun'
 import { Card } from '../../components/ui/Card'

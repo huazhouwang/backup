@@ -1,4 +1,4 @@
-import type { Baby, Event, GrowthEvent } from '@bobo/shared'
+import type { Baby, Event, GrowthEvent } from '@lullabo/shared'
 import { useState } from 'react'
 
 import { Card } from '../../components/ui/Card'

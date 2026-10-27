@@ -15,7 +15,7 @@ export interface UnitPreferences {
 
 export type Quantity = keyof UnitPreferences
 
-const UNITS_STORAGE_KEY = 'bobo.units'
+const UNITS_STORAGE_KEY = 'lullabo.units'
 
 export const DEFAULT_UNITS: UnitPreferences = {
   volume: 'ml',

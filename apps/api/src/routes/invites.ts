@@ -7,7 +7,7 @@ import {
   base64UrlEncode,
   canManageMember,
   createInviteRequestSchema,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { Hono } from 'hono'
 
 import {

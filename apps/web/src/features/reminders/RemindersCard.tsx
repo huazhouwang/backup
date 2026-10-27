@@ -1,4 +1,4 @@
-import { type Baby, MINUTE, type Reminder, type ReminderKind, nextUp } from '@bobo/shared'
+import { type Baby, MINUTE, type Reminder, type ReminderKind, nextUp } from '@lullabo/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 

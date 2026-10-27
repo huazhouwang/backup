@@ -3,7 +3,7 @@ import {
   type FamilySummary,
   familyDisplayName,
   localDateString,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { useState } from 'react'
 
 import { Button } from '../../components/ui/Button'

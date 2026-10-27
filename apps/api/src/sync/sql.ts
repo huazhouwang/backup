@@ -1,4 +1,4 @@
-import type { Baby, Event } from '@bobo/shared'
+import type { Baby, Event } from '@lullabo/shared'
 
 import type { TableCursor } from './protocol'
 

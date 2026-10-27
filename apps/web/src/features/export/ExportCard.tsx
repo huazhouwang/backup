@@ -1,4 +1,4 @@
-import { localDateString, localMidnight, shiftDay } from '@bobo/shared'
+import { localDateString, localMidnight, shiftDay } from '@lullabo/shared'
 import { useState } from 'react'
 
 import { Button } from '../../components/ui/Button'

@@ -1,4 +1,4 @@
-import { type Baby, newId } from '@bobo/shared'
+import { type Baby, newId } from '@lullabo/shared'
 import {
   SchemaValidationError,
   createCollection,

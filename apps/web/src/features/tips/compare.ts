@@ -1,4 +1,4 @@
-import { type Event, HOUR, ageNorms } from '@bobo/shared'
+import { type Event, HOUR, ageNorms } from '@lullabo/shared'
 
 import { dailyTrends } from '../trends/trends'
 

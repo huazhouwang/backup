@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 
-import { newId } from '@bobo/shared'
+import { newId } from '@lullabo/shared'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createTestEnv } from './d1'

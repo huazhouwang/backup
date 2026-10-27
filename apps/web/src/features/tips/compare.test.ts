@@ -1,4 +1,4 @@
-import { HOUR, type Event, startOfLocalDay } from '@bobo/shared'
+import { HOUR, type Event, startOfLocalDay } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { compareWithUsual } from './compare'

@@ -1,4 +1,4 @@
-import { RECORD_KINDS, type RecordKind } from '@bobo/shared'
+import { RECORD_KINDS, type RecordKind } from '@lullabo/shared'
 
 import type { ButtonTone } from '../../components/ui/Button'
 import type { ChipTone } from '../../components/ui/ToggleChip'

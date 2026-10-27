@@ -9,7 +9,7 @@ import { SCENARIOS } from './scenarios'
 
 // Plays every scenario against real models and reports how often each does the right thing.
 // Costs real tokens, so it only runs on request:
-//   EVAL_OPENROUTER_API_KEY=... pnpm --filter @bobo/api eval
+//   EVAL_OPENROUTER_API_KEY=... pnpm --filter @lullabo/api eval
 // EVAL_MODELS picks the models ("provider:model", comma-separated), EVAL_RUNS the runs per
 // scenario, EVAL_ONLY a substring of the scenario names to run, EVAL_CONCURRENCY how many play
 // at once.

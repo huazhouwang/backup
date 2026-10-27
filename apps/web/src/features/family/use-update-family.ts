@@ -1,4 +1,4 @@
-import type { FamilySummary } from '@bobo/shared'
+import type { FamilySummary } from '@lullabo/shared'
 import { createOptimisticAction } from '@tanstack/db'
 import { useMemo } from 'react'
 

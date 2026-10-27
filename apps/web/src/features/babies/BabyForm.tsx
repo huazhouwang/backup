@@ -1,4 +1,4 @@
-import { type AvatarColor, type BabySex, localDateString } from '@bobo/shared'
+import { type AvatarColor, type BabySex, localDateString } from '@lullabo/shared'
 import { clsx } from 'clsx'
 import { type FormEvent, useState } from 'react'
 

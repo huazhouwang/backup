@@ -1,4 +1,4 @@
-import { type Baby, type FamilySummary, type MemberRole, assignableRoles } from '@bobo/shared'
+import { type Baby, type FamilySummary, type MemberRole, assignableRoles } from '@lullabo/shared'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 

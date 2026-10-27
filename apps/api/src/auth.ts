@@ -1,5 +1,5 @@
 import { passkey } from '@better-auth/passkey'
-import { newId } from '@bobo/shared'
+import { newId } from '@lullabo/shared'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { betterAuth } from 'better-auth/minimal'
 import { bearer } from 'better-auth/plugins/bearer'

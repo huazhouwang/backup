@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { logDiaper, logSolids } from '../events/records'

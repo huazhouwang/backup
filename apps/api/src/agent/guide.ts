@@ -8,7 +8,7 @@ import {
   ageNorms,
   babyAge,
   nextUp,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import { type VoiceBaby, durationLabel, formatClock, localDay, minuteOfDayIn } from '../voice/plan'
 import { recentEvents } from './data'

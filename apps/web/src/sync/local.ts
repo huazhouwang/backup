@@ -1,4 +1,4 @@
-import type { Baby, Event, FamilySummary } from '@bobo/shared'
+import type { Baby, Event, FamilySummary } from '@lullabo/shared'
 import { createTransaction } from '@tanstack/db'
 
 import type { LocalStore } from '../db/local-store'

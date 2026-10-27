@@ -7,7 +7,7 @@ import {
   type PullResponse,
   type PushResponse,
   newId,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createTestApp } from './app'

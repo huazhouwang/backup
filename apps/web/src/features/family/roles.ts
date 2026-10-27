@@ -1,4 +1,4 @@
-import type { FamilyRole, MemberRole } from '@bobo/shared'
+import type { FamilyRole, MemberRole } from '@lullabo/shared'
 
 import { m } from '../../paraglide/messages.js'
 

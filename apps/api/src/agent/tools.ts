@@ -5,7 +5,7 @@ import {
   eventSchema,
   hasDuration,
   tipById,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
 

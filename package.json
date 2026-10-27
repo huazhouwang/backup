@@ -15,8 +15,8 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "codegen": "pnpm -r --if-present codegen",
     "postinstall": "pnpm codegen",
-    "test:e2e": "pnpm --filter @bobo/web build && pnpm --filter @bobo/e2e test:e2e",
-    "deploy": "pnpm --filter @bobo/api exec wrangler d1 migrations apply DB --remote && pnpm --filter @bobo/api exec wrangler deploy"
+    "test:e2e": "pnpm --filter @lullabo/web build && pnpm --filter @lullabo/e2e test:e2e",
+    "deploy": "pnpm --filter @lullabo/api exec wrangler d1 migrations apply DB --remote && pnpm --filter @lullabo/api exec wrangler deploy"
   },
   "devDependencies": {
     "oxfmt": "^0.72.0",

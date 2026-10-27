@@ -1,4 +1,4 @@
-import type { PoopDetails } from '@bobo/shared'
+import type { PoopDetails } from '@lullabo/shared'
 
 /** Fill colors for the stain on the diaper illustration. */
 const POOP_FILL: Record<PoopDetails['color'], string> = {

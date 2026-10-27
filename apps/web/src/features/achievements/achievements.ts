@@ -1,4 +1,4 @@
-import { type Baby, type Event, babyAge, localDateString, shiftDay } from '@bobo/shared'
+import { type Baby, type Event, babyAge, localDateString, shiftDay } from '@lullabo/shared'
 
 export type BadgeGroup = 'records' | 'streak' | 'night' | 'firsts' | 'age' | 'family'
 

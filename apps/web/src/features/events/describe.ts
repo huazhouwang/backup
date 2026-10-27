@@ -4,7 +4,7 @@ import {
   eventDurationMs,
   hasKnownDuration,
   isRunning,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import { formatQuantity, unitLabel } from '../../lib/units'
 import { m } from '../../paraglide/messages.js'

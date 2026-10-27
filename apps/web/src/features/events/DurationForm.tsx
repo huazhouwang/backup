@@ -6,7 +6,7 @@ import {
   RECORD_KINDS,
   isRunning,
   recordKind,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { type FormEvent, type ReactNode, useReducer, useState } from 'react'
 
 import { Button } from '../../components/ui/Button'

@@ -1,4 +1,4 @@
-import { DAY, localMidnight } from '@bobo/shared'
+import { DAY, localMidnight } from '@lullabo/shared'
 
 import { WHO_LMS } from './who-data'
 

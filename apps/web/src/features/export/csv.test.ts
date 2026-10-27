@@ -1,4 +1,4 @@
-import { newId } from '@bobo/shared'
+import { newId } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { deleteEvent, logBottle, logGrowth, logNote, logSleep } from '../events/records'
@@ -59,7 +59,7 @@ describe('eventsToCsv', () => {
 
   it('names files after the baby and the inclusive range', () => {
     expect(csvFileName('小 米/粒', at(1, 0), at(15, 0))).toBe(
-      'bobo-小-米-粒-2026-10-01-2026-10-14.csv',
+      'lullabo-小-米-粒-2026-10-01-2026-10-14.csv',
     )
   })
 })

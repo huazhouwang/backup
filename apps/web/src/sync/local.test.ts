@@ -1,4 +1,4 @@
-import { type Baby, newId } from '@bobo/shared'
+import { type Baby, newId } from '@lullabo/shared'
 import { SchemaValidationError } from '@tanstack/db'
 import { IDBFactory } from 'fake-indexeddb'
 import { describe, expect, it } from 'vitest'

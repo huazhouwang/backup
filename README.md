@@ -43,7 +43,7 @@ Requires Node.js 22+ and pnpm 12 (version pinned via `packageManager`).
 ```sh
 pnpm install
 cp .dev.vars.example .dev.vars   # then fill it in; BETTER_AUTH_URL=http://localhost:3000
-pnpm --filter @bobo/api db:migrate:local
+pnpm --filter @lullabo/api db:migrate:local
 pnpm dev           # web on :3000 (proxies /api) + wrangler dev on :8787 (no Workers AI: no speech)
 ```
 
@@ -55,7 +55,7 @@ pnpm lint          # oxlint with type-aware rules
 pnpm typecheck     # tsc (TypeScript 7)
 pnpm test          # vitest
 pnpm test:e2e      # build the web app, then Playwright end-to-end tests (e2e/)
-pnpm --filter @bobo/api eval   # voice agent evals against real models (needs a key)
+pnpm --filter @lullabo/api eval   # voice agent evals against real models (needs a key)
 ```
 
 Tooling: [oxlint](https://oxc.rs/docs/guide/usage/linter) (type-aware via `oxlint-tsgolint`), [oxfmt](https://oxc.rs/docs/guide/usage/formatter), TypeScript 7 and Vitest. In VS Code, install the recommended Oxc extension for format-on-save and lint fixes.
@@ -74,18 +74,18 @@ Unit tests run the voice agent with a scripted model. `apps/api/evals` plays sce
 
 ## Architecture
 
-| Path              | Package        | Description                                               |
-| ----------------- | -------------- | --------------------------------------------------------- |
-| `apps/web`        | `@bobo/web`    | TanStack Start client (static SPA), TanStack DB and Query |
-| `apps/api`        | `@bobo/api`    | Hono API on Cloudflare Workers, D1, TanStack AI agent     |
-| `packages/shared` | `@bobo/shared` | Schemas and types shared by web and api                   |
-| `e2e`             | `@bobo/e2e`    | Playwright end-to-end tests                               |
+| Path              | Package           | Description                                               |
+| ----------------- | ----------------- | --------------------------------------------------------- |
+| `apps/web`        | `@lullabo/web`    | TanStack Start client (static SPA), TanStack DB and Query |
+| `apps/api`        | `@lullabo/api`    | Hono API on Cloudflare Workers, D1, TanStack AI agent     |
+| `packages/shared` | `@lullabo/shared` | Schemas and types shared by web and api                   |
+| `e2e`             | `@lullabo/e2e`    | Playwright end-to-end tests                               |
 
 Internal packages export TypeScript source directly; consuming apps compile them with their own bundler.
 
 **Web.** Records live in IndexedDB as TanStack DB collections. A local write and its sync-queue entry commit in one transaction, and a sync engine pushes and pulls changes by cursor. Server data in settings goes through TanStack Query.
 
-**API.** One Worker, configured in `wrangler.jsonc` at the repository root, serves the SPA build through Workers Static Assets; only `/api/*` runs Worker code. The D1 schema is in `apps/api/src/db/schema.ts`, with Drizzle migrations in `apps/api/migrations`. After changing the schema, run `pnpm --filter @bobo/api db:generate`. A cron trigger sends reminders every minute and clears old voice conversations hourly.
+**API.** One Worker, configured in `wrangler.jsonc` at the repository root, serves the SPA build through Workers Static Assets; only `/api/*` runs Worker code. The D1 schema is in `apps/api/src/db/schema.ts`, with Drizzle migrations in `apps/api/migrations`. After changing the schema, run `pnpm --filter @lullabo/api db:generate`. A cron trigger sends reminders every minute and clears old voice conversations hourly.
 
 **Auth** uses [Better Auth](https://better-auth.com), tuned for the Workers free plan (10 ms CPU):
 

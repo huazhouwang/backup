@@ -1,4 +1,4 @@
-import type { FeedingData, MedicationEvent, PumpingEvent } from '@bobo/shared'
+import type { FeedingData, MedicationEvent, PumpingEvent } from '@lullabo/shared'
 
 import { inputValue } from '../../lib/units'
 import { m } from '../../paraglide/messages.js'

@@ -3,7 +3,7 @@ import {
   pushSubscriptionSchema,
   pushUnsubscribeSchema,
   reminderSchema,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { Hono } from 'hono'
 
 import { canSeeBaby } from '../access'

@@ -1,4 +1,4 @@
-import { base64UrlDecode, base64UrlEncode } from '@bobo/shared'
+import { base64UrlDecode, base64UrlEncode } from '@lullabo/shared'
 import { openaiCompatibleText } from '@tanstack/ai-openai/compatible'
 
 export const AI_PROVIDERS = ['openai', 'openrouter'] as const
@@ -195,6 +195,7 @@ async function cipherKey(secret: string): Promise<CryptoKey> {
       name: 'HKDF',
       hash: 'SHA-256',
       salt: new Uint8Array(0),
+      // From when the app was called Bobo; changing it would make saved keys unreadable.
       info: new TextEncoder().encode('bobo ai key'),
     },
     material,

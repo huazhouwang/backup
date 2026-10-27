@@ -1,4 +1,4 @@
-import { type Event, HOUR, hasDuration, hasKnownDuration, isRunning } from '@bobo/shared'
+import { type Event, HOUR, hasDuration, hasKnownDuration, isRunning } from '@lullabo/shared'
 import { clsx } from 'clsx'
 
 import { formatTime } from '../../lib/i18n'

@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 
 import { DeleteConfirmSheet } from '../../components/ui/DeleteConfirmSheet'
 import { useLocalStore } from '../../db'

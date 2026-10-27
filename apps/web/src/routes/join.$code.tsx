@@ -1,4 +1,4 @@
-import type { InvitePreview } from '@bobo/shared'
+import type { InvitePreview } from '@lullabo/shared'
 import { type UseMutationResult, useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { type ReactNode, useEffect } from 'react'
@@ -37,7 +37,7 @@ export const Route = createFileRoute('/join/$code')({
 })
 
 // Set before leaving for Google sign-in, so the invite is accepted when the user returns.
-const PENDING_KEY = 'bobo.pendingInvite'
+const PENDING_KEY = 'lullabo.pendingInvite'
 
 function readPending(): string | null {
   try {

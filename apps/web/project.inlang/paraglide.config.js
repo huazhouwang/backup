@@ -4,7 +4,7 @@ export default {
   outdir: './src/paraglide',
   // Client-only SPA: a stored choice wins, then the browser language, then the base locale.
   strategy: ['localStorage', 'preferredLanguage', 'baseLocale'],
-  localStorageKey: 'bobo.locale',
+  localStorageKey: 'lullabo.locale',
   emitReadme: false,
   emitTsDeclarations: true,
 }

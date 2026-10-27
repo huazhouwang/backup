@@ -2,7 +2,7 @@
 @import '@fontsource-variable/nunito';
 
 /*
- * Design tokens. Raw values live in --bobo-* variables, redefined per theme; Tailwind
+ * Design tokens. Raw values live in --lullabo-* variables, redefined per theme; Tailwind
  * utilities reference them through `@theme inline`, so components never need `dark:`.
  *
  * Accent fills are slightly deeper than Duolingo's so white bold labels reach >= 3:1
@@ -13,123 +13,123 @@
  */
 :root {
   color-scheme: light;
-  --bobo-bg: #fffdf8;
-  --bobo-surface: #f7f3ea;
-  --bobo-border: #ebe4d6;
-  --bobo-fg: #2f3350;
-  --bobo-fg-muted: #5d6380;
-  --bobo-on-accent: #ffffff;
+  --lullabo-bg: #fffdf8;
+  --lullabo-surface: #f7f3ea;
+  --lullabo-border: #ebe4d6;
+  --lullabo-fg: #2f3350;
+  --lullabo-fg-muted: #5d6380;
+  --lullabo-on-accent: #ffffff;
 
-  --bobo-primary: #4152b8;
-  --bobo-primary-edge: #2e3c8f;
-  --bobo-primary-soft: #e8ebfa;
-  --bobo-primary-text: #3a4bb0;
+  --lullabo-primary: #4152b8;
+  --lullabo-primary-edge: #2e3c8f;
+  --lullabo-primary-soft: #e8ebfa;
+  --lullabo-primary-text: #3a4bb0;
 
-  --bobo-moon: #ffc927;
-  --bobo-moon-edge: #e0a800;
-  --bobo-moon-soft: #fff4cc;
-  --bobo-moon-text: #8a6a00;
-  --bobo-on-moon: #4a3a00;
+  --lullabo-moon: #ffc927;
+  --lullabo-moon-edge: #e0a800;
+  --lullabo-moon-soft: #fff4cc;
+  --lullabo-moon-text: #8a6a00;
+  --lullabo-on-moon: #4a3a00;
 
-  --bobo-feeding: #e07a00;
-  --bobo-feeding-edge: #b86400;
-  --bobo-feeding-soft: #fff0d9;
-  --bobo-feeding-text: #c86d00;
+  --lullabo-feeding: #e07a00;
+  --lullabo-feeding-edge: #b86400;
+  --lullabo-feeding-soft: #fff0d9;
+  --lullabo-feeding-text: #c86d00;
 
-  --bobo-sleep: #b26ef0;
-  --bobo-sleep-edge: #8f4ccf;
-  --bobo-sleep-soft: #f4e8ff;
-  --bobo-sleep-text: #9a4fe0;
+  --lullabo-sleep: #b26ef0;
+  --lullabo-sleep-edge: #8f4ccf;
+  --lullabo-sleep-soft: #f4e8ff;
+  --lullabo-sleep-text: #9a4fe0;
 
-  --bobo-diaper: #0e8fd6;
-  --bobo-diaper-edge: #0b74ae;
-  --bobo-diaper-soft: #ddf4ff;
-  --bobo-diaper-text: #0a84c8;
+  --lullabo-diaper: #0e8fd6;
+  --lullabo-diaper-edge: #0b74ae;
+  --lullabo-diaper-soft: #ddf4ff;
+  --lullabo-diaper-text: #0a84c8;
 
-  --bobo-danger: #e83a3a;
-  --bobo-danger-edge: #c22626;
-  --bobo-danger-soft: #ffe1e1;
-  --bobo-danger-text: #d83030;
+  --lullabo-danger: #e83a3a;
+  --lullabo-danger-edge: #c22626;
+  --lullabo-danger-soft: #ffe1e1;
+  --lullabo-danger-text: #d83030;
 
-  --bobo-pumping: #e0569a;
-  --bobo-pumping-edge: #b83f7c;
-  --bobo-pumping-soft: #ffe4f1;
-  --bobo-pumping-text: #c13f80;
+  --lullabo-pumping: #e0569a;
+  --lullabo-pumping-edge: #b83f7c;
+  --lullabo-pumping-soft: #ffe4f1;
+  --lullabo-pumping-text: #c13f80;
 
-  --bobo-medication: #a87d00;
-  --bobo-medication-edge: #876400;
-  --bobo-medication-soft: #fff4d1;
-  --bobo-medication-text: #9a7200;
+  --lullabo-medication: #a87d00;
+  --lullabo-medication-edge: #876400;
+  --lullabo-medication-soft: #fff4d1;
+  --lullabo-medication-text: #9a7200;
 
-  --bobo-note: #6b6b6b;
-  --bobo-note-edge: #4f4f4f;
-  --bobo-note-soft: #f0ece3;
-  --bobo-note-text: #5c5c5c;
+  --lullabo-note: #6b6b6b;
+  --lullabo-note-edge: #4f4f4f;
+  --lullabo-note-soft: #f0ece3;
+  --lullabo-note-text: #5c5c5c;
 
   /* The avatar called green stays green, now that the primary is blue. */
-  --bobo-avatar-green: #46a302;
-  --bobo-avatar-pink: #e0569a;
-  --bobo-avatar-yellow: #d19b00;
+  --lullabo-avatar-green: #46a302;
+  --lullabo-avatar-pink: #e0569a;
+  --lullabo-avatar-yellow: #d19b00;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bobo-bg: #161d38;
-    --bobo-surface: #1f2848;
-    --bobo-border: #34406a;
-    --bobo-fg: #f1f3fb;
-    --bobo-fg-muted: #a3abc9;
-    --bobo-primary: #5668dc;
-    --bobo-primary-edge: #4152b8;
-    --bobo-primary-soft: #263063;
-    --bobo-primary-text: #9aa8ff;
-    --bobo-moon-soft: #2e2a1a;
-    --bobo-moon-text: #ffd84d;
-    --bobo-feeding-soft: #3a2a14;
-    --bobo-feeding-text: #ff9600;
-    --bobo-sleep-soft: #2f2440;
-    --bobo-sleep-text: #ce82ff;
-    --bobo-diaper-soft: #12313f;
-    --bobo-diaper-text: #1cb0f6;
-    --bobo-danger-soft: #3d1c1e;
-    --bobo-danger-text: #ff4b4b;
-    --bobo-pumping-soft: #3d1f2e;
-    --bobo-pumping-text: #ff7ab8;
-    --bobo-medication-soft: #3a3114;
-    --bobo-medication-text: #ffc800;
-    --bobo-note-soft: #263052;
-    --bobo-note-text: #b0b8d6;
+    --lullabo-bg: #161d38;
+    --lullabo-surface: #1f2848;
+    --lullabo-border: #34406a;
+    --lullabo-fg: #f1f3fb;
+    --lullabo-fg-muted: #a3abc9;
+    --lullabo-primary: #5668dc;
+    --lullabo-primary-edge: #4152b8;
+    --lullabo-primary-soft: #263063;
+    --lullabo-primary-text: #9aa8ff;
+    --lullabo-moon-soft: #2e2a1a;
+    --lullabo-moon-text: #ffd84d;
+    --lullabo-feeding-soft: #3a2a14;
+    --lullabo-feeding-text: #ff9600;
+    --lullabo-sleep-soft: #2f2440;
+    --lullabo-sleep-text: #ce82ff;
+    --lullabo-diaper-soft: #12313f;
+    --lullabo-diaper-text: #1cb0f6;
+    --lullabo-danger-soft: #3d1c1e;
+    --lullabo-danger-text: #ff4b4b;
+    --lullabo-pumping-soft: #3d1f2e;
+    --lullabo-pumping-text: #ff7ab8;
+    --lullabo-medication-soft: #3a3114;
+    --lullabo-medication-text: #ffc800;
+    --lullabo-note-soft: #263052;
+    --lullabo-note-text: #b0b8d6;
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bobo-bg: #161d38;
-  --bobo-surface: #1f2848;
-  --bobo-border: #34406a;
-  --bobo-fg: #f1f3fb;
-  --bobo-fg-muted: #a3abc9;
-  --bobo-primary: #5668dc;
-  --bobo-primary-edge: #4152b8;
-  --bobo-primary-soft: #263063;
-  --bobo-primary-text: #9aa8ff;
-  --bobo-moon-soft: #2e2a1a;
-  --bobo-moon-text: #ffd84d;
-  --bobo-feeding-soft: #3a2a14;
-  --bobo-feeding-text: #ff9600;
-  --bobo-sleep-soft: #2f2440;
-  --bobo-sleep-text: #ce82ff;
-  --bobo-diaper-soft: #12313f;
-  --bobo-diaper-text: #1cb0f6;
-  --bobo-danger-soft: #3d1c1e;
-  --bobo-danger-text: #ff4b4b;
-  --bobo-pumping-soft: #3d1f2e;
-  --bobo-pumping-text: #ff7ab8;
-  --bobo-medication-soft: #3a3114;
-  --bobo-medication-text: #ffc800;
-  --bobo-note-soft: #263052;
-  --bobo-note-text: #b0b8d6;
+  --lullabo-bg: #161d38;
+  --lullabo-surface: #1f2848;
+  --lullabo-border: #34406a;
+  --lullabo-fg: #f1f3fb;
+  --lullabo-fg-muted: #a3abc9;
+  --lullabo-primary: #5668dc;
+  --lullabo-primary-edge: #4152b8;
+  --lullabo-primary-soft: #263063;
+  --lullabo-primary-text: #9aa8ff;
+  --lullabo-moon-soft: #2e2a1a;
+  --lullabo-moon-text: #ffd84d;
+  --lullabo-feeding-soft: #3a2a14;
+  --lullabo-feeding-text: #ff9600;
+  --lullabo-sleep-soft: #2f2440;
+  --lullabo-sleep-text: #ce82ff;
+  --lullabo-diaper-soft: #12313f;
+  --lullabo-diaper-text: #1cb0f6;
+  --lullabo-danger-soft: #3d1c1e;
+  --lullabo-danger-text: #ff4b4b;
+  --lullabo-pumping-soft: #3d1f2e;
+  --lullabo-pumping-text: #ff7ab8;
+  --lullabo-medication-soft: #3a3114;
+  --lullabo-medication-text: #ffc800;
+  --lullabo-note-soft: #263052;
+  --lullabo-note-text: #b0b8d6;
 }
 
 @theme inline {
@@ -138,55 +138,55 @@
   --color-current: currentColor;
   --color-black: #000000;
   --color-white: #ffffff;
-  --color-bg: var(--bobo-bg);
-  --color-surface: var(--bobo-surface);
-  --color-border: var(--bobo-border);
-  --color-fg: var(--bobo-fg);
-  --color-fg-muted: var(--bobo-fg-muted);
-  --color-on-accent: var(--bobo-on-accent);
+  --color-bg: var(--lullabo-bg);
+  --color-surface: var(--lullabo-surface);
+  --color-border: var(--lullabo-border);
+  --color-fg: var(--lullabo-fg);
+  --color-fg-muted: var(--lullabo-fg-muted);
+  --color-on-accent: var(--lullabo-on-accent);
 
-  --color-primary: var(--bobo-primary);
-  --color-primary-edge: var(--bobo-primary-edge);
-  --color-primary-soft: var(--bobo-primary-soft);
-  --color-primary-text: var(--bobo-primary-text);
-  --color-moon: var(--bobo-moon);
-  --color-moon-edge: var(--bobo-moon-edge);
-  --color-moon-soft: var(--bobo-moon-soft);
-  --color-moon-text: var(--bobo-moon-text);
-  --color-on-moon: var(--bobo-on-moon);
-  --color-feeding: var(--bobo-feeding);
-  --color-feeding-edge: var(--bobo-feeding-edge);
-  --color-feeding-soft: var(--bobo-feeding-soft);
-  --color-feeding-text: var(--bobo-feeding-text);
-  --color-sleep: var(--bobo-sleep);
-  --color-sleep-edge: var(--bobo-sleep-edge);
-  --color-sleep-soft: var(--bobo-sleep-soft);
-  --color-sleep-text: var(--bobo-sleep-text);
-  --color-diaper: var(--bobo-diaper);
-  --color-diaper-edge: var(--bobo-diaper-edge);
-  --color-diaper-soft: var(--bobo-diaper-soft);
-  --color-diaper-text: var(--bobo-diaper-text);
-  --color-danger: var(--bobo-danger);
-  --color-danger-edge: var(--bobo-danger-edge);
-  --color-danger-soft: var(--bobo-danger-soft);
-  --color-danger-text: var(--bobo-danger-text);
-  --color-pumping: var(--bobo-pumping);
-  --color-pumping-edge: var(--bobo-pumping-edge);
-  --color-pumping-soft: var(--bobo-pumping-soft);
-  --color-pumping-text: var(--bobo-pumping-text);
-  --color-medication: var(--bobo-medication);
-  --color-medication-edge: var(--bobo-medication-edge);
-  --color-medication-soft: var(--bobo-medication-soft);
-  --color-medication-text: var(--bobo-medication-text);
-  --color-note: var(--bobo-note);
-  --color-note-edge: var(--bobo-note-edge);
-  --color-note-soft: var(--bobo-note-soft);
-  --color-note-text: var(--bobo-note-text);
-  --color-avatar-green: var(--bobo-avatar-green);
-  --color-avatar-pink: var(--bobo-avatar-pink);
-  --color-avatar-yellow: var(--bobo-avatar-yellow);
+  --color-primary: var(--lullabo-primary);
+  --color-primary-edge: var(--lullabo-primary-edge);
+  --color-primary-soft: var(--lullabo-primary-soft);
+  --color-primary-text: var(--lullabo-primary-text);
+  --color-moon: var(--lullabo-moon);
+  --color-moon-edge: var(--lullabo-moon-edge);
+  --color-moon-soft: var(--lullabo-moon-soft);
+  --color-moon-text: var(--lullabo-moon-text);
+  --color-on-moon: var(--lullabo-on-moon);
+  --color-feeding: var(--lullabo-feeding);
+  --color-feeding-edge: var(--lullabo-feeding-edge);
+  --color-feeding-soft: var(--lullabo-feeding-soft);
+  --color-feeding-text: var(--lullabo-feeding-text);
+  --color-sleep: var(--lullabo-sleep);
+  --color-sleep-edge: var(--lullabo-sleep-edge);
+  --color-sleep-soft: var(--lullabo-sleep-soft);
+  --color-sleep-text: var(--lullabo-sleep-text);
+  --color-diaper: var(--lullabo-diaper);
+  --color-diaper-edge: var(--lullabo-diaper-edge);
+  --color-diaper-soft: var(--lullabo-diaper-soft);
+  --color-diaper-text: var(--lullabo-diaper-text);
+  --color-danger: var(--lullabo-danger);
+  --color-danger-edge: var(--lullabo-danger-edge);
+  --color-danger-soft: var(--lullabo-danger-soft);
+  --color-danger-text: var(--lullabo-danger-text);
+  --color-pumping: var(--lullabo-pumping);
+  --color-pumping-edge: var(--lullabo-pumping-edge);
+  --color-pumping-soft: var(--lullabo-pumping-soft);
+  --color-pumping-text: var(--lullabo-pumping-text);
+  --color-medication: var(--lullabo-medication);
+  --color-medication-edge: var(--lullabo-medication-edge);
+  --color-medication-soft: var(--lullabo-medication-soft);
+  --color-medication-text: var(--lullabo-medication-text);
+  --color-note: var(--lullabo-note);
+  --color-note-edge: var(--lullabo-note-edge);
+  --color-note-soft: var(--lullabo-note-soft);
+  --color-note-text: var(--lullabo-note-text);
+  --color-avatar-green: var(--lullabo-avatar-green);
+  --color-avatar-pink: var(--lullabo-avatar-pink);
+  --color-avatar-yellow: var(--lullabo-avatar-yellow);
 
-  --shadow-segment: 0 2px 0 var(--bobo-border);
+  --shadow-segment: 0 2px 0 var(--lullabo-border);
 }
 
 @theme {

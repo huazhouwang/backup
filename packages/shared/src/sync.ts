@@ -13,7 +13,9 @@ export const SYNC_PULL_LIMIT = 500
  * Sent with pushes by apps that know duration records can run (#170). Older apps send
  * bottles, solids and pumping without an end to mean the record has no duration.
  */
-export const RECORDS_VERSION_HEADER = 'X-Bobo-Records'
+export const RECORDS_VERSION_HEADER = 'X-Lullabo-Records'
+/** The same header as apps still cached from when the app was called Bobo send it. */
+export const LEGACY_RECORDS_VERSION_HEADER = 'X-Bobo-Records'
 export const RECORDS_VERSION = '2'
 
 export const pushRequestSchema = z.object({

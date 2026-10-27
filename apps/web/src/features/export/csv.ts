@@ -1,4 +1,4 @@
-import { type Baby, type Event, eventDurationMs, hasKnownDuration } from '@bobo/shared'
+import { type Baby, type Event, eventDurationMs, hasKnownDuration } from '@lullabo/shared'
 
 import { formatDate } from '../../lib/i18n'
 import { m } from '../../paraglide/messages.js'
@@ -109,7 +109,7 @@ export function eventsToCsv(
 export function csvFileName(babyName: string, from: number, to: number): string {
   const last = to - 1
   const safeName = babyName.replaceAll(/[\\/:*?"<>|\s]+/g, '-')
-  return `bobo-${safeName}-${localDate(from)}-${localDate(last)}.csv`
+  return `lullabo-${safeName}-${localDate(from)}-${localDate(last)}.csv`
 }
 
 /** Saves the text as a file through a temporary download link (works offline). */

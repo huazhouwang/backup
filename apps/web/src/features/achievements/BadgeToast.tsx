@@ -1,4 +1,4 @@
-import type { Baby, Event } from '@bobo/shared'
+import type { Baby, Event } from '@lullabo/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
@@ -11,7 +11,7 @@ import { badgeLabel } from './badge-labels'
 
 const MEDAL = '🏅'
 
-const seenKey = (babyId: string) => `bobo.seenBadges.${babyId}`
+const seenKey = (babyId: string) => `lullabo.seenBadges.${babyId}`
 const idList = jsonCodec(stringList)
 
 function readSeen(babyId: string): Set<string> | undefined {

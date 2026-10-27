@@ -7,7 +7,7 @@ import {
   SYNC_PUSH_LIMIT,
   babySchema,
   eventSchema,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import type { LocalStore } from '../db'
 import { applyAccess } from './access'

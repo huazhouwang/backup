@@ -15,7 +15,7 @@ const MIN_SPIN_MS = 600
 const DONE_MS = 700
 /** Coming to the page refreshes on its own only when the last sync is older than this. */
 const STALE_MS = 30_000
-const REFRESH_EVENT = 'bobo:refresh-today'
+const REFRESH_EVENT = 'lullabo:refresh-today'
 
 /** Tapping the Today tab while on it: back to the top, then refresh as if pulled. */
 export const refreshToday = () => window.dispatchEvent(new Event(REFRESH_EVENT))

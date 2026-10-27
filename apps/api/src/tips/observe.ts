@@ -1,4 +1,4 @@
-import { type BabyAge, type Event, shiftDay } from '@bobo/shared'
+import { type BabyAge, type Event, shiftDay } from '@lullabo/shared'
 import { type AnyTextAdapter, chat } from '@tanstack/ai'
 
 import { ageLabel, referenceLine } from '../agent/guide'

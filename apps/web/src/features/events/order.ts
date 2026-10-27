@@ -1,4 +1,4 @@
-import { type Event, MINUTE, isRunning } from '@bobo/shared'
+import { type Event, MINUTE, isRunning } from '@lullabo/shared'
 
 /** When a record ended: never yet while it runs, at its start for one-off records. */
 const endedAt = (event: Event) =>

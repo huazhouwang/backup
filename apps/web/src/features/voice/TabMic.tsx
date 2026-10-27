@@ -1,4 +1,4 @@
-import { APP_NAME } from '@bobo/shared'
+import { APP_NAME } from '@lullabo/shared'
 import { type InfiniteData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'

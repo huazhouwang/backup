@@ -1,4 +1,4 @@
-import { tipById } from '@bobo/shared'
+import { tipById } from '@lullabo/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 

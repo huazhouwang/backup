@@ -1,4 +1,4 @@
-import { type Baby, type Event, newId } from '@bobo/shared'
+import { type Baby, type Event, newId } from '@lullabo/shared'
 
 export const T0 = Date.UTC(2026, 9, 13, 8)
 

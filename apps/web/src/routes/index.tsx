@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { PullToRefresh } from '../components/PullToRefresh'

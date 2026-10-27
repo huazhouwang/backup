@@ -1,4 +1,4 @@
-import type { FamilyMember, Invite } from '@bobo/shared'
+import type { FamilyMember, Invite } from '@lullabo/shared'
 import { createCollection } from '@tanstack/db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { useLiveQuery } from '@tanstack/react-db'

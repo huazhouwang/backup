@@ -1,4 +1,4 @@
-import type { MemberRole } from '@bobo/shared'
+import type { MemberRole } from '@lullabo/shared'
 import { clsx } from 'clsx'
 
 import { m } from '../../paraglide/messages.js'

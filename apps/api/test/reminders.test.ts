@@ -1,4 +1,10 @@
-import { type Event, type PushMessage, base64UrlDecode, base64UrlEncode, newId } from '@bobo/shared'
+import {
+  type Event,
+  type PushMessage,
+  base64UrlDecode,
+  base64UrlEncode,
+  newId,
+} from '@lullabo/shared'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { MAX_SENDS, dispatchReminders } from '../src/reminders'

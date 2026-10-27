@@ -1,4 +1,4 @@
-import { MINUTE } from '@bobo/shared'
+import { MINUTE } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { checkTimes, newTimes, resolveTimes, storedTimes, timesReducer } from './duration-times'

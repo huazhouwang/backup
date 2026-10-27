@@ -1,4 +1,4 @@
-import { type Baby, type FamilySummary, familyDisplayName } from '@bobo/shared'
+import { type Baby, type FamilySummary, familyDisplayName } from '@lullabo/shared'
 import { clsx } from 'clsx'
 import type { ReactNode } from 'react'
 

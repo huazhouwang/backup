@@ -1,12 +1,12 @@
 {
-  "name": "@bobo/api",
+  "name": "@lullabo/api",
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --local",
-    "deploy": "pnpm --filter @bobo/web build && wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "deploy": "pnpm --filter @lullabo/web build && wrangler d1 migrations apply DB --remote && wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply bobo-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply bobo-db --remote",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@better-auth/passkey": "catalog:",
-    "@bobo/shared": "workspace:*",
+    "@lullabo/shared": "workspace:*",
     "@tanstack/ai": "^0.69.0",
     "@tanstack/ai-compaction": "^0.2.0",
     "@tanstack/ai-openai": "^0.30.0",

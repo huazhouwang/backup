@@ -1,4 +1,4 @@
-import { type Event, isRunning } from '@bobo/shared'
+import { type Event, isRunning } from '@lullabo/shared'
 
 import { RollingText } from '../../components/ui/RollingText'
 import { useNow } from '../../lib/use-now'

@@ -4,7 +4,7 @@ import { persistQueryClient } from '@tanstack/react-query-persist-client'
 
 const DAY = 86_400_000
 
-const KEY = 'bobo-queries'
+const KEY = 'lullabo-queries'
 
 /**
  * Keeps the signed-in user's server data (settings pages) in `storage`, so it shows offline

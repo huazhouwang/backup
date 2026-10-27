@@ -1,4 +1,4 @@
-import type { AvatarColor } from '@bobo/shared'
+import type { AvatarColor } from '@lullabo/shared'
 import { clsx } from 'clsx'
 
 export const avatarBackground: Record<AvatarColor, string> = {

@@ -6,7 +6,7 @@ import {
   canAddBabies,
   inBabyScope,
   isManager,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import type { LocalStore } from '../db'
 import { getAccess, getAccount, removeLocal, setAccess, setAccount } from './local'

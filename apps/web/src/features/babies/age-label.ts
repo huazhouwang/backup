@@ -1,4 +1,4 @@
-import { babyAge, localDateString } from '@bobo/shared'
+import { babyAge, localDateString } from '@lullabo/shared'
 
 import { m } from '../../paraglide/messages.js'
 

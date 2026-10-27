@@ -1,4 +1,4 @@
-import { type Event, type PullResponse, newId } from '@bobo/shared'
+import { type Event, type PullResponse, newId } from '@lullabo/shared'
 import { fakeText } from '@tanstack/ai/testing'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 

@@ -65,7 +65,7 @@ export interface ChatPage {
 
 // Codes made on this device, so signing out here can end them (another account may sign in
 // next, and the shortcuts would otherwise keep logging for this one).
-const TOKEN_IDS_KEY = 'bobo.voiceTokenIds'
+const TOKEN_IDS_KEY = 'lullabo.voiceTokenIds'
 
 function deviceTokenIds(): string[] {
   try {

@@ -11,7 +11,7 @@ import {
   type TemperatureEvent,
   newId,
   sleepKindFor,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 type NewEventBase = Pick<
   Event,

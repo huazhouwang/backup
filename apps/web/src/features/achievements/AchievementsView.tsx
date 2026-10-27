@@ -1,4 +1,4 @@
-import type { Baby, Event } from '@bobo/shared'
+import type { Baby, Event } from '@lullabo/shared'
 import { clsx } from 'clsx'
 
 import { Card } from '../../components/ui/Card'

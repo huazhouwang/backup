@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 
 import { m } from '../../paraglide/messages.js'
 import { BabyAvatar } from '../babies/BabyAvatar'

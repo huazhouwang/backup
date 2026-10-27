@@ -275,7 +275,7 @@ test('explains the microphone before the system asks, and how to turn it back on
   await page.getByRole('button', { name: '清除本机缓存' }).click()
   await page.getByRole('dialog').getByRole('button', { name: '清除本机缓存' }).click()
   await expect(page.getByText('已清除')).toBeVisible()
-  expect(await page.evaluate(() => localStorage.getItem('bobo.hiddenHints'))).toBe('[]')
+  expect(await page.evaluate(() => localStorage.getItem('lullabo.hiddenHints'))).toBe('[]')
   await context.close()
 })
 

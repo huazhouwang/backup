@@ -1,4 +1,4 @@
-import { newId } from '@bobo/shared'
+import { newId } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
 import { logBottle, logDiaper, logSleep } from '../events/records'

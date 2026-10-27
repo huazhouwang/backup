@@ -1,4 +1,4 @@
-import { type FamilySummary, newId } from '@bobo/shared'
+import { type FamilySummary, newId } from '@lullabo/shared'
 import { IDBFactory } from 'fake-indexeddb'
 import { describe, expect, it } from 'vitest'
 

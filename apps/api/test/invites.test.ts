@@ -5,7 +5,7 @@ import {
   type Invite,
   type InvitePreview,
   newId,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createTestApp } from './app'

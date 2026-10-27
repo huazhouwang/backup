@@ -20,7 +20,7 @@ const cueModeCodec: Codec<CueMode> = {
   serialize: (mode) => (mode === 'switch' ? null : mode),
 }
 /** Per device, like the other display settings. */
-const cueMode = createStoredValue<CueMode>('bobo.cues', cueModeCodec, 'switch')
+const cueMode = createStoredValue<CueMode>('lullabo.cues', cueModeCodec, 'switch')
 
 export const useCueMode = () => useStore(cueMode)
 export const setCueMode = (mode: CueMode) => cueMode.set(mode)

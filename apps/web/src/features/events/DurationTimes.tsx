@@ -1,4 +1,4 @@
-import { RECORD_KINDS } from '@bobo/shared'
+import { RECORD_KINDS } from '@lullabo/shared'
 import type { Dispatch } from 'react'
 
 import { FormError } from '../../components/ui/FormError'

@@ -4,7 +4,7 @@ import type {
   FamilyRole,
   Invite,
   InvitePreview,
-} from '@bobo/shared'
+} from '@lullabo/shared'
 
 import { apiFetch } from '../../lib/api'
 

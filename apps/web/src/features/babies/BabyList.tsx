@@ -1,4 +1,4 @@
-import type { Baby } from '@bobo/shared'
+import type { Baby } from '@lullabo/shared'
 import { useState } from 'react'
 
 import { Button } from '../../components/ui/Button'

@@ -1,4 +1,4 @@
-import type { PoopDetails } from '@bobo/shared'
+import type { PoopDetails } from '@lullabo/shared'
 
 import { m } from '../../paraglide/messages.js'
 

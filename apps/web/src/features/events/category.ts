@@ -1,4 +1,4 @@
-import type { Event } from '@bobo/shared'
+import type { Event } from '@lullabo/shared'
 
 import type { ButtonTone } from '../../components/ui/Button'
 import { m } from '../../paraglide/messages.js'
