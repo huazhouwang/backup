@@ -10,8 +10,8 @@ const svg = await readFile(dir + 'icon.svg', 'utf8')
 // Maskable icons need the artwork inside the central 80% safe zone on a full-bleed background.
 const maskable = svg
   .replace(
-    '<rect width="512" height="512" rx="112" fill="#58cc02"/>',
-    '<rect width="512" height="512" fill="#58cc02"/><g transform="translate(51.2 51.2) scale(.8)">',
+    '<rect width="512" height="512" rx="112" fill="#2b3a67"/>',
+    '<rect width="512" height="512" fill="#2b3a67"/><g transform="translate(51.2 51.2) scale(.8)">',
   )
   .replace('</svg>', '</g></svg>')
 
