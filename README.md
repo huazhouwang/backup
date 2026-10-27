@@ -20,7 +20,7 @@ A local-first baby tracker for logging feeds, sleep, diapers and growth, shared 
 
 ### One click
 
-Use the **Deploy to Cloudflare** button above. Cloudflare copies this repository to your GitHub account and creates the `bobo-db` D1 database. Every later push to the copy builds and deploys it again, and each deploy applies the database migrations.
+Use the **Deploy to Cloudflare** button above. Cloudflare copies this repository to your GitHub account and creates the `lullabo-db` D1 database. Every later push to the copy builds and deploys it again, and each deploy applies the database migrations.
 
 It asks for three values (listed in `.dev.vars.example`):
 

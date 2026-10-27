@@ -25,7 +25,10 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      DB_NAME: bobo-db
+      DB_NAME: lullabo-db
+      # The database the app used before it was renamed: copied once into DB_NAME when that
+      # is first created, and left as it was, as a backup.
+      FORMER_DB_NAME: bobo-db
       WORKER_NAME: lullabo
     steps:
       - name: Check configuration
@@ -90,6 +93,7 @@ jobs:
 
       - name: Create the database if needed
         if: steps.config.outputs.ready == 'true'
+        id: db
         working-directory: apps/api
         run: |
           db_id() { pnpm exec wrangler d1 list --json | jq -r --arg name "$DB_NAME" '.[] | select(.name == $name) | .uuid'; }
@@ -98,6 +102,17 @@ jobs:
             # Asia-Pacific is closest to the app's first (Chinese-speaking) users.
             pnpm exec wrangler d1 create "$DB_NAME" --location apac
             id=$(db_id)
+            former=$(DB_NAME=$FORMER_DB_NAME db_id)
+            if [ -n "$FORMER_DB_NAME" ] && [ -n "$former" ]; then
+              echo "copied=true" >> "$GITHUB_OUTPUT"
+              # Everything in the former database, migrations table included, so the
+              # migrations step finds nothing left to apply.
+              dump="$RUNNER_TEMP/former.sql"
+              pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --output "$dump"
+              pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$dump" --yes
+              rm -f "$dump"
+              ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"
+            fi
           fi
           # The repository keeps a placeholder; account-specific IDs stay out of git.
           sed -i "s/00000000-0000-0000-0000-000000000000/$id/" ../../wrangler.jsonc
@@ -155,3 +170,10 @@ jobs:
           fi
           echo "::error::$APP_URL/api/health did not answer ok"
           exit 1
+
+      - name: Compare with the former database
+        # Right after a copy: anything written to the former database while the app switched
+        # over shows here, to bring across by hand.
+        if: steps.config.outputs.ready == 'true' && steps.db.outputs.copied == 'true'
+        working-directory: apps/api
+        run: ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME" --warn

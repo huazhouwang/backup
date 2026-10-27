@@ -14,7 +14,7 @@ rmSync(state, { recursive: true, force: true })
 const wrangler = (args, opts = {}) =>
   execFileSync('pnpm', ['exec', 'wrangler', ...args], { cwd: api, stdio: 'inherit', ...opts })
 
-wrangler(['d1', 'migrations', 'apply', 'bobo-db', '--local', '--persist-to', state])
+wrangler(['d1', 'migrations', 'apply', 'lullabo-db', '--local', '--persist-to', state])
 const now = Date.now()
 const expires = now + 86_400_000
 const users = SESSIONS.map(
@@ -26,7 +26,7 @@ const sessions = SESSIONS.map(
 wrangler([
   'd1',
   'execute',
-  'bobo-db',
+  'lullabo-db',
   '--local',
   '--persist-to',
   state,

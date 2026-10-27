@@ -14,7 +14,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "bobo-db",
+      "database_name": "lullabo-db",
       // Placeholder: the deploy workflow (or the Deploy to Cloudflare button) creates the
       // database if needed and fills in its id.
       "database_id": "00000000-0000-0000-0000-000000000000",

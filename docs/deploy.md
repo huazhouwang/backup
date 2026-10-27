@@ -57,7 +57,7 @@ Changing `BETTER_AUTH_SECRET` later signs everyone out.
 
 ### 3. First deploy
 
-Run **Actions → Deploy → Run workflow**. The first run creates the `bobo-db` D1 database
+Run **Actions → Deploy → Run workflow**. The first run creates the `lullabo-db` D1 database
 (Asia-Pacific), applies the migrations and deploys. The run summary shows the app URL.
 
 ## Optional: a custom domain
@@ -88,6 +88,12 @@ database, a reminder is still sent once (each run claims it first). Before the d
 moves too, remove the old Worker's Cron Trigger and turn off its workers.dev route, or it
 would keep sending reminders, and taking records, from the old database.
 
+Renaming the database (`DB_NAME`, and `database_name` in `wrangler.jsonc`): set
+`FORMER_DB_NAME` in the deploy workflow to the old name. The deploy that first creates the
+new database copies the old one into it, compares every table's row count and stops before
+deploying if they differ; after deploying it compares again and warns about anything written
+to the old one meanwhile. The old database stays as it was. Deploy when nobody is logging.
+
 ## Optional: Google sign-in
 
 In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an
@@ -113,7 +119,7 @@ Set `ENCRYPTION_SECRET` and add the signed shortcut; see [siri.md](siri.md).
 
 ## Notes
 
-- The database ID never goes into git: the workflow looks up `bobo-db` and fills it in.
+- The database ID never goes into git: the workflow looks up `lullabo-db` and fills it in.
 - Migrations run before each deploy, so new code always meets the schema it expects.
 - Reminders (#41) are sent by a Cron Trigger every minute (`triggers` in `wrangler.jsonc`).
   The Web Push (VAPID) key pair is created on first use and kept in the `server_keys` table,
