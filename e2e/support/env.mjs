@@ -87,6 +87,13 @@ export const SESSIONS = [
     email: 'tab-mic@example.com',
   },
   {
+    key: 'tabMicHints',
+    token: 'e2e-tab-mic-hints',
+    userId: 'e2e-tab-mic-hints',
+    name: '测试家长',
+    email: 'tab-mic-hints@example.com',
+  },
+  {
     key: 'micRetake',
     token: 'e2e-mic-retake',
     userId: 'e2e-mic-retake',

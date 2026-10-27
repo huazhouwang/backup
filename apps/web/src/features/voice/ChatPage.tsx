@@ -91,7 +91,10 @@ export function ChatPage({
   // The page renders only in the browser, so this can be asked right away.
   const [micShown] = useState(canRecord)
   // A voice message on its way: being said (with what has been heard so far), then heard.
-  const [live, setLive] = useState<{ phase: 'talking' | 'hearing'; text: string } | null>(null)
+  const [live, setLive] = useState<{
+    phase: 'preparing' | 'talking' | 'hearing'
+    text: string
+  } | null>(null)
   // Whether the assistant's reply has started to show, growing as it is written.
   const [answering, setAnswering] = useState(false)
   const lastReply = messages.findLast((message) => message.role === 'assistant')?.text
@@ -161,7 +164,10 @@ export function ChatPage({
     onBegin: () => {
       talking.current = true
       setUnheard(false)
-      setLive({ phase: 'talking', text: '' })
+      setLive({ phase: 'preparing', text: '' })
+    },
+    onReady: () => {
+      if (talking.current) setLive((current) => ({ phase: 'talking', text: current?.text ?? '' }))
     },
     onPartial: async (soFar: Blob) => {
       const { text: heard } = await voiceApi
@@ -263,7 +269,13 @@ export function ChatPage({
             <Waiting
               mine
               text={live.text}
-              label={live.phase === 'talking' ? m.voiceListening() : m.voiceHearing()}
+              label={
+                live.phase === 'preparing'
+                  ? m.voiceMicPreparing()
+                  : live.phase === 'talking'
+                    ? m.voiceListening()
+                    : m.voiceHearing()
+              }
             />
           )}
           {send.isPending && !answering && <Waiting label={m.voiceThinking()} />}

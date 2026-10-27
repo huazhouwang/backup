@@ -39,8 +39,10 @@ export interface TalkOptions {
   aim: (dx: number, dy: number) => TalkAim
   /** Let go while aiming somewhere: the recording is dropped first. */
   onAimed?: (aim: NonNullable<TalkAim>) => void
-  /** Recording started. */
+  /** Recording started: the microphone is being taken. */
   onBegin: () => void
+  /** The microphone is heard: from now on what is said is recorded. */
+  onReady?: () => void
   /** What has been said so far, while recording goes on. */
   onPartial: (soFar: Blob) => Promise<void>
   /** Recording ended with nothing to send: dropped, too short or failed. */
@@ -62,6 +64,7 @@ export function useTalk({
   aim,
   onAimed,
   onBegin,
+  onReady,
   onPartial,
   onDrop,
   onSpoken,
@@ -111,6 +114,10 @@ export function useTalk({
   useEffect(() => {
     latestPartial.current = onPartial
   })
+  const latestReady = useRef(onReady)
+  useEffect(() => {
+    latestReady.current = onReady
+  })
   const { state: recorderState, snapshot } = recorder
   // Only once it really records does it say so: the start sound (which the recording leaves
   // out) and a tap. Taking the microphone can take a moment after the press.
@@ -120,6 +127,7 @@ export function useTalk({
     explainedThisRun = true
     playCue('start')
     tapPhone()
+    latestReady.current?.()
   }, [recorderState])
   useEffect(() => {
     if (recorderState !== 'recording') return undefined

@@ -514,21 +514,19 @@ export function TabMic() {
                 className="flex flex-1 flex-col items-center justify-end gap-4 pb-4 text-center"
                 aria-live="polite"
               >
-                {pending && (
+                {/* Above what is said: how long it has been recording, or that it is being
+                    heard once said (the words themselves show below). */}
+                {phase === 'talking' && talk.ready ? (
                   <span className="text-caption font-extrabold tracking-wide text-primary-text">
-                    {phase === 'hearing' ? (
-                      m.voiceHearing()
-                    ) : talk.ready ? (
-                      <>
-                        {m.voiceListening()}
-                        {' · '}
-                        <Elapsed since={talk.startedAt} />
-                      </>
-                    ) : (
-                      m.voiceMicPreparing()
-                    )}
+                    {m.voiceListening()}
+                    {' · '}
+                    <Elapsed since={talk.startedAt} />
                   </span>
-                )}
+                ) : phase === 'hearing' && live ? (
+                  <span className="text-caption font-extrabold tracking-wide text-primary-text">
+                    {m.voiceHearing()}
+                  </span>
+                ) : null}
                 <p
                   className={clsx(
                     'm-0 text-[28px] leading-10 font-extrabold wrap-anywhere',
@@ -540,8 +538,12 @@ export function TabMic() {
                     problem
                   ) : live ? (
                     <ChangingText text={live} />
-                  ) : (
+                  ) : phase === 'hearing' ? (
+                    m.tabMicHearing()
+                  ) : talk.ready ? (
                     m.tabMicSpeak()
+                  ) : (
+                    m.voiceMicPreparing()
                   )}
                 </p>
                 {pending && typingDots}

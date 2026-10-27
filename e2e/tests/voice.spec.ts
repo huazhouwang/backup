@@ -23,7 +23,8 @@ async function slideOverFrost(page: Page, from: [number, number], to: [number, n
   await release()
 }
 
-async function standInApi(page: Page) {
+/** `partials: false`: nothing is made out while talking, as with a few words said slowly. */
+async function standInApi(page: Page, { partials: hearParts = true } = {}) {
   const uploads: { type: string | null; head: string; query: URLSearchParams }[] = []
   let partials = 0
   const gates = { hear: null as (() => void) | null, answer: null as (() => void) | null }
@@ -67,7 +68,7 @@ async function standInApi(page: Page) {
     const query = new URL(request.url()).searchParams
     if (query.get('partial') === '1') {
       partials += 1
-      await route.fulfill({ json: { text: '正在说的话' } })
+      await route.fulfill({ json: { text: hearParts ? '正在说的话' : null } })
       return
     }
     const body = request.postDataBuffer() ?? Buffer.alloc(0)
@@ -202,9 +203,12 @@ test('takes the microphone again when the first one sends nothing', async ({ bro
 
   await mic.click()
   // Nothing heard yet: it doesn't say it listens; a second later it takes another and does.
-  await expect(page.getByText('准备中…')).toBeVisible()
+  // Both the conversation's bubble and the microphone's status line, with no time running.
+  const preparing = page.getByText('准备中…')
+  await expect(preparing).toHaveCount(2)
   await page.waitForTimeout(600)
-  await expect(page.getByText('准备中…')).toBeVisible()
+  await expect(preparing).toHaveCount(2)
+  await expect(page.getByText(/\d+:\d\d/)).toHaveCount(0)
   await expect(page.getByText('点麦克风发送')).toBeVisible({ timeout: 5_000 })
   expect(await micsTaken()).toBe(2)
   await page.waitForTimeout(800)
@@ -446,4 +450,44 @@ test('talks to the AI from the tab bar, over the blurred page', async ({ browser
   await page.getByRole('button', { name: '打开对话' }).click()
   await expect(page).toHaveURL(/\/chat/)
   await context.close()
+})
+
+test('the tab bar microphone says what it is doing, not to speak, once spoken', async ({
+  browser,
+}) => {
+  const { context, page } = await newDevice(browser)
+  await context.grantPermissions(['microphone'])
+  await onboard(page)
+  await signIn(context, 'tabMicHints')
+  // A phone takes a moment to hand over the microphone.
+  await page.addInitScript(() => {
+    const take = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+    navigator.mediaDevices.getUserMedia = async (constraints) => {
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      return take(constraints)
+    }
+  })
+  const api = await standInApi(page, { partials: false })
+  await page.goto('/')
+  const mic = page.getByRole('navigation').getByRole('button', { name: '语音' })
+  await expect(page.locator('main').getByRole('button', { name: /对话记录/ })).toBeVisible()
+  await page.waitForTimeout(500)
+
+  await mic.click()
+  // Not yet heard: getting ready, not asking to speak.
+  await expect(page.getByText('准备中…')).toBeVisible()
+  await expect(page.getByText('请说话…')).toHaveCount(0)
+  await expect(page.getByText('请说话…')).toBeVisible()
+  await expect(page.getByText(/正在听 · /)).toBeVisible()
+  await page.waitForTimeout(800)
+  await page.getByRole('button', { name: '说完了，发送' }).click()
+  // Said, and nothing made out yet: being heard, no longer asking to speak.
+  await expect(page.getByText('正在识别…')).toBeVisible()
+  await expect(page.getByText('请说话…')).toHaveCount(0)
+  await expect(page.getByText(/正在听/)).toHaveCount(0)
+  await expect.poll(() => api.uploads.length).toBe(1)
+  api.hear()
+  await expect(page.getByText('我说：换尿不 1')).toBeVisible()
+  api.answer()
+  await expect(page.getByText('已记录：换尿布 1。还有吗？')).toBeVisible()
 })

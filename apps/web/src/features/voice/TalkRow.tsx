@@ -72,6 +72,7 @@ export function TalkRow({
   showMic,
   disabled,
   onBegin,
+  onReady,
   onPartial,
   onDrop,
   onSpoken,
@@ -82,8 +83,10 @@ export function TalkRow({
   send: ReactNode
   showMic: boolean
   disabled: boolean
-  /** Recording started. */
+  /** Recording started: the microphone is being taken. */
   onBegin: () => void
+  /** The microphone is heard. */
+  onReady: () => void
   /** What has been said so far, while recording goes on. */
   onPartial: (soFar: Blob) => Promise<void>
   /** Recording ended with nothing to send: dropped, too short or failed. */
@@ -96,6 +99,7 @@ export function TalkRow({
     // Slid up: letting go drops the recording.
     aim: (_dx, dy) => (dy < -CANCEL_DISTANCE ? 'drop' : null),
     onBegin,
+    onReady,
     onPartial,
     onDrop,
     onSpoken,
@@ -125,7 +129,8 @@ export function TalkRow({
                 )}
               >
                 <Levels analyser={talk.analyser} />
-                <Elapsed since={startedAt} />
+                {/* Counted from when it really records, not while the microphone is taken. */}
+                {talk.ready && <Elapsed since={startedAt} />}
                 <span className="min-w-0 flex-1 truncate text-caption font-bold">{status}</span>
                 {mode === 'free' && (
                   <Button variant="ghost" className="-mr-2 min-h-0 px-2 py-1" onClick={talk.drop}>

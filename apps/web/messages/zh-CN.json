@@ -564,6 +564,7 @@
   "syncStatusSyncing": "正在同步…",
   "syncStatusUnauthorized": "登录已过期，请重新登录",
   "tabMicClose": "关闭",
+  "tabMicHearing": "正在识别…",
   "tabMicHint": "松开发送",
   "tabMicLabel": "语音",
   "tabMicMore": "按住麦克风继续说 · 点空白处关闭",
