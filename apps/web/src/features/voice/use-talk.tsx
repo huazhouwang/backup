@@ -8,7 +8,7 @@ import {
 } from 'react'
 
 import { wakeAudioOnTaps } from '../../lib/audio'
-import { START_CUE_MS, playCue, tapPhone } from '../../lib/cues'
+import { START_CUE_MS, currentCueMode, playCue, tapPhone } from '../../lib/cues'
 import { hideHint, isHintHidden } from '../../lib/hints'
 import { m } from '../../paraglide/messages.js'
 import { voiceApi } from './api'
@@ -88,8 +88,10 @@ export function useTalk({
       playCue('cancel')
       setError(recording.why === 'unheard' ? m.voiceMicUnheard() : m.voiceMicTooShort())
       // What the audio was doing, so the logs can say why nothing came through.
-      if (recording.why === 'unheard')
-        void voiceApi.reportUnheard(recording.unheard).catch(() => {})
+      if (recording.why === 'unheard') {
+        const report = { ...recording.unheard, cueMode: currentCueMode() }
+        void voiceApi.reportUnheard(report).catch(() => {})
+      }
       onDrop()
     }
   }

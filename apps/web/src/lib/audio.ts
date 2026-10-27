@@ -38,6 +38,12 @@ export function setAudioUse(next: AudioUse) {
 /** What the audio is for right now. */
 export const audioUse = () => use
 
+/** The phone's audio session as Safari reports it, or null where there is none. */
+export const audioSessionType = (): string | null => session()?.type ?? null
+
+/** How long since the audio's use last changed (ms). */
+export const sinceAudioUseChanged = () => performance.now() - changedAt
+
 /** How long until a session change just made has taken effect (ms; 0 once it has). */
 export const untilSettled = () => Math.max(0, changedAt + SESSION_SETTLE_MS - performance.now())
 

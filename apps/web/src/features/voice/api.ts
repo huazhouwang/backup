@@ -144,13 +144,14 @@ export const voiceApi = {
           ? {
               ready: String(options.startup.readyMs),
               mic: String(options.startup.micMs),
+              retakes: String(options.startup.retakes),
             }
           : {}),
       })}`,
       { method: 'POST', body: recording, headers: { 'Content-Type': 'audio/wav' } },
     ),
   /** A recording that heard nothing: what the audio was doing, for the logs. */
-  reportUnheard: (unheard: Unheard) =>
+  reportUnheard: (unheard: Unheard & { cueMode: string }) =>
     apiFetch<void>('/api/voice/unheard', { method: 'POST', body: JSON.stringify(unheard) }),
   /**
    * Sends a message and follows the answer as it is written. A spoken one is corrected

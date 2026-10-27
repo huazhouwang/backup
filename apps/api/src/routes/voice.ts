@@ -99,12 +99,25 @@ const speechQuerySchema = z.object({
     .string()
     .regex(/^\d{1,6}$/)
     .optional(),
+  /** How many times the microphone was taken again before anything came through. */
+  retakes: z.string().regex(/^\d$/).optional(),
 })
 /** What the audio was doing when a recording on the device heard nothing. */
 const unheardSchema = z.object({
   contextState: z.string().max(20),
-  rebuilt: z.boolean(),
   waitedMs: z.number().int().min(0).max(600_000),
+  /** Each time the microphone was taken again, and why. */
+  retakes: z.array(z.enum(['silent', 'muted', 'ended'])).max(5),
+  /** The microphone at the end. */
+  track: z
+    .object({ muted: z.boolean(), readyState: z.string().max(20), enabled: z.boolean() })
+    .nullable(),
+  /** Times the device's tap ran with nothing coming in. */
+  emptyBlocks: z.number().int().min(0).max(1_000_000),
+  sessionType: z.string().max(20).nullable(),
+  sinceSessionChangeMs: z.number().int().min(0).max(3_600_000),
+  visibility: z.string().max(20),
+  cueMode: z.string().max(20),
 })
 
 /** Foods and medicines logged within this long help recognise speech. */
@@ -486,8 +499,14 @@ export function voiceRoutes(adapterFor: AdapterFor) {
         if (!partial && (await countMessage(db, userId, settings, now)) > DAILY_LIMIT) {
           return c.json({ text: null }, 429)
         }
-        const { ready, mic } = query.data
-        if (ready) console.log('Recording startup', { readyMs: Number(ready), micMs: Number(mic) })
+        const { ready, mic, retakes } = query.data
+        if (ready) {
+          console.log('Recording startup', {
+            readyMs: Number(ready),
+            micMs: Number(mic),
+            retakes: Number(retakes ?? 0),
+          })
+        }
         const hints = { ...(await speechHints(db, access, now)), recent: query.data.recent }
         try {
           return c.json({ text: await transcribe(ai, audio, query.data.speech, hints) })

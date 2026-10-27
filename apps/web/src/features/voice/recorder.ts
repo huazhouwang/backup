@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { audioContext, setAudioUse } from '../../lib/audio'
+import { audioContext, audioSessionType, setAudioUse, sinceAudioUseChanged } from '../../lib/audio'
 
 /** Longest recording; the chat sends it then. 30 s of 16 kHz WAV stays under the API's 1 MB. */
 export const MAX_RECORDING_MS = 30_000
@@ -44,11 +44,16 @@ export function useMicPermission(): [MicPermission, (state: MicPermission) => vo
   return [state, setState]
 }
 
-/** Hands each block of microphone samples to the page, as it comes. */
+/**
+ * Hands each block of microphone samples to the page, as it comes. Running with nothing coming
+ * in (a microphone that sends nothing) it says so now and then, with an empty block.
+ */
 const TAP = `registerProcessor('bobo-tap', class extends AudioWorkletProcessor {
+  empty = 0
   process(inputs) {
     const samples = inputs[0] && inputs[0][0]
     if (samples) this.port.postMessage(samples.slice(0))
+    else if (this.empty++ % 50 === 0) this.port.postMessage(new Float32Array(0))
     return true
   }
 })`
@@ -106,6 +111,8 @@ export type RecorderState = 'idle' | 'starting' | 'recording'
 export interface Startup {
   readyMs: number
   micMs: number
+  /** How many times the microphone was taken again before anything came through. */
+  retakes: number
 }
 
 /** How a recording ended: what was said, or why there is nothing to send. */
@@ -116,14 +123,26 @@ export type Recording =
   /** Long enough, but no sound came through: the audio wasn't running. */
   | { said: null; why: 'unheard'; unheard: Unheard }
 
+/** Why the microphone was taken again: nothing came through, or the system muted or ended it. */
+export type Retake = 'silent' | 'muted' | 'ended'
+
 /** What the audio was doing when a recording heard nothing, for the logs. */
 export interface Unheard {
   /** The audio context's state at the end. */
   contextState: string
-  /** The context was replaced after nothing came through at first. */
-  rebuilt: boolean
   /** How long it waited for sound, from the microphone being granted (ms). */
   waitedMs: number
+  /** Each time the microphone was taken again, and why. */
+  retakes: Retake[]
+  /** The microphone at the end, before it was let go. */
+  track: { muted: boolean; readyState: string; enabled: boolean } | null
+  /** Times the tap ran with nothing coming in (every 50th run counts once). */
+  emptyBlocks: number
+  /** The phone's audio session (Safari) at the end, if it says. */
+  sessionType: string | null
+  /** At the press: how long since the audio session last changed (ms), and the page's state. */
+  sinceSessionChangeMs: number
+  visibility: string
 }
 
 /** The audio graph one recording is heard through. */
@@ -143,13 +162,28 @@ interface Session {
   grantedAt: number
   /** Set once the first samples came through: then it really records. */
   startup: Startup | null
-  rebuilt: boolean
+  retakes: Retake[]
+  emptyBlocks: number
   /** The microphone's samples so far, at the context's rate. */
   blocks: Float32Array[]
+  /** At the press, for the logs. */
+  sinceSessionChangeMs: number
+  visibility: string
 }
 
-/** With nothing come through by now, the audio is built again on a fresh context. */
+/** With nothing come through by now, the microphone is taken again. */
 const NOTHING_YET_MS = 1_000
+/** Times the microphone is taken again in one recording, at most. */
+const MAX_RETAKES = 2
+
+const takeMicrophone = () =>
+  navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true },
+  })
+
+const stopTracks = (stream: MediaStream) => {
+  for (const track of stream.getTracks()) track.stop()
+}
 
 /** Hears the microphone through `context`, handing its samples to `take`. */
 async function wire(
@@ -247,7 +281,7 @@ export function useRecorder() {
     setAnalyser(null)
     if (!current) return null
     unwire(current.wiring)
-    for (const track of current.stream.getTracks()) track.stop()
+    stopTracks(current.stream)
     setAudioUse('sounds')
     return current
   }, [])
@@ -259,6 +293,8 @@ export function useRecorder() {
   const start = useCallback(async (quietMs = 0) => {
     if (session.current) return
     const pressedAt = performance.now()
+    const sinceSessionChangeMs = Math.round(Math.min(sinceAudioUseChanged(), 3_600_000))
+    const visibility = document.visibilityState
     abandoned.current = false
     setState('starting')
     // Asked to run within the press, before anything is awaited; usually an earlier tap
@@ -266,12 +302,10 @@ export function useRecorder() {
     const context = audioContext()
     setAudioUse('recording')
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
-      })
+      const stream = await takeMicrophone()
       const micMs = Math.round(performance.now() - pressedAt)
       if (abandoned.current) {
-        for (const track of stream.getTracks()) track.stop()
+        stopTracks(stream)
         setAudioUse('sounds')
         return
       }
@@ -281,35 +315,83 @@ export function useRecorder() {
       // The first samples to come through, not the microphone being granted, start the
       // recording: before them nothing is heard, so nothing may say it listens.
       const take = (samples: Float32Array) => {
-        const now = performance.now()
         const current = session.current
+        if (samples.length === 0) {
+          if (current) current.emptyBlocks += 1
+          return
+        }
+        const now = performance.now()
         if (current && !current.startup) {
-          current.startup = { readyMs: Math.round(now - pressedAt), micMs }
+          current.startup = {
+            readyMs: Math.round(now - pressedAt),
+            micMs,
+            retakes: current.retakes.length,
+          }
           quietUntil = now + quietMs
           setStartedAt(Date.now())
           setState('recording')
         }
         if (now >= quietUntil) blocks.push(samples)
       }
-      const wiring = await wire(context, stream, take)
-      session.current = { stream, wiring, grantedAt, startup: null, rebuilt: false, blocks }
-      setAnalyser(wiring.levels)
-      // Nothing yet: a context made now, with the microphone on, usually hears it.
-      setTimeout(() => {
-        const current = session.current
-        if (!current || current.stream !== stream || current.startup) return
+
+      /**
+       * Takes the microphone again, on a fresh context: iOS sometimes hands over a microphone
+       * that sends nothing, or mutes or ends it while recording, and a context rebuilt on the
+       * same one hears nothing either. Granted already, it needs no tap and asks nothing.
+       */
+      const retake = async (current: Session, why: Retake) => {
+        if (session.current !== current || current.retakes.length >= MAX_RETAKES) return
+        current.retakes.push(why)
+        const rate = current.wiring.context.sampleRate
         unwire(current.wiring)
-        current.rebuilt = true
-        const fresh = new AudioContext()
-        void wire(fresh, stream, take).then((rewired) => {
-          if (session.current !== current) {
-            unwire(rewired)
-            return
-          }
-          current.wiring = rewired
-          setAnalyser(rewired.levels)
-        })
-      }, NOTHING_YET_MS)
+        stopTracks(current.stream)
+        const fresh = await takeMicrophone().catch(() => null)
+        if (!fresh) return
+        if (session.current !== current) {
+          stopTracks(fresh)
+          return
+        }
+        // At the same rate, so what was heard before and after makes one recording.
+        const rewired = await wire(new AudioContext({ sampleRate: rate }), fresh, take)
+        if (session.current !== current) {
+          unwire(rewired)
+          stopTracks(fresh)
+          return
+        }
+        current.stream = fresh
+        current.wiring = rewired
+        setAnalyser(rewired.levels)
+        watch(current)
+      }
+      /** Takes the microphone again if it sends nothing for a while, or the system stops it. */
+      const watch = (current: Session) => {
+        const { stream: watched } = current
+        const [track] = watched.getAudioTracks()
+        const stopped = (why: Retake) => () => {
+          if (current.stream === watched) void retake(current, why)
+        }
+        track?.addEventListener('mute', stopped('muted'), { once: true })
+        track?.addEventListener('ended', stopped('ended'), { once: true })
+        setTimeout(() => {
+          if (current.stream === watched && !current.startup) void retake(current, 'silent')
+        }, NOTHING_YET_MS)
+      }
+
+      const wiring = await wire(context, stream, take)
+      const current: Session = {
+        stream,
+        wiring,
+        grantedAt,
+        startup: null,
+        retakes: [],
+        emptyBlocks: 0,
+        blocks,
+        sinceSessionChangeMs,
+        visibility,
+      }
+      session.current = current
+      setAnalyser(wiring.levels)
+      watch(current)
     } catch (error) {
       setAudioUse('sounds')
       setState('idle')
@@ -324,6 +406,12 @@ export function useRecorder() {
   }, [])
 
   const finish = useCallback((): Recording => {
+    // As they were while recording: letting go stops the microphone and the session.
+    const [track] = session.current?.stream.getAudioTracks() ?? []
+    const trackState = track
+      ? { muted: track.muted, readyState: track.readyState, enabled: track.enabled }
+      : null
+    const sessionType = audioSessionType()
     const current = release()
     if (!current) {
       // Let go before the microphone was ready: nothing was said.
@@ -336,8 +424,13 @@ export function useRecorder() {
     if (!current.startup || samples.length < MIN_HEARD_S * SAMPLE_RATE) {
       const unheard: Unheard = {
         contextState: current.wiring.context.state,
-        rebuilt: current.rebuilt,
         waitedMs: Math.round(now - current.grantedAt),
+        retakes: current.retakes,
+        track: trackState,
+        emptyBlocks: current.emptyBlocks,
+        sessionType,
+        sinceSessionChangeMs: current.sinceSessionChangeMs,
+        visibility: current.visibility,
       }
       return { said: null, why: 'unheard', unheard }
     }

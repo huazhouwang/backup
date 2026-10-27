@@ -288,16 +288,24 @@ describe('siri voice logging', () => {
         headers: { cookie: headers.get('cookie') ?? '', 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-    expect((await report({ contextState: 'running', rebuilt: true, waitedMs: 2100 })).status).toBe(
-      204,
-    )
-    expect((await report({ contextState: 'running', rebuilt: 'yes', waitedMs: -1 })).status).toBe(
-      400,
-    )
+    const unheard = {
+      contextState: 'running',
+      waitedMs: 2100,
+      retakes: ['silent', 'muted'],
+      track: { muted: true, readyState: 'live', enabled: true },
+      emptyBlocks: 12,
+      sessionType: 'play-and-record',
+      sinceSessionChangeMs: 40,
+      visibility: 'visible',
+      cueMode: 'always',
+    }
+    expect((await report(unheard)).status).toBe(204)
+    expect((await report({ ...unheard, retakes: ['again'] })).status).toBe(400)
+    expect((await report({ ...unheard, waitedMs: -1 })).status).toBe(400)
     const anonymous = await t.request('/api/voice/unheard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contextState: 'running', rebuilt: false, waitedMs: 1 }),
+      body: JSON.stringify(unheard),
     })
     expect(anonymous.status).toBe(401)
   })

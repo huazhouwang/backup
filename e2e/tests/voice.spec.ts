@@ -161,6 +161,68 @@ test('talks to the AI on its own page, by holding the microphone or tapping it',
   await context.close()
 })
 
+test('takes the microphone again when the first one sends nothing', async ({ browser }) => {
+  const { context, page } = await newDevice(browser)
+  await context.grantPermissions(['microphone'])
+  await onboard(page)
+  await signIn(context, 'micRetake')
+  // As on an iPhone now and then: the first microphone is granted but nothing comes through
+  // (Chromium's always does, so its samples are dropped here). Count how often it is taken.
+  await page.addInitScript(() => {
+    const take = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+    Reflect.set(window, 'micsTaken', 0)
+    navigator.mediaDevices.getUserMedia = async (constraints) => {
+      Reflect.set(window, 'micsTaken', Number(Reflect.get(window, 'micsTaken')) + 1)
+      const stream = await take(constraints)
+      Reflect.set(window, 'lastMic', stream)
+      return stream
+    }
+    const Tap = window.AudioWorkletNode
+    let first = true
+    window.AudioWorkletNode = class extends Tap {
+      constructor(...args: ConstructorParameters<typeof AudioWorkletNode>) {
+        super(...args)
+        if (first) {
+          first = false
+          this.port.addEventListener = () => undefined
+        }
+      }
+    }
+  })
+  const micsTaken = () => page.evaluate(() => Number(Reflect.get(window, 'micsTaken')))
+  const api = await standInApi(page)
+  await page.goto('/')
+  await page
+    .locator('main')
+    .getByRole('button', { name: /对话记录/ })
+    .click()
+  const mic = page.getByRole('button', { name: '按住说话' })
+  await expect(mic).toBeVisible()
+  await page.waitForTimeout(500)
+
+  await mic.click()
+  // Nothing heard yet: it doesn't say it listens; a second later it takes another and does.
+  await expect(page.getByText('准备中…')).toBeVisible()
+  await page.waitForTimeout(600)
+  await expect(page.getByText('准备中…')).toBeVisible()
+  await expect(page.getByText('点麦克风发送')).toBeVisible({ timeout: 5_000 })
+  expect(await micsTaken()).toBe(2)
+  await page.waitForTimeout(800)
+  // Muted by the system while recording (a call, another app): taken again, recording on.
+  await page.evaluate(() => {
+    const stream: unknown = Reflect.get(window, 'lastMic')
+    if (stream instanceof MediaStream) stream.getAudioTracks()[0]?.dispatchEvent(new Event('mute'))
+  })
+  await expect.poll(micsTaken).toBe(3)
+  await page.waitForTimeout(500)
+  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await page.getByRole('button', { name: '说完了，发送' }).click()
+  await expect.poll(() => api.uploads.length).toBe(1)
+  expect(api.uploads[0]).toMatchObject({ type: 'audio/wav', head: 'RIFF' })
+  expect(api.uploads[0]?.query.get('retakes')).toBe('1')
+  expect(Number(api.uploads[0]?.query.get('ready'))).toBeGreaterThanOrEqual(1_000)
+})
+
 test('explains the microphone before the system asks, and how to turn it back on', async ({
   browser,
 }) => {

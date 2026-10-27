@@ -24,6 +24,7 @@ const cueMode = createStoredValue<CueMode>('bobo.cues', cueModeCodec, 'switch')
 
 export const useCueMode = () => useStore(cueMode)
 export const setCueMode = (mode: CueMode) => cueMode.set(mode)
+export const currentCueMode = () => cueMode.get()
 
 /** A note in place of a pitch: a short burst of noise, like a party popper going off. */
 const POP = 0
