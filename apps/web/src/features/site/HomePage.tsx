@@ -1,4 +1,4 @@
-import { migrate } from '@plinth/core';
+import { migrate } from '@opensu/core';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowRightIcon, CheckIcon, LoaderIcon } from 'lucide-react';
 import { useState } from 'react';

@@ -1,5 +1,5 @@
 /** What the property panel's parts share */
-import type { ObjectInfo } from '@plinth/core';
+import type { ObjectInfo } from '@opensu/core';
 import { m } from '@/lib/i18n';
 
 export type Info<T extends ObjectInfo['type']> = Extract<ObjectInfo, { type: T }>;

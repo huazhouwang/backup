@@ -2,7 +2,7 @@
  * Saving one of the design's own widgets (one the agent wrote) into a widget library the user can edit, so it can be installed
  * in other designs and shared. The library gives it a new version when it changed.
  */
-import type { WidgetDef } from '@plinth/core';
+import type { WidgetDef } from '@opensu/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { LibraryBigIcon } from 'lucide-react';
 import { useState } from 'react';

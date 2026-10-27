@@ -2,7 +2,7 @@
  * Pieces of a library's page, the same for every library: a look's card (a still from the fixed direction at its type's size
  * with its default parameters, fitted to the frame, with its size and parameters written under it) and a material's swatch
  */
-import { libraryRecipe, lookSizeOf, type LibraryLook, type LookLibrary, type Material } from '@plinth/core';
+import { libraryRecipe, lookSizeOf, type LibraryLook, type LookLibrary, type Material } from '@opensu/core';
 import { Link } from '@tanstack/react-router';
 import { BoxIcon } from 'lucide-react';
 import { useId } from 'react';

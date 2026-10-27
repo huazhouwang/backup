@@ -1,4 +1,4 @@
-import { type LookLibrary } from '@plinth/core';
+import { type LookLibrary } from '@opensu/core';
 import { MaterialSwatch } from '@/features/looks/LookCard';
 import { m } from '@/lib/i18n';
 

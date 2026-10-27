@@ -1,4 +1,4 @@
-import { type Project } from '@plinth/core';
+import { type Project } from '@opensu/core';
 import { useEffect, useRef, useState } from 'react';
 import { PlanPreview } from '@/features/site/PlanPreview';
 import { api } from '@/lib/api';

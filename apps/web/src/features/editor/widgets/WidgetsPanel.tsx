@@ -21,7 +21,7 @@ import {
   type WidgetCopy,
   type WidgetDef,
   type WidgetInstance,
-} from '@plinth/core';
+} from '@opensu/core';
 import { ChevronDownIcon, EyeIcon, EyeOffIcon, PlusIcon, Trash2Icon, UserPlusIcon, XIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from 'cn';

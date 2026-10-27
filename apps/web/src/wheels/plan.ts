@@ -3,7 +3,7 @@
  * components rendered to markup), with panning and zooming, the selection stippled as in SketchUp, and layers above the drawing
  * for modules to draw in. Coordinates are plan millimetres (x east, y south). A tool can take the pointer over (setTool).
  */
-import type { Point, Project } from '@plinth/core';
+import type { Point, Project } from '@opensu/core';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PlanDefs, PlanInk, PlanLabels, PlanPaper, screenLine } from '@/graphics/plan/PlanDrawing';
@@ -53,7 +53,7 @@ const pts = (p: Point[]) => p.map(([x, y]) => `${x},${y}`).join(' ');
 
 /** Mount the plan in `container` (filling it) */
 export function mount(container: HTMLElement): PlanView {
-  const svg = svgEl('svg', { class: 'plinth-plan' });
+  const svg = svgEl('svg', { class: 'opensu-plan plinth-plan' });
   svg.style.cssText = 'display:block;width:100%;height:100%;background:var(--canvas-backdrop);touch-action:none;user-select:none';
   const base = svgEl('g', { 'data-layer': 'base' });
   const selection = svgEl('g', { 'data-layer': 'selection', 'pointer-events': 'none' });
@@ -110,7 +110,7 @@ export function mount(container: HTMLElement): PlanView {
   };
   const drawSelection = () => {
     const k = pxMm();
-    const dots = `<defs><pattern id="plinth-selection-dots" patternUnits="userSpaceOnUse" width="${6 * k}" height="${6 * k}"><rect width="${1.2 * k}" height="${1.2 * k}" fill="var(--canvas-selection)"/><rect x="${3 * k}" y="${3 * k}" width="${1.2 * k}" height="${1.2 * k}" fill="var(--canvas-selection)"/></pattern></defs>`;
+    const dots = `<defs><pattern id="opensu-selection-dots" patternUnits="userSpaceOnUse" width="${6 * k}" height="${6 * k}"><rect width="${1.2 * k}" height="${1.2 * k}" fill="var(--canvas-selection)"/><rect x="${3 * k}" y="${3 * k}" width="${1.2 * k}" height="${1.2 * k}" fill="var(--canvas-selection)"/></pattern></defs>`;
     selection.innerHTML =
       dots +
       bridge
@@ -119,7 +119,7 @@ export function mount(container: HTMLElement): PlanView {
           const d = outline(id);
           return d
             ? [
-                `<path d="${d}" fill="url(#plinth-selection-dots)" stroke="var(--canvas-selection)" stroke-width="1" vector-effect="non-scaling-stroke" data-selected="${id}"/>`,
+                `<path d="${d}" fill="url(#opensu-selection-dots)" stroke="var(--canvas-selection)" stroke-width="1" vector-effect="non-scaling-stroke" data-selected="${id}"/>`,
               ]
             : [];
         })

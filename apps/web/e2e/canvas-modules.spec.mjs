@@ -21,7 +21,7 @@ test('canvas modules', async ({ browser: b }) => {
   check(off.ok && off.result.tried === false, `saved untried while no page is open (${JSON.stringify(off.result)})`);
   await call('canvas_module_remove', { id: 'probe' });
 
-  await page.evaluate(() => localStorage.setItem('plinth.sandboxCanvas', '1'));
+  await page.evaluate(() => localStorage.setItem('opensu.sandboxCanvas', '1'));
   await page.reload();
   await page.waitForFunction(() => window.artifact?.ready);
   const iframe = page.locator('iframe[data-sandbox-canvas]');

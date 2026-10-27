@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/looklib.schema.json",
-  "title": "Plinth look library",
+  "title": "OpenSU look library",
   "description": "A look library, like a font file: groups, materials (glTF 2.0) and looks (a JSONata script with JSON Schema parameters). See packages/core/src/looks/library.ts.",
   "type": "object",
   "required": ["format", "formatVersion", "id", "name", "version", "looks"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
-    "format": { "const": "plinth-looks" },
+    "format": { "const": "opensu-looks" },
     "formatVersion": { "const": 1, "description": "A newer format version migrates older files" },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "maxLength": 64, "description": "Recorded in designs as the source of the looks they copy" },
     "name": { "$ref": "#/$defs/names" },

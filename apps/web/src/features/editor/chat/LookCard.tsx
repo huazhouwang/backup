@@ -2,7 +2,7 @@
  * The look just added or changed: a still from three sides, and what to do with it: use it (for every object of its type when
  * nothing uses it yet), or discard it (a new look is removed, a change is undone). Asking for changes is just chatting on.
  */
-import { targetSize } from '@plinth/core';
+import { targetSize } from '@opensu/core';
 import { CheckIcon, Trash2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';

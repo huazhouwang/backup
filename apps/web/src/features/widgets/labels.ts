@@ -1,4 +1,4 @@
-import type { WidgetDef } from '@plinth/core';
+import type { WidgetDef } from '@opensu/core';
 import { m } from '@/lib/i18n';
 
 /** What a widget may do, as the UI names it */

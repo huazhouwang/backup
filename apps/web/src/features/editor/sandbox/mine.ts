@@ -3,7 +3,7 @@
  * sample-room page of every design they open. Not part of any design, so not edits of one: no undo, no history, nobody else sees
  * them. Changes show at once and are stored in the background; a failed store puts the old ones back.
  */
-import type { CanvasPage } from '@plinth/core';
+import type { CanvasPage } from '@opensu/core';
 import { useQuery } from '@tanstack/react-query';
 import { api, type Me } from '@/lib/api';
 import { m } from '@/lib/i18n';

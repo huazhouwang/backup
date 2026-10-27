@@ -4,7 +4,7 @@
  * hops once (it helps find objects behind walls); nothing repeats, and the plan doesn't hop at all.
  * Feel by weight: load-bearing walls hop low and land heavy, partitions and railings are light, furniture lightest.
  */
-import { findObject, type Project } from '@plinth/core';
+import { findObject, type Project } from '@opensu/core';
 
 export type Weight = 'heavy' | 'light' | 'furniture' | 'floor';
 

@@ -21,7 +21,7 @@ import {
   type Wall,
   openingLookParams,
   slabShape,
-} from '@plinth/core';
+} from '@opensu/core';
 import { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';

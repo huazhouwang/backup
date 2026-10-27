@@ -17,7 +17,7 @@ import {
   type Point,
   type Project,
   type Wall,
-} from '@plinth/core';
+} from '@opensu/core';
 
 /** A chain of dimensions on one line: marks along `dir` from `origin`, the values written on the `normal` side */
 export interface DimChain {

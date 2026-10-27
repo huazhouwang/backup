@@ -3,7 +3,7 @@
  * walls whose bodies the line crosses (with the doors and windows it passes through left open) and the floor slabs and roofs it
  * crosses. Millimetres: along the line from its start, and absolute height.
  */
-import { dot, footing, roofs, SLAB_THICKNESS, slabShape, sub, wallBody, wallDir, wallHeight, type Point, type Polygon, type Project } from '@plinth/core';
+import { dot, footing, roofs, SLAB_THICKNESS, slabShape, sub, wallBody, wallDir, wallHeight, type Point, type Polygon, type Project } from '@opensu/core';
 import { hasSlab, slabLevel } from './scene/units';
 
 export interface SectionLine {

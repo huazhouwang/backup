@@ -2,7 +2,7 @@
  * The offer of a newer version of an installed widget: what changed (its author's description, parameters added or gone, whether
  * it may now do more) and the choice to update; nothing changes until the user says so (widget_update).
  */
-import type { widgetUpdate } from '@plinth/core';
+import type { widgetUpdate } from '@opensu/core';
 import { ArrowUpCircleIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';

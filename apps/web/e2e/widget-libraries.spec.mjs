@@ -155,7 +155,7 @@ test('widget libraries', async ({ browser: b }) => {
   const file = readFileSync(await download.path(), 'utf8');
   const exported = JSON.parse(file);
   check(
-    download.suggestedFilename().endsWith('.widgetlib.json') && exported.format === 'plinth-widgets' && exported.widgets.centres?.version === '1.0.1',
+    download.suggestedFilename().endsWith('.widgetlib.json') && exported.format === 'opensu-widgets' && exported.widgets.centres?.version === '1.0.1',
     'exports the library as a widget library file',
   );
   await a.page.goto(`${BASE}/widgets`);

@@ -6,7 +6,7 @@
  * out of its façade and is one-sided: the façades turned to the camera show theirs, those behind are culled (and hidden by the
  * house). Nothing moves as the view turns.
  */
-import type { Project } from '@plinth/core';
+import type { Project } from '@opensu/core';
 import { Html } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';

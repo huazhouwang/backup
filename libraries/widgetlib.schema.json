@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/widgetlib.schema.json",
-  "title": "Plinth widget library",
+  "title": "OpenSU widget library",
   "description": "A widget library: tools people add to the canvas, each a JavaScript function run in the sandbox with JSON Schema parameters. See packages/core/src/widgets/format.ts.",
   "type": "object",
   "required": [
@@ -18,7 +18,7 @@
       "type": "string"
     },
     "format": {
-      "const": "plinth-widgets"
+      "const": "opensu-widgets"
     },
     "formatVersion": {
       "const": 1,

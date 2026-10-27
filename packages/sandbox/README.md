@@ -1,6 +1,6 @@
-# @plinth/sandbox
+# @opensu/sandbox
 
-Runs untrusted JavaScript safely: QuickJS compiled to WebAssembly, isolated by **realm** and **script**. It knows nothing of widgets, looks or libraries; the caller chooses the keys, and with them who shares what (the policy lives in `@plinth/core`, see #158).
+Runs untrusted JavaScript safely: QuickJS compiled to WebAssembly, isolated by **realm** and **script**. It knows nothing of widgets, looks or libraries; the caller chooses the keys, and with them who shares what (the policy lives in `@opensu/core`, see #158).
 
 ```ts
 const realm = sandbox.realm(realmKey); // one wasm instance, with its own memory, created on first use
@@ -20,9 +20,9 @@ Errors are `SandboxError` with a `kind`:
 
 ## Hosts
 
-- **In place**: `createEngine(wasmModule, options)` from `@plinth/sandbox`, given the compiled module (compile it once).
-- **Cloudflare Workers**: `createSandbox(options)` from `@plinth/sandbox/workerd`. Workers can't compile wasm from bytes, so the module is imported (wrangler's CompiledWasm rule).
-- **Browser**: `createBrowserSandbox({ worker, wasmUrl, ...options })` from `@plinth/sandbox/browser`.
+- **In place**: `createEngine(wasmModule, options)` from `@opensu/sandbox`, given the compiled module (compile it once).
+- **Cloudflare Workers**: `createSandbox(options)` from `@opensu/sandbox/workerd`. Workers can't compile wasm from bytes, so the module is imported (wrangler's CompiledWasm rule).
+- **Browser**: `createBrowserSandbox({ worker, wasmUrl, ...options })` from `@opensu/sandbox/browser`.
   - The engine runs in a dedicated worker started from a hidden iframe with an opaque origin (`sandbox="allow-scripts"`, no `allow-same-origin`). A Content Security Policy allows no network.
   - `worker` is `src/worker.ts` bundled as a classic script (IIFE), given as its source or a same-origin URL: a module worker can't start from an opaque origin.
   - A watchdog replaces a worker that stops answering. The next request starts a new one, remaking its scripts from source and sending their data again.
@@ -39,7 +39,7 @@ Errors are `SandboxError` with a `kind`:
   - The deadline is checked between operations, so one long native operation can overrun it; memory bounds that, and in the browser the watchdog bounds it.
   - Out of memory, QuickJS may throw `null` instead of an error; that is reported as `memory`.
 - **Isolation.** A script in one realm can neither tamper with nor read a script in another. Two scripts in one realm don't see each other's globals. Every realm is a fresh instantiation of the compiled module, never reused for another key. A realm that hangs or crashes leaves the others running.
-- **Browser host**: the worker's origin is `null`, network and storage are blocked, the page can't reach into the iframe, and a hung worker is replaced (`test/browser`, needs Playwright's Chromium: `npm run test:browser -w @plinth/sandbox`).
+- **Browser host**: the worker's origin is `null`, network and storage are blocked, the page can't reach into the iframe, and a hung worker is replaced (`test/browser`, needs Playwright's Chromium: `npm run test:browser -w @opensu/sandbox`).
 - **Workers**: runs in workerd, where the host's own `new Function` is blocked (`test/workerd.test.ts`).
 
 ## Engine version

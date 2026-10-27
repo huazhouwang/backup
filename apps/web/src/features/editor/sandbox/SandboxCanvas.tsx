@@ -5,7 +5,7 @@
  * only through the bridge (wheels/protocol.ts): the design and its changes, the level and the selection come in; capability
  * calls and selections go out, and every call is made here, as the person looking, through the same registry as the editor.
  */
-import { findObject, mutates, setCanvasData } from '@plinth/core';
+import { findObject, mutates, setCanvasData } from '@opensu/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import wheels from 'virtual:canvas-wheels';
 import css from '@/canvas/canvas.css?inline';
@@ -29,13 +29,16 @@ function base64(text: string) {
 /** No network for the page: everything it runs is inlined, and fonts fall back to the system's */
 const CSP = "default-src 'none'; script-src 'unsafe-inline' data:; style-src 'unsafe-inline'; img-src data: blob:; font-src data:";
 
-/** The page: the canvas stylesheet (light theme, without its web fonts), the wheels as `plinth`, and the default page */
+/**
+ * The page: the canvas stylesheet (light theme, without its web fonts), the wheels as `opensu`, and the default page. `plinth`, the
+ * wheels' name before the rename (issue 179), stays as an alias so modules written then keep working.
+ */
 function pageHtml() {
   const style = css.replace(/@font-face\s*\{[^}]*\}/g, '');
-  const imports = { imports: { plinth: `data:text/javascript;base64,${base64(wheels)}` } };
+  const imports = { imports: { opensu: `data:text/javascript;base64,${base64(wheels)}`, plinth: `data:text/javascript,export * from 'opensu'` } };
   return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${CSP}">
 <style>${style}</style><script type="importmap">${JSON.stringify(imports)}</script></head><body>
-<script type="module">globalThis.plinthBytes=${wheels.length};import('plinth').then(p=>p.start()).catch(e=>parent.postMessage({type:'error',source:'start',message:String(e&&e.stack||e)},'*'))</script>
+<script type="module">globalThis.opensuBytes=${wheels.length};import('opensu').then(p=>p.start()).catch(e=>parent.postMessage({type:'error',source:'start',message:String(e&&e.stack||e)},'*'))</script>
 </body></html>`;
 }
 
@@ -129,7 +132,7 @@ export function SandboxCanvas({ className }: { className?: string }) {
           return;
         case 'ready':
           setReady(true);
-          (globalThis as { plinthSandboxPerf?: unknown }).plinthSandboxPerf = { ...msg.perf };
+          (globalThis as { opensuSandboxPerf?: unknown }).opensuSandboxPerf = { ...msg.perf };
           return;
         case 'select': {
           const p = store.getState().project;
@@ -171,7 +174,7 @@ export function SandboxCanvas({ className }: { className?: string }) {
           console.warn(`[canvas page] ${msg.source}: ${msg.message}`);
           return;
         case 'perf': {
-          const perf = ((globalThis as { plinthSandboxPerf?: Record<string, number> }).plinthSandboxPerf ??= {});
+          const perf = ((globalThis as { opensuSandboxPerf?: Record<string, number> }).opensuSandboxPerf ??= {});
           perf[msg.name] = msg.ms;
           return;
         }

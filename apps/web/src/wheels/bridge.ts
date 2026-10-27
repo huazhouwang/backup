@@ -3,7 +3,7 @@
  * the current level and the selection, and calls capabilities through the editor: the same registry the editor and its agent
  * use, so a change from the page is checked by the building rules, undoable and saved like any other.
  */
-import type { CanvasPage, Project } from '@plinth/core';
+import type { CanvasPage, Project } from '@opensu/core';
 import { applyDiff, type CallReply, type HostMessage, type Init, type ModuleScope, type PageMessage } from './protocol';
 
 type Events = { project: Project; level: string; selection: string[]; canEdit: boolean };

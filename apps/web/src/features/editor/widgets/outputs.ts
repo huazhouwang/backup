@@ -3,7 +3,7 @@
  * core by project, params and context, so redrawing the same state runs nothing). The previous drawing stays until the new one
  * arrives. `overrides` stand in for params while a handle is being dragged.
  */
-import { resolveMyWidget, resolveWidget, runWidget, type ParamValue, type Project, type WidgetItem } from '@plinth/core';
+import { resolveMyWidget, resolveWidget, runWidget, type ParamValue, type Project, type WidgetItem } from '@opensu/core';
 import { useEffect, useState } from 'react';
 // Lets core start the sandbox when a widget first runs
 import './sandbox';

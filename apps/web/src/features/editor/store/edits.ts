@@ -1,5 +1,5 @@
 /** Edits: calling capabilities (checking the role), previewing a call on a scratch copy, undo and redo, and what just changed */
-import { capabilityTitle, mutates, Session } from '@plinth/core';
+import { capabilityTitle, mutates, Session } from '@opensu/core';
 import { registry } from '../agent/registry';
 import { canvasHost } from '../sandbox/host';
 import { m } from '@/lib/i18n';

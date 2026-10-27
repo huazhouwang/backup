@@ -1,4 +1,4 @@
-import { createProject, type Project } from '@plinth/core';
+import { createProject, type Project } from '@opensu/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, ApiError } from '@/lib/api';
 import type { Role } from '@/shared/roles';

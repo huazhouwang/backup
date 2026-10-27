@@ -25,7 +25,7 @@ test('sandbox canvas', async ({ browser: b }) => {
   const iframe = page.locator('iframe[data-sandbox-canvas]');
   await page.locator('iframe[data-sandbox-canvas][data-ready]').waitFor({ timeout: 30000 });
   const frame = await (await iframe.elementHandle()).contentFrame();
-  const perf = await page.evaluate(() => window.plinthSandboxPerf);
+  const perf = await page.evaluate(() => window.opensuSandboxPerf);
   console.log(`perf: first draw ${perf.firstDrawMs} ms, wheels ${(perf.bundleBytes / 1024).toFixed(0)} KB`);
   check(perf.firstDrawMs > 0, 'the sandboxed page draws and says it is ready');
 
@@ -73,7 +73,7 @@ test('sandbox canvas', async ({ browser: b }) => {
   const screen = async ([x, y]) => {
     const [sx, sy] = await frame.evaluate(
       ([px, py]) => {
-        const m = document.querySelector('svg.plinth-plan').getScreenCTM();
+        const m = document.querySelector('svg.opensu-plan').getScreenCTM();
         return [px * m.a + py * m.c + m.e, px * m.b + py * m.d + m.f];
       },
       [x, y],
@@ -139,14 +139,17 @@ test('sandbox canvas', async ({ browser: b }) => {
   await page.screenshot({ path: `${OUT}/sandbox-canvas-2.png` });
 
   // Capabilities a page may not call are refused
-  const refusedCall = await frame.evaluate(async () => (await import('plinth')).bridge.call('view_set', { mode: '3d' }));
+  const refusedCall = await frame.evaluate(async () => (await import('opensu')).bridge.call('view_set', { mode: '3d' }));
+  // Modules written before the rename (#179) import the wheels as `plinth`: the same module
+  const alias = await frame.evaluate(async () => (await import('plinth')).bridge === (await import('opensu')).bridge);
+  check(alias, "the wheels are still importable as 'plinth'");
   check(!refusedCall.ok && refusedCall.error.code === 'forbidden', `a page may not call the editor's view controls (${JSON.stringify(refusedCall.error)})`);
 
   // Update latency: an edit made in the editor, sent as a diff and drawn by the page (the page reports it)
-  await page.evaluate(() => (window.plinthSandboxPerf.update = undefined));
+  await page.evaluate(() => (window.opensuSandboxPerf.update = undefined));
   await page.evaluate(id => window.artifact.call('furniture_move', { furniture: id, by: [100, 0] }), f.id);
-  await page.waitForFunction(() => window.plinthSandboxPerf.update !== undefined, null, { timeout: 5000 });
-  const update = await page.evaluate(() => window.plinthSandboxPerf.update);
+  await page.waitForFunction(() => window.opensuSandboxPerf.update !== undefined, null, { timeout: 5000 });
+  const update = await page.evaluate(() => window.opensuSandboxPerf.update);
   console.log(`perf: an edit reaches the page and is drawn in ${update} ms`);
   check(update < 1000, `an edit reaches the page quickly (${update} ms)`);
 

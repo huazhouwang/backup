@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { createEngine } from '@plinth/sandbox';
+import { createEngine } from '@opensu/sandbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   BUILTIN_WIDGET_LIBRARIES,
@@ -37,7 +37,7 @@ const BUILTIN = { origin: 'builtin' as const, id: 'builtin-widgets' };
 const grid = findWidget('builtin-widgets', 'grid')!.def;
 
 const library = (id: string, widgets: Record<string, WidgetDef>): WidgetLibrary => ({
-  format: 'plinth-widgets',
+  format: 'opensu-widgets',
   formatVersion: 1,
   id,
   name: { en: id },
@@ -61,8 +61,12 @@ describe('widget library files', () => {
     expect(Object.keys(grid.params!)).toEqual(['spacing', 'originX', 'originY', 'snap']);
   });
 
+  it('still reads files saved before the rename to OpenSU (#179)', () => {
+    expect(parseWidgetLibrary({ ...library('x', {}), format: 'plinth-widgets' }).format).toBe('opensu-widgets');
+  });
+
   it('refuses a malformed library', () => {
-    expect(() => parseWidgetLibrary({ format: 'plinth-looks', formatVersion: 1, id: 'x', name: { en: 'x' }, version: '1.0.0', widgets: {} })).toThrow(/format/);
+    expect(() => parseWidgetLibrary({ format: 'opensu-looks', formatVersion: 1, id: 'x', name: { en: 'x' }, version: '1.0.0', widgets: {} })).toThrow(/format/);
     expect(() => parseWidgetLibrary({ ...library('x', {}), widgets: { a: { ...def('x'), permissions: ['delete'] } } })).toThrow(/permissions/);
     expect(() => parseWidgetLibrary({ ...library('x', {}), widgets: { a: def('x', { n: { type: 'number', default: 'no' } }) } })).toThrow();
   });

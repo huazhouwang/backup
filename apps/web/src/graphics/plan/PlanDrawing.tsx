@@ -5,7 +5,7 @@
  * floor-materials.tsx), furniture and fittings white with thin black edges. Coordinates in millimetres. Interaction (picking)
  * is optional.
  */
-import type { Project } from '@plinth/core';
+import type { Project } from '@opensu/core';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
 import { isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';

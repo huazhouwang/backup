@@ -1,4 +1,4 @@
-import { footing, migrate, type Project } from '@plinth/core';
+import { footing, migrate, type Project } from '@opensu/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../samples/wushi-10/project.json';
 import { elevationLabel, sectionAxes, sectionCuts } from './section';

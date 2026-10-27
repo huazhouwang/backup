@@ -1,4 +1,4 @@
-import { DEFAULT_FINISH, materialOf } from '@plinth/core';
+import { DEFAULT_FINISH, materialOf } from '@opensu/core';
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
 import { MaterialSelect } from '@/features/looks/ParamControls';

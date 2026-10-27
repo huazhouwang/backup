@@ -1,8 +1,8 @@
 /**
- * Built-in look libraries (libraries/*.looklib.json, loaded by @plinth/core) served like libraries every user can view, as the
+ * Built-in look libraries (libraries/*.looklib.json, loaded by @opensu/core) served like libraries every user can view, as the
  * same library files the API returns for user libraries
  */
-import { BUILTIN_LIBRARIES, builtinLibrary, DEFAULT_LIBRARY_ID, libraryRecipe, lookSizeOf } from '@plinth/core';
+import { BUILTIN_LIBRARIES, builtinLibrary, DEFAULT_LIBRARY_ID, libraryRecipe, lookSizeOf } from '@opensu/core';
 import { uiName } from '@/lib/i18n';
 import type { LibraryDetail, LibrarySummary } from '@/shared/looks';
 
@@ -15,7 +15,7 @@ export const builtinSummaries = (): LibrarySummary[] =>
       id: l.id,
       name: uiName(l.name),
       role: 'viewer',
-      owner_name: l.author ?? 'Plinth',
+      owner_name: l.author ?? 'OpenSU',
       looks: Object.keys(l.looks).length,
       updated_at: 0,
       builtin: true,

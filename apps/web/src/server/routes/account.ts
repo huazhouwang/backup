@@ -1,5 +1,5 @@
 /** Account: who is signed in (accepting their pending invites), their own canvas modules, and exporting their data */
-import { canvasPageSchema } from '@plinth/core';
+import { canvasPageSchema } from '@opensu/core';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { googleEnabled } from '../auth';
@@ -18,7 +18,7 @@ routes.get('/me', async c => {
 routes.get('/account/export', async c => {
   const u = requireUser(c);
   const data = await repo.exportUserData(u.id);
-  return c.json(data, 200, { 'Content-Disposition': `attachment; filename="plinth-export-${new Date().toISOString().slice(0, 10)}.json"` });
+  return c.json(data, 200, { 'Content-Disposition': `attachment; filename="opensu-export-${new Date().toISOString().slice(0, 10)}.json"` });
 });
 
 /** The user's own canvas modules (issue 171): added for themselves, run in every design they open */

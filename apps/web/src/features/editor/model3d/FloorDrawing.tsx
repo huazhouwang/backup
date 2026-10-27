@@ -5,7 +5,7 @@
  * furniture and walls. Both are unlit, so their colors are the plan's. Line widths are the plan's screen widths at the scale the plan
  * is shown, converted to millimetres.
  */
-import type { Project } from '@plinth/core';
+import type { Project } from '@opensu/core';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';

@@ -1,5 +1,5 @@
 /** Which capabilities need the homeowner's confirmation: one rule set shared by the server (tool definitions) and the browser (confirmation cards) */
-import type { Capability, Permission } from '@plinth/core';
+import type { Capability, Permission } from '@opensu/core';
 
 export type Autonomy = 'ask' | 'balanced' | 'auto';
 

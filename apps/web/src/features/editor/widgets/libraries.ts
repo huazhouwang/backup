@@ -2,7 +2,7 @@
  * The widget libraries the user can use (their own and shared ones), registered in core so their widgets can be installed and
  * their newer versions offered; built-in ones are always there. Each keeps its owner, which decides its realm in the sandbox.
  */
-import { registerWidgetLibrary, unregisterWidgetLibrary } from '@plinth/core';
+import { registerWidgetLibrary, unregisterWidgetLibrary } from '@opensu/core';
 import { useQuery } from '@tanstack/react-query';
 import { useMe } from '@/lib/query';
 import { widgetLibraryFiles } from '@/lib/widget-libraries';

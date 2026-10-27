@@ -1,5 +1,5 @@
 /** Stored constraints with whether each is satisfied */
-import { derived } from '@plinth/core';
+import { derived } from '@opensu/core';
 import { Trash2Icon, TriangleAlertIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';

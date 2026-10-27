@@ -1,4 +1,4 @@
-import { DEFAULT_TYPES, groupNames, lookGroup, lookSizeOf, names, type LibraryLook, type LookLibrary, type ParamValue } from '@plinth/core';
+import { DEFAULT_TYPES, groupNames, lookGroup, lookSizeOf, names, type LibraryLook, type LookLibrary, type ParamValue } from '@opensu/core';
 import { useState } from 'react';
 import { sizeText, LookImage } from '@/features/looks/LookCard';
 import { ParamControls } from '@/features/looks/ParamControls';

@@ -1,5 +1,5 @@
 /** Look libraries: built-in and user libraries, their looks and members */
-import { DEFAULT_LIBRARY, parseLibrary, type LookLibrary } from '@plinth/core';
+import { DEFAULT_LIBRARY, parseLibrary, type LookLibrary } from '@opensu/core';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';

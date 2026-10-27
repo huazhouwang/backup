@@ -23,7 +23,7 @@ const def = (version: string, params: WidgetDef['params']): WidgetDef => ({
   script: "function widget() { return [{ type: 'point', at: [0, 0] }] }",
 });
 const lib = (d: WidgetDef) => ({
-  format: 'plinth-widgets' as const,
+  format: 'opensu-widgets' as const,
   formatVersion: 1 as const,
   id: 'lib_m',
   name: { zh: '我的组件' },

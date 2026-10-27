@@ -20,7 +20,7 @@ import {
   type Recipe,
   type RecipeSize,
   slabShape,
-} from '@plinth/core';
+} from '@opensu/core';
 import * as THREE from 'three';
 import { lightDocument } from '@/canvas/CanvasFrame';
 import { materialStyle } from '@/lib/materials';

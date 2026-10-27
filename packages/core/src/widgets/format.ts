@@ -31,7 +31,7 @@ export interface WidgetDef {
 
 export interface WidgetLibrary {
   $schema?: string;
-  format: 'plinth-widgets';
+  format: 'opensu-widgets';
   formatVersion: 1;
   id: string;
   name: Names;
@@ -81,7 +81,9 @@ export type WidgetItem =
   | { type: 'handle'; at: Point; x: string; y: string; level?: string }
   | { type: 'snap'; at: Point; level?: string };
 
-export const WIDGETLIB_FORMAT = 'plinth-widgets';
+export const WIDGETLIB_FORMAT = 'opensu-widgets' as const;
+/** The format id widget library files had before the rename to OpenSU (#179); still read */
+export const LEGACY_WIDGETLIB_FORMAT = 'plinth-widgets';
 export const WIDGETLIB_FORMAT_VERSION = 1;
 /** Limits on what a widget may return */
 export const WIDGET_LIMITS = { items: 5000, outline: 500, text: 200, dash: 8, coordinate: 1e7 };
@@ -114,7 +116,7 @@ export const libraryCanvasModuleSchema: z.ZodType<LibraryCanvasModule> = z.objec
 
 export const widgetLibrarySchema: z.ZodType<WidgetLibrary> = z.object({
   $schema: z.string().optional(),
-  format: z.literal(WIDGETLIB_FORMAT),
+  format: z.enum([WIDGETLIB_FORMAT, LEGACY_WIDGETLIB_FORMAT]).transform(() => WIDGETLIB_FORMAT),
   formatVersion: z.literal(WIDGETLIB_FORMAT_VERSION),
   id,
   name: namesSchema,

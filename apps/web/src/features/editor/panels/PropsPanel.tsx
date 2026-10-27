@@ -1,5 +1,5 @@
 /** Properties of the selected object; with nothing selected, the level's rule check and the constraints. */
-import { objectInfo } from '@plinth/core';
+import { objectInfo } from '@opensu/core';
 import { useMemo } from 'react';
 
 import { useEditor } from '../store';

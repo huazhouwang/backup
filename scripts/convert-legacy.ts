@@ -2,7 +2,7 @@
 // Usage: npm run convert -- [scheme=10]
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { areaReport, fromLegacy, validate } from '@plinth/core';
+import { areaReport, fromLegacy, validate } from '@opensu/core';
 
 const sch = Number(process.argv[2] ?? 10);
 const dir = join(import.meta.dirname, '..', `samples/wushi-${sch}`);

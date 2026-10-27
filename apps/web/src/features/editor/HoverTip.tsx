@@ -2,7 +2,7 @@
  * Revit's pre-selection tooltip: after a short pause over an object, its category and name under the cursor (e.g. Bearing wall :
  * North wall).
  */
-import { findObject, type Project } from '@plinth/core';
+import { findObject, type Project } from '@opensu/core';
 import { useEffect, useState } from 'react';
 import { useEditor } from './store';
 import { useHover } from './hover';

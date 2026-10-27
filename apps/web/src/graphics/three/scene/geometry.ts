@@ -2,7 +2,7 @@
  * Geometry of a house's parts in metres, shared by the editor's 3D view and the house stills: walls, floor slabs, elements'
  * solids, and the box that frames what is shown.
  */
-import { rect, union, wallBoxes, wallDir, type Polygon, type Project, type Solid, type Wall, type Box } from '@plinth/core';
+import { rect, union, wallBoxes, wallDir, type Polygon, type Project, type Solid, type Wall, type Box } from '@opensu/core';
 import * as THREE from 'three';
 import { M } from './units';
 

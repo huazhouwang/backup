@@ -2,7 +2,7 @@
  * Look libraries as the API returns them: every library, built-in or the user's own, as a library file (packages/core/src/
  * library.ts) with who may do what to it (see migrations/0005_look_libraries.sql, 0006_library_files.sql)
  */
-import type { LookLibrary, Recipe } from '@plinth/core';
+import type { LookLibrary, Recipe } from '@opensu/core';
 
 export type LibraryRole = 'owner' | 'editor' | 'viewer';
 

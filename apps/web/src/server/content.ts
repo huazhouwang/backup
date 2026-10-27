@@ -1,5 +1,5 @@
 /** Checks on project content as it is saved and read: size, the current schema (migrating older data) and structure */
-import { migrate, validate, type Project, type ValidationIssue } from '@plinth/core';
+import { migrate, validate, type Project, type ValidationIssue } from '@opensu/core';
 import { HTTPException } from 'hono/http-exception';
 import { m } from '@/lib/i18n';
 import * as repo from './repo';

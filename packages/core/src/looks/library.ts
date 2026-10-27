@@ -37,7 +37,7 @@ export interface LibraryLook {
 
 export interface LookLibrary {
   $schema?: string;
-  format: 'plinth-looks';
+  format: 'opensu-looks';
   formatVersion: 1;
   id: string;
   name: Names;
@@ -52,7 +52,9 @@ export interface LookLibrary {
   looks: Record<string, LibraryLook>;
 }
 
-export const LIBRARY_FORMAT = 'plinth-looks';
+export const LIBRARY_FORMAT = 'opensu-looks' as const;
+/** The format id library files had before the rename to OpenSU (#179); still read */
+export const LEGACY_LIBRARY_FORMAT = 'plinth-looks';
 export const LIBRARY_FORMAT_VERSION = 1;
 export const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const id = z
@@ -80,7 +82,7 @@ export const libraryLookSchema: z.ZodType<LibraryLook> = z.object({
 
 export const librarySchema: z.ZodType<LookLibrary> = z.object({
   $schema: z.string().optional(),
-  format: z.literal(LIBRARY_FORMAT),
+  format: z.enum([LIBRARY_FORMAT, LEGACY_LIBRARY_FORMAT]).transform(() => LIBRARY_FORMAT),
   formatVersion: z.literal(LIBRARY_FORMAT_VERSION),
   id,
   name: namesSchema,

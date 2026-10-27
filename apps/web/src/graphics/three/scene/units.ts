@@ -1,5 +1,5 @@
 /** Units and sizes shared by everything drawn in 3D. Data is in millimetres, scenes in metres. */
-import { footing, SLAB_THICKNESS, type Space } from '@plinth/core';
+import { footing, SLAB_THICKNESS, type Space } from '@opensu/core';
 
 /** Millimetres to metres */
 export const M = 0.001;

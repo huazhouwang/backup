@@ -2,7 +2,7 @@
  * Look options: the parameters a selected object's look declares (materials, decoration on/off, choices, numbers), set per
  * object with params_set; the look itself stays the same. The controls come from the declarations (ParamControls).
  */
-import { elementTarget, findObject, furnitureTarget, lookRecipe, openingTarget, wallTarget, type ParamValue } from '@plinth/core';
+import { elementTarget, findObject, furnitureTarget, lookRecipe, openingTarget, wallTarget, type ParamValue } from '@opensu/core';
 import { ParamControls } from '@/features/looks/ParamControls';
 import { m } from '@/lib/i18n';
 import { useEditor } from '../store';

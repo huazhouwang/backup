@@ -1,4 +1,4 @@
-import { capabilityTitle } from '@plinth/core';
+import { capabilityTitle } from '@opensu/core';
 import type { UIMessage } from '@tanstack/ai-react';
 import { registry } from '@/features/editor/agent/registry';
 

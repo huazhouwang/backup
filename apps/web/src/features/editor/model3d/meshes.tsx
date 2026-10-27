@@ -4,8 +4,8 @@
  * records its id in userData for picking.
  */
 import { Edges } from '@react-three/drei';
-import type { Element, OpeningFrame, Polygon, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@plinth/core';
-import { footing, lookRecipe, materialOf, SLAB_THICKNESS, wallTarget, type Material } from '@plinth/core';
+import type { Element, OpeningFrame, Polygon, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@opensu/core';
+import { footing, lookRecipe, materialOf, SLAB_THICKNESS, wallTarget, type Material } from '@opensu/core';
 import { useContext, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
@@ -85,7 +85,7 @@ export function Slab({
   );
 }
 
-/** A flat roof over a room with nothing above it (see roofs in @plinth/core), its top on the room's walls; picking it picks the room */
+/** A flat roof over a room with nothing above it (see roofs in @opensu/core), its top on the room's walls; picking it picks the room */
 export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: number; color: string }) {
   const line = useLine(r.space, o.sel);
   const ref = useFeedback<THREE.Mesh>(r.space, color, !!o.sel);

@@ -1,5 +1,5 @@
 /** Widget libraries from the API, as widget library files (packages/core/src/widgets/format.ts) */
-import type { WidgetDef, WidgetLibrary } from '@plinth/core';
+import type { WidgetDef, WidgetLibrary } from '@opensu/core';
 import type { WidgetLibraryDetail, WidgetLibraryFile, WidgetLibrarySummary } from '@/shared/widgets';
 import { api } from './api';
 

@@ -3,7 +3,7 @@
  * points and areas, which don't take the pointer; and handles, which an editor drags to move the two params they stand for. The
  * handle follows the pointer through `onPreview` (the widget runs again with those values) and releasing commits the change.
  */
-import type { ParamValue, Point } from '@plinth/core';
+import type { ParamValue, Point } from '@opensu/core';
 import { useRef } from 'react';
 import { m } from '@/lib/i18n';
 import { itemsOn, type WidgetOutput } from './outputs';

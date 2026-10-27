@@ -19,6 +19,7 @@ export const schemaPlugins = (
     }),
     // Try first, sign in later: when an anonymous user signs in, their projects move to the real account
     anonymous({
+      // Guests' stored addresses use the product's old name (issue 179); kept so existing guest accounts still match
       emailDomainName: 'guest.plinth.invalid',
       // Stored as the user's name at creation, in the language of the request that started the trial
       generateName: () => m.server_guest_name(),

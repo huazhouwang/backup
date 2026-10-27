@@ -1,5 +1,5 @@
 /** Labels and small building blocks shared by the side panels. */
-import type { ConstraintType, OpeningKind, SpaceKind, WallKind } from '@plinth/core';
+import type { ConstraintType, OpeningKind, SpaceKind, WallKind } from '@opensu/core';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';

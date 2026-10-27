@@ -2,7 +2,7 @@
  * Look libraries for the agent: list them, read a look to copy it into the design (look_import), and save a look of the design
  * to a library. Run in the browser, which calls the API as the user; the server only uses the definitions.
  */
-import { designLookOf, libraryLookOf, defineRead, type CapabilityContext } from '@plinth/core';
+import { designLookOf, libraryLookOf, defineRead, type CapabilityContext } from '@opensu/core';
 import { z } from 'zod';
 import { m, uiName } from '@/lib/i18n';
 import type { LibraryDetail, LibraryLookInput, LibrarySummary } from '@/shared/looks';

@@ -1,6 +1,6 @@
 {
   "$schema": "./widgetlib.schema.json",
-  "format": "plinth-widgets",
+  "format": "opensu-widgets",
   "formatVersion": 1,
   "id": "builtin-widgets",
   "name": {
@@ -12,7 +12,7 @@
     "en": "Common helpers for the canvas: a structural grid and a coordinate system"
   },
   "version": "0.2.0",
-  "author": "Plinth",
+  "author": "OpenSU",
   "license": "CC-BY-4.0",
   "widgets": {
     "grid": {

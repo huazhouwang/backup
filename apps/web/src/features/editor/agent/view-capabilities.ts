@@ -2,7 +2,7 @@
  * View capabilities that run only in the browser: switch view, focus, screenshot.
  * View state is data too: camera, level, selection and change highlights are all readable/writable. The server only uses their definitions to build tool descriptions.
  */
-import { defineRead, findObject, resolveLevel, type CapabilityContext } from '@plinth/core';
+import { defineRead, findObject, resolveLevel, type CapabilityContext } from '@opensu/core';
 import { z } from 'zod';
 import { m } from '@/lib/i18n';
 import { COMMENT_STATUSES, type CommentRow, type CommentStatus } from '@/shared/comments';

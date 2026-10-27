@@ -43,7 +43,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser -w @plinth/sandbox
+      - run: npm run test:browser -w @opensu/sandbox
 
   lint:
     runs-on: ubuntu-latest
@@ -57,8 +57,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
-      - run: npm run check:theme -w @plinth/web
-      - run: npm run check:i18n -w @plinth/web
+      - run: npm run check:theme -w @opensu/web
+      - run: npm run check:i18n -w @opensu/web
 
   web:
     runs-on: ubuntu-latest
@@ -71,9 +71,9 @@ jobs:
           cache: npm
       - run: npm ci
       # The build generates the route tree routeTree.gen.ts (not committed); the web typecheck must run after it
-      - run: npm run build -w @plinth/web
+      - run: npm run build -w @opensu/web
       - run: npx tsc --noEmit -p apps/web
-      - run: npm test -w @plinth/web
+      - run: npm test -w @opensu/web
 
   # API checks against a local Worker + D1 (no browser, no model): permission matrix, version history
   api:
@@ -140,7 +140,7 @@ jobs:
           cache: npm
       - run: npm ci
         if: steps.cfg.outputs.ready == 'true'
-      - run: npm run build -w @plinth/web
+      - run: npm run build -w @opensu/web
         if: steps.cfg.outputs.ready == 'true'
       - name: Migrate production database
         if: steps.cfg.outputs.ready == 'true'

@@ -2,7 +2,7 @@
  * Plan editor: chat on one side, canvas on the other. On phones the canvas is full screen and panels slide up from the bottom.
  * The page exposes window.artifact.call(capability, args) and a "ready" signal, so any agent can verify it with its own browser.
  */
-import { describe } from '@plinth/core';
+import { describe } from '@opensu/core';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo } from 'react';
 import { toast } from 'sonner';

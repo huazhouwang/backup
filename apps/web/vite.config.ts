@@ -18,7 +18,7 @@ function sandboxWorker(): Plugin {
   const here = fileURLToPath(new URL('.', import.meta.url));
   const entry = resolve(here, '../../packages/sandbox/src/worker.ts');
   return {
-    name: 'plinth-sandbox-worker',
+    name: 'opensu-sandbox-worker',
     resolveId: source => (source === id ? `\0${id}` : undefined),
     async load(source) {
       if (source !== `\0${id}`) return;
@@ -40,14 +40,14 @@ function sandboxWorker(): Plugin {
 
 /**
  * `virtual:canvas-wheels`: the wheels (src/wheels/index.ts), bundled as one ES module, as a string. The sandboxed canvas page
- * (#171) gets it inlined under the import name `plinth`; it can't load the app's own modules from its opaque origin. Paths
+ * (#171) gets it inlined under the import name `opensu`; it can't load the app's own modules from its opaque origin. Paths
  * resolve through tsconfig.json (`@/…`).
  */
 function canvasWheels(): Plugin {
   const id = 'virtual:canvas-wheels';
   const here = fileURLToPath(new URL('.', import.meta.url));
   return {
-    name: 'plinth-canvas-wheels',
+    name: 'opensu-canvas-wheels',
     resolveId: source => (source === id ? `\0${id}` : undefined),
     async load(source) {
       if (source !== `\0${id}`) return;

@@ -3,7 +3,7 @@
  * the store only handles view state, autosave, conflicts and the before/after comparison. It is built from slices that share
  * the session and the autosave timer (see StoreContext).
  */
-import { findObject, Session, type Project } from '@plinth/core';
+import { findObject, Session, type Project } from '@opensu/core';
 import { createStore, type StoreApi } from 'zustand';
 import type { ViewState } from '../agent/view-capabilities';
 import { editsSlice } from './edits';

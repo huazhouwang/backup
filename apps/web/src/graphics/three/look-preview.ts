@@ -4,7 +4,7 @@
  * fitted to the frame, in the canvas's light theme and the default model style's light. One offscreen renderer draws every still
  * in turn (a page of looks would otherwise run out of WebGL contexts), and recent stills are kept.
  */
-import { buildRecipe, type Material, type Recipe } from '@plinth/core';
+import { buildRecipe, type Material, type Recipe } from '@opensu/core';
 import * as THREE from 'three';
 import { lightDocument } from '@/canvas/CanvasFrame';
 import { themeColor } from '@/lib/theme';

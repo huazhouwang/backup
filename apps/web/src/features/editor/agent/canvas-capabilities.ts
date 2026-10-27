@@ -3,7 +3,7 @@
  * person's own modules, kept in their settings and run in every design they open. Run in the browser; the server only uses the
  * definitions to describe the tools.
  */
-import { CANVAS_LIMITS, defineRead, putCanvasModule, removeCanvasModule } from '@plinth/core';
+import { CANVAS_LIMITS, defineRead, putCanvasModule, removeCanvasModule } from '@opensu/core';
 import { z } from 'zod';
 import { m, uiName } from '@/lib/i18n';
 import { WHEELS_DOC } from '@/wheels/docs';

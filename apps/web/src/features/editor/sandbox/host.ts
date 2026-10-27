@@ -2,7 +2,7 @@
  * The canvas page as capabilities reach it (CapabilityContext.host.canvas): trying a module in the open sample-room page before
  * it is saved, a design's or the person's own. With no page open, nothing is tried and the module is saved as it is.
  */
-import type { CanvasHost } from '@plinth/core';
+import type { CanvasHost } from '@opensu/core';
 import type { ModuleScope } from '@/wheels/protocol';
 
 type Trier = (scope: ModuleScope, id: string, source: string) => Promise<{ ok: true; drawn?: unknown } | { ok: false; error: string }>;

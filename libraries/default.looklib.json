@@ -1,6 +1,6 @@
 {
   "$schema": "./looklib.schema.json",
-  "format": "plinth-looks",
+  "format": "opensu-looks",
   "formatVersion": 1,
   "id": "builtin-default",
   "name": {"zh": "默认物品", "en": "Default looks"},
@@ -9,7 +9,7 @@
     "en": "What every object without a look of its own is drawn with: Scandinavian furniture, doors and windows, building elements, and the full set of wall, floor and furniture materials"
   },
   "version": "1.2.0",
-  "author": "Plinth",
+  "author": "OpenSU",
   "license": "CC-BY-4.0",
   "groups": {
     "living": {"name": {"zh": "客厅", "en": "Living room"}},

@@ -3,7 +3,7 @@
  * material picker with swatches, a select for a closed set of values, show/hide for a boolean, a number field with its range
  * (empty means automatic when the script may work it out). Used by the properties panel and by a look's page in its library.
  */
-import { DEFAULT_MATERIALS, materialOf, paramTypes, type Material, type ParamDecl, type ParamValue, type Recipe } from '@plinth/core';
+import { DEFAULT_MATERIALS, materialOf, paramTypes, type Material, type ParamDecl, type ParamValue, type Recipe } from '@opensu/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

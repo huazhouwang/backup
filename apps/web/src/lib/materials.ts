@@ -2,7 +2,7 @@
  * Library materials (glTF 2.0, see packages/core/src/looks/material.ts) for drawing: CSS colours for the plan, swatches and
  * three.js. Material colours are data from a library, not theme colours: the canvas draws what the library says.
  */
-import type { Material, RGBA } from '@plinth/core';
+import type { Material, RGBA } from '@opensu/core';
 
 /** sRGB 0..255 of a linear 0..1 channel */
 const encode = (c: number) => Math.round(255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055));

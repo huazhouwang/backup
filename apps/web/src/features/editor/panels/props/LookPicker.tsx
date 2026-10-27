@@ -1,4 +1,4 @@
-import { DEFAULT_LIBRARY_ID, elementTarget, findObject, furnitureTarget, looksFor, openingTarget, wallTarget } from '@plinth/core';
+import { DEFAULT_LIBRARY_ID, elementTarget, findObject, furnitureTarget, looksFor, openingTarget, wallTarget } from '@opensu/core';
 import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

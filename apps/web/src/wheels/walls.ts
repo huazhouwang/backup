@@ -3,7 +3,7 @@
  * ends, a module's lines…; shift keeps it level or upright); each one is added through wall_add, so the building rules check it
  * and it undoes like any edit, and the next starts where it ended. Esc stops.
  */
-import type { Point } from '@plinth/core';
+import type { Point } from '@opensu/core';
 import { m } from '@/lib/i18n';
 import { bridge, report } from './bridge';
 import { snap, SNAP_PX } from './interact';

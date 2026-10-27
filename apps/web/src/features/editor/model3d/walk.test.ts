@@ -1,4 +1,4 @@
-import { migrate, pointInPolygon, type Project } from '@plinth/core';
+import { migrate, pointInPolygon, type Project } from '@opensu/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../../samples/wushi-10/project.json';
 import { walkStart } from './WalkView';

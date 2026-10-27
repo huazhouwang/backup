@@ -1,5 +1,5 @@
 /** Account: the user's own canvas modules, and exporting a user's data */
-import type { CanvasPage } from '@plinth/core';
+import type { CanvasPage } from '@opensu/core';
 import { m } from '@/lib/i18n';
 import { db } from './db';
 import { listApiKeys, listModels } from './models';

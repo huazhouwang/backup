@@ -1,8 +1,8 @@
 {
-  "name": "@plinth/sandbox",
+  "name": "@opensu/sandbox",
   "version": "0.1.0",
   "private": true,
-  "description": "Plinth sandbox: runs untrusted JavaScript in QuickJS compiled to WebAssembly, isolated by realm and script",
+  "description": "OpenSU sandbox: runs untrusted JavaScript in QuickJS compiled to WebAssembly, isolated by realm and script",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

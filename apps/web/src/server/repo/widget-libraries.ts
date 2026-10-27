@@ -1,5 +1,5 @@
 /** Widget libraries: a user's own and shared ones, each stored as its library file, and their members */
-import { WIDGETLIB_FORMAT, WIDGETLIB_FORMAT_VERSION, type MyWidgets, type WidgetDef, type WidgetLibrary } from '@plinth/core';
+import { WIDGETLIB_FORMAT, WIDGETLIB_FORMAT_VERSION, type MyWidgets, type WidgetDef, type WidgetLibrary } from '@opensu/core';
 import type { LibraryRole } from '@/shared/looks';
 import type { WidgetLibrarySummary } from '@/shared/widgets';
 import { uiName } from '@/lib/i18n';

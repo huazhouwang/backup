@@ -4,7 +4,7 @@
  * wall it would stand in, its centre on a widget's snap point (a grid's intersection) when near one; a door or window onto the
  * nearest wall it can go in, snapped to the wall's middle.
  */
-import { dot, OPENING_DEFAULTS, pointAt, sub, wallDir, wallLength, wallNormal, type Point, type Project, type Wall } from '@plinth/core';
+import { dot, OPENING_DEFAULTS, pointAt, sub, wallDir, wallLength, wallNormal, type Point, type Project, type Wall } from '@opensu/core';
 import type { Placing } from '../store/types';
 
 export interface PlaceResult {

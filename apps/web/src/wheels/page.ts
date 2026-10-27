@@ -3,7 +3,7 @@
  * design's walls, doors and windows and furniture (the same moves and snapping as the editor's plan, made through the same
  * capabilities), the wall tool, and a small toolbar. Agent modules run on top of it with the same `canvas` it uses.
  */
-import type { Point } from '@plinth/core';
+import type { Point } from '@opensu/core';
 import { overwriteGetLocale } from '@/paraglide/runtime';
 import { m } from '@/lib/i18n';
 import { dragCall, draggable as canDrag } from '@/features/editor/plan/plan-drag';
@@ -219,7 +219,7 @@ export async function start(): Promise<Canvas> {
   requestAnimationFrame(() =>
     post({
       type: 'ready',
-      perf: { firstDrawMs: Math.round(performance.now() - t0), bundleBytes: (globalThis as { plinthBytes?: number }).plinthBytes ?? 0 },
+      perf: { firstDrawMs: Math.round(performance.now() - t0), bundleBytes: (globalThis as { opensuBytes?: number }).opensuBytes ?? 0 },
     }),
   );
   return canvas;

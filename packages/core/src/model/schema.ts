@@ -1,5 +1,5 @@
 /**
- * Plinth project data schema v2 (v2 added `language`).
+ * OpenSU project data schema v2 (v2 added `language`).
  *
  * Conventions:
  * - Lengths are in millimetres; plan coordinates have x pointing east and y pointing south; heights are measured from each level's base elevation.
@@ -13,8 +13,10 @@ import type { Material, Names } from '../looks/material.js';
 import type { ParamValue, Recipe } from '../looks/script.js';
 import type { WidgetDef } from '../widgets/format.js';
 
-export const SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 19 as const;
+export const SCHEMA = 'opensu/project' as const;
+/** The schema id project files had up to v19, before the rename to OpenSU (#179) */
+export const LEGACY_SCHEMA = 'plinth/project' as const;
+export const SCHEMA_VERSION = 20 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -198,7 +200,7 @@ export interface WidgetInstance {
 
 /**
  * A design's additions to its canvas page (issue 171): ES modules run in the sandboxed page on top of the default one, each
- * `export default function (canvas) {…}`, using the wheels it imports as `plinth`; and the data each module keeps (its own JSON,
+ * `export default function (canvas) {…}`, using the wheels it imports as `opensu`; and the data each module keeps (its own JSON,
  * changed through canvas_data_set, so it undoes and is shared like the rest of the design).
  */
 export interface CanvasPage {

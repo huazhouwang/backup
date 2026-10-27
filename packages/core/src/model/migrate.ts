@@ -7,7 +7,7 @@ import { elementGeometry } from '../geometry/elements.js';
 import { pointInPolygon } from '../geometry/geometry.js';
 import { heightsFromElevations } from './levels.js';
 import { names } from './names.js';
-import { SCHEMA, SCHEMA_VERSION, type Polygon, type Project } from './schema.js';
+import { LEGACY_SCHEMA, SCHEMA, SCHEMA_VERSION, type Polygon, type Project } from './schema.js';
 
 /**
  * When the schema is upgraded, add a step here: MIGRATIONS[n] converts version n data to version n+1.
@@ -60,6 +60,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   17: doc => doc,
   // v19 records where an imported canvas module came from (canvas.modules[].origin); optional
   18: doc => doc,
+  // v20: the product is renamed OpenSU (#179), so the schema id changes from plinth/project to opensu/project
+  19: doc => ({ ...doc, schema: SCHEMA }),
 };
 
 /**
@@ -145,7 +147,8 @@ export class SchemaError extends Error {}
 
 export function migrate(doc: unknown): Project {
   const d = doc as any;
-  if (!d || d.schema !== SCHEMA) throw new SchemaError(text('schema_not_plinth', 'Not a Plinth project file (schema should be {schema})', { schema: SCHEMA }));
+  const known = d?.schema === SCHEMA || (d?.schema === LEGACY_SCHEMA && typeof d.version === 'number' && d.version < 20);
+  if (!known) throw new SchemaError(text('schema_not_opensu', 'Not an OpenSU project file (schema should be {schema})', { schema: SCHEMA }));
   if (typeof d.version !== 'number') throw new SchemaError(text('schema_no_version', 'Missing version'));
   if (d.version > SCHEMA_VERSION)
     throw new SchemaError(

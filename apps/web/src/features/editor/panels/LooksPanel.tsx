@@ -2,7 +2,7 @@
  * The design's own looks (beyond the default set): where each came from, saving one to a look library, copying looks from a
  * library, and bringing a copied look up to its library's newer version (shown before and after; never automatic).
  */
-import { compareVersions, designLookOf, libraryLookOf, names, targetSize, type Look, type Project } from '@plinth/core';
+import { compareVersions, designLookOf, libraryLookOf, names, targetSize, type Look, type Project } from '@opensu/core';
 import { useQuery } from '@tanstack/react-query';
 import { LibraryIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';

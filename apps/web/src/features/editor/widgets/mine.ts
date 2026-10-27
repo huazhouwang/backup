@@ -3,7 +3,7 @@
  * (shown at once, stored in the background, put back on failure), drawn in every design they open. Not part of the design, so
  * not edits of it: no undo, no history, nobody else sees them.
  */
-import { configureMyWidget, isMyWidget, type MyWidgets, type ParamValue } from '@plinth/core';
+import { configureMyWidget, isMyWidget, type MyWidgets, type ParamValue } from '@opensu/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';

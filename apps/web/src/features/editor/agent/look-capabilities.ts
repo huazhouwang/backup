@@ -2,7 +2,7 @@
  * Looking at a look before (or after) adding it: the agent's self-check. Runs in the browser, which draws the still; the server
  * only uses the definition to describe the tool.
  */
-import { checkRecipe, defineRead, inspectRecipe, normalizeRecipe, targetSize, type CapabilityContext, type Recipe } from '@plinth/core';
+import { checkRecipe, defineRead, inspectRecipe, normalizeRecipe, targetSize, type CapabilityContext, type Recipe } from '@opensu/core';
 import { z } from 'zod';
 import { m } from '@/lib/i18n';
 

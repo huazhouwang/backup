@@ -2,7 +2,7 @@
  * A widget library's page, the same for every library: what its file says about it, then a card per widget with its description,
  * version, what it may do and its parameters. Export downloads the file; the owner and editors manage it from the sheet.
  */
-import type { WidgetDef } from '@plinth/core';
+import type { WidgetDef } from '@opensu/core';
 import { useQuery } from '@tanstack/react-query';
 import { getRouteApi, Link } from '@tanstack/react-router';
 import { ArrowLeftIcon, DownloadIcon, SettingsIcon } from 'lucide-react';

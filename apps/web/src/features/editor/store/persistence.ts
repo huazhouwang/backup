@@ -2,7 +2,7 @@
  * Saving: autosave after edits (each save names its version from the edits it carries), conflicts with someone else's save,
  * opening an earlier version read-only and restoring one
  */
-import type { Project } from '@plinth/core';
+import type { Project } from '@opensu/core';
 import { api, ApiError } from '@/lib/api';
 import { m } from '@/lib/i18n';
 import type { StoreContext } from './create';

@@ -1,4 +1,4 @@
-import { createProject, migrate, type Project } from '@plinth/core';
+import { createProject, migrate, type Project } from '@opensu/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../samples/wushi-10/project.json';
 import { elevationDimensions, elevationText, exteriorDimensions, heightDimensions, selectionDimensions, type DimChain, type Side } from './dimensions';

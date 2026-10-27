@@ -1,5 +1,5 @@
 /** Look libraries from the API, as library files (packages/core/src/looks/library.ts) */
-import type { LookLibrary } from '@plinth/core';
+import type { LookLibrary } from '@opensu/core';
 import type { LibraryDetail, LibraryLookInput, LibrarySummary } from '@/shared/looks';
 import { api } from './api';
 

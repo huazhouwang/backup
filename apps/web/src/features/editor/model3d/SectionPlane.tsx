@@ -7,7 +7,7 @@ import { Html, Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { Point } from '@plinth/core';
+import type { Point } from '@opensu/core';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { themeColor } from '@/lib/theme';
 import { elevationLabel, sectionAxes, sectionCuts } from '@/graphics/three/section';

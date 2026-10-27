@@ -21,7 +21,7 @@ import {
   type Project,
   type Space,
   type Wall,
-} from '@plinth/core';
+} from '@opensu/core';
 import polylabel from 'polylabel';
 import { EXTERIOR_REACH } from './dimensions';
 

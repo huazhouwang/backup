@@ -10,7 +10,7 @@ import {
   type LibraryLook,
   type LookLibrary,
   type Recipe,
-} from '@plinth/core';
+} from '@opensu/core';
 import type { LibraryLookInput, LibraryRole, LibrarySummary } from '@/shared/looks';
 import { uiName } from '@/lib/i18n';
 import { db, now, newId } from './db';

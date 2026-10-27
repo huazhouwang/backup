@@ -1,4 +1,4 @@
-import { lookSizeOf, type LibraryLook, type LookLibrary, type ParamValue } from '@plinth/core';
+import { lookSizeOf, type LibraryLook, type LookLibrary, type ParamValue } from '@opensu/core';
 import { sizeText, LookImage } from '@/features/looks/LookCard';
 import { paramText, paramTitle } from '@/features/looks/ParamControls';
 import { Button } from '@/components/ui/button';

@@ -2,7 +2,7 @@
  * Widget libraries as the API returns them: built-in ones (shipped with the app) and users' own and shared ones, as widget
  * library files (packages/core/src/widgets/format.ts) with who may do what to them (migrations/0007_widget_libraries.sql)
  */
-import type { WidgetDef, WidgetLibrary } from '@plinth/core';
+import type { WidgetDef, WidgetLibrary } from '@opensu/core';
 import type { LibraryRole } from './looks';
 
 export interface WidgetLibrarySummary {

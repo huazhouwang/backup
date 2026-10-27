@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { wallBody, type ParamValue, type Point, type Project } from '@plinth/core';
+import { wallBody, type ParamValue, type Point, type Project } from '@opensu/core';
 import { dragCall, draggable, rotateCall, rotateHandle, type DragResult } from './plan-drag';
 import { placeCall, type PlaceResult } from './plan-place';
 import { exteriorDimensions, selectionDimensions } from '@/graphics/plan/dimensions';

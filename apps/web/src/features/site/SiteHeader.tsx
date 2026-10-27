@@ -18,10 +18,12 @@ export function Logo() {
   return (
     <Link to="/" className="flex items-center gap-2 font-medium tracking-tight">
       <svg viewBox="0 0 32 32" className="size-5" aria-hidden>
-        <rect x="4" y="18" width="24" height="10" fill="currentColor" />
-        <rect x="9" y="6" width="14" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" />
+        {/* An open box: the lid lifted off a block */}
+        <path d="M5 12.5 16 19v11L5 23.5Z" fill="currentColor" />
+        <path d="M27 12.5 16 19v11l11-6.5Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="M16 2 27 8.5 16 15 5 8.5Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       </svg>
-      Plinth
+      OpenSU
     </Link>
   );
 }
@@ -85,7 +87,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mx-auto flex w-full max-w-5xl flex-wrap gap-4 px-4 py-8 text-xs text-muted-foreground">
-      <span>Plinth</span>
+      <span>OpenSU</span>
       <Link to="/privacy" className="hover:underline">
         {m.site_privacy()}
       </Link>

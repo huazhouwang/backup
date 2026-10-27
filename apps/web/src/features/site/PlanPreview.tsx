@@ -1,5 +1,5 @@
 /** Read-only plan thumbnail (landing page, plan list) */
-import type { Project } from '@plinth/core';
+import type { Project } from '@opensu/core';
 import { useMemo } from 'react';
 import { levelShapes } from '@/graphics/plan/plan-geometry';
 import { m } from '@/lib/i18n';

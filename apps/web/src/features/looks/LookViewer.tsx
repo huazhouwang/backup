@@ -4,7 +4,7 @@
  * phones' browsers don't put a page element in full screen; Esc or the button again brings it back). It redraws as its
  * parameters and size change. Drawn in the canvas's light theme whatever the website's theme, like the stills.
  */
-import type { Recipe } from '@plinth/core';
+import type { Recipe } from '@opensu/core';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Maximize2Icon, Minimize2Icon, RotateCcwIcon } from 'lucide-react';

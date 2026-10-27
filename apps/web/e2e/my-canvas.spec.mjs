@@ -10,7 +10,7 @@ test('my canvas modules', async ({ browser: b }) => {
     // (also runs in the sandboxed page, which has no storage)
     await ctx.addInitScript(() => {
       try {
-        localStorage.setItem('plinth.sandboxCanvas', '1');
+        localStorage.setItem('opensu.sandboxCanvas', '1');
       } catch {}
     });
     const page = await ctx.newPage();

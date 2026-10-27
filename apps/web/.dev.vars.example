@@ -9,4 +9,4 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 # OTP emails (Resend). When unset locally, OTPs are printed to the terminal
 RESEND_API_KEY=
-MAIL_FROM=Plinth <noreply@example.com>
+MAIL_FROM=OpenSU <noreply@example.com>

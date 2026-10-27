@@ -15,7 +15,7 @@ function create() {
       ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET, prompt: 'select_account' as const } }
       : undefined;
   return betterAuth({
-    appName: 'Plinth',
+    appName: 'OpenSU',
     // Without APP_URL the base URL is inferred from the request (the default workers.dev URL works); set it once a custom domain is bound
     baseURL: env.APP_URL || undefined,
     basePath: '/api/auth',

@@ -20,7 +20,7 @@ import {
   type Point,
   type Project,
   type Wall,
-} from '@plinth/core';
+} from '@opensu/core';
 
 export interface DragResult {
   name: string;

@@ -1,5 +1,5 @@
 /** Deleting an object from the editor (the Delete key, the props panel's buttons): the capability call that removes it */
-import { findObject, type Project } from '@plinth/core';
+import { findObject, type Project } from '@opensu/core';
 
 /** The call that removes an object, or null for what can't be removed this way (bearing walls, elements, levels) */
 export function removeCall(p: Project, id: string): { name: string; input: Record<string, unknown> } | null {

@@ -2,7 +2,7 @@
  * Floor material textures for the 3D floors: each material's pattern tile (see floor-materials.tsx) rasterized once per canvas
  * document and repeated by world position (floor UVs are in metres), so a floor in 3D shows the same pattern as in the plan.
  */
-import type { Material } from '@plinth/core';
+import type { Material } from '@opensu/core';
 import { createElement, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { materialPattern } from '../plan/floor-materials';

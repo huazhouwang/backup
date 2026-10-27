@@ -50,9 +50,15 @@ describe('乌石合院 scheme 10', () => {
 });
 
 describe('migrate', () => {
-  it('rejects non-Plinth files and newer versions', () => {
+  it('rejects non-OpenSU files and newer versions', () => {
     expect(() => migrate({})).toThrow();
-    expect(() => migrate({ schema: 'plinth/project', version: 99 })).toThrow(/newer than/);
+    expect(() => migrate({ schema: 'opensu/project', version: 99 })).toThrow(/newer than/);
+    expect(() => migrate({ schema: 'plinth/project', version: 20 })).toThrow(/Not an OpenSU project/);
+  });
+
+  it('opens projects saved as plinth/project before the rename (v20, #179)', () => {
+    const old = { ...migrate(read()), schema: 'plinth/project', version: 19 };
+    expect(migrate(old)).toMatchObject({ schema: 'opensu/project', version: 20 });
   });
 
   it('drops the model axes (v13) and the guides (v14) of older projects', () => {

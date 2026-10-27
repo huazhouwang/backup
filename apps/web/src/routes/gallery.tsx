@@ -1,5 +1,5 @@
 /** The old style gallery lives on as the default library's page */
-import { DEFAULT_LIBRARY_ID } from '@plinth/core';
+import { DEFAULT_LIBRARY_ID } from '@opensu/core';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 

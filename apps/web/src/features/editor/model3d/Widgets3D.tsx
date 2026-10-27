@@ -4,7 +4,7 @@
  * before the orbit controls and the picker see it, the pointer is followed on the floor's plane (50 mm steps), and releasing
  * makes the change. Ignored by picking, edges, walking and the sun (userData.mark).
  */
-import type { ParamValue, Point, Project } from '@plinth/core';
+import type { ParamValue, Point, Project } from '@opensu/core';
 import { Html, Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';

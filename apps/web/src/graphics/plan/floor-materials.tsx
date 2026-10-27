@@ -4,7 +4,7 @@
  * 3D floors (the same tile rasterized as a texture). The plan draws them in greys, like SketchUp's monochrome style; 3D in their
  * colours. Sizes in millimetres; colours from the material (library data, not the theme).
  */
-import { materialOf, type Material, type Project } from '@plinth/core';
+import { materialOf, type Material, type Project } from '@opensu/core';
 import type { ReactElement } from 'react';
 import { cssColor, grayColor } from '@/lib/materials';
 

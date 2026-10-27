@@ -1,4 +1,4 @@
-import { groupedLooks } from '@plinth/core';
+import { groupedLooks } from '@opensu/core';
 import { ShapesIcon } from 'lucide-react';
 import { LookCard } from '@/features/looks/LookCard';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';

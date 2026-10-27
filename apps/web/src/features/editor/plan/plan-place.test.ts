@@ -1,4 +1,4 @@
-import { migrate, type Project } from '@plinth/core';
+import { migrate, type Project } from '@opensu/core';
 import { describe, expect, it } from 'vitest';
 import sampleJson from '../../../../../../samples/wushi-10/project.json';
 import { rotateCall, rotateHandle } from './plan-drag';

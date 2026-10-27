@@ -3,7 +3,7 @@
  * Messages live in apps/web/messages/{locale}.json; a key missing from a locale falls back to Chinese.
  * Shared by the browser and the Worker (the Worker resolves the locale per request from the cookie).
  */
-import { nameIn, setTranslator, type Names } from '@plinth/core';
+import { nameIn, setTranslator, type Names } from '@opensu/core';
 import { m } from '@/paraglide/messages';
 import { getLocale, locales, setLocale, type Locale } from '@/paraglide/runtime';
 

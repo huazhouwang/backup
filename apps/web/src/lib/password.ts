@@ -1,5 +1,6 @@
 /**
  * Passwords are slow-hashed on device: PBKDF2-SHA256 with 600k iterations (OWASP recommendation), salt is "plinth:" + email.
+ * The salt keeps the product's old name on purpose (issue 179): changing it would change every user's hash and lock them out.
  * The server receives the derived key; the raw password never leaves the device. The server adds a random salt and stores one more SHA-256 (see server/password.ts).
  */
 export const MIN_PASSWORD = 8;

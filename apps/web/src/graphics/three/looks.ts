@@ -3,7 +3,7 @@
  * parts are merged into one geometry per material (one draw call each). Recipes only name materials; what a material looks
  * like comes from its library (lookMaterial).
  */
-import { getBuild, materialOf, type Built, type BuiltPart, type Material, type Recipe, type RecipeMaterial, type RecipeSize } from '@plinth/core';
+import { getBuild, materialOf, type Built, type BuiltPart, type Material, type Recipe, type RecipeMaterial, type RecipeSize } from '@opensu/core';
 import { materialStyle } from '@/lib/materials';
 import { useRef } from 'react';
 import { useBuildsVersion } from '@/lib/builds';

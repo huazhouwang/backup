@@ -64,6 +64,11 @@ describe('library files', () => {
     }
   });
 
+  it('still reads files saved before the rename to OpenSU (#179)', () => {
+    const lib = file('chinese.looklib.json');
+    expect(parseLibrary({ ...lib, format: 'plinth-looks' }, DEFAULT_LIBRARY).format).toBe('opensu-looks');
+  });
+
   it('rejects a bad file with a readable problem', () => {
     const lib = file('chinese.looklib.json');
     expect(() => parseLibrary({ ...lib, format: 'x' })).toThrow(/format/);
@@ -216,7 +221,7 @@ describe('capabilities', () => {
 
   it("a library look goes into a design with its materials and type, and back out in the library's structure", async () => {
     const lib: LookLibrary = {
-      format: 'plinth-looks',
+      format: 'opensu-looks',
       formatVersion: 1,
       id: 'games',
       name: { zh: '游戏' },

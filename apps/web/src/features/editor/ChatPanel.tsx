@@ -2,7 +2,7 @@
  * Chat with the agent. Every capability in the list is a browser-side tool: agent calls run here (same transaction and undo);
  * actions needing confirmation show a confirmation card. Chats are saved per user and per plan.
  */
-import { findObject, type Project } from '@plinth/core';
+import { findObject, type Project } from '@opensu/core';
 import type { ToolApprovalInterrupt } from '@tanstack/ai-client';
 import { Link } from '@tanstack/react-router';
 import { ArrowUpIcon, CircleStopIcon, ImagePlusIcon, ShieldQuestionIcon, SparklesIcon, SettingsIcon, XIcon } from 'lucide-react';

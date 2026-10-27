@@ -1,7 +1,8 @@
-# Plinth
+# OpenSU
 
-A general-purpose house design platform with a built-in agent: the homeowner states needs and makes decisions, and the agent authors the design — drawing walls and openings, laying out rooms, computing areas and checking its own work.
-Overall design and roadmap: [#1](https://github.com/x0finch/Plinth/issues/1). Requirements are tracked as GitHub issues.
+An open SketchUp you build by talking: describe the house you want, and the built-in agent asks the right questions, builds it, renders it in any style, and adds what the canvas can't do yet. (OpenSU was called Plinth before #179. It is not affiliated with SketchUp or Trimble.)
+
+Product direction: [#178](https://github.com/x0finch/Plinth/issues/178). Architecture so far: [#1](https://github.com/x0finch/Plinth/issues/1). Requirements are tracked as GitHub issues.
 
 The UI is available in Chinese (default) and English, chosen in Settings → Language (Paraglide JS, messages in `apps/web/messages/`). Each design also has its own language for the names it generates (levels, walls, openings). Everything in the repository is in English (see `CLAUDE.md`).
 
@@ -34,7 +35,7 @@ npm run dev                            # http://localhost:3000; OTP codes are pr
 
 ```sh
 npm test                               # core: area reference values, capability contracts, constraints, widgets (run in the sandbox); sandbox: rules, limits, isolation, workerd (repo root)
-npm run test:browser -w @plinth/sandbox  # sandbox's browser host in Chromium: opaque-origin worker, no network, watchdog
+npm run test:browser -w @opensu/sandbox  # sandbox's browser host in Chromium: opaque-origin worker, no network, watchdog
 npm run bench                          # core: transaction timings on the sample project
 npm run lint && npm run format:check   # oxlint, oxfmt (npm run format writes)
 cd apps/web
@@ -72,8 +73,8 @@ Repository Settings → Secrets and variables → Actions:
 
 | Name | Notes |
 |---|---|
-| `MAIL_FROM` | Needed for email sign-in. Sender, e.g. `Plinth <noreply@your-domain>`; the domain must be verified in Resend |
-| `APP_URL` | Optional. Set it when using a custom domain, e.g. `https://plinth.example.com`; otherwise it's inferred from the request URL |
+| `MAIL_FROM` | Needed for email sign-in. Sender, e.g. `OpenSU <noreply@your-domain>`; the domain must be verified in Resend |
+| `APP_URL` | Optional. Set it when using a custom domain, e.g. `https://opensu.example.com`; otherwise it's inferred from the request URL |
 
 ### Sign-in methods
 
@@ -81,7 +82,7 @@ Repository Settings → Secrets and variables → Actions:
 - Email + password: verify the email with an OTP after sign-up; reset a forgotten password with an OTP (accounts that only ever used OTP can set a password this way).
 - Google (optional).
 
-The slow password hash runs on the user's device (PBKDF2-SHA256, 600,000 iterations, salt `plinth:` + email). The server receives the derived value and stores a random salt + one SHA-256 of it. A free-plan Worker gets 10 ms CPU per request, too little for a slow hash; as a side effect the raw password never leaves the device.
+The slow password hash runs on the user's device (PBKDF2-SHA256, 600,000 iterations, salt `plinth:` + email; the old name stays so existing passwords keep working). The server receives the derived value and stores a random salt + one SHA-256 of it. A free-plan Worker gets 10 ms CPU per request, too little for a slow hash; as a side effect the raw password never leaves the device.
 
 All OTP emails go through Resend. Without `RESEND_API_KEY` + `MAIL_FROM`, production still offers email + password (sign-up signs in directly, no email verification), Google and guest trial; OTP sign-in and password reset are hidden until mail is configured. Locally the codes are printed to the terminal.
 

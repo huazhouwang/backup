@@ -150,7 +150,7 @@ test('libraries', async ({ browser: b }) => {
   const [download] = await Promise.all([a.page.waitForEvent('download'), a.page.getByRole('button', { name: '导出文件' }).click()]);
   const exported = JSON.parse(readFileSync(await download.path(), 'utf8'));
   check(
-    exported.format === 'plinth-looks' &&
+    exported.format === 'opensu-looks' &&
       download.suggestedFilename().endsWith('.looklib.json') &&
       Object.values(exported.looks)[0]?.params?.top?.type === 'string',
     'exporting writes a library file with JSON Schema parameters',

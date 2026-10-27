@@ -51,10 +51,10 @@ test('sample room on a phone', async ({ browser: b }) => {
   await until(async () => (await axis('x1')) === undefined && (await axis('x0')) !== undefined, 'deleted through its action');
 
   // Two fingers zoom in
-  const zoom = () => frame.evaluate(() => document.querySelector('svg.plinth-plan').viewBox.baseVal.width);
+  const zoom = () => frame.evaluate(() => document.querySelector('svg.opensu-plan').viewBox.baseVal.width);
   const before = await zoom();
   await frame.evaluate(() => {
-    const svg = document.querySelector('svg.plinth-plan');
+    const svg = document.querySelector('svg.opensu-plan');
     const r = svg.getBoundingClientRect();
     const cx = r.x + r.width / 2,
       cy = r.y + r.height / 2;

@@ -1,5 +1,5 @@
 /** A still of a look from three sides (see editor/model3d/look-preview.ts), drawn on demand */
-import type { Recipe } from '@plinth/core';
+import type { Recipe } from '@opensu/core';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { renderLookPreview } from '@/graphics/three/look-preview';

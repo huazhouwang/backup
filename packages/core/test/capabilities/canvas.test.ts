@@ -84,7 +84,7 @@ describe("a person's own canvas page (kept in their settings)", () => {
 describe('canvas modules published as wheels', () => {
   it('a library file keeps them, and a design keeps where its copy came from', async () => {
     const lib = parseWidgetLibrary({
-      format: 'plinth-widgets',
+      format: 'opensu-widgets',
       formatVersion: 1,
       id: 'mine',
       name: { zh: '我的' },

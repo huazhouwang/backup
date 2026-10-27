@@ -1,5 +1,5 @@
 /** What the house stands in, in the 3D view: sky light, the sun, and a ground that only catches shadows (see scene/lighting.ts) */
-import type { Project } from '@plinth/core';
+import type { Project } from '@opensu/core';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';

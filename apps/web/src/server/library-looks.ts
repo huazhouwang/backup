@@ -12,7 +12,7 @@ import {
   normalizeRecipe,
   typicalSize,
   type Material,
-} from '@plinth/core';
+} from '@opensu/core';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 import { m } from '@/lib/i18n';

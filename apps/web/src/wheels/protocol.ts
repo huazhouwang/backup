@@ -4,7 +4,7 @@
  * fields whose value changed, and for lists of objects with ids (walls, spaces, furniture…) the items that changed, the ids that
  * went and the new order. Changes are found by identity, which the editor's immutable updates keep for whatever didn't change.
  */
-import type { CanvasPage, Project } from '@plinth/core';
+import type { CanvasPage, Project } from '@opensu/core';
 
 /** What a capability call answers (the registry's result, as plain data) */
 export interface CallReply {

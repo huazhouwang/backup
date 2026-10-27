@@ -2,7 +2,7 @@
  * What each part of a house is drawn in, shared by the editor's 3D view and the house stills: a wall's finish, a floor's material,
  * the materials an element's look gives each kind of its solids, and the theme colors used when a part has no material.
  */
-import { DEFAULT_FINISH, elementTarget, lookRecipe, materialOf, type Built, type Element, type Project, type Solid, type Wall } from '@plinth/core';
+import { DEFAULT_FINISH, elementTarget, lookRecipe, materialOf, type Built, type Element, type Project, type Solid, type Wall } from '@opensu/core';
 import { materialStyle } from '@/lib/materials';
 import { ELEMENT_SIZE } from './units';
 

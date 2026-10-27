@@ -4,7 +4,7 @@
  * plan millimetres, snapped), and anything can offer snap points and snap lines that every tool snaps to: the wall tool, dragging,
  * and whatever a module builds.
  */
-import type { Point } from '@plinth/core';
+import type { Point } from '@opensu/core';
 import { bridge } from './bridge';
 import type { PlanView } from './plan';
 

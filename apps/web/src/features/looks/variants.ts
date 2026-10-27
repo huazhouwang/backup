@@ -2,7 +2,7 @@
  * The variants a look's page shows, like a component's stories: one parameter changed at a time, the others at their defaults.
  * Generated from the declarations (JSON Schema keywords), never written per look.
  */
-import { paramTypes, type ParamDecl, type ParamValue } from '@plinth/core';
+import { paramTypes, type ParamDecl, type ParamValue } from '@opensu/core';
 
 /** Which value a variant shows, for its caption: the range's ends, the default, automatic, or one of a set */
 export type VariantRole = 'min' | 'default' | 'max' | 'auto' | 'value';

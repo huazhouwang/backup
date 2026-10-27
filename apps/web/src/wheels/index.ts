@@ -1,5 +1,5 @@
 /**
- * The wheels (issue 171): ready-made code a canvas page imports as `plinth` instead of rewriting it. The editor bundles this file
+ * The wheels (issue 171): ready-made code a canvas page imports as `opensu` instead of rewriting it. The editor bundles this file
  * (vite.config.ts, `virtual:canvas-wheels`) and inlines it into the sandboxed canvas page. A page may use all of it (start() lays
  * out the default page), parts of it, or none.
  *

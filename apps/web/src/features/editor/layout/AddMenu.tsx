@@ -2,7 +2,7 @@
  * The add palette, as SketchUp's component browser: doors and windows, and the design's furniture types by group. Picking one
  * enters place mode (the plan shows where it goes; a click puts it down). And the hint shown while placing.
  */
-import type { OpeningKind } from '@plinth/core';
+import type { OpeningKind } from '@opensu/core';
 import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';

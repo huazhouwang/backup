@@ -1,6 +1,6 @@
 /**
  * The browser host in Chromium: the worker in an opaque-origin iframe with no network, the deadline, and the watchdog replacing
- * a hung worker. Needs Playwright's Chromium (`npm run test:browser -w @plinth/sandbox`).
+ * a hung worker. Needs Playwright's Chromium (`npm run test:browser -w @opensu/sandbox`).
  */
 import { readFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';

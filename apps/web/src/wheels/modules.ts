@@ -5,7 +5,7 @@
  * listeners) is tracked, so it goes when the module is stopped, replaced or removed; the module may also return a cleanup. A
  * module that throws is reported and, if it was replacing a version that worked, that version runs again.
  */
-import type { CanvasModule } from '@plinth/core';
+import type { CanvasModule } from '@opensu/core';
 import { bridge, myCanvas, onMine, report, setMyData } from './bridge';
 import type { Canvas } from './page';
 import type { ModuleScope } from './protocol';
@@ -159,15 +159,15 @@ export type ModuleSummary = ReturnType<ReturnType<typeof moduleCanvas>['describe
 let loads = 0;
 const loading = new Map<number, { resolve(m: { default?: unknown }): void; reject(e: unknown): void }>();
 const g = globalThis as unknown as Record<string, unknown>;
-g.plinthModuleLoaded = (n: number, m: { default?: unknown }) => (loading.get(n)?.resolve(m), loading.delete(n));
-g.plinthModuleFailed = (n: number, e: unknown) => (loading.get(n)?.reject(e), loading.delete(n));
+g.opensuModuleLoaded = (n: number, m: { default?: unknown }) => (loading.get(n)?.resolve(m), loading.delete(n));
+g.opensuModuleFailed = (n: number, e: unknown) => (loading.get(n)?.reject(e), loading.delete(n));
 function importSource(source: string): Promise<{ default?: unknown }> {
   return new Promise((resolve, reject) => {
     const n = ++loads;
     loading.set(n, { resolve, reject });
     const s = document.createElement('script');
     s.type = 'module';
-    s.textContent = `import(${JSON.stringify(`data:text/javascript;base64,${base64(source)}`)}).then(m => plinthModuleLoaded(${n}, m), e => plinthModuleFailed(${n}, e));`;
+    s.textContent = `import(${JSON.stringify(`data:text/javascript;base64,${base64(source)}`)}).then(m => opensuModuleLoaded(${n}, m), e => opensuModuleFailed(${n}, e));`;
     document.head.appendChild(s);
     s.remove();
   });

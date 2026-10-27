@@ -1,4 +1,4 @@
-import { derived, findObject } from '@plinth/core';
+import { derived, findObject } from '@opensu/core';
 import { CheckIcon, TriangleAlertIcon } from 'lucide-react';
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';

@@ -10,7 +10,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import * as THREE from 'three';
-import { area, findObject, lookRecipe, openingFrames, openingTarget, pointInPolygon, type Point, type Project } from '@plinth/core';
+import { area, findObject, lookRecipe, openingFrames, openingTarget, pointInPolygon, type Point, type Project } from '@opensu/core';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { FOV } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';

@@ -3,11 +3,11 @@
  * (a wasm instance with its own memory) per library, since a library is one author; one script (a context with its own globals)
  * per definition, keyed by kind, id, version and a hash of its source. Neither widgets nor looks choose keys themselves.
  *
- * The sandbox is injected by the app (@plinth/sandbox: the browser's isolated worker, or in place on the server), so core stays
+ * The sandbox is injected by the app (@opensu/sandbox: the browser's isolated worker, or in place on the server), so core stays
  * free of browser and worker code. Its shape is all core needs to know.
  */
 
-/** What core needs of a sandbox (@plinth/sandbox's Sandbox has this shape) */
+/** What core needs of a sandbox (@opensu/sandbox's Sandbox has this shape) */
 export interface ScriptSandbox {
   realm(key: string): {
     script(key: string, source: string): Promise<{ setData(name: string, value: unknown): Promise<void>; call(fn: string, args: unknown[]): Promise<unknown> }>;

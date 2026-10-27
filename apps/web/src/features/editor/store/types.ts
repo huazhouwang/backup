@@ -1,5 +1,5 @@
 /** The editor store's state and actions, and what a project page opens it with */
-import type { Actor, CallResult, OpeningKind, Point, Project, Session, TxResult } from '@plinth/core';
+import type { Actor, CallResult, OpeningKind, Point, Project, Session, TxResult } from '@opensu/core';
 import type { ViewHost, ViewState } from '../agent/view-capabilities';
 import type { Role } from '@/shared/roles';
 

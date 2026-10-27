@@ -1,4 +1,4 @@
-import { designLookOf, lookSizeOf, type LookLibrary } from '@plinth/core';
+import { designLookOf, lookSizeOf, type LookLibrary } from '@opensu/core';
 import { useQuery } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';

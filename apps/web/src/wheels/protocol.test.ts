@@ -1,4 +1,4 @@
-import { createRegistry, migrate, Session } from '@plinth/core';
+import { createRegistry, migrate, Session } from '@opensu/core';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyDiff, diffProject, isEmptyDiff } from './protocol';

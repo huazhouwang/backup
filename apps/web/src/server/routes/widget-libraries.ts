@@ -8,7 +8,7 @@ import {
   WIDGETLIB_FORMAT,
   WIDGETLIB_FORMAT_VERSION,
   type WidgetLibrary,
-} from '@plinth/core';
+} from '@opensu/core';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
@@ -42,7 +42,7 @@ routes.get('/widget-libraries', async c => {
     id: l.id,
     name: uiName(l.name),
     role: 'viewer',
-    owner_name: l.author ?? 'Plinth',
+    owner_name: l.author ?? 'OpenSU',
     widgets: Object.keys(l.widgets).length,
     updated_at: 0,
     builtin: true,

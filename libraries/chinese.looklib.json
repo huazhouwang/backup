@@ -1,6 +1,6 @@
 {
   "$schema": "./looklib.schema.json",
-  "format": "plinth-looks",
+  "format": "opensu-looks",
   "formatVersion": 1,
   "id": "builtin-chinese",
   "name": {"zh": "中式物品", "en": "Chinese pieces"},
@@ -9,7 +9,7 @@
     "en": "A gongfu tea table, an ancestral altar, a brick wood-fired stove, a stone table and drum stools, with red lacquer and gold"
   },
   "version": "1.0.0",
-  "author": "Plinth",
+  "author": "OpenSU",
   "license": "CC-BY-4.0",
   "materials": {
     "lacquer": {

@@ -25,7 +25,7 @@ export function widgetParams(def: Pick<WidgetDef, 'params'>, given: Record<strin
 }
 
 /** The script as run: the widget's own, then an entry point that hands it the project kept in its context */
-const ENTRY = '\n;function __plinth_widget(params, ctx) { return widget(__plinth_project, params, ctx) }\n';
+const ENTRY = '\n;function __opensu_widget(params, ctx) { return widget(__opensu_project, params, ctx) }\n';
 
 const cache = new WeakMap<Project, Map<string, Promise<WidgetResult>>>();
 
@@ -51,7 +51,7 @@ export function runWidget(
   if (!result) {
     result = (async (): Promise<WidgetResult> => {
       try {
-        return { ok: true, items: validateWidgetOutput(await runSandboxed(ref, { __plinth_project: project }, '__plinth_widget', [params, ctx]), def) };
+        return { ok: true, items: validateWidgetOutput(await runSandboxed(ref, { __opensu_project: project }, '__opensu_widget', [params, ctx]), def) };
       } catch (e) {
         return { ok: false, error: e instanceof ScriptError ? { kind: e.kind, message: e.message } : { kind: 'invalid', message: (e as Error).message } };
       }

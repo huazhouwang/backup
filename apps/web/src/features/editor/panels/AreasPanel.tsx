@@ -1,5 +1,5 @@
 /** Gross area per level and usable area per space */
-import { derived } from '@plinth/core';
+import { derived } from '@opensu/core';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { m } from '@/lib/i18n';
 import { fmtArea } from '@/lib/query';

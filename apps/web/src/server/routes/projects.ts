@@ -1,5 +1,5 @@
 /** Projects: the list and creating one; under /projects/:id a project's content, name, thumbnail and versions */
-import { createProject as newProjectData, type Project } from '@plinth/core';
+import { createProject as newProjectData, type Project } from '@opensu/core';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';

@@ -1,5 +1,5 @@
 /** Comment threads on the project and its objects */
-import { findObject } from '@plinth/core';
+import { findObject } from '@opensu/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckIcon, MessageSquareIcon } from 'lucide-react';
 import { useState } from 'react';

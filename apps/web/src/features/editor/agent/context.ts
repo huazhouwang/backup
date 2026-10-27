@@ -1,5 +1,5 @@
 /** What the agent is told about the editor along with each message: project, view, selection, levels, brief. */
-import { findObject } from '@plinth/core';
+import { findObject } from '@opensu/core';
 import type { EditorState } from '@/features/editor/store';
 import type { AgentContext } from './prompt';
 
