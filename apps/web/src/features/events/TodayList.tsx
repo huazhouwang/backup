@@ -2,6 +2,7 @@ import { type Event, hasKnownDuration, startOfLocalDay } from '@bobo/shared'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { useState } from 'react'
 
+import { Bun } from '../../components/ui/Bun'
 import { Chevron } from '../../components/ui/Chevron'
 import { showToast } from '../../components/ui/Toast'
 import { useLocalStore } from '../../db'
@@ -90,7 +91,10 @@ export function TodayList({ events }: { events: readonly Event[] }) {
       <AnimatePresence initial={false} mode="wait" custom={direction}>
         <motion.div key={daysBack} custom={direction} {...slideFromSide}>
           {today.length === 0 && (
-            <p className="text-fg-muted">{daysBack === 0 ? m.todayEmpty() : m.dayEmpty()}</p>
+            <div className="flex items-center gap-3">
+              <Bun mood="asleep" className="size-14" />
+              <p className="m-0 text-fg-muted">{daysBack === 0 ? m.todayEmpty() : m.dayEmpty()}</p>
+            </div>
           )}
           {/* Always mounted, so the first record of the day animates in like the rest. */}
           <ul className="m-0 flex list-none flex-col p-0">

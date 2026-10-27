@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { type ExternalToast, Toaster as SonnerToaster, toast } from 'sonner'
 
+import { Bun } from './Bun'
+
 // Below the status bar, over the top of the page (the baby switcher), so toasts never cover
 // the list at the bottom or the logging buttons; sonner positions the stack itself.
 const top = 'calc(0.75rem + env(safe-area-inset-top))'
@@ -59,7 +61,14 @@ export function showToast(message: string, options: ToastOptions = {}) {
   const external: ExternalToast = {
     id: options.id,
     className: tones[options.tone ?? 'neutral'],
-    icon: options.icon,
+    // Done, or gone wrong: the bun says it too.
+    icon:
+      options.icon ??
+      (options.tone === 'success' ? (
+        <Bun mood="happy" className="size-8" />
+      ) : options.tone === 'error' ? (
+        <Bun mood="oops" className="size-8" />
+      ) : undefined),
     duration: options.duration ?? DEFAULT_DURATION_MS,
     onDismiss: options.onDismiss,
     action: options.action,

@@ -1,5 +1,6 @@
 import { localDateString } from '@bobo/shared'
 
+import { Bun } from '../../components/ui/Bun'
 import { Card } from '../../components/ui/Card'
 import { useLocalStore } from '../../db'
 import { m } from '../../paraglide/messages.js'
@@ -13,6 +14,7 @@ export function BabyOnboarding() {
 
   return (
     <section className="flex flex-col gap-4">
+      <Bun mood="happy" className="size-24 self-center" />
       <h1 className="text-display font-extrabold">{m.onboardingTitle()}</h1>
       <p className="text-fg-muted">{m.onboardingBody()}</p>
       <Card>

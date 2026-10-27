@@ -15,6 +15,7 @@ import { Link } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import { useRef } from 'react'
 
+import { Bun } from '../../components/ui/Bun'
 import { Card, CardTitle } from '../../components/ui/Card'
 import { CheckIcon } from '../../components/ui/CheckIcon'
 import { Chevron } from '../../components/ui/Chevron'
@@ -208,7 +209,11 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
   }
   return (
     <section className="flex flex-col gap-2">
-      <CardTitle small>{m.tipsMilestonesTitle({ months: checkpoint.by })}</CardTitle>
+      <div className="flex items-center justify-between gap-2">
+        <CardTitle small>{m.tipsMilestonesTitle({ months: checkpoint.by })}</CardTitle>
+        {/* All done: the bun cheers on until one is unticked. */}
+        {allDone && <Bun mood="cheer" className="-my-3 size-12" />}
+      </div>
       {/* All ticked off: confetti bursts out from behind the list. */}
       <div ref={list} className="relative">
         <Card className="relative z-10 overflow-hidden px-0 py-0">

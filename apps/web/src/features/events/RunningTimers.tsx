@@ -3,6 +3,7 @@ import { clsx } from 'clsx'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { type FormEvent, useState } from 'react'
 
+import { Bun } from '../../components/ui/Bun'
 import { Button } from '../../components/ui/Button'
 import { Card, type CardTone } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
@@ -129,7 +130,12 @@ function TimerCard({
   return (
     <Card tone={CARD_TONE[kind]} className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <EventIcon {...eventIconProps(event)} className="size-10" />
+        {/* A sleeping baby: the bun sleeps along. */}
+        {kind === 'sleep' ? (
+          <Bun mood="asleep" className="size-10" />
+        ) : (
+          <EventIcon {...eventIconProps(event)} className="size-10" />
+        )}
         <div className="flex min-w-0 flex-1 flex-col">
           <span className={clsx('truncate font-extrabold', TITLE_TONE[kind])}>
             {title(event, kind)}

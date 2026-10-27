@@ -6,6 +6,7 @@ import { AnimatePresence, m as motion } from 'motion/react'
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import { Bun } from '../../components/ui/Bun'
 import { Button } from '../../components/ui/Button'
 import { ChatIcon } from '../../components/ui/ChatIcon'
 import { MicIcon } from '../../components/ui/MicIcon'
@@ -353,7 +354,7 @@ export function TabMic() {
   }
   // Why a recording came to nothing (too short, or not heard), once the overlay has gone.
   useEffect(() => {
-    if (talk.error) showToast(talk.error)
+    if (talk.error) showToast(talk.error, { icon: <Bun mood="oops" className="size-8" /> })
   }, [talk.error])
   // Open: the page behind stays put, even under a sliding finger, and Escape closes it.
   useEffect(() => (open ? lockScroll() : undefined), [open])
@@ -527,6 +528,7 @@ export function TabMic() {
                     {m.voiceHearing()}
                   </span>
                 ) : null}
+                {problem && !pending && <Bun mood="oops" className="size-20" />}
                 <p
                   className={clsx(
                     'm-0 text-[28px] leading-10 font-extrabold wrap-anywhere',
