@@ -5,8 +5,8 @@ export const THEME_STORAGE_KEY = 'bobo.theme'
 
 /** Browser chrome color per theme; must match `--bobo-bg` in app.css. */
 export const THEME_COLORS: Record<ResolvedTheme, string> = {
-  light: '#ffffff',
-  dark: '#131f24',
+  light: '#fffdf8',
+  dark: '#161d38',
 }
 
 export function parseThemePreference(value: unknown): ThemePreference {

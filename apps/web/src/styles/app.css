@@ -7,28 +7,37 @@
  *
  * Accent fills are slightly deeper than Duolingo's so white bold labels reach >= 3:1
  * (WCAG large text). Brighter hues are used for accent text/icons on dark surfaces.
+ *
+ * The palette follows the logo: night blue for the primary, moon yellow for good news,
+ * warm white (light) and the logo's night sky (dark) behind everything.
  */
 :root {
   color-scheme: light;
-  --bobo-bg: #ffffff;
-  --bobo-surface: #f7f7f7;
-  --bobo-border: #e5e5e5;
-  --bobo-fg: #3c3c3c;
-  --bobo-fg-muted: #6b6b6b;
+  --bobo-bg: #fffdf8;
+  --bobo-surface: #f7f3ea;
+  --bobo-border: #ebe4d6;
+  --bobo-fg: #2f3350;
+  --bobo-fg-muted: #5d6380;
   --bobo-on-accent: #ffffff;
 
-  --bobo-primary: #46a302;
-  --bobo-primary-edge: #3a8700;
-  --bobo-primary-soft: #e3f8d3;
-  --bobo-primary-text: #3f9a00;
+  --bobo-primary: #4152b8;
+  --bobo-primary-edge: #2e3c8f;
+  --bobo-primary-soft: #e8ebfa;
+  --bobo-primary-text: #3a4bb0;
+
+  --bobo-moon: #ffc927;
+  --bobo-moon-edge: #e0a800;
+  --bobo-moon-soft: #fff4cc;
+  --bobo-moon-text: #8a6a00;
+  --bobo-on-moon: #4a3a00;
 
   --bobo-feeding: #e07a00;
   --bobo-feeding-edge: #b86400;
   --bobo-feeding-soft: #fff0d9;
   --bobo-feeding-text: #c86d00;
 
-  --bobo-sleep: #a560e8;
-  --bobo-sleep-edge: #8547c4;
+  --bobo-sleep: #b26ef0;
+  --bobo-sleep-edge: #8f4ccf;
   --bobo-sleep-soft: #f4e8ff;
   --bobo-sleep-text: #9a4fe0;
 
@@ -54,9 +63,11 @@
 
   --bobo-note: #6b6b6b;
   --bobo-note-edge: #4f4f4f;
-  --bobo-note-soft: #f0f0f0;
+  --bobo-note-soft: #f0ece3;
   --bobo-note-text: #5c5c5c;
 
+  /* The avatar called green stays green, now that the primary is blue. */
+  --bobo-avatar-green: #46a302;
   --bobo-avatar-pink: #e0569a;
   --bobo-avatar-yellow: #d19b00;
 }
@@ -64,13 +75,17 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bobo-bg: #131f24;
-    --bobo-surface: #1b2a31;
-    --bobo-border: #37464f;
-    --bobo-fg: #f1f7fb;
-    --bobo-fg-muted: #8a9ba3;
-    --bobo-primary-soft: #1f3517;
-    --bobo-primary-text: #58cc02;
+    --bobo-bg: #161d38;
+    --bobo-surface: #1f2848;
+    --bobo-border: #34406a;
+    --bobo-fg: #f1f3fb;
+    --bobo-fg-muted: #a3abc9;
+    --bobo-primary: #5668dc;
+    --bobo-primary-edge: #4152b8;
+    --bobo-primary-soft: #263063;
+    --bobo-primary-text: #9aa8ff;
+    --bobo-moon-soft: #2e2a1a;
+    --bobo-moon-text: #ffd84d;
     --bobo-feeding-soft: #3a2a14;
     --bobo-feeding-text: #ff9600;
     --bobo-sleep-soft: #2f2440;
@@ -83,20 +98,24 @@
     --bobo-pumping-text: #ff7ab8;
     --bobo-medication-soft: #3a3114;
     --bobo-medication-text: #ffc800;
-    --bobo-note-soft: #26343b;
-    --bobo-note-text: #a9b8bf;
+    --bobo-note-soft: #263052;
+    --bobo-note-text: #b0b8d6;
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bobo-bg: #131f24;
-  --bobo-surface: #1b2a31;
-  --bobo-border: #37464f;
-  --bobo-fg: #f1f7fb;
-  --bobo-fg-muted: #8a9ba3;
-  --bobo-primary-soft: #1f3517;
-  --bobo-primary-text: #58cc02;
+  --bobo-bg: #161d38;
+  --bobo-surface: #1f2848;
+  --bobo-border: #34406a;
+  --bobo-fg: #f1f3fb;
+  --bobo-fg-muted: #a3abc9;
+  --bobo-primary: #5668dc;
+  --bobo-primary-edge: #4152b8;
+  --bobo-primary-soft: #263063;
+  --bobo-primary-text: #9aa8ff;
+  --bobo-moon-soft: #2e2a1a;
+  --bobo-moon-text: #ffd84d;
   --bobo-feeding-soft: #3a2a14;
   --bobo-feeding-text: #ff9600;
   --bobo-sleep-soft: #2f2440;
@@ -109,8 +128,8 @@
   --bobo-pumping-text: #ff7ab8;
   --bobo-medication-soft: #3a3114;
   --bobo-medication-text: #ffc800;
-  --bobo-note-soft: #26343b;
-  --bobo-note-text: #a9b8bf;
+  --bobo-note-soft: #263052;
+  --bobo-note-text: #b0b8d6;
 }
 
 @theme inline {
@@ -130,6 +149,11 @@
   --color-primary-edge: var(--bobo-primary-edge);
   --color-primary-soft: var(--bobo-primary-soft);
   --color-primary-text: var(--bobo-primary-text);
+  --color-moon: var(--bobo-moon);
+  --color-moon-edge: var(--bobo-moon-edge);
+  --color-moon-soft: var(--bobo-moon-soft);
+  --color-moon-text: var(--bobo-moon-text);
+  --color-on-moon: var(--bobo-on-moon);
   --color-feeding: var(--bobo-feeding);
   --color-feeding-edge: var(--bobo-feeding-edge);
   --color-feeding-soft: var(--bobo-feeding-soft);
@@ -158,6 +182,7 @@
   --color-note-edge: var(--bobo-note-edge);
   --color-note-soft: var(--bobo-note-soft);
   --color-note-text: var(--bobo-note-text);
+  --color-avatar-green: var(--bobo-avatar-green);
   --color-avatar-pink: var(--bobo-avatar-pink);
   --color-avatar-yellow: var(--bobo-avatar-yellow);
 

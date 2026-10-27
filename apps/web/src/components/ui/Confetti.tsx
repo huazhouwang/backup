@@ -4,6 +4,7 @@ import { prefersReducedMotion } from '../../lib/motion'
 
 /** The app's record colours, flat, as the paper pieces. */
 const COLORS = [
+  'var(--color-moon)',
   'var(--color-primary)',
   'var(--color-feeding)',
   'var(--color-sleep)',

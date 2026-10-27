@@ -219,21 +219,21 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
               return (
                 <li key={item}>
                   {/* The colour change parts a ticked row from the rest; two ticked rows get
-                    a faint green line across, two plain ones the usual divider. */}
+                    a faint yellow line across, two plain ones the usual divider. */}
                   {index > 0 && (
                     <span
                       aria-hidden
                       className={clsx(
                         'block h-0.5',
                         ticked && above
-                          ? 'bg-primary/20'
+                          ? 'bg-moon/30'
                           : ticked || above
                             ? 'bg-transparent'
                             : 'mx-4 bg-border',
                       )}
                     />
                   )}
-                  <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-primary-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
+                  <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-moon-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
                     {item}
                     <input
                       type="checkbox"
@@ -241,8 +241,8 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
                       checked={ticked}
                       onChange={() => tick(item)}
                     />
-                    {/* Ticked: the row turns light green, with a dark green tick. */}
-                    <CheckIcon className="hidden size-6 text-primary-text peer-checked:block" />
+                    {/* Ticked: the row turns moon yellow, good news, with a deep yellow tick. */}
+                    <CheckIcon className="hidden size-6 text-moon-text peer-checked:block" />
                   </label>
                 </li>
               )

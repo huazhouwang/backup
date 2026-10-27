@@ -2,7 +2,7 @@ import type { AvatarColor } from '@bobo/shared'
 import { clsx } from 'clsx'
 
 export const avatarBackground: Record<AvatarColor, string> = {
-  green: 'bg-primary',
+  green: 'bg-avatar-green',
   blue: 'bg-diaper',
   orange: 'bg-feeding',
   purple: 'bg-sleep',
