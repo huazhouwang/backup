@@ -211,6 +211,8 @@
   --text-display--line-height: 34px;
 
   --spacing-tab-bar: 64px;
+  /* How far the microphone and its ring stand above the tab bar (TabMic: -mt-8, -inset-1.5). */
+  --spacing-mic-rise: 38px;
   --spacing-touch: 48px;
   --container-app: 480px;
 }
@@ -259,12 +261,14 @@
   }
 }
 
-/* Room for the fixed tab bar: page content ends above it. */
+/* Room for the fixed tab bar: page content ends above it and the microphone standing out of it. */
 @utility h-tab-bar-safe {
   height: calc(var(--spacing-tab-bar) + env(safe-area-inset-bottom));
 }
 @utility pb-above-tab-bar {
-  padding-bottom: calc(var(--spacing-tab-bar) + 1rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(
+    var(--spacing-tab-bar) + var(--spacing-mic-rise) + 1rem + env(safe-area-inset-bottom)
+  );
 }
 
 @layer base {
