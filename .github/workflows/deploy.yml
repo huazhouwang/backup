@@ -126,6 +126,8 @@ jobs:
             pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-data --output "$schema"
             pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --no-schema --output "$rows"
             { cat "$schema"; echo 'PRAGMA defer_foreign_keys = true;'; cat "$rows"; } > "$dump"
+            # D1 rejects broken references without naming them; this names the tables.
+            python3 -I scripts/check-dump.py "$dump"
             pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$dump" --yes
             rm -f "$schema" "$rows" "$dump"
             ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"
