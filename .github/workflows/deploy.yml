@@ -96,27 +96,33 @@ jobs:
         id: db
         working-directory: apps/api
         run: |
-          db_id() { pnpm exec wrangler d1 list --json | jq -r --arg name "$DB_NAME" '.[] | select(.name == $name) | .uuid'; }
-          id=$(db_id)
+          db_id() { pnpm exec wrangler d1 list --json | jq -r --arg name "$1" '.[] | select(.name == $name) | .uuid'; }
+          id=$(db_id "$DB_NAME")
           if [ -z "$id" ]; then
             # Asia-Pacific is closest to the app's first (Chinese-speaking) users.
             pnpm exec wrangler d1 create "$DB_NAME" --location apac
-            id=$(db_id)
-            former=$(DB_NAME=$FORMER_DB_NAME db_id)
-            if [ -n "$FORMER_DB_NAME" ] && [ -n "$former" ]; then
-              echo "copied=true" >> "$GITHUB_OUTPUT"
-              # Everything in the former database, migrations table included, so the
-              # migrations step finds nothing left to apply.
-              dump="$RUNNER_TEMP/former.sql"
-              pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --output "$dump"
-              pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$dump" --yes
-              rm -f "$dump"
-              ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"
-            fi
+            id=$(db_id "$DB_NAME")
           fi
-          # The repository keeps a placeholder; account-specific IDs stay out of git.
+          # The repository keeps a placeholder; account-specific IDs stay out of git. Filled
+          # in first: wrangler finds DB_NAME by the ID in this file.
           sed -i "s/00000000-0000-0000-0000-000000000000/$id/" ../../wrangler.jsonc
           grep -q "$id" ../../wrangler.jsonc
+
+          # A database that has never been migrated starts as a copy of the former one, if
+          # there is one; also when an earlier attempt created it and stopped.
+          migrated=$(pnpm exec wrangler d1 execute "$DB_NAME" --remote --json --command \
+            "select count(*) as n from sqlite_master where type = 'table' and name = 'd1_migrations'" |
+            jq -r '.[0].results[0].n')
+          if [ "$migrated" = 0 ] && [ -n "$FORMER_DB_NAME" ] && [ -n "$(db_id "$FORMER_DB_NAME")" ]; then
+            echo "copied=true" >> "$GITHUB_OUTPUT"
+            # Everything in the former database, migrations table included, so the
+            # migrations step finds nothing left to apply.
+            dump="$RUNNER_TEMP/former.sql"
+            pnpm exec wrangler d1 export "$FORMER_DB_NAME" --remote --output "$dump"
+            pnpm exec wrangler d1 execute "$DB_NAME" --remote --file "$dump" --yes
+            rm -f "$dump"
+            ./scripts/compare-databases.sh "$FORMER_DB_NAME" "$DB_NAME"
+          fi
 
       - name: Apply database migrations
         if: steps.config.outputs.ready == 'true'
