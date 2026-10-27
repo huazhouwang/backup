@@ -145,7 +145,8 @@ export function DurationForm({
       ...('kind' in record ? {} : record),
       ...checkTimes(times, current, true),
     }
-    const { startAt: from, endAt } = resolveTimes(times, current)
+    // The times the form shows: "1 小时前" counts from the same minute.
+    const { startAt: from, endAt } = resolveTimes(times, now)
     const to = endAt ?? from
     if (!next.start && !next.end && !next.duration) {
       if (kind === 'sleep') {

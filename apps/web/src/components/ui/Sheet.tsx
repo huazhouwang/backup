@@ -2,7 +2,7 @@ import { clsx } from 'clsx'
 import { type PointerEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
 
 import { useBounce } from '../../lib/bounce'
-import { useVisibleArea } from '../../lib/keyboard'
+import { useFieldAboveKeyboard, useVisibleArea } from '../../lib/keyboard'
 import { prefersReducedMotion } from '../../lib/motion'
 import { lockScroll } from '../../lib/scroll-lock'
 
@@ -132,6 +132,8 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
 
   // The sheet rests on the iOS keyboard instead of sitting behind it, and fits above it.
   useVisibleArea(ref, shownInDialog)
+  // And the field being typed in stays in sight above the keyboard's toolbar.
+  useFieldAboveKeyboard(ref, shownInDialog)
 
   // Dragging the header pulls the sheet down; far or fast enough, it closes.
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {

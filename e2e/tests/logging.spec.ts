@@ -75,3 +75,22 @@ test('edits a finished record by its start, duration and end', async ({ page }) 
   await sheetClosed(page)
   await expect(todayRows(page).first()).toContainText('30 分钟')
 })
+
+test('logs afterwards the times on the screen, also once the minute has turned', async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date('2026-10-27T10:05:20+08:00') })
+  await onboard(page)
+  await page.locator('main').getByRole('button', { name: '喂养', exact: true }).click()
+  await sheet(page).getByText('瓶喂', { exact: true }).click()
+  await sheet(page).getByText('120', { exact: true }).click()
+  await sheet(page).getByText('1 小时前', { exact: true }).click()
+  const end = sheet(page).getByLabel('结束时间')
+  await expect(end).toHaveValue(/T09:05$/)
+  // The minute turns while the sheet is open: what it shows is what gets saved.
+  await page.clock.fastForward(50_000)
+  const shown = (await end.inputValue()).slice(-5)
+  await sheet(page).getByRole('button', { name: '保存' }).click()
+  await sheetClosed(page)
+  await expect(todayRows(page).first()).toContainText(shown)
+})
