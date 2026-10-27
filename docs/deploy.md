@@ -48,10 +48,10 @@ Secrets:
 
 Variables:
 
-| Name         | Required             | Value                                                                               |
-| ------------ | -------------------- | ----------------------------------------------------------------------------------- |
-| `APP_URL`    | with a custom domain | e.g. `https://bobo.example.com`; defaults to `https://bobo.<subdomain>.workers.dev` |
-| `EMAIL_FROM` | with Resend          | e.g. `Lullabo <noreply@example.com>`, on a domain verified in Resend                |
+| Name         | Required             | Value                                                                                     |
+| ------------ | -------------------- | ----------------------------------------------------------------------------------------- |
+| `APP_URL`    | with a custom domain | e.g. `https://lullabo.example.com`; defaults to `https://lullabo.<subdomain>.workers.dev` |
+| `EMAIL_FROM` | with Resend          | e.g. `Lullabo <noreply@example.com>`, on a domain verified in Resend                      |
 
 Changing `BETTER_AUTH_SECRET` later signs everyone out.
 
@@ -62,11 +62,31 @@ Run **Actions → Deploy → Run workflow**. The first run creates the `bobo-db`
 
 ## Optional: a custom domain
 
-1. In Cloudflare, open the `bobo` Worker → **Settings → Domains & Routes → Add → Custom domain**
+1. In Cloudflare, open the `lullabo` Worker → **Settings → Domains & Routes → Add → Custom domain**
    (the domain must be on Cloudflare DNS).
-2. Set the `APP_URL` variable to it (e.g. `https://bobo.example.com`) and re-run the deploy.
+2. Set the `APP_URL` variable to it (e.g. `https://lullabo.example.com`) and re-run the deploy.
 
 Sign-in uses `APP_URL` as the app's address. The workers.dev address keeps working too.
+
+## Moving to a new address
+
+To move the app to another domain, or after renaming the Worker:
+
+1. Attach the new domain to the Worker as above, and keep the old one attached too: Siri
+   shortcuts already installed keep calling it.
+2. Set `APP_URL` to the new address and re-run the deploy. At the old address the app
+   still runs (signed in), and a notice says where it lives now; sign-in itself works only
+   at the new one.
+3. Add `<new address>/api/auth/callback/google` to Google sign-in's redirect URIs.
+
+Passkeys belong to an address: everyone adds theirs again at the new one. Notifications
+are turned on again there too.
+
+Renaming the Worker (`name` in `wrangler.jsonc`) deploys a new Worker next to the old
+one; move the domains over. The old one may stay, as a fallback: while both use the same
+database, a reminder is still sent once (each run claims it first). Before the database
+moves too, remove the old Worker's Cron Trigger and turn off its workers.dev route, or it
+would keep sending reminders, and taking records, from the old database.
 
 ## Optional: Google sign-in
 

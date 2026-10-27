@@ -26,7 +26,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       DB_NAME: bobo-db
-      WORKER_NAME: bobo
+      WORKER_NAME: lullabo
     steps:
       - name: Check configuration
         id: config
@@ -59,10 +59,6 @@ jobs:
         if: steps.config.outputs.ready == 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Build the web app
-        if: steps.config.outputs.ready == 'true'
-        run: pnpm --filter @lullabo/web build
-
       - name: Resolve the app URL
         if: steps.config.outputs.ready == 'true'
         id: url
@@ -84,6 +80,13 @@ jobs:
           if [ -n "$workers_dev" ] && [ "$workers_dev" != "$url" ]; then
             echo "extra=$workers_dev" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Build the web app
+        if: steps.config.outputs.ready == 'true'
+        env:
+          # Copies at other addresses (the one it had before, workers.dev) point people here.
+          APP_URL: ${{ steps.url.outputs.url }}
+        run: pnpm --filter @lullabo/web build
 
       - name: Create the database if needed
         if: steps.config.outputs.ready == 'true'
@@ -135,13 +138,20 @@ jobs:
         if: steps.config.outputs.ready == 'true'
         env:
           APP_URL: ${{ steps.url.outputs.url }}
+          WORKERS_DEV: ${{ steps.url.outputs.extra }}
         run: |
+          ok() { curl -fsS "$1/api/health" | grep -q '"ok":true'; }
           for attempt in 1 2 3 4 5; do
-            if curl -fsS "$APP_URL/api/health" | grep -q '"ok":true'; then
+            if ok "$APP_URL"; then
               echo "### Deployed to $APP_URL" >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             sleep 5
           done
+          # A domain not yet attached to this Worker (a new name or a move): it runs all the same.
+          if [ -n "$WORKERS_DEV" ] && ok "$WORKERS_DEV"; then
+            echo "::warning::$APP_URL does not answer yet; attach it to the $WORKER_NAME Worker (docs/deploy.md). $WORKERS_DEV is up."
+            exit 0
+          fi
           echo "::error::$APP_URL/api/health did not answer ok"
           exit 1

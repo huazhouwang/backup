@@ -1,6 +1,6 @@
 {
   "$schema": "apps/api/node_modules/wrangler/config-schema.json",
-  "name": "bobo",
+  "name": "lullabo",
   "main": "apps/api/src/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],

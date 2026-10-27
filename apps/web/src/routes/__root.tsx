@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-router'
 import { type ReactNode, Suspense, useEffect, useRef } from 'react'
 
+import { MovedNotice } from '../components/MovedNotice'
 import { TabBar } from '../components/TabBar'
 import { Toaster } from '../components/ui/Toast'
 import { UpdatePrompt } from '../components/UpdatePrompt'
@@ -125,6 +126,7 @@ function RootLayout() {
         <KeyboardKeeper />
         <Toaster />
         {hydrated && <UpdatePrompt />}
+        {hydrated && <MovedNotice />}
         {hydrated && (
           <Suspense>
             <SyncRunner />
