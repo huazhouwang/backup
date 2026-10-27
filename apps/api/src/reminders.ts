@@ -77,7 +77,7 @@ export function reminderMessage(reminder: DueReminder, now: number): PushMessage
   }
 }
 
-/** Cron entry point: sends due reminders and marks them sent. */
+/** Cron entry point: claims due reminders and sends the ones it claimed. */
 export async function dispatchReminders(
   env: Pick<Env, 'DB' | 'BETTER_AUTH_URL'>,
   now: number,
@@ -89,34 +89,43 @@ export async function dispatchReminders(
 
   const targets = await subscriptionsOf(db, [...new Set(due.map((reminder) => reminder.userId))])
   const keys = targets.length > 0 ? await getVapidKeys(db) : undefined
-  const sends: Promise<PushResult>[] = []
-  const sentTo: PushTarget[] = []
-  const handled: DueReminder[] = []
+  // What this run takes on, within its share of pushes.
+  const planned: { reminder: DueReminder; devices: PushTarget[] }[] = []
+  let planSends = 0
   for (const reminder of due) {
     const devices = keys ? targets.filter((target) => target.userId === reminder.userId) : []
     // The first always goes, so a user with many devices is never stuck.
-    if (handled.length > 0 && sends.length + devices.length > MAX_SENDS) break
-    handled.push(reminder)
-    const message = reminderMessage(reminder, now)
-    for (const target of devices) {
-      if (!keys) continue
-      sentTo.push(target)
-      sends.push(sendPush(target, message, keys, env.BETTER_AUTH_URL, now, fetcher))
-    }
+    if (planned.length > 0 && planSends + devices.length > MAX_SENDS) break
+    planned.push({ reminder, devices })
+    planSends += devices.length
   }
-  const results = await Promise.all(sends)
 
-  // Marked even without a device to send to, so each gap is considered once; reminders left
-  // for the next run stay unmarked.
-  await db.batch(
-    handled.map((reminder) =>
+  // Claimed before sending, so two runs at once (an overlap, a retry, two Workers while one
+  // replaces the other) never send the same reminder twice: only the run whose update
+  // changed the row sends it. Claimed even without a device, so each gap is considered
+  // once; reminders left for the next run stay unclaimed.
+  const claims = await db.batch(
+    planned.map(({ reminder }) =>
       db
         .prepare(
-          'update reminders set fired_for = ? where user_id = ? and baby_id = ? and kind = ?',
+          `update reminders set fired_for = ?1
+           where user_id = ?2 and baby_id = ?3 and kind = ?4 and (fired_for is null or fired_for < ?1)`,
         )
         .bind(reminder.lastAt, reminder.userId, reminder.babyId, reminder.kind),
     ),
   )
+  const sends: Promise<PushResult>[] = []
+  const sentTo: PushTarget[] = []
+  planned.forEach(({ reminder, devices }, index) => {
+    if (!keys || claims[index]?.meta.changes !== 1) return
+    const message = reminderMessage(reminder, now)
+    for (const target of devices) {
+      sentTo.push(target)
+      sends.push(sendPush(target, message, keys, env.BETTER_AUTH_URL, now, fetcher))
+    }
+  })
+  const results = await Promise.all(sends)
+
   await removeGone(db, sentTo, results)
   return results.filter((result) => result === 'sent').length
 }

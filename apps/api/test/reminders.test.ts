@@ -243,6 +243,27 @@ describe('reminders', () => {
     expect(await dispatchReminders(t.env, now + 5 * HOUR + 240_000, pushService().fetcher)).toBe(1)
   })
 
+  it('sends a reminder once when two runs find it due at the same time', async () => {
+    const b = baby()
+    // The user's devices are those subscribed in the tests above.
+    await send('POST', '/api/sync/push', { babies: [b], events: [feeding(b.id, now - HOUR)] })
+    await send('PUT', '/api/reminders', {
+      babyId: b.id,
+      kind: 'feeding',
+      intervalMinutes: 120,
+      enabled: true,
+    })
+    // Two Workers' crons, or an overlapping retry, in the same minute.
+    const first = pushService()
+    const second = pushService()
+    await Promise.all([
+      dispatchReminders(t.env, now + HOUR + 60_000, first.fetcher),
+      dispatchReminders(t.env, now + HOUR + 60_000, second.fetcher),
+    ])
+    // One of them sends it, to every device; the other sends nothing.
+    expect([first.sent.length > 0, second.sent.length > 0].filter(Boolean)).toHaveLength(1)
+  })
+
   it("doesn't notify for a gap that was already overdue when the reminder was set", async () => {
     const b = baby()
     await send('POST', '/api/sync/push', { babies: [b], events: [feeding(b.id, now - 4 * HOUR)] })
