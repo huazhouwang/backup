@@ -84,6 +84,12 @@ export function Workspace() {
     if (ask) setTab('chat');
   }, [ask]);
 
+  // On phones, a house picked in the chat goes up behind the sheet: put the sheet away to watch it (issue 188)
+  const justBuilt = useEditor(s => s.justBuilt);
+  useEffect(() => {
+    if (justBuilt && mobile) setSheet(false);
+  }, [justBuilt]);
+
   // On phones, open the properties panel when an object is selected
   const sel = view.selection[0];
   useEffect(() => {

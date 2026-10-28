@@ -255,7 +255,7 @@ export function ChatPanel() {
               title={blank ? m.chat_empty_title_blank() : m.chat_empty_title()}
               description={blank ? m.chat_empty_description_blank() : m.chat_empty_description()}
             >
-              <div className="mt-3 flex flex-col gap-2">
+              <div className="mt-3 flex flex-col gap-2" hidden={!!justBuilt}>
                 {(blank ? SUGGESTIONS_BLANK : SUGGESTIONS)
                   .map(suggestion => suggestion())
                   .map(s => (
