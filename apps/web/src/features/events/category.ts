@@ -1,44 +1,28 @@
 import type { Event } from '@lullabo/shared'
+import type { ButtonTone } from '@lullabo/ui/button'
 
-import type { ButtonTone } from '../../components/ui/Button'
 import { m } from '../../paraglide/messages.js'
 
 /** One per event type; the unit for titles, colors, icons and timeline lanes. */
 export type Category = Event['type']
 
-export const categoryTitle: Record<Category, () => string> = {
-  feeding: m.categoryFeeding,
-  sleep: m.categorySleep,
-  diaper: m.categoryDiaper,
-  pumping: m.categoryPumping,
-  temperature: m.categoryTemperature,
-  medication: m.categoryMedication,
-  note: m.categoryNote,
-  growth: m.categoryGrowth,
+/** How each type looks: its title, its colour as a button, and the fill of its icon and dot. */
+interface CategoryLook {
+  title: () => string
+  tone: ButtonTone
+  dot: string
 }
 
-// Colors are full class names so Tailwind can find them; keep these maps side by side.
-export const categoryTone: Record<Category, ButtonTone> = {
-  feeding: 'feeding',
-  sleep: 'sleep',
-  diaper: 'diaper',
-  pumping: 'pumping',
-  temperature: 'danger',
-  medication: 'medication',
-  note: 'note',
-  growth: 'primary',
-}
-
-/** Fill of a type's icon badge and timeline dot. */
-export const categoryDot: Record<Category, string> = {
-  feeding: 'bg-feeding',
-  sleep: 'bg-sleep',
-  diaper: 'bg-diaper',
-  pumping: 'bg-pumping',
-  temperature: 'bg-danger',
-  medication: 'bg-medication',
-  note: 'bg-note',
-  growth: 'bg-primary',
+// Colours are full class names so Tailwind can find them.
+export const CATEGORY_LOOK: Record<Category, CategoryLook> = {
+  feeding: { title: m.categoryFeeding, tone: 'feeding', dot: 'bg-feeding' },
+  sleep: { title: m.categorySleep, tone: 'sleep', dot: 'bg-sleep' },
+  diaper: { title: m.categoryDiaper, tone: 'diaper', dot: 'bg-diaper' },
+  pumping: { title: m.categoryPumping, tone: 'pumping', dot: 'bg-pumping' },
+  temperature: { title: m.categoryTemperature, tone: 'destructive', dot: 'bg-destructive' },
+  medication: { title: m.categoryMedication, tone: 'medication', dot: 'bg-medication' },
+  note: { title: m.categoryNote, tone: 'note', dot: 'bg-note' },
+  growth: { title: m.categoryGrowth, tone: 'primary', dot: 'bg-primary' },
 }
 
 /** Event types logged from the "more" sheet rather than the three big buttons. */

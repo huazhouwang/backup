@@ -1,6 +1,6 @@
+import { Input } from '@lullabo/ui/input'
 import { useState } from 'react'
 
-import { Input } from '../../components/ui/Input'
 import { useOptimisticMutation } from '../../lib/optimistic'
 import { m } from '../../paraglide/messages.js'
 import { type VoiceSettings, voiceApi } from './api'
@@ -28,7 +28,7 @@ export function PhraseInput({ settings }: { settings: VoiceSettings }) {
           else if (next !== settings.phrase) save.mutate(next)
         }}
       />
-      <p className="m-0 text-fg-muted">{m.voiceSay({ phrase: settings.phrase })}</p>
+      <p className="m-0 text-muted-foreground">{m.voiceSay({ phrase: settings.phrase })}</p>
     </div>
   )
 }

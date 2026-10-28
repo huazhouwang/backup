@@ -1,9 +1,9 @@
 import { MINUTE } from '@lullabo/shared'
+import { FormError } from '@lullabo/ui/form-error'
+import { Input } from '@lullabo/ui/input'
+import { type ChipTone, ChipGroup } from '@lullabo/ui/toggle-chip'
 import { useState } from 'react'
 
-import { FormError } from '../../components/ui/FormError'
-import { Input } from '../../components/ui/Input'
-import { type ChipTone, ChipGroup } from '../../components/ui/ToggleChip'
 import { m } from '../../paraglide/messages.js'
 import { durationLabel } from './duration-label'
 

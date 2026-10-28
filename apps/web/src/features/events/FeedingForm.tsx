@@ -1,7 +1,7 @@
 import type { Event } from '@lullabo/shared'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { type ReactNode, useState } from 'react'
 
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { m } from '../../paraglide/messages.js'
 import { DurationForm } from './DurationForm'
 

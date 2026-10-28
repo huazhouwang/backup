@@ -1,12 +1,12 @@
 import { tipById } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { NoticeCard } from '@lullabo/ui/card'
+import { cn } from '@lullabo/ui/utils'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { clsx } from 'clsx'
 
-import { Button } from '../../components/ui/Button'
-import { NoticeCard } from '../../components/ui/Card'
-import { ChatIcon } from '../../components/ui/ChatIcon'
-import { Chevron } from '../../components/ui/Chevron'
-import { TopicIcon } from '../../components/ui/TopicIcon'
+import { ChatIcon } from '../../components/icons/ChatIcon'
+import { Chevron } from '../../components/icons/Chevron'
+import { TopicIcon } from '../../components/icons/TopicIcon'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { TOPIC_STYLE } from './topic-style'
@@ -32,7 +32,7 @@ export function TipDetail({ tipId }: { tipId: string }) {
   const back = (
     <Link
       to="/tips"
-      className="flex min-h-touch items-center gap-1 self-start font-bold text-fg-muted"
+      className="flex min-h-touch items-center gap-1 self-start font-bold text-muted-foreground"
     >
       <Chevron direction="left" />
       {m.tabTips()}
@@ -52,10 +52,10 @@ export function TipDetail({ tipId }: { tipId: string }) {
   return (
     <article className="flex flex-col gap-5">
       {back}
-      <header className={clsx('flex flex-col gap-2 rounded-xl p-5', style.card)}>
-        <TopicIcon topic={tip.topic} className={clsx('size-12', style.icon)} />
-        <h1 className={clsx('m-0 text-title font-extrabold', style.text)}>{tip.title}</h1>
-        <p className="m-0 text-fg-muted">{tip.teaser}</p>
+      <header className={cn('flex flex-col gap-2 rounded-xl p-5', style.card)}>
+        <TopicIcon topic={tip.topic} className={cn('size-12', style.icon)} />
+        <h1 className={cn('m-0 text-title font-extrabold', style.text)}>{tip.title}</h1>
+        <p className="m-0 text-muted-foreground">{tip.teaser}</p>
       </header>
       <section className="flex flex-col gap-2">
         <h2 className="m-0 text-body font-extrabold">{m.tipWhat()}</h2>
@@ -64,9 +64,9 @@ export function TipDetail({ tipId }: { tipId: string }) {
       {tip.signs && <List title={m.tipSigns()} items={tip.signs} />}
       <List title={m.tipTodo()} items={tip.todo} />
       {tip.doctor && (
-        <section className="flex flex-col gap-1.5 rounded-xl bg-danger-soft p-4">
-          <h2 className="m-0 text-body font-extrabold text-danger-text">{m.tipDoctor()}</h2>
-          <p className="m-0 text-danger-text">{tip.doctor}</p>
+        <section className="flex flex-col gap-1.5 rounded-xl bg-destructive-soft p-4">
+          <h2 className="m-0 text-body font-extrabold text-destructive-text">{m.tipDoctor()}</h2>
+          <p className="m-0 text-destructive-text">{tip.doctor}</p>
         </section>
       )}
       {userId && (
@@ -75,7 +75,9 @@ export function TipDetail({ tipId }: { tipId: string }) {
           {m.tipAskMore()}
         </Button>
       )}
-      <p className="m-0 text-caption text-fg-muted">{m.tipSource({ source: tip.source })}</p>
+      <p className="m-0 text-caption text-muted-foreground">
+        {m.tipSource({ source: tip.source })}
+      </p>
     </article>
   )
 }

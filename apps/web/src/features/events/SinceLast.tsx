@@ -1,6 +1,6 @@
 import { type Event, MINUTE, isRunning } from '@lullabo/shared'
+import { RollingText } from '@lullabo/ui/rolling-text'
 
-import { RollingText } from '../../components/ui/RollingText'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { durationLabel } from './duration-label'
@@ -42,8 +42,8 @@ export function SinceLast({ events }: { events: readonly Event[] }) {
   return (
     <dl className="m-0 grid grid-cols-3 gap-2">
       {TILES.map((tile) => (
-        <div key={tile.category} className="flex flex-col gap-0.5 rounded-lg bg-surface px-3 py-2">
-          <dt className="flex items-center gap-1 whitespace-nowrap text-caption text-fg-muted">
+        <div key={tile.category} className="flex flex-col gap-0.5 rounded-lg bg-muted px-3 py-2">
+          <dt className="flex items-center gap-1 whitespace-nowrap text-caption text-muted-foreground">
             <EventIcon kind={tile.icon} className="size-4" />
             {tile.label()}
           </dt>

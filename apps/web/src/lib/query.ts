@@ -1,5 +1,6 @@
-import { QueryClient } from '@tanstack/react-query'
+import { type FetchQueryOptions, QueryClient } from '@tanstack/react-query'
 
+import { isSignedIn } from '../db'
 import { HttpError } from './api'
 
 /**
@@ -19,4 +20,21 @@ export function createQueryClient() {
       mutations: { retry: false },
     },
   })
+}
+
+/** Query meta for data kept on the device across reloads and offline (persist-queries.ts). */
+export const PERSIST = { persist: true }
+
+/**
+ * For a route loader: starts loading these for a signed-in user, not awaited, so the page
+ * opens at once and finds the data on its way. Says whether the user is signed in.
+ */
+export async function prefetchWhenSignedIn(
+  client: QueryClient,
+  // oxlint-disable-next-line typescript/no-explicit-any -- any query's options
+  ...queries: FetchQueryOptions<any, any, any, any>[]
+): Promise<boolean> {
+  if (!(await isSignedIn())) return false
+  for (const query of queries) void client.prefetchQuery(query)
+  return true
 }

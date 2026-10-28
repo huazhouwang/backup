@@ -68,6 +68,19 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindDefinition> = {
   note: instant,
 }
 
+/**
+ * The kinds timed as a duration, in RECORD_KINDS order: they run as a timer or are logged
+ * with how long they took.
+ */
+export const DURATION_KINDS = [
+  'breast',
+  'bottle',
+  'solids',
+  'sleep',
+  'pumping',
+] as const satisfies readonly RecordKind[]
+export type DurationKind = (typeof DURATION_KINDS)[number]
+
 export function recordKind(event: Pick<Event, 'type' | 'data'>): RecordKind {
   if (event.type !== 'feeding') return event.type
   // A Pick of the union doesn't tie `data` to `type`; tell the feeds apart by their fields.

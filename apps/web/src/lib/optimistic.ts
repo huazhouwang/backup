@@ -1,3 +1,4 @@
+import { showToast } from '@lullabo/ui/toast'
 import {
   type MutationOptions,
   type QueryClient,
@@ -6,7 +7,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-import { showToast } from '../components/ui/Toast'
 import { m } from '../paraglide/messages.js'
 
 interface OptimisticOptions<TData, TVariables> {

@@ -1,8 +1,8 @@
+import { Card } from '@lullabo/ui/card'
 import { createFileRoute } from '@tanstack/react-router'
 
-import { BackLink } from '../components/SettingsLayout'
-import { Card } from '../components/ui/Card'
 import { FamilyDetail } from '../features/family/FamilyDetail'
+import { BackLink } from '../features/settings/SettingsLayout'
 import { m } from '../paraglide/messages.js'
 import { useAccess } from '../sync/use-access'
 
@@ -22,7 +22,7 @@ function FamilyPage() {
         <FamilyDetail key={family.id} family={family} userId={userId} />
       ) : (
         <Card>
-          <p className="text-fg-muted">{m.familyNotFound()}</p>
+          <p className="text-muted-foreground">{m.familyNotFound()}</p>
         </Card>
       )}
     </section>

@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 
-import { ErrorPage, NotFoundPage } from './components/RouteFallback'
+import { ErrorPage, NotFoundPage } from './app/RouteFallback'
 import { createQueryClient } from './lib/query'
 import { routeTree } from './routeTree.gen'
 

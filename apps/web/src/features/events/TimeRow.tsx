@@ -1,7 +1,7 @@
-import { clsx } from 'clsx'
+import { FormError } from '@lullabo/ui/form-error'
+import { cn } from '@lullabo/ui/utils'
 
-import { EditIcon } from '../../components/ui/EditIcon'
-import { FormError } from '../../components/ui/FormError'
+import { EditIcon } from '../../components/icons/EditIcon'
 import { m } from '../../paraglide/messages.js'
 import { formatDayTime, fromDateTimeLocal, toDateTimeLocal } from './time'
 
@@ -26,17 +26,17 @@ export function TimeRow({
   return (
     <div className="flex flex-col gap-1">
       <div
-        className={clsx(
-          'relative flex min-h-touch items-center gap-3 rounded-lg border-2 bg-surface px-4',
+        className={cn(
+          'relative flex min-h-touch items-center gap-3 rounded-lg border-2 bg-muted px-4',
           'has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-diaper',
-          error ? 'border-danger' : 'border-border',
+          error ? 'border-destructive' : 'border-border',
         )}
       >
-        <span className="font-bold text-fg-muted">{label}</span>
+        <span className="font-bold text-muted-foreground">{label}</span>
         <span className="flex-1 text-right font-extrabold tabular-nums">
           {at === null ? m.timeNotRecorded() : formatDayTime(at, now)}
         </span>
-        <EditIcon className="size-5 text-primary-text" />
+        <EditIcon className="size-5 text-accent-foreground" />
         {/* Transparent over the row: a tap reaches the native picker on every platform. */}
         <input
           type="datetime-local"

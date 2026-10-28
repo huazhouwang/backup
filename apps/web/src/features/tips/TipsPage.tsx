@@ -1,3 +1,4 @@
+import { Checkbox } from '@base-ui/react/checkbox'
 import {
   type Baby,
   STAGES,
@@ -10,27 +11,27 @@ import {
   stageFor,
   tipById,
 } from '@lullabo/shared'
+import { Bun } from '@lullabo/ui/bun'
+import { Card, CardTitle } from '@lullabo/ui/card'
+import { useConfetti } from '@lullabo/ui/confetti'
+import { ChipGroup } from '@lullabo/ui/toggle-chip'
+import { cn } from '@lullabo/ui/utils'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { clsx } from 'clsx'
 import { useRef } from 'react'
 
-import { Bun } from '../../components/ui/Bun'
-import { Card, CardTitle } from '../../components/ui/Card'
-import { CheckIcon } from '../../components/ui/CheckIcon'
-import { Chevron } from '../../components/ui/Chevron'
-import { useConfetti } from '../../components/ui/Confetti'
-import { ChipGroup } from '../../components/ui/ToggleChip'
-import { TopicIcon } from '../../components/ui/TopicIcon'
+import { CheckIcon } from '../../components/icons/CheckIcon'
+import { Chevron } from '../../components/icons/Chevron'
+import { TopicIcon } from '../../components/icons/TopicIcon'
 import { playCue } from '../../lib/cues'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { useBabyEvents } from '../events/use-events'
 import { typingDots } from '../voice/ChangingText'
-import { tipsQueries } from './api'
 import { type Comparison, compareWithUsual } from './compare'
 import { useMilestoneChecks } from './milestone-checks'
+import { tipsQueries } from './queries'
 import { TOPIC_STYLE } from './topic-style'
 
 /**
@@ -76,7 +77,7 @@ export function TipsPage({
       <Milestones stage={stage} babyId={baby.id} />
       <Tips stage={stage} />
       <Doctor stage={stage} />
-      <p className="m-0 text-caption text-fg-muted">{m.tipsSources()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.tipsSources()}</p>
     </div>
   )
 }
@@ -97,17 +98,17 @@ function Observation({ baby, day }: { baby: Baby; day: string }) {
     <Card as="section" className="flex flex-col gap-2">
       <CardTitle small>{m.tipsObservationTitle()}</CardTitle>
       {isPending ? (
-        <p className="m-0 flex items-center gap-2 text-fg-muted">
+        <p className="m-0 flex items-center gap-2 text-muted-foreground">
           {typingDots}
           {m.tipsObservationLoading()}
         </p>
       ) : data?.text ? (
         <>
           <p className="m-0">{data.text}</p>
-          <p className="m-0 text-caption text-fg-muted">{m.tipsObservationAi()}</p>
+          <p className="m-0 text-caption text-muted-foreground">{m.tipsObservationAi()}</p>
         </>
       ) : (
-        <p className="m-0 text-fg-muted">{m.tipsObservationSparse()}</p>
+        <p className="m-0 text-muted-foreground">{m.tipsObservationSparse()}</p>
       )}
     </Card>
   )
@@ -129,16 +130,16 @@ function ComparisonRow({ item }: { item: Comparison }) {
             ? m.tipsRecordsMilk({ ml: item.value })
             : m.tipsRecordsSleep({ hours: item.value })}
         </span>
-        <span className="text-caption text-fg-muted">
+        <span className="text-caption text-muted-foreground">
           {m.tipsRecordsUsual({ low, high, days: item.days })}
           {item.verdict === 'below' && ` ${m.tipsVerdictBelowHint()}`}
         </span>
       </div>
       <span
-        className={clsx(
+        className={cn(
           'shrink-0 rounded-full px-2.5 py-1 text-caption font-extrabold',
           item.verdict === 'usual'
-            ? 'bg-primary-soft text-primary-text'
+            ? 'bg-accent text-accent-foreground'
             : 'bg-medication-soft text-medication-text',
         )}
       >
@@ -163,7 +164,7 @@ function Records({ baby, now }: { baby: Baby; now: number }) {
           ))}
         </ul>
       ) : (
-        <p className="m-0 text-fg-muted">{m.tipsRecordsNone()}</p>
+        <p className="m-0 text-muted-foreground">{m.tipsRecordsNone()}</p>
       )}
     </Card>
   )
@@ -228,7 +229,7 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
                   {index > 0 && (
                     <span
                       aria-hidden
-                      className={clsx(
+                      className={cn(
                         'block h-0.5',
                         ticked && above
                           ? 'bg-moon/30'
@@ -240,14 +241,13 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
                   )}
                   <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2 font-bold transition-colors has-checked:bg-moon-soft has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-primary">
                     {item}
-                    <input
-                      type="checkbox"
-                      className="peer sr-only"
+                    <Checkbox.Root
                       checked={ticked}
-                      onChange={() => tick(item)}
+                      onCheckedChange={() => tick(item)}
+                      className="sr-only"
                     />
                     {/* Ticked: the row turns moon yellow, good news, with a deep yellow tick. */}
-                    <CheckIcon className="hidden size-6 text-moon-text peer-checked:block" />
+                    {ticked && <CheckIcon className="size-6 text-moon-text" />}
                   </label>
                 </li>
               )
@@ -256,7 +256,7 @@ function Milestones({ stage, babyId }: { stage: Stage; babyId: string }) {
         </Card>
         {confetti}
       </div>
-      <p className="m-0 text-caption text-fg-muted">{m.tipsMilestonesNote()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.tipsMilestonesNote()}</p>
       <p className="sr-only" aria-live="polite">
         {allDone ? m.tipsMilestonesDone() : ''}
       </p>
@@ -276,17 +276,17 @@ function Tips({ stage }: { stage: Stage }) {
             key={tip.id}
             to="/tips/$tipId"
             params={{ tipId: tip.id }}
-            className={clsx(
+            className={cn(
               'press flex items-center gap-3 rounded-xl border-2 border-b-4 p-3',
               style.card,
             )}
           >
-            <TopicIcon topic={tip.topic} className={clsx('size-10', style.icon)} />
+            <TopicIcon topic={tip.topic} className={cn('size-10', style.icon)} />
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className={clsx('font-extrabold', style.text)}>{tip.title}</span>
-              <span className="text-caption text-fg-muted">{tip.teaser}</span>
+              <span className={cn('font-extrabold', style.text)}>{tip.title}</span>
+              <span className="text-caption text-muted-foreground">{tip.teaser}</span>
             </span>
-            <Chevron className={clsx('size-5', style.text)} />
+            <Chevron className={cn('size-5', style.text)} />
           </Link>
         )
       })}
@@ -297,9 +297,9 @@ function Tips({ stage }: { stage: Stage }) {
 function Doctor({ stage }: { stage: Stage }) {
   const signs = doctorSignsFor(stage)
   return (
-    <section className="flex flex-col gap-2 rounded-xl bg-danger-soft p-4">
-      <h2 className="m-0 text-body font-extrabold text-danger-text">{m.tipsDoctorTitle()}</h2>
-      <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-danger-text">
+    <section className="flex flex-col gap-2 rounded-xl bg-destructive-soft p-4">
+      <h2 className="m-0 text-body font-extrabold text-destructive-text">{m.tipsDoctorTitle()}</h2>
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-destructive-text">
         {signs.items.map((item) => (
           <li key={item}>{item}</li>
         ))}

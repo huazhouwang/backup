@@ -1,6 +1,6 @@
 import type { Baby } from '@lullabo/shared'
 
-import { DeleteConfirmSheet } from '../../components/ui/DeleteConfirmSheet'
+import { DeleteConfirmSheet } from '../../components/DeleteConfirmSheet'
 import { useLocalStore } from '../../db'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'

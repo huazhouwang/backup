@@ -1,7 +1,7 @@
 import { type AnyTextAdapter, chat } from '@tanstack/ai'
 
 import type { SpeechHints } from '../voice/transcribe'
-import { withoutThinking } from './run'
+import { withoutThinking } from './text'
 
 /**
  * A quick model on Workers AI that knows Chinese: with thinking off it answers in well under

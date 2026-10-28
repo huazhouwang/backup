@@ -1,14 +1,14 @@
 import type { Baby, Event } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { Card } from '@lullabo/ui/card'
+import { cn } from '@lullabo/ui/utils'
 
-import { Card } from '../../components/ui/Card'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { type BadgeGroup, computeBadges, computeStreak } from './achievements'
 import { badgeLabel } from './badge-labels'
 
 const GROUP_COLOR: Record<BadgeGroup, string> = {
-  records: 'bg-primary border-primary-text',
+  records: 'bg-primary border-accent-foreground',
   streak: 'bg-feeding border-feeding-text',
   night: 'bg-sleep border-sleep-text',
   firsts: 'bg-diaper border-diaper-text',
@@ -25,7 +25,7 @@ export function Flame({ lit, className }: { lit: boolean; className?: string }) 
       />
       <path
         d="M24 26c2 3 5 5 5 9a5 5 0 0 1-10 0c0-3 2-5 5-9z"
-        className={lit ? 'fill-avatar-yellow' : 'fill-surface'}
+        className={lit ? 'fill-avatar-yellow' : 'fill-muted'}
       />
     </svg>
   )
@@ -43,11 +43,11 @@ export function AchievementsView({ baby, events }: { baby: Baby; events: readonl
       <Card className="flex items-center gap-4">
         <Flame lit={streak.current > 0} className="size-16 shrink-0" />
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-caption font-bold text-fg-muted">{m.streakLabel()}</span>
+          <span className="text-caption font-bold text-muted-foreground">{m.streakLabel()}</span>
           <span className="text-title font-extrabold tabular-nums">
             {m.streakDays({ days: streak.current })}
           </span>
-          <span className="text-caption text-fg-muted">
+          <span className="text-caption text-muted-foreground">
             {streak.loggedToday
               ? m.streakToday()
               : streak.current > 0
@@ -65,7 +65,7 @@ export function AchievementsView({ baby, events }: { baby: Baby; events: readonl
       <Card className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="m-0 text-title font-extrabold">{m.badgeTitle()}</h2>
-          <span className="text-caption font-bold text-fg-muted">
+          <span className="text-caption font-bold text-muted-foreground">
             {m.badgeEarned({ earned, total: badges.length })}
           </span>
         </div>
@@ -76,21 +76,21 @@ export function AchievementsView({ baby, events }: { baby: Baby; events: readonl
               <li key={badge.id} className="flex flex-col items-center gap-1 text-center">
                 <span
                   aria-hidden
-                  className={clsx(
+                  className={cn(
                     'flex size-16 items-center justify-center rounded-full border-b-4 font-extrabold',
                     label.mark.length > 2 ? 'text-body' : 'text-title',
                     badge.earned
-                      ? `${GROUP_COLOR[badge.group]} text-on-accent`
-                      : 'border-border bg-surface text-fg-muted',
+                      ? `${GROUP_COLOR[badge.group]} text-primary-foreground`
+                      : 'border-border bg-muted text-muted-foreground',
                   )}
                 >
                   {label.mark}
                 </span>
-                <span className={clsx('font-extrabold', !badge.earned && 'text-fg-muted')}>
+                <span className={cn('font-extrabold', !badge.earned && 'text-muted-foreground')}>
                   {label.title}
                   {!badge.earned && <span className="sr-only">{` ${m.badgeLocked()}`}</span>}
                 </span>
-                <span className="text-caption text-fg-muted">
+                <span className="text-caption text-muted-foreground">
                   {badge.earned || !badge.progress
                     ? label.description
                     : m.badgeProgress(badge.progress)}

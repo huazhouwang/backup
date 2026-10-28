@@ -6,13 +6,16 @@ See README.md for the stack, commands and architecture. Conventions the code doe
 
 - The look follows Duolingo: flat colours, chunky rounded shapes, a solid darker bottom edge
   on buttons and cards that collapses when pressed, bold rounded type.
+- Generic components and the theme live in `packages/ui` (`@lullabo/ui`), shadcn/ui-style on
+  Base UI: colours named by role, `cva` variants, `cn()`. It knows nothing of the app (no copy,
+  routes or data); compositions with copy, like `ConfirmSheet`, stay in `apps/web/src/components`.
 - **Icons are Duolingo-style too**, always, without being asked: flat filled shapes or bold
   round-capped strokes (stroke width 3 on a 24 grid), rounded corners, no thin outlines, no
-  gradients or shadows. Put new icons in `apps/web/src/components/ui/` next to `Chevron.tsx`
+  gradients or shadows. Put new icons in `apps/web/src/components/icons/` next to `Chevron.tsx`
   (or `features/events/EventIcon.tsx` for record types) and draw them as inline SVG using
   `currentColor` or the theme tokens; don't add an icon library.
 - Scroll areas bounce at their ends like iOS, horizontally or vertically: give a new one
-  `useBounce` (`apps/web/src/lib/bounce.ts`). Sheets lock the page behind them.
+  `useBounce` (`@lullabo/ui/bounce`). Sheets lock the page behind them.
 
 ## Records
 

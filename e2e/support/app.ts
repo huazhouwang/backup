@@ -43,7 +43,7 @@ export async function newDevice(browser: Browser) {
 }
 
 /** The open bottom sheet. */
-export const sheet = (page: Page) => page.locator('dialog[open]')
+export const sheet = (page: Page) => page.locator('[data-slot=sheet]')
 
 /** Waits for a sheet to finish sliding away. */
 export async function sheetClosed(page: Page) {

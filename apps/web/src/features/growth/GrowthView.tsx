@@ -1,10 +1,12 @@
 import type { Baby, Event, GrowthEvent } from '@lullabo/shared'
+import { Badge } from '@lullabo/ui/badge'
+import { Card } from '@lullabo/ui/card'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { useState } from 'react'
 
-import { Card } from '../../components/ui/Card'
-import { ListRow } from '../../components/ui/ListRow'
-import { Pill } from '../../components/ui/Pill'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
+import { niceStep, ticks } from '../../components/chart/scale'
+import { YGrid } from '../../components/chart/YGrid'
+import { ListRow } from '../../components/ListRow'
 import { formatDate, formatNumber } from '../../lib/i18n'
 import { convertToDisplay, formatQuantity, unitLabel } from '../../lib/units'
 import { m } from '../../paraglide/messages.js'
@@ -51,13 +53,6 @@ const PAD = { top: 12, right: 34, bottom: 28, left: 34 }
 const path = (coords: [number, number][]) =>
   coords.map(([cx, cy], i) => `${i === 0 ? 'M' : 'L'}${cx.toFixed(1)},${cy.toFixed(1)}`).join('')
 
-function niceStep(span: number): number {
-  const raw = span / 5
-  const power = 10 ** Math.floor(Math.log10(raw))
-  const unit = raw / power
-  return (unit < 1.5 ? 1 : unit < 3 ? 2 : unit < 7 ? 5 : 10) * power
-}
-
 function GrowthChart({
   measure,
   sex,
@@ -98,10 +93,7 @@ function GrowthChart({
     H - PAD.bottom - ((value - yMin) / (yMax - yMin)) * (H - PAD.top - PAD.bottom)
   const y = (value: number) => yDisplay(toUnits(value))
 
-  const yTicks = Array.from(
-    { length: Math.round((yMax - yMin) / step) + 1 },
-    (_, i) => yMin + i * step,
-  )
+  const yTicks = ticks(yMin, yMax, step)
   const xTicks = Array.from({ length: Math.floor(xMax / 3) + 1 }, (_, i) => i * 3)
   const active = charted.find((point) => point.event.id === selected)
 
@@ -109,34 +101,20 @@ function GrowthChart({
     <div className="relative">
       {/* Decorative: the readings are in the table below and on the point buttons. */}
       <svg aria-hidden viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full overflow-visible">
-        {yTicks.map((tick) => (
-          <g key={tick}>
-            <line
-              x1={PAD.left}
-              x2={W - PAD.right}
-              y1={yDisplay(tick)}
-              y2={yDisplay(tick)}
-              className="stroke-border"
-              strokeWidth={1}
-            />
-            <text
-              x={PAD.left - 6}
-              y={yDisplay(tick)}
-              textAnchor="end"
-              dominantBaseline="middle"
-              className="fill-fg-muted text-[10px] tabular-nums"
-            >
-              {formatNumber(tick)}
-            </text>
-          </g>
-        ))}
+        <YGrid
+          values={yTicks}
+          y={yDisplay}
+          left={PAD.left}
+          right={W - PAD.right}
+          label={formatNumber}
+        />
         {xTicks.map((tick) => (
           <text
             key={tick}
             x={x(tick)}
             y={H - PAD.bottom + 16}
             textAnchor="middle"
-            className="fill-fg-muted text-[10px] tabular-nums"
+            className="fill-muted-foreground text-[10px] tabular-nums"
           >
             {m.ageMonths({ months: tick })}
           </text>
@@ -146,7 +124,7 @@ function GrowthChart({
             <path
               d={path(samples.map((months, i) => [x(months), yDisplay(curve.values[i] ?? 0)]))}
               fill="none"
-              className="stroke-fg-muted"
+              className="stroke-muted-foreground"
               strokeOpacity={curve.percentile === 50 ? 0.9 : 0.4}
               strokeWidth={curve.percentile === 50 ? 2 : 1.25}
               strokeLinecap="round"
@@ -155,7 +133,7 @@ function GrowthChart({
               x={W - PAD.right + 4}
               y={yDisplay(curve.values.at(-1) ?? 0)}
               dominantBaseline="middle"
-              className="fill-fg-muted text-[10px] tabular-nums"
+              className="fill-muted-foreground text-[10px] tabular-nums"
             >
               {`P${curve.percentile}`}
             </text>
@@ -176,7 +154,7 @@ function GrowthChart({
             cx={x(point.months)}
             cy={y(point.value)}
             r={point.event.id === selected ? 6.5 : 5}
-            className="fill-primary stroke-bg"
+            className="fill-primary stroke-background"
             strokeWidth={2}
           />
         ))}
@@ -196,7 +174,7 @@ function GrowthChart({
       ))}
       {active && (
         <div
-          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-fg px-3 py-1.5 text-caption whitespace-nowrap text-bg"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-foreground px-3 py-1.5 text-caption whitespace-nowrap text-background"
           style={{
             left: `${(x(active.months) / W) * 100}%`,
             top: `calc(${(y(active.value) / H) * 100}% - 10px)`,
@@ -210,13 +188,13 @@ function GrowthChart({
           </div>
         </div>
       )}
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-caption text-fg-muted">
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-caption text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="size-2.5 rounded-full bg-primary" />
           {m.growthLegendBaby()}
         </span>
         <span className="flex items-center gap-1.5">
-          <span aria-hidden className="h-0.5 w-4 rounded-full bg-fg-muted" />
+          <span aria-hidden className="h-0.5 w-4 rounded-full bg-muted-foreground" />
           {m.growthLegendCurves()}
         </span>
       </div>
@@ -257,7 +235,7 @@ export function GrowthView({ baby, events }: { baby: Baby; events: readonly Even
       />
       {baby.sex === 'unspecified' && (
         <div className="flex flex-col gap-2">
-          <p className="m-0 text-caption text-fg-muted">{m.growthNeedsSex()}</p>
+          <p className="m-0 text-caption text-muted-foreground">{m.growthNeedsSex()}</p>
           <SegmentedControl<GrowthSex>
             label={m.growthStandard()}
             options={[
@@ -276,15 +254,15 @@ export function GrowthView({ baby, events }: { baby: Baby; events: readonly Even
         {monthsNow <= MAX_MONTHS || points.some((point) => point.months <= MAX_MONTHS) ? (
           <GrowthChart measure={measure} sex={sex} points={points} monthsNow={monthsNow} />
         ) : (
-          <p className="m-0 text-fg-muted">{m.growthBeyondRange()}</p>
+          <p className="m-0 text-muted-foreground">{m.growthBeyondRange()}</p>
         )}
-        <p className="m-0 text-caption text-fg-muted">{m.growthSource()}</p>
+        <p className="m-0 text-caption text-muted-foreground">{m.growthSource()}</p>
       </Card>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-title font-extrabold">{m.growthTableTitle()}</h2>
         {points.length === 0 ? (
-          <p className="m-0 text-fg-muted">{m.growthEmpty()}</p>
+          <p className="m-0 text-muted-foreground">{m.growthEmpty()}</p>
         ) : (
           <ul className="m-0 flex list-none flex-col p-0">
             {points.toReversed().map((point) => (
@@ -297,12 +275,14 @@ export function GrowthView({ baby, events }: { baby: Baby; events: readonly Even
                   detail={`${formatDate(point.event.startAt, { year: 'numeric', month: 'short', day: 'numeric' })} · ${m.ageMonths({ months: formatNumber(point.months, { maximumFractionDigits: 1 }) })}`}
                   trailing={
                     point.percentile !== undefined && (
-                      <Pill
-                        tone={point.percentile < 3 || point.percentile > 97 ? 'danger' : 'primary'}
+                      <Badge
+                        tone={
+                          point.percentile < 3 || point.percentile > 97 ? 'destructive' : 'primary'
+                        }
                         className="shrink-0"
                       >
                         {m.growthPercentile({ value: Math.round(point.percentile) })}
-                      </Pill>
+                      </Badge>
                     )
                   }
                 />

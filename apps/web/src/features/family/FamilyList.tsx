@@ -1,11 +1,11 @@
 import { type Baby, type FamilySummary, familyDisplayName } from '@lullabo/shared'
+import { Badge } from '@lullabo/ui/badge'
+import { Card } from '@lullabo/ui/card'
 
-import { SettingsRow } from '../../components/SettingsLayout'
-import { Card } from '../../components/ui/Card'
-import { Pill } from '../../components/ui/Pill'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { useBabies } from '../babies/use-babies'
+import { SettingsRow } from '../settings/SettingsLayout'
 import { roleLabel } from './roles'
 
 /** Families the user created first, then the rest in the order they joined. */
@@ -38,7 +38,7 @@ export function FamilyList() {
               key={family.id}
               link={{ to: '/settings/family/$familyId', params: { familyId: family.id } }}
               title={familyDisplayName(family)}
-              badge={<Pill className="shrink-0">{roleLabel[family.role]()}</Pill>}
+              badge={<Badge className="shrink-0">{roleLabel[family.role]()}</Badge>}
               summary={details.join(' · ')}
             />
           )

@@ -1,9 +1,9 @@
 import { type Event, HOUR, hasDuration, hasKnownDuration, isRunning } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { cn } from '@lullabo/ui/utils'
 
 import { formatTime } from '../../lib/i18n'
 import { m } from '../../paraglide/messages.js'
-import { categoryDot, laneOf } from './category'
+import { CATEGORY_LOOK, laneOf } from './category'
 import { describeEvent } from './describe'
 
 const HOUR_PX = 40
@@ -43,10 +43,10 @@ export function DayTimeline({
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-title font-extrabold">{m.timelineTitle()}</h2>
-      {visible.length === 0 && <p className="text-fg-muted">{m.dayEmpty()}</p>}
+      {visible.length === 0 && <p className="text-muted-foreground">{m.dayEmpty()}</p>}
       <div aria-hidden className="flex">
         <div className="w-12 shrink-0" />
-        <div className="grid flex-1 grid-cols-4 gap-2 text-center text-caption font-bold text-fg-muted">
+        <div className="grid flex-1 grid-cols-4 gap-2 text-center text-caption font-bold text-muted-foreground">
           {LANES.map((lane) => (
             <span key={lane}>{laneTitles[lane]()}</span>
           ))}
@@ -57,11 +57,11 @@ export function DayTimeline({
           {Array.from({ length: hours }, (_, hour) => (
             <div
               key={hour}
-              className="relative border-t border-border text-caption text-fg-muted tabular-nums"
+              className="relative border-t border-border text-caption text-muted-foreground tabular-nums"
               style={{ height: HOUR_PX }}
             >
               {hour % 3 === 0 && (
-                <span className="absolute -top-2.5 bg-bg pr-1">
+                <span className="absolute -top-2.5 bg-background pr-1">
                   {String(hour).padStart(2, '0')}
                 </span>
               )}
@@ -70,7 +70,7 @@ export function DayTimeline({
         </div>
         <div className="relative grid flex-1 grid-cols-4 gap-2">
           {LANES.map((lane) => (
-            <div key={lane} className="relative rounded-md bg-surface">
+            <div key={lane} className="relative rounded-md bg-muted">
               {visible
                 .filter((event) => laneOf(event.type) === lane)
                 .map((event) => {
@@ -86,10 +86,10 @@ export function DayTimeline({
                       type="button"
                       aria-label={`${formatTime(event.startAt)} ${title} ${detail}`}
                       onClick={() => onSelect(event)}
-                      className={clsx(
-                        'absolute border-2 border-bg',
+                      className={cn(
+                        'absolute border-2 border-background',
                         dot ? 'left-1/2 -translate-x-1/2 rounded-full' : 'inset-x-1 rounded-sm',
-                        categoryDot[event.type],
+                        CATEGORY_LOOK[event.type].dot,
                         isRunning(event) && 'animate-pulse',
                       )}
                       style={{
@@ -105,7 +105,7 @@ export function DayTimeline({
           {showNow && (
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 h-0.5 bg-danger"
+              className="pointer-events-none absolute inset-x-0 h-0.5 bg-destructive"
               style={{ top: toPx(now) }}
             />
           )}

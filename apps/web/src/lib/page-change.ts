@@ -1,6 +1,6 @@
+import { prefersReducedMotion } from '@lullabo/ui/motion'
 import type { AnyRouter } from '@tanstack/react-router'
 
-import { prefersReducedMotion } from './motion'
 import { type PageTransition, pageTransition } from './page-transition'
 
 /**
@@ -102,7 +102,7 @@ function freeze(main: HTMLElement): HTMLElement {
     inset: '0',
     overflow: 'hidden',
     pointerEvents: 'none',
-    background: 'var(--color-bg)',
+    background: 'var(--color-background)',
   })
   const copy = main.cloneNode(true)
   if (!(copy instanceof HTMLElement)) return layer

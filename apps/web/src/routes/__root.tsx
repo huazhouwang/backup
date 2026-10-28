@@ -1,4 +1,8 @@
 import { APP_NAME } from '@lullabo/shared'
+import { useBounce } from '@lullabo/ui/bounce'
+import { KeyboardKeeper } from '@lullabo/ui/keyboard'
+import { MotionProvider } from '@lullabo/ui/motion'
+import { Toaster } from '@lullabo/ui/toast'
 import type { QueryClient } from '@tanstack/react-query'
 import {
   HeadContent,
@@ -10,14 +14,10 @@ import {
 } from '@tanstack/react-router'
 import { type ReactNode, Suspense, useEffect, useRef } from 'react'
 
-import { MovedNotice } from '../components/MovedNotice'
-import { TabBar } from '../components/TabBar'
-import { Toaster } from '../components/ui/Toast'
-import { UpdatePrompt } from '../components/UpdatePrompt'
-import { useBounce } from '../lib/bounce'
+import { MovedNotice } from '../app/MovedNotice'
+import { TabBar } from '../app/TabBar'
+import { UpdatePrompt } from '../app/UpdatePrompt'
 import { getLocale } from '../lib/i18n'
-import { KeyboardKeeper } from '../lib/keyboard'
-import { MotionProvider } from '../lib/motion'
 import { animatePageChanges } from '../lib/page-change'
 import { splashLinks } from '../lib/splash'
 import { storageRenameScript } from '../lib/storage-rename'
@@ -75,7 +75,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 const pageOwnsNot = (target: Element, _axis: unknown, edge: 'start' | 'end') =>
-  target.closest('dialog, [data-own-scroll]') !== null ||
+  target.closest('[data-slot=sheet], [data-own-scroll]') !== null ||
   (edge === 'start' && target.closest('[data-pull-to-refresh]') !== null)
 
 function RootLayout() {

@@ -1,0 +1,81 @@
+/*
+ * @lullabo/ui's styles: the theme (colours by role, as shadcn/ui names them), the type, radius
+ * and size scales, the utilities its components use, and the bottom sheet. Import after
+ * tailwindcss; the components' classes are picked up from this package's sources.
+ */
+@import './theme.css';
+
+@source '../';
+
+@theme {
+  /* Steps around the theme's --radius, as shadcn/ui derives them. */
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 8px);
+
+  --text-caption: 13px;
+  --text-caption--line-height: 18px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-label: 19px;
+  --text-label--line-height: 24px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-display: 28px;
+  --text-display--line-height: 34px;
+
+  --spacing-touch: 48px;
+  --container-app: 480px;
+}
+
+/* Flat 3D press: the thick bottom edge collapses while held. Pair with `border-b-4`. */
+@utility press {
+  transition-property: transform, translate, border-width;
+  transition-duration: 75ms;
+  &:active {
+    translate: 0 0.125rem;
+    border-bottom-width: 2px;
+  }
+}
+
+/* Safe-area aware spacing, e.g. `pb-safe-4` is 1rem plus the home indicator inset. */
+@utility pt-safe-* {
+  padding-top: calc(--spacing(--value(integer)) + env(safe-area-inset-top));
+}
+@utility pr-safe-* {
+  padding-right: calc(--spacing(--value(integer)) + env(safe-area-inset-right));
+}
+@utility pb-safe-* {
+  padding-bottom: calc(--spacing(--value(integer)) + env(safe-area-inset-bottom));
+}
+@utility pl-safe-* {
+  padding-left: calc(--spacing(--value(integer)) + env(safe-area-inset-left));
+}
+
+/*
+ * Bottom sheets: Sheet slides them in with a little bounce and plays the same slide
+ * backwards to close. The backdrop fades along with it.
+ */
+.sheet {
+  /* Fills the gap the overshoot opens under the sheet. */
+  box-shadow: 0 4rem 0 var(--color-background);
+
+  &[data-closing] {
+    /* What it shows is a snapshot of the closed state; nothing in it should react. */
+    pointer-events: none;
+  }
+}
+.sheet-backdrop {
+  background-color: rgb(0 0 0 / 0.4);
+  transition: background-color 380ms ease-out;
+
+  &[data-closing] {
+    background-color: rgb(0 0 0 / 0);
+  }
+}
+@starting-style {
+  .sheet-backdrop {
+    background-color: rgb(0 0 0 / 0);
+  }
+}

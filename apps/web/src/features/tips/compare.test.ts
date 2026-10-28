@@ -1,37 +1,14 @@
-import { HOUR, type Event, startOfLocalDay } from '@lullabo/shared'
+import { HOUR, startOfLocalDay } from '@lullabo/shared'
+import { bottleEvent, breastEvent, sleepEvent } from '@lullabo/shared/testing'
 import { describe, expect, it } from 'vitest'
 
 import { compareWithUsual } from './compare'
 
 const now = new Date(2026, 9, 25, 15).getTime()
 const dayAgo = (n: number, hour: number) => startOfLocalDay(now, -n) + hour * HOUR
-let id = 0
-const base = (startAt: number, endAt: number | null) => ({
-  id: `e${(id += 1)}`,
-  babyId: 'b',
-  familyId: 'f',
-  startAt,
-  endAt,
-  createdAt: startAt,
-  updatedAt: startAt,
-  deletedAt: null,
-  createdBy: 'u',
-  note: null,
-})
-const bottle = (at: number, amountMl: number) =>
-  ({
-    ...base(at, at + 15 * 60_000),
-    type: 'feeding',
-    data: { kind: 'bottle', amountMl, milk: 'formula' },
-  }) as Event
-const breast = (at: number) =>
-  ({
-    ...base(at, at + 15 * 60_000),
-    type: 'feeding',
-    data: { kind: 'breast', segments: [{ side: 'left', startAt: at, endAt: at + 15 * 60_000 }] },
-  }) as Event
-const sleep = (from: number, hours: number) =>
-  ({ ...base(from, from + hours * HOUR), type: 'sleep', data: { kind: 'nap' } }) as Event
+const bottle = (at: number, amountMl: number) => bottleEvent(at, { minutes: 15, amountMl })
+const breast = (at: number) => breastEvent(at)
+const sleep = (from: number, hours: number) => sleepEvent(from, from + hours * HOUR)
 
 /** A fully logged day `n` days ago: six 130 ml bottles and 14 hours of sleep. */
 const loggedDay = (n: number) => [

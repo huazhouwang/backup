@@ -1,20 +1,20 @@
+import { Badge } from '@lullabo/ui/badge'
+import { Button, type ButtonTone } from '@lullabo/ui/button'
+import { Card, CardTitle, NoticeCard } from '@lullabo/ui/card'
+import { Input } from '@lullabo/ui/input'
+import { RollingText } from '@lullabo/ui/rolling-text'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
+import { Sheet } from '@lullabo/ui/sheet'
+import { showToast } from '@lullabo/ui/toast'
+import { ChipGroup } from '@lullabo/ui/toggle-chip'
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { DeleteConfirmSheet } from '../components/DeleteConfirmSheet'
+import { Chevron } from '../components/icons/Chevron'
+import { ListRow } from '../components/ListRow'
 import { PageHeader } from '../components/PageHeader'
-import { SettingsGroup, SettingsRow } from '../components/SettingsLayout'
-import { Button, type ButtonTone } from '../components/ui/Button'
-import { Card, CardTitle, NoticeCard } from '../components/ui/Card'
-import { Chevron } from '../components/ui/Chevron'
-import { DeleteConfirmSheet } from '../components/ui/DeleteConfirmSheet'
-import { Input } from '../components/ui/Input'
-import { ListRow } from '../components/ui/ListRow'
-import { Pill } from '../components/ui/Pill'
-import { RollingText } from '../components/ui/RollingText'
-import { SegmentedControl } from '../components/ui/SegmentedControl'
-import { Sheet } from '../components/ui/Sheet'
-import { showToast } from '../components/ui/Toast'
-import { ChipGroup } from '../components/ui/ToggleChip'
+import { SettingsGroup, SettingsRow } from '../features/settings/SettingsLayout'
 import { m } from '../paraglide/messages.js'
 
 // Component preview for development; linked from settings in dev builds only.
@@ -48,10 +48,10 @@ function UiPreviewPage() {
           {m.actionSave()}
         </Button>
         <div className="flex gap-3">
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1 shrink-0">
             {m.actionCancel()}
           </Button>
-          <Button tone="danger" className="flex-1">
+          <Button tone="destructive" className="flex-1 shrink-0">
             {m.actionDelete()}
           </Button>
         </div>
@@ -101,9 +101,9 @@ function UiPreviewPage() {
       <div className="flex flex-col gap-3">
         <h2 className="text-title font-extrabold">{m.uiPills()}</h2>
         <div className="flex items-center gap-3">
-          <Pill>{m.roleOwner()}</Pill>
-          <Pill tone="primary">{m.growthPercentile({ value: 50 })}</Pill>
-          <Pill tone="danger">{m.timerRunning()}</Pill>
+          <Badge>{m.roleOwner()}</Badge>
+          <Badge tone="primary">{m.growthPercentile({ value: 50 })}</Badge>
+          <Badge tone="destructive">{m.timerRunning()}</Badge>
           <Chevron direction="left" />
           <Chevron />
         </div>
@@ -122,7 +122,7 @@ function UiPreviewPage() {
                 title={
                   <>
                     <span className="truncate">{m.uiNameLabel()}</span>
-                    <Pill>{m.roleOwner()}</Pill>
+                    <Badge>{m.roleOwner()}</Badge>
                   </>
                 }
                 detail={m.uiRowSummary()}
@@ -140,7 +140,7 @@ function UiPreviewPage() {
           <SettingsRow
             link={{ to: '/ui' }}
             title={m.uiNameLabel()}
-            badge={<Pill className="shrink-0">{m.roleOwner()}</Pill>}
+            badge={<Badge className="shrink-0">{m.roleOwner()}</Badge>}
             summary={m.uiRowSummary()}
           />
         </SettingsGroup>
@@ -189,7 +189,7 @@ function UiPreviewPage() {
         </div>
       </div>
 
-      <Button variant="soft" tone="danger" onClick={() => setDeleteOpen(true)}>
+      <Button variant="soft" tone="destructive" onClick={() => setDeleteOpen(true)}>
         {m.uiDeleteConfirm()}
       </Button>
       <DeleteConfirmSheet

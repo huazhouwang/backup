@@ -145,6 +145,17 @@ export const eventSchema = z
 
 export type Event = z.infer<typeof eventSchema>
 export type EventType = Event['type']
+/** Every record type, in eventSchema's order. */
+export const EVENT_TYPES = [
+  'feeding',
+  'sleep',
+  'diaper',
+  'pumping',
+  'temperature',
+  'medication',
+  'note',
+  'growth',
+] as const satisfies readonly EventType[]
 export type FeedingEvent = Extract<Event, { type: 'feeding' }>
 export type SleepEvent = Extract<Event, { type: 'sleep' }>
 export type DiaperEvent = Extract<Event, { type: 'diaper' }>

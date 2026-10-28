@@ -1,12 +1,12 @@
+import { Button } from '@lullabo/ui/button'
+import { Card, CardTitle } from '@lullabo/ui/card'
+import { Sheet } from '@lullabo/ui/sheet'
 import { count, useLiveQuery } from '@tanstack/react-db'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Card, CardTitle } from '../../components/ui/Card'
-import { ConfirmSheet } from '../../components/ui/ConfirmSheet'
-import { Sheet } from '../../components/ui/Sheet'
+import { ConfirmSheet } from '../../components/ConfirmSheet'
 import { useLocalStore } from '../../db'
 import { formatTime } from '../../lib/i18n'
 import { m } from '../../paraglide/messages.js'
@@ -47,7 +47,7 @@ export function AccountSettings({ returnTo }: { returnTo?: string }) {
   if (!account) {
     return (
       <Card className="flex flex-col gap-3">
-        <p className="m-0 text-fg-muted">{m.accountSignedOutBody()}</p>
+        <p className="m-0 text-muted-foreground">{m.accountSignedOutBody()}</p>
         <SignInOptions
           returnTo={returnTo}
           onSignedIn={async () => {
@@ -122,12 +122,12 @@ function SignedIn({ userId, userName = '' }: { userId: string; userName?: string
         <Button block onClick={() => void signOut(false)}>
           {m.signOutKeep()}
         </Button>
-        <Button variant="ghost" tone="danger" block onClick={() => void signOut(true)}>
+        <Button variant="ghost" tone="destructive" block onClick={() => void signOut(true)}>
           {m.signOutClear()}
         </Button>
-        <p className="m-0 text-center text-caption text-fg-muted">{m.signOutClearHint()}</p>
+        <p className="m-0 text-center text-caption text-muted-foreground">{m.signOutClearHint()}</p>
       </Sheet>
-      <Button variant="ghost" tone="danger" onClick={() => setDeleting(true)}>
+      <Button variant="ghost" tone="destructive" onClick={() => setDeleting(true)}>
         {m.accountDelete()}
       </Button>
       <ConfirmSheet
@@ -160,9 +160,11 @@ function SyncCard() {
   return (
     <Card as="section" className="flex flex-col gap-3">
       <CardTitle small>{m.accountSync()}</CardTitle>
-      <p className="m-0 text-fg-muted">{useSyncStatusText()}</p>
+      <p className="m-0 text-muted-foreground">{useSyncStatusText()}</p>
       {pending > 0 && (
-        <p className="m-0 text-caption text-fg-muted">{m.syncPending({ count: pending })}</p>
+        <p className="m-0 text-caption text-muted-foreground">
+          {m.syncPending({ count: pending })}
+        </p>
       )}
       <Button variant="soft" tone="diaper" onClick={() => void requestSync()}>
         {m.syncNow()}

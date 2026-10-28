@@ -1,7 +1,7 @@
 import { MINUTE } from '@lullabo/shared'
+import { ChipGroup } from '@lullabo/ui/toggle-chip'
 import { useState } from 'react'
 
-import { ChipGroup } from '../../components/ui/ToggleChip'
 import { m } from '../../paraglide/messages.js'
 import { fromDateTimeLocal, toDateTimeLocal } from './time'
 import { TimeRow } from './TimeRow'

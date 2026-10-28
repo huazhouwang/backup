@@ -1,4 +1,4 @@
-import { clsx } from 'clsx'
+import { cn } from '@lullabo/ui/utils'
 import { useState } from 'react'
 
 /** A person's picture (from Google), or the first character of their name. */
@@ -21,15 +21,15 @@ export function UserAvatar({
         alt=""
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
-        className={clsx('shrink-0 rounded-full object-cover', sizeClass)}
+        className={cn('shrink-0 rounded-full object-cover', sizeClass)}
       />
     )
   }
   return (
     <span
       aria-hidden
-      className={clsx(
-        'inline-flex shrink-0 items-center justify-center rounded-full bg-primary font-extrabold text-on-accent',
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-full bg-primary font-extrabold text-primary-foreground',
         sizeClass,
       )}
     >

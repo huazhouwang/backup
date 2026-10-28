@@ -1,10 +1,10 @@
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Input } from '@lullabo/ui/input'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { Input } from '../../components/ui/Input'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { HttpError } from '../../lib/api'
 import { m } from '../../paraglide/messages.js'
 import {
@@ -211,16 +211,16 @@ export function SignInOptions({
         </Button>
       )}
       {(google || passkeyButton) && (
-        <div aria-hidden className="flex items-center gap-3 text-caption text-fg-muted">
+        <div aria-hidden className="flex items-center gap-3 text-caption text-muted-foreground">
           <span className="h-0.5 flex-1 bg-border" />
           {m.signInOr()}
           <span className="h-0.5 flex-1 bg-border" />
         </div>
       )}
       <form noValidate onSubmit={submit} className="flex flex-col gap-3">
-        {mode === 'reset-request' && <p className="m-0 text-fg-muted">{m.resetIntro()}</p>}
+        {mode === 'reset-request' && <p className="m-0 text-muted-foreground">{m.resetIntro()}</p>}
         {mode === 'reset' ? (
-          <p className="m-0 text-caption text-fg-muted">
+          <p className="m-0 text-caption text-muted-foreground">
             {m.resetCodeSent({ email: email.trim() })}
           </p>
         ) : (
@@ -265,7 +265,7 @@ export function SignInOptions({
             onChange={(e) => setPassword(e.target.value)}
           />
         )}
-        <Button type="submit" variant={google ? 'outline' : 'solid'} block disabled={busy}>
+        <Button type="submit" variant={google ? 'outline' : 'default'} block disabled={busy}>
           {submitLabel}
         </Button>
       </form>

@@ -1,9 +1,9 @@
+import { holdKeyboard } from '@lullabo/ui/keyboard'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useId, useState } from 'react'
 
-import { ChatIcon } from '../../components/ui/ChatIcon'
-import { holdKeyboard } from '../../lib/keyboard'
+import { ChatIcon } from '../../components/icons/ChatIcon'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { voiceQueries } from './queries'
@@ -50,12 +50,12 @@ function Bar() {
       type="button"
       aria-describedby={hintId}
       onClick={start}
-      className="press flex min-h-touch w-full items-center gap-3 rounded-xl border-2 border-b-4 border-border bg-surface px-4 py-3 text-left"
+      className="press flex min-h-touch w-full items-center gap-3 rounded-xl border-2 border-b-4 border-border bg-muted px-4 py-3 text-left"
     >
       <ChatIcon className="size-8 text-primary" />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="font-extrabold">{m.voiceChatTitle()}</span>
-        <span id={hintId} className="truncate text-caption text-fg-muted">
+        <span id={hintId} className="truncate text-caption text-muted-foreground">
           {noAi ? m.chatBarNoAi() : m.chatBarHint({ example: example() })}
         </span>
       </span>

@@ -1,10 +1,10 @@
+import { Button } from '@lullabo/ui/button'
+import { Sheet } from '@lullabo/ui/sheet'
+import { showToast } from '@lullabo/ui/toast'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
-import { Button } from '../components/ui/Button'
-import { Sheet } from '../components/ui/Sheet'
-import { showToast } from '../components/ui/Toast'
 import { useLocalStore } from '../db'
 import {
   connectIfSignedIn,
@@ -64,7 +64,7 @@ export function SyncRunner() {
       <Sheet open={choice !== null} onClose={() => undefined} title={m.claimTitle()}>
         {choice && (
           <div className="flex flex-col gap-3">
-            <p className="m-0 text-fg-muted">{m.claimBody({ count: choice.unclaimed })}</p>
+            <p className="m-0 text-muted-foreground">{m.claimBody({ count: choice.unclaimed })}</p>
             {choice.families.map((family) => (
               <Button
                 key={family.id}

@@ -1,8 +1,8 @@
+import { buttonVariants } from '@lullabo/ui/button'
+import { Card, NoticeCard } from '@lullabo/ui/card'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 
-import { buttonClass } from '../../components/ui/Button'
-import { Card, NoticeCard } from '../../components/ui/Card'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { SignInNotice } from '../account/SignInNotice'
@@ -43,7 +43,7 @@ function Voice() {
       </Card>
       {settings.ai && <ChatCard />}
       <Card>
-        <p className="m-0 text-caption text-fg-muted">{m.voiceBackTap()}</p>
+        <p className="m-0 text-caption text-muted-foreground">{m.voiceBackTap()}</p>
       </Card>
     </>
   )
@@ -71,10 +71,10 @@ function AiStatus({ settings }: { settings: VoiceSettings }) {
 function ChatCard() {
   return (
     <Card className="flex flex-col gap-2">
-      <Link to="/chat" className={buttonClass({ variant: 'outline', block: true })}>
+      <Link to="/chat" className={buttonVariants({ variant: 'outline', block: true })}>
         {m.voiceChatOpen()}
       </Link>
-      <p className="m-0 text-caption text-fg-muted">{m.voiceChatHint()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.voiceChatHint()}</p>
     </Card>
   )
 }

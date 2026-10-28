@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { ageNorms } from './age-norms'
 import { DAY, MINUTE } from './date'
-import type { Event } from './event'
-import { baseEvent } from './fixtures.test-utils'
 import { type NextUpOptions, nextUp } from './next-up'
+import { bottleEvent, diaperEvent, sleepEvent } from './testing'
 
 // UTC stands in for the family's clock, so the times read as written.
 const at = (day: number, hour: number, minute = 0) => Date.UTC(2026, 2, day, hour, minute)
@@ -12,27 +11,10 @@ const minuteOfDay = (time: number) => Math.floor((time % DAY) / MINUTE)
 // Four months: awake 90–150 minutes, a feed every 180–240, a diaper every 180–240.
 const options = (now: number): NextUpOptions => ({ months: 4.2, now, minuteOfDay })
 
-const sleep = (start: number, end: number | null, kind: 'nap' | 'night' = 'nap'): Event => ({
-  ...baseEvent(),
-  type: 'sleep',
-  startAt: start,
-  endAt: end,
-  data: { kind },
-})
-const bottle = (start: number, minutes: number | null = 10, amountMl = 120): Event => ({
-  ...baseEvent(),
-  type: 'feeding',
-  startAt: start,
-  endAt: minutes === null ? null : start + minutes * MINUTE,
-  data: { kind: 'bottle', amountMl, milk: 'formula' },
-})
-const diaper = (time: number): Event => ({
-  ...baseEvent(),
-  type: 'diaper',
-  startAt: time,
-  endAt: null,
-  data: { contents: 'wet' },
-})
+const sleep = sleepEvent
+const bottle = (start: number, minutes: number | null = 10, amountMl = 120) =>
+  bottleEvent(start, { minutes, amountMl })
+const diaper = (time: number) => diaperEvent(time)
 
 describe('ageNorms', () => {
   it('grows with the baby', () => {

@@ -326,5 +326,37 @@ describe('roles, baby scope and member management', () => {
         await t2.dispose()
       }
     })
+
+    it("deletes its babies' observations, and no other family's", async () => {
+      const t2 = await createTestApp()
+      try {
+        const a = await t2.signIn('a')
+        const families: FamilySummary[] = []
+        const kids: Baby[] = []
+        for (const name of ['家', '别的家']) {
+          const res = await t2.send('POST', '/api/families', a.headers, { name })
+          const family = (await res.json()) as FamilySummary
+          const kid = baby(family.id)
+          await t2.send('POST', '/api/sync/push', a.headers, { babies: [kid], events: [] })
+          await t2.env.DB.prepare(
+            "insert into observations (baby_id, day, text, created_at) values (?, '2026-10-17', '很规律。', ?)",
+          )
+            .bind(kid.id, Date.now())
+            .run()
+          families.push(family)
+          kids.push(kid)
+        }
+
+        const res = await t2.send('DELETE', `/api/families/${families[0]?.id}`, a.headers)
+        expect(res.status).toBe(204)
+
+        const observations = await t2.env.DB.prepare(
+          'select baby_id as babyId from observations',
+        ).all<{ babyId: string }>()
+        expect(observations.results).toEqual([{ babyId: kids[1]?.id }])
+      } finally {
+        await t2.dispose()
+      }
+    })
   })
 })

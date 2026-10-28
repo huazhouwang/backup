@@ -1,8 +1,8 @@
+import { Card } from '@lullabo/ui/card'
 import { useQuery } from '@tanstack/react-query'
 
-import { Card } from '../../components/ui/Card'
-import { Chevron } from '../../components/ui/Chevron'
-import { ListRow } from '../../components/ui/ListRow'
+import { Chevron } from '../../components/icons/Chevron'
+import { ListRow } from '../../components/ListRow'
 import { UserAvatar } from '../../components/UserAvatar'
 import { m } from '../../paraglide/messages.js'
 import { useAccount } from '../../sync/use-access'

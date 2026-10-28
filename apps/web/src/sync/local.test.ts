@@ -1,4 +1,5 @@
-import { type Baby, newId } from '@lullabo/shared'
+import { newId } from '@lullabo/shared'
+import { testBaby } from '@lullabo/shared/testing'
 import { SchemaValidationError } from '@tanstack/db'
 import { IDBFactory } from 'fake-indexeddb'
 import { describe, expect, it } from 'vitest'
@@ -6,21 +7,9 @@ import { describe, expect, it } from 'vitest'
 import { openLocalStore } from '../db/local-store'
 import { markDirty, writeLocal } from './local'
 
-function baby(): Baby {
+const baby = () => {
   const now = Date.now()
-  return {
-    id: newId(now),
-    familyId: null,
-    name: '小宝',
-    birthDate: '2026-09-30',
-    sex: 'unspecified',
-    avatarColor: 'green',
-    archivedAt: null,
-    createdAt: now,
-    updatedAt: now,
-    deletedAt: null,
-    createdBy: null,
-  }
+  return testBaby({ id: newId(now), createdAt: now, updatedAt: now })
 }
 
 const granted = () => Promise.resolve(true)

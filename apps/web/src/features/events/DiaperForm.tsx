@@ -1,11 +1,11 @@
+import { Button } from '@lullabo/ui/button'
 import { type FormEvent, type ReactNode, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
 import { useLocalStore } from '../../db'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { addEvent } from './actions'
-import { DEFAULT_PEE, type DiaperData, DiaperFields } from './DiaperFields'
+import { DEFAULT_PEE, type DiaperData, DiaperFields } from './fields/DiaperFields'
 import { QuickTimeField } from './QuickTimeField'
 import { logDiaper } from './records'
 import { toDateTimeLocal } from './time'

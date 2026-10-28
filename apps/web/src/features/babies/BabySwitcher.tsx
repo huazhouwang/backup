@@ -4,11 +4,11 @@ import {
   familyDisplayName,
   localDateString,
 } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
-import { Sheet } from '../../components/ui/Sheet'
 import { useLocalStore } from '../../db'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
@@ -45,15 +45,15 @@ export function BabySwitcher() {
           <BabyAvatar name={baby.name} color={baby.avatarColor} />
           {otherRunning && (
             // Another baby has a timer running; the picker shows which one.
-            <span className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full border-2 border-bg bg-danger" />
+            <span className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full border-2 border-background bg-destructive" />
           )}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-extrabold">{baby.name}</span>
-          <span className="text-caption text-fg-muted">{ageLabel(baby.birthDate)}</span>
+          <span className="text-caption text-muted-foreground">{ageLabel(baby.birthDate)}</span>
         </span>
         {active.length > 1 && (
-          <svg aria-hidden viewBox="0 0 24 24" className="size-6 text-fg-muted">
+          <svg aria-hidden viewBox="0 0 24 24" className="size-6 text-muted-foreground">
             <path
               d="M7 9l5-5 5 5M7 15l5 5 5-5"
               fill="none"
@@ -76,7 +76,10 @@ export function BabySwitcher() {
           }}
           badges={
             new Map(
-              [...runningBabies].map((id) => [id, { label: m.timerRunning(), tone: 'danger' }]),
+              [...runningBabies].map((id) => [
+                id,
+                { label: m.timerRunning(), tone: 'destructive' },
+              ]),
             )
           }
         />

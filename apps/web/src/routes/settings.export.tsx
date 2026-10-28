@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { SettingsPage } from '../components/SettingsLayout'
 import { ExportCard } from '../features/export/ExportCard'
+import { SettingsPage } from '../features/settings/SettingsLayout'
 import { m } from '../paraglide/messages.js'
 
 export const Route = createFileRoute('/settings/export')({

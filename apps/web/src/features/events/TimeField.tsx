@@ -1,4 +1,5 @@
-import { Input } from '../../components/ui/Input'
+import { Input } from '@lullabo/ui/input'
+
 import { toDateTimeLocal } from './time'
 
 export function TimeField({

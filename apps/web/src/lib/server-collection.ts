@@ -1,7 +1,6 @@
+import { showToast } from '@lullabo/ui/toast'
 import type { Transaction } from '@tanstack/db'
 import type { QueryClient } from '@tanstack/react-query'
-
-import { showToast } from '../components/ui/Toast'
 
 /**
  * A cache of collections of one kind (a family's members, the account's reminders), one

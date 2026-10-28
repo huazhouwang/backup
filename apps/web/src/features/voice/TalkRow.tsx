@@ -1,11 +1,11 @@
-import { clsx } from 'clsx'
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { cn } from '@lullabo/ui/utils'
 import { type ReactNode, useEffect, useRef } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { MicIcon } from '../../components/ui/MicIcon'
-import { useNow } from '../../lib/use-now'
+import { MicIcon } from '../../components/icons/MicIcon'
 import { m } from '../../paraglide/messages.js'
+import { Elapsed } from './Elapsed'
 import type { Startup } from './recorder'
 import { useTalk } from './use-talk'
 
@@ -47,15 +47,6 @@ function Levels({ analyser }: { analyser: AnalyserNode | null }) {
         />
       ))}
     </span>
-  )
-}
-
-/** Seconds since recording began, as "0:07". */
-function Elapsed({ since }: { since: number }) {
-  const now = useNow(250)
-  const seconds = Math.max(0, Math.floor((now - since) / 1000))
-  return (
-    <span className="tabular-nums">{`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`}</span>
   )
 }
 
@@ -121,11 +112,11 @@ export function TalkRow({
             <div className="flex flex-col">
               <span className="sr-only">{m.voiceMicRecording()}</span>
               <output
-                className={clsx(
+                className={cn(
                   'flex min-h-touch items-center gap-3 rounded-lg border-2 px-3',
                   dropping
-                    ? 'border-danger bg-danger-soft text-danger-text'
-                    : 'border-primary bg-primary-soft text-primary-text',
+                    ? 'border-destructive bg-destructive-soft text-destructive-text'
+                    : 'border-primary bg-accent text-accent-foreground',
                 )}
               >
                 <Levels analyser={talk.analyser} />
@@ -133,7 +124,7 @@ export function TalkRow({
                 {talk.ready && <Elapsed since={startedAt} />}
                 <span className="min-w-0 flex-1 truncate text-caption font-bold">{status}</span>
                 {mode === 'free' && (
-                  <Button variant="ghost" className="-mr-2 min-h-0 px-2 py-1" onClick={talk.drop}>
+                  <Button variant="ghost" className="-mr-2 py-1" onClick={talk.drop}>
                     {m.voiceMicCancel()}
                   </Button>
                 )}
@@ -147,11 +138,11 @@ export function TalkRow({
           <Button
             key="mic"
             data-sheet-still
-            tone={dropping ? 'danger' : 'primary'}
+            tone={dropping ? 'destructive' : 'primary'}
             aria-label={recording ? m.voiceMicSend() : m.voiceMicHold()}
             aria-pressed={recording}
             disabled={disabled && !recording}
-            className="touch-none px-3 select-none [-webkit-touch-callout:none]"
+            className="touch-none select-none [-webkit-touch-callout:none]"
             {...talk.buttonProps}
           >
             <MicIcon />

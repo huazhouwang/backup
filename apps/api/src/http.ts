@@ -40,6 +40,17 @@ export const json = <T>(schema: Schema<T>) =>
     return parsed.data
   })
 
+/**
+ * Validates the query string against a schema; handlers read `c.req.valid('query')`. It reads
+ * `c.req.query()`, one value per name, as the routes did before.
+ */
+export const query = <T>(schema: Schema<T>) =>
+  validator('query', (_value, c): T => {
+    const parsed = schema.safeParse(c.req.query())
+    if (!parsed.success) fail('invalid')
+    return parsed.data
+  })
+
 /** Maps thrown errors to JSON: HTTP errors keep their status, anything else is a 500. */
 export function errorResponse(error: Error): Response {
   if (error instanceof HTTPException) {

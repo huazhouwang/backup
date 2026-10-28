@@ -1,10 +1,10 @@
 import { type Baby, MINUTE, type Reminder, type ReminderKind, nextUp } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { Card } from '@lullabo/ui/card'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { formatNumber } from '../../lib/i18n'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
@@ -116,7 +116,7 @@ function Reminders({ userId }: { userId: string }) {
 
   return (
     <Card className="flex flex-col gap-4">
-      <p className="m-0 text-fg-muted">{m.reminderIntro()}</p>
+      <p className="m-0 text-muted-foreground">{m.reminderIntro()}</p>
 
       {hint ? (
         <p className="m-0 font-bold">{hint()}</p>
@@ -126,7 +126,7 @@ function Reminders({ userId }: { userId: string }) {
             <p className="m-0 font-bold">{push === 'on' ? m.pushOn() : m.pushOff()}</p>
             <div className="flex flex-wrap gap-2">
               <Button
-                variant={push === 'on' ? 'outline' : 'solid'}
+                variant={push === 'on' ? 'outline' : 'default'}
                 disabled={togglePush.isPending}
                 onClick={() => togglePush.mutate()}
               >
@@ -186,7 +186,7 @@ function BabyReminders({
         )
         return (
           <div key={kind} className="flex flex-col gap-2">
-            <span className="text-caption font-bold text-fg-muted">
+            <span className="text-caption font-bold text-muted-foreground">
               {m.reminderRow({ kind: KIND_LABEL[kind]() })}
             </span>
             <SegmentedControl<string>
@@ -198,7 +198,7 @@ function BabyReminders({
               value={String(value)}
               onChange={(minutes) => onChoose(kind, Number(minutes), suggested[kind])}
             />
-            <span className="text-caption text-fg-muted">
+            <span className="text-caption text-muted-foreground">
               {m.reminderSuggested({ duration: hours(suggested[kind]) })}
             </span>
           </div>

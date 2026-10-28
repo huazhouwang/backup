@@ -1,8 +1,10 @@
 import { type Event, HOUR } from '@lullabo/shared'
+import { Card } from '@lullabo/ui/card'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { useState } from 'react'
 
-import { Card } from '../../components/ui/Card'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
+import { niceScale, ticks } from '../../components/chart/scale'
+import { YGrid } from '../../components/chart/YGrid'
 import { formatDate, formatNumber } from '../../lib/i18n'
 import { convertToDisplay, getUnits, unitLabel } from '../../lib/units'
 import { useNow } from '../../lib/use-now'
@@ -96,16 +98,6 @@ const H = 150
 const PAD = { top: 8, right: 4, bottom: 22, left: 44 }
 const GAP = 2
 
-/** Upper bound and step for about three gridlines on round values of the metric's unit. */
-function scale(max: number, unit: number): { top: number; step: number } {
-  const units = Math.max(1, Math.ceil(max / unit))
-  const raw = units / 3
-  const power = 10 ** Math.floor(Math.log10(raw))
-  const nice = [1, 2, 5, 10].find((n) => n * power >= raw) ?? 10
-  const step = nice * power * unit
-  return { top: Math.max(step, Math.ceil(max / step) * step), step }
-}
-
 const shortDate = (at: number) => formatDate(at, { month: 'numeric', day: 'numeric' })
 
 function TrendChart({ metric, days }: { metric: Metric; days: DayTrend[] }) {
@@ -117,14 +109,13 @@ function TrendChart({ metric, days }: { metric: Metric; days: DayTrend[] }) {
     .filter((value): value is number => value !== null && value > 0)
   const average =
     complete.length > 0 ? complete.reduce((sum, value) => sum + value, 0) / complete.length : null
-  const { top, step } = scale(Math.max(0, ...values.map((value) => value ?? 0)), metric.unit)
+  const { top, step } = niceScale(Math.max(0, ...values.map((value) => value ?? 0)), metric.unit)
 
   const plotW = W - PAD.left - PAD.right
   const plotH = H - PAD.top - PAD.bottom
   const slot = plotW / days.length
   const barW = Math.max(2, slot - GAP)
   const y = (value: number) => PAD.top + plotH - (value / top) * plotH
-  const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step)
   const labelEvery = days.length <= 7 ? 1 : 7
   const activeIndex = days.findIndex((day) => day.day === selected)
   const active = days[activeIndex]
@@ -150,27 +141,13 @@ function TrendChart({ metric, days }: { metric: Metric; days: DayTrend[] }) {
       <div className="relative">
         {/* Decorative: the values are on the bar buttons and in the data table. */}
         <svg aria-hidden viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full overflow-visible">
-          {ticks.map((tick) => (
-            <g key={tick}>
-              <line
-                x1={PAD.left}
-                x2={W - PAD.right}
-                y1={y(tick)}
-                y2={y(tick)}
-                className="stroke-border"
-                strokeWidth={1}
-              />
-              <text
-                x={PAD.left - 6}
-                y={y(tick)}
-                textAnchor="end"
-                dominantBaseline="middle"
-                className="fill-fg-muted text-[10px] tabular-nums"
-              >
-                {metric.tick(tick)}
-              </text>
-            </g>
-          ))}
+          <YGrid
+            values={ticks(0, top, step)}
+            y={y}
+            left={PAD.left}
+            right={W - PAD.right}
+            label={metric.tick}
+          />
           {days.map((day, i) => {
             const value = values[i]
             if (value === null || value === undefined || value <= 0) return null
@@ -197,7 +174,7 @@ function TrendChart({ metric, days }: { metric: Metric; days: DayTrend[] }) {
                 x={PAD.left + i * slot + slot / 2}
                 y={H - 6}
                 textAnchor="middle"
-                className="fill-fg-muted text-[10px] tabular-nums"
+                className="fill-muted-foreground text-[10px] tabular-nums"
               >
                 {shortDate(day.dayStart)}
               </text>
@@ -222,10 +199,12 @@ function TrendChart({ metric, days }: { metric: Metric; days: DayTrend[] }) {
         ))}
       </div>
       <details className="text-caption">
-        <summary className="cursor-pointer font-bold text-fg-muted">{m.trendTable()}</summary>
+        <summary className="cursor-pointer font-bold text-muted-foreground">
+          {m.trendTable()}
+        </summary>
         <table className="mt-2 w-full border-collapse tabular-nums">
           <thead>
-            <tr className="text-left text-fg-muted">
+            <tr className="text-left text-muted-foreground">
               <th className="py-1 font-bold">{m.trendColumnDay()}</th>
               <th className="py-1 text-right font-bold">{m.trendColumnValue()}</th>
             </tr>
@@ -266,7 +245,7 @@ export function TrendsView({ events }: { events: readonly Event[] }) {
         value={`${range}`}
         onChange={(value) => setRange(value === '30' ? 30 : 7)}
       />
-      <p className="m-0 text-caption text-fg-muted">{m.trendTodayPartial()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.trendTodayPartial()}</p>
       {METRICS.map((metric) => (
         <TrendChart key={metric.key} metric={metric} days={days} />
       ))}

@@ -1,6 +1,6 @@
 import type { Event } from '@lullabo/shared'
+import { Sheet } from '@lullabo/ui/sheet'
 
-import { Sheet } from '../../components/ui/Sheet'
 import { m } from '../../paraglide/messages.js'
 import { EditEventForm } from './EditEventForm'
 

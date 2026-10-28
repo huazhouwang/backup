@@ -1,6 +1,6 @@
+import { Card, NoticeCard } from '@lullabo/ui/card'
 import { useQuery } from '@tanstack/react-query'
 
-import { Card, NoticeCard } from '../../components/ui/Card'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { SignInNotice } from '../account/SignInNotice'

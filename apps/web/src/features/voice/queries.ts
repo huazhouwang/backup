@@ -1,11 +1,9 @@
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
 
+import { PERSIST } from '../../lib/query'
 import { voiceApi } from './api'
 
 // Not keyed by user: signing out clears the whole query cache.
-
-/** Kept on the device across reloads and offline (lib/persist-queries.ts). */
-const persist = { persist: true }
 
 export const voiceKeys = {
   all: ['voice'] as const,
@@ -16,7 +14,7 @@ export const voiceKeys = {
 export const voiceQueries = {
   /** Phrase, code and whose AI commands use. */
   settings: () =>
-    queryOptions({ queryKey: voiceKeys.settings, queryFn: voiceApi.settings, meta: persist }),
+    queryOptions({ queryKey: voiceKeys.settings, queryFn: voiceApi.settings, meta: PERSIST }),
   /** The last 30 days of conversations, newest page first. */
   chat: () =>
     infiniteQueryOptions({

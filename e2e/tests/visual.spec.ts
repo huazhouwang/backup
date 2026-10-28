@@ -52,6 +52,14 @@ test('key screens look as before', async ({ page, context }) => {
   await screen(page, 'yesterday')
   await page.getByRole('button', { name: '回到今天' }).click()
 
+  await page.goto('/stats?view=trends')
+  await expect(page.getByText('喂养次数')).toBeVisible()
+  await screen(page, 'trends')
+  await page.goto('/stats?view=growth')
+  await expect(page.getByText('体重生长曲线')).toBeVisible()
+  await screen(page, 'growth')
+  await page.goto('/')
+
   await page.locator('main button').first().click()
   await sheetShot(page, 'switcher')
   await closeSheet(page)

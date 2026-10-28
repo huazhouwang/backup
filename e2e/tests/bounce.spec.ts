@@ -21,10 +21,10 @@ test('a short sheet bounces on its own, without moving the page', async ({ page 
   const box = await sheet(page).locator('button').last().boundingBox()
   if (!box) throw new Error('no sheet content')
   const release = await drag(page, [box.x + 20, box.y], [box.x + 20, box.y - 150])
-  expect(await transformOf(page, 'dialog[open] > div')).toMatch(/translate3d\(0px, -\d/)
+  expect(await transformOf(page, '[data-slot=sheet] > div')).toMatch(/translate3d\(0px, -\d/)
   expect(await transformOf(page, 'main')).toBe('')
   await release()
-  await expect.poll(() => transformOf(page, 'dialog[open] > div')).toBe('')
+  await expect.poll(() => transformOf(page, '[data-slot=sheet] > div')).toBe('')
 })
 
 test('a chip row bounces sideways at its start', async ({ page }) => {

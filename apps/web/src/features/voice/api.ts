@@ -1,3 +1,5 @@
+import type { ChatLine, ChatPage, ChatTurn, VoiceSettings } from '@lullabo/shared'
+
 import { HttpError, apiFetch } from '../../lib/api'
 import { getLocale } from '../../lib/i18n'
 import type { Startup, Unheard } from './recorder'
@@ -22,46 +24,9 @@ export function openShortcut() {
   window.location.assign(installed ? `x-safari-${SHORTCUT_URL}` : SHORTCUT_URL)
 }
 
-export interface VoiceSettings {
-  /** What the user says to Siri, i.e. the name they gave the shortcut. */
-  phrase: string
-  /** The code the shortcut uses, if one is active; the code itself is never shown again. */
-  token: { createdAt: number; lastUsedAt: number | null } | null
-  /**
-   * Whose AI commands use: the user's own (every family), one a family shared (only that
-   * family), or none yet.
-   */
-  ai: { kind: 'own' } | { kind: 'shared'; familyName: string; by: string } | null
-}
-
-/** The agent's answer to one message. */
-export interface ChatTurn {
-  reply: string
-  /** The user said they're finished. */
-  done: boolean
-  /** A change is waiting for the user's yes or no. */
-  confirming: boolean
-}
-
-export interface ChatMessage {
-  /** Stable for a stored message; random for one shown before the server answers. */
-  id: string
-  /** The conversation it belongs to; null until the server answers. */
-  threadId: string | null
-  role: 'user' | 'assistant'
-  text: string
-}
-
-/** A page of the last 30 days of conversations, oldest message first. */
-export interface ChatPage {
-  lines: ChatMessage[]
-  /** When each conversation on the page started. */
-  threads: Record<string, { startedAt: number }>
-  /** Where the page before this one ends; null at the oldest kept. */
-  next: string | null
-  /** The conversation the next message continues; null after a pause. */
-  activeThreadId: string | null
-}
+/** A message as the chat shows it: stored, or sent and not yet answered. */
+export type ChatMessage = ChatLine
+export type { ChatPage, ChatTurn, VoiceSettings } from '@lullabo/shared'
 
 // Codes made on this device, so signing out here can end them (another account may sign in
 // next, and the shortcuts would otherwise keep logging for this one).

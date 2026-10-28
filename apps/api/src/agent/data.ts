@@ -1,21 +1,13 @@
 import { type Event, inBabyScope, isRunning, newId } from '@lullabo/shared'
 
 import { type Access, type FamilyAccess, checkEventWrite } from '../access'
+import { type EventRow, toEvents } from '../db/events'
 import { parseEvent } from '../sync/protocol'
 import { EVENT_COLUMNS, bumpSeq, upsertEvents } from '../sync/sql'
-import type { VoiceBaby } from '../voice/plan'
+import type { VoiceBaby } from './plan/plan'
 
 // Reads and writes the agent's tools share. Writes go through the same checks and SQL as a
 // sync push, so devices get them on their next pull.
-
-type EventRow = Omit<Event, 'data'> & { data: string }
-
-function toEvents(rows: EventRow[]): Event[] {
-  return rows.flatMap((row) => {
-    const event = parseEvent({ ...row, data: JSON.parse(row.data) })
-    return event ? [event] : []
-  })
-}
 
 /**
  * The babies the user may record for in these families: not archived, within their baby

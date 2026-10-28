@@ -4,6 +4,9 @@ import { bodyLimit } from 'hono/body-limit'
 import { except } from 'hono/combine'
 import { cors } from 'hono/cors'
 
+import type { AdapterFor } from './agent/budget'
+import { decryptKey } from './ai/key-crypto'
+import { aiAdapter } from './ai/providers'
 import { getAuth, trustedOrigins } from './auth'
 import { canSendEmail } from './email'
 import { errorResponse, fail } from './http'
@@ -14,11 +17,11 @@ import { familyAiRoutes, userAiRoutes } from './routes/ai'
 import { familyRoutes } from './routes/families'
 import { familyInviteRoutes, inviteAcceptRoutes, invitePreviewRoutes } from './routes/invites'
 import { pushRoutes, reminderRoutes } from './routes/notifications'
+import { siriRoutes } from './routes/siri'
 import { syncRoutes } from './routes/sync'
 import { tipsRoutes } from './routes/tips'
-import { type AdapterFor, siriRoutes, voiceRoutes } from './routes/voice'
+import { voiceRoutes } from './routes/voice'
 import type { AppEnv, AuthFor } from './types'
-import { decryptKey, aiAdapter } from './voice/ai'
 
 /** Request bodies above this are refused before they are read in full. */
 const MAX_BODY_BYTES = 1024 * 1024
@@ -58,6 +61,11 @@ export function createApp(options: AppOptions = {}) {
 
   // The largest legitimate body is a sync push of SYNC_PUSH_LIMIT records, well under this.
   app.use('*', bodyLimit({ maxSize: MAX_BODY_BYTES, onError: () => fail('too_large') }))
+
+  app.use('*', async (c, next) => {
+    c.set('adapterFor', voiceAdapter)
+    await next()
+  })
 
   app.get('/health', async (c) => {
     // Touch D1 so the check covers the binding, not just the Worker.
@@ -110,9 +118,9 @@ export function createApp(options: AppOptions = {}) {
   app.route('/sync', syncRoutes)
   app.route('/push', pushRoutes)
   app.route('/reminders', reminderRoutes)
-  app.route('/tips', tipsRoutes(voiceAdapter))
-  app.route('/voice/siri', siriRoutes(voiceAdapter))
-  app.route('/voice', voiceRoutes(voiceAdapter))
+  app.route('/tips', tipsRoutes)
+  app.route('/voice/siri', siriRoutes)
+  app.route('/voice', voiceRoutes)
 
   app.notFound(() => fail('not_found'))
   app.onError(errorResponse)

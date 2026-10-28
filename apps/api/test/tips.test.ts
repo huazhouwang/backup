@@ -82,6 +82,16 @@ describe('the weekly observation', () => {
   it('is only for babies the user can see', async () => {
     const stranger = (await t.signIn('别人')).headers
     expect((await observation(stranger)).status).toBe(404)
-    expect((await observation(headers, 'nope')).status).toBe(404)
+    const missing = await observation(headers, 'nope')
+    expect(missing.status).toBe(404)
+    expect(await missing.json()).toEqual({ error: 'not_found' })
+  })
+
+  it('refuses a query without a baby or with an unknown time zone', async () => {
+    for (const query of [`timeZone=Asia%2FShanghai`, `babyId=${babyId}&timeZone=Mars%2FBase`]) {
+      const res = await t.request(`/api/tips/observation?${query}`, { headers })
+      expect(res.status).toBe(400)
+      expect(await res.json()).toEqual({ error: 'invalid' })
+    }
   })
 })

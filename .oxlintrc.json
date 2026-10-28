@@ -41,6 +41,30 @@
         "typescript/no-unsafe-type-assertion": "off",
         "no-await-in-loop": "off"
       }
+    },
+    {
+      "files": ["apps/web/src/components/**", "packages/ui/src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/features/**",
+                  "**/sync/**",
+                  "**/db",
+                  "**/db/**",
+                  "**/app/**",
+                  "**/routes/**",
+                  "@lullabo/web"
+                ],
+                "message": "Generic UI (packages/ui, apps/web/src/components) doesn't reach into features, sync, the database or the app shell."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

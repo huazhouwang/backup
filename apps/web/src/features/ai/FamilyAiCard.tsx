@@ -1,7 +1,7 @@
+import { Card, CardTitle } from '@lullabo/ui/card'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 
-import { Card, CardTitle } from '../../components/ui/Card'
 import { useOptimisticMutation } from '../../lib/optimistic'
 import { m } from '../../paraglide/messages.js'
 import { voiceKeys } from '../voice/queries'
@@ -29,18 +29,18 @@ export function FamilyAiCard({ familyId, managing }: { familyId: string; managin
       {inUse ? (
         <p className="m-0">
           {m.familyAiInUse({ name: inUse.name })}
-          <span className="block text-caption text-fg-muted">
+          <span className="block text-caption text-muted-foreground">
             {`${PROVIDER_LABEL[inUse.provider]} · ${inUse.model}`}
           </span>
         </p>
       ) : (
-        <p className="m-0 text-fg-muted">{m.familyAiNone()}</p>
+        <p className="m-0 text-muted-foreground">{m.familyAiNone()}</p>
       )}
       {managing && data.shares.length > 1 && (
         <label className="flex flex-col gap-1.5">
           <span className="font-bold">{m.familyAiChoose()}</span>
           <select
-            className="min-h-touch rounded-lg border-2 border-border bg-surface px-4 text-fg"
+            className="min-h-touch rounded-lg border-2 border-border bg-muted px-4 text-foreground"
             value={data.inUse ?? ''}
             onChange={(event) => choose.mutate(event.target.value)}
           >
@@ -52,9 +52,9 @@ export function FamilyAiCard({ familyId, managing }: { familyId: string; managin
           </select>
         </label>
       )}
-      <p className="m-0 text-caption text-fg-muted">
+      <p className="m-0 text-caption text-muted-foreground">
         {m.familyAiHint()}{' '}
-        <Link to="/settings/ai" className="font-bold text-primary-text underline">
+        <Link to="/settings/ai" className="font-bold text-accent-foreground underline">
           {m.aiMineTitle()}
         </Link>
       </p>

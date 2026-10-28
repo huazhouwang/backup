@@ -1,8 +1,8 @@
 import type { Baby } from '@lullabo/shared'
+import { NoticeCard } from '@lullabo/ui/card'
 import { createFileRoute } from '@tanstack/react-router'
 
-import { PullToRefresh } from '../components/PullToRefresh'
-import { NoticeCard } from '../components/ui/Card'
+import { PullToRefresh } from '../app/PullToRefresh'
 import { BadgeToast } from '../features/achievements/BadgeToast'
 import { RequireBaby } from '../features/babies/RequireBaby'
 import { useSelectedBaby } from '../features/babies/use-babies'

@@ -1,8 +1,8 @@
 import type { Baby, Event } from '@lullabo/shared'
+import { showToast } from '@lullabo/ui/toast'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
-import { showToast } from '../../components/ui/Toast'
 import { jsonCodec, readStored, stringList, writeStored } from '../../lib/store'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'

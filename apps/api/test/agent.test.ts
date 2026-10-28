@@ -3,7 +3,9 @@ import { fakeText } from '@tanstack/ai/testing'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { loadAccess } from '../src/access'
-import { type AgentScope, SESSION_IDLE_MS, runAgent } from '../src/agent/run'
+import { runAgent } from '../src/agent/run'
+import type { AgentScope } from '../src/agent/scope'
+import { SESSION_IDLE_MS } from '../src/agent/threads'
 import { createTestApp } from './app'
 import { baby } from './fixtures'
 

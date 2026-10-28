@@ -56,8 +56,9 @@ jobs:
           name: web-dist
           path: apps/web/dist
 
+      # Every test that takes screenshots, not only the visual suite (the voice tests have some).
       - name: Update screenshots
-        run: pnpm --filter @lullabo/e2e exec playwright test tests/visual.spec.ts --update-snapshots
+        run: pnpm --filter @lullabo/e2e exec playwright test --update-snapshots
 
       - name: Commit
         run: |

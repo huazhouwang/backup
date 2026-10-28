@@ -1,22 +1,23 @@
 import { tipById } from '@lullabo/shared'
+import { useBounce } from '@lullabo/ui/bounce'
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Input } from '@lullabo/ui/input'
+import { useVisibleArea } from '@lullabo/ui/keyboard'
+import { lockScroll } from '@lullabo/ui/scroll-lock'
+import { cn } from '@lullabo/ui/utils'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
-import { clsx } from 'clsx'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Chevron } from '../../components/ui/Chevron'
-import { FormError } from '../../components/ui/FormError'
-import { Input } from '../../components/ui/Input'
-import { useBounce } from '../../lib/bounce'
+import { Chevron } from '../../components/icons/Chevron'
 import { playCue } from '../../lib/cues'
 import { formatDate, formatTime } from '../../lib/i18n'
-import { useVisibleArea } from '../../lib/keyboard'
-import { lockScroll } from '../../lib/scroll-lock'
 import { m } from '../../paraglide/messages.js'
-import { requestSync } from '../../sync/runner'
 import { type ChatMessage, type ChatTurn, voiceApi } from './api'
 import { ChangingText, typingDots as dots } from './ChangingText'
+import { ConfirmAnswer } from './ConfirmAnswer'
+import { answered, hearSoFar, recentContext } from './conversation'
 import { voiceKeys } from './queries'
 import { type Startup, canRecord } from './recorder'
 import { TalkRow } from './TalkRow'
@@ -103,9 +104,7 @@ export function ChatPage({
     mutationFn: async ({ text: said, spoken }) => {
       // A refetch already on its way would overwrite the messages shown below.
       await queryClient.cancelQueries({ queryKey: voiceKeys.chat })
-      const recent = messages
-        .slice(-4)
-        .map((message) => `${message.role === 'user' ? 'User' : 'Assistant'}: ${message.text}`)
+      const recent = recentContext(messages)
       const mine = append({ role: 'user', text: said })
       let reply: string | null = null
       const turn = await voiceApi.stream(
@@ -127,11 +126,8 @@ export function ChatPage({
       return turn
     },
     onSuccess: (turn) => {
-      // Heard as the answer completes, for a parent not looking at the screen.
-      playCue('reply')
+      answered()
       setConfirming(turn.confirming)
-      // The agent writes on the server; pull now so the records show without waiting.
-      void requestSync()
     },
     onError: () => playCue('error'),
     // Back in step with the server: which conversation the messages went to.
@@ -170,9 +166,7 @@ export function ChatPage({
       if (talking.current) setLive((current) => ({ phase: 'talking', text: current?.text ?? '' }))
     },
     onPartial: async (soFar: Blob) => {
-      const { text: heard } = await voiceApi
-        .transcribe(soFar, { partial: true, recent: lastReply })
-        .catch(() => ({ text: null }))
+      const heard = await hearSoFar(soFar, lastReply)
       if (heard && talking.current) setLive({ phase: 'talking', text: heard })
     },
     onDrop: () => {
@@ -192,7 +186,7 @@ export function ChatPage({
   }
 
   const newConversation = (
-    <p key="new" className="m-0 text-center text-caption font-bold text-fg-muted">
+    <p key="new" className="m-0 text-center text-caption font-bold text-muted-foreground">
       {m.voiceChatNew()}
     </p>
   )
@@ -203,7 +197,10 @@ export function ChatPage({
       const started = threads[message.threadId]?.startedAt
       if (started !== undefined) {
         before.push(
-          <p key={`d-${message.threadId}`} className="m-0 text-center text-caption text-fg-muted">
+          <p
+            key={`d-${message.threadId}`}
+            className="m-0 text-center text-caption text-muted-foreground"
+          >
             {startedLabel(started)}
           </p>,
         )
@@ -220,16 +217,16 @@ export function ChatPage({
       data-own-scroll
       // Slides up over the page as it opens (lib/page-change.ts).
       data-cover
-      className="fixed inset-x-0 top-[var(--visible-top,0px)] z-20 mx-auto flex h-[var(--visible,100dvh)] max-w-app flex-col bg-bg"
+      className="fixed inset-x-0 top-[var(--visible-top,0px)] z-20 mx-auto flex h-[var(--visible,100dvh)] max-w-app flex-col bg-background"
     >
       <header className="flex items-center gap-1 border-b-2 border-border pt-safe-2 pr-safe-4 pb-2 pl-safe-2">
         <button
           type="button"
           aria-label={m.voiceChatClose()}
           onClick={close}
-          className="flex size-touch items-center justify-center rounded-full active:bg-surface"
+          className="flex size-touch items-center justify-center rounded-full active:bg-muted"
         >
-          <Chevron direction="down" className="size-6 text-fg-muted" />
+          <Chevron direction="down" className="size-6 text-muted-foreground" />
         </button>
         <h1 className="m-0 text-title font-extrabold">{m.voiceChatTitle()}</h1>
       </header>
@@ -247,16 +244,18 @@ export function ChatPage({
           className="flex min-h-full flex-col justify-end gap-2 py-3"
         >
           {hasEarlier ? (
-            <div ref={top} className="text-center text-caption text-fg-muted">
+            <div ref={top} className="text-center text-caption text-muted-foreground">
               {loadingEarlier ? m.voiceChatLoadingEarlier() : ' '}
             </div>
           ) : (
             messages.length > 0 && (
-              <p className="m-0 text-center text-caption text-fg-muted">{m.voiceChatOldest()}</p>
+              <p className="m-0 text-center text-caption text-muted-foreground">
+                {m.voiceChatOldest()}
+              </p>
             )
           )}
           {messages.length === 0 && !busy && (
-            <p className="m-0 text-fg-muted">
+            <p className="m-0 text-muted-foreground">
               {isError
                 ? m.voiceLoadFailed()
                 : tip
@@ -290,16 +289,7 @@ export function ChatPage({
           the keyboard is up: on the Home Screen iOS shrinks the whole page for it rather
           than covering it, so --keyboard stays 0 and only the focus tells. */}
       <div className="flex flex-col gap-2 border-t-2 border-border pt-2 pr-safe-4 pb-[calc(0.5rem+max(0px,env(safe-area-inset-bottom)-var(--keyboard,0px)))] pl-safe-4 has-[input:focus]:pb-2">
-        {confirming && !busy && (
-          <div className="flex gap-2">
-            <Button className="flex-1" onClick={() => say(m.voiceYes())}>
-              {m.voiceYes()}
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={() => say(m.voiceNo())}>
-              {m.voiceNo()}
-            </Button>
-          </div>
-        )}
+        {confirming && !busy && <ConfirmAnswer onAnswer={(answer) => say(answer)} />}
         {tip && !asked && !busy && (
           <fieldset className="m-0 flex flex-wrap gap-2 border-0 p-0">
             <legend className="sr-only">{m.tipAskSuggestions()}</legend>
@@ -307,7 +297,7 @@ export function ChatPage({
               <Button
                 key={question}
                 variant="soft"
-                className="px-3 text-left"
+                className="text-left"
                 onClick={() => say(m.tipAskQuestion({ title: tip.title, question }))}
               >
                 {question}
@@ -346,11 +336,11 @@ export function ChatPage({
 }
 
 const bubbleClass = (mine: boolean) =>
-  clsx(
+  cn(
     'm-0 max-w-[85%] rounded-2xl px-3 py-2 wrap-anywhere',
     mine
-      ? 'self-end rounded-br-md bg-primary text-on-accent'
-      : 'self-start rounded-bl-md bg-surface',
+      ? 'self-end rounded-br-md bg-primary text-primary-foreground'
+      : 'self-start rounded-bl-md bg-muted',
   )
 
 function Bubble({ message }: { message: ChatMessage }) {
@@ -379,7 +369,7 @@ function Waiting({
   label: string
 }) {
   return (
-    <output className={clsx(bubbleClass(mine), 'block')}>
+    <output className={cn(bubbleClass(mine), 'block')}>
       {text ? (
         <>
           <span className="sr-only">{label}</span>

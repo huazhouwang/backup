@@ -1,9 +1,9 @@
 import type { Baby } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { ListRow } from '../../components/ui/ListRow'
-import { Sheet } from '../../components/ui/Sheet'
+import { ListRow } from '../../components/ListRow'
 import { useLocalStore } from '../../db'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
@@ -39,7 +39,7 @@ export function BabyList() {
 
   return (
     <div className="flex flex-col gap-2">
-      {active.length === 0 && <p className="text-fg-muted">{m.babyListEmpty()}</p>}
+      {active.length === 0 && <p className="text-muted-foreground">{m.babyListEmpty()}</p>}
       {active.map((baby) => (
         <BabyRow
           key={baby.id}
@@ -49,7 +49,9 @@ export function BabyList() {
       ))}
       {archived.length > 0 && (
         <>
-          <h3 className="mt-2 text-caption font-bold text-fg-muted">{m.babyArchivedGroup()}</h3>
+          <h3 className="mt-2 text-caption font-bold text-muted-foreground">
+            {m.babyArchivedGroup()}
+          </h3>
           {archived.map((baby) => (
             <div key={baby.id} className="flex items-center gap-3">
               <div className="min-w-0 flex-1 opacity-70">
@@ -97,12 +99,14 @@ export function BabyList() {
                   >
                     {m.babyArchive()}
                   </Button>
-                  <p className="text-center text-caption text-fg-muted">{m.babyArchiveHint()}</p>
+                  <p className="text-center text-caption text-muted-foreground">
+                    {m.babyArchiveHint()}
+                  </p>
                 </>
               )}
               <Button
                 variant="ghost"
-                tone="danger"
+                tone="destructive"
                 onClick={() => {
                   setDeletingId(editing.id)
                   close()
@@ -110,7 +114,7 @@ export function BabyList() {
               >
                 {m.babyDelete()}
               </Button>
-              <p className="text-center text-caption text-fg-muted">{m.babyDeleteHint()}</p>
+              <p className="text-center text-caption text-muted-foreground">{m.babyDeleteHint()}</p>
             </div>
           </>
         )}

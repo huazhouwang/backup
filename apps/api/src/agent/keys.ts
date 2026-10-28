@@ -1,5 +1,5 @@
 import type { Access } from '../access'
-import type { AiProvider } from '../voice/ai'
+import type { AiProvider } from '../ai/providers'
 
 // Whose AI key voice logging spends. A user's own key works in every family they can record
 // for. Without one, a key another member shared with a family works only in that family, so

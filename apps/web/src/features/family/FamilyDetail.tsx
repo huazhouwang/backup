@@ -1,14 +1,14 @@
 import { type FamilySummary, canManageMember, familyDisplayName, isManager } from '@lullabo/shared'
+import { Badge } from '@lullabo/ui/badge'
+import { Button } from '@lullabo/ui/button'
+import { Card } from '@lullabo/ui/card'
+import { FormError } from '@lullabo/ui/form-error'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
-import { ConfirmSheet } from '../../components/ui/ConfirmSheet'
-import { FormError } from '../../components/ui/FormError'
-import { ListRow } from '../../components/ui/ListRow'
-import { Pill } from '../../components/ui/Pill'
+import { ConfirmSheet } from '../../components/ConfirmSheet'
+import { ListRow } from '../../components/ListRow'
 import { toastIfRefused } from '../../lib/server-collection'
 import { m } from '../../paraglide/messages.js'
 import { requestSync } from '../../sync/runner'
@@ -69,17 +69,19 @@ export function FamilyDetail({ family, userId }: { family: FamilySummary; userId
           <h1 className="min-w-0 flex-1 truncate text-display font-extrabold">
             {familyDisplayName(family)}
           </h1>
-          <Pill>{roleLabel[family.role]()}</Pill>
+          <Badge>{roleLabel[family.role]()}</Badge>
         </div>
         {family.alias && (
-          <p className="text-caption text-fg-muted">{m.familyAliasOf({ name: family.name })}</p>
+          <p className="text-caption text-muted-foreground">
+            {m.familyAliasOf({ name: family.name })}
+          </p>
         )}
       </div>
 
       <Card className="flex flex-col gap-2">
-        <h2 className="text-caption font-bold text-fg-muted">{m.familyBabies()}</h2>
+        <h2 className="text-caption font-bold text-muted-foreground">{m.familyBabies()}</h2>
         {babies.length === 0 ? (
-          <p className="text-fg-muted">{m.familyNoBabies()}</p>
+          <p className="text-muted-foreground">{m.familyNoBabies()}</p>
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {babies.map((baby) => (
@@ -87,7 +89,9 @@ export function FamilyDetail({ family, userId }: { family: FamilySummary; userId
                 <BabyAvatar name={baby.name} color={baby.avatarColor} />
                 <span className="flex flex-col">
                   <span className="font-extrabold">{baby.name}</span>
-                  <span className="text-caption text-fg-muted">{ageLabel(baby.birthDate)}</span>
+                  <span className="text-caption text-muted-foreground">
+                    {ageLabel(baby.birthDate)}
+                  </span>
                 </span>
               </li>
             ))}
@@ -96,9 +100,9 @@ export function FamilyDetail({ family, userId }: { family: FamilySummary; userId
       </Card>
 
       <Card className="flex flex-col gap-3">
-        <h3 className="m-0 text-caption font-bold text-fg-muted">{m.familyTitle()}</h3>
+        <h3 className="m-0 text-caption font-bold text-muted-foreground">{m.familyTitle()}</h3>
         {members === undefined ? (
-          <p className="m-0 text-fg-muted">{m.familyLoadFailed()}</p>
+          <p className="m-0 text-muted-foreground">{m.familyLoadFailed()}</p>
         ) : (
           <ul className="m-0 flex list-none flex-col p-0">
             {members.map((member) => {
@@ -126,14 +130,16 @@ export function FamilyDetail({ family, userId }: { family: FamilySummary; userId
 
         {managing && invites.length > 0 && (
           <>
-            <h3 className="m-0 text-caption font-bold text-fg-muted">{m.invitePending()}</h3>
+            <h3 className="m-0 text-caption font-bold text-muted-foreground">
+              {m.invitePending()}
+            </h3>
             <ul className="m-0 flex list-none flex-col p-0">
               {invites.map((invite) => (
                 <li key={invite.code} className="flex min-h-touch items-center gap-3">
                   <span className="min-w-0 flex-1 truncate">
                     {`${roleLabel[invite.role]()} · ${scopeLabel(invite.babyIds, babies)}`}
                   </span>
-                  <Button variant="ghost" tone="danger" onClick={() => revoke(invite.code)}>
+                  <Button variant="ghost" tone="destructive" onClick={() => revoke(invite.code)}>
                     {m.inviteRevoke()}
                   </Button>
                 </li>
@@ -163,11 +169,11 @@ export function FamilyDetail({ family, userId }: { family: FamilySummary; userId
           </Button>
         )}
         {family.role === 'owner' ? (
-          <Button variant="ghost" tone="danger" onClick={() => setSheet('delete')}>
+          <Button variant="ghost" tone="destructive" onClick={() => setSheet('delete')}>
             {m.familyDelete()}
           </Button>
         ) : (
-          <Button variant="ghost" tone="danger" onClick={() => setSheet('leave')}>
+          <Button variant="ghost" tone="destructive" onClick={() => setSheet('leave')}>
             {m.familyLeave()}
           </Button>
         )}

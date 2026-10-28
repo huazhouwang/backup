@@ -10,8 +10,9 @@ import {
   nextUp,
 } from '@lullabo/shared'
 
-import { type VoiceBaby, durationLabel, formatClock, localDay, minuteOfDayIn } from '../voice/plan'
+import { formatClock, localDay, minuteOfDayIn } from '../time-zone'
 import { recentEvents } from './data'
+import { type VoiceBaby, durationLabel } from './plan/plan'
 
 // What is usual at each age (ageNorms) lets the assistant tell a misheard value ("十五毫升"
 // for "五十毫升") from a real one.

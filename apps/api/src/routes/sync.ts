@@ -13,6 +13,7 @@ import {
 import { Hono } from 'hono'
 
 import { checkBabyWrite, checkEventWrite, loadAccess, readScope, toSummaries } from '../access'
+import { type EventRow, toEvent } from '../db/events'
 import { fail, json } from '../http'
 import {
   type ExistingRow,
@@ -38,7 +39,6 @@ import {
 import type { AppEnv } from '../types'
 
 type BabyRow = Baby & { seq: number }
-type EventRow = Omit<Event, 'data'> & { data: string; seq: number }
 
 const toMap = (rows: ExistingRow[]) => new Map(rows.map((row) => [row.id, row]))
 
@@ -49,13 +49,6 @@ function lastOf(rows: readonly { seq: number; id: string }[], fallback: TableCur
 
 function toBaby({ seq: _seq, ...baby }: BabyRow): Baby {
   return baby
-}
-
-function toEvent({ seq: _seq, data, ...event }: EventRow): Event {
-  // Rows are validated against the event schema when written; re-validating every pulled
-  // row would spend the CPU budget (10ms on the free plan) for no gain.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-  return Object.assign(event, { data: JSON.parse(data) as unknown }) as Event
 }
 
 export const syncRoutes = new Hono<AppEnv>()
@@ -130,7 +123,9 @@ export const syncRoutes = new Hono<AppEnv>()
 
     const [babyRows, eventRows] = await Promise.all([
       selectBabiesPage(db, scope, cursor.babies, SYNC_PULL_LIMIT + 1).all<BabyRow>(),
-      selectEventsPage(db, scope, cursor.events, SYNC_PULL_LIMIT + 1).all<EventRow>(),
+      selectEventsPage(db, scope, cursor.events, SYNC_PULL_LIMIT + 1).all<
+        EventRow & { seq: number }
+      >(),
     ])
     const babyPage = babyRows.results.slice(0, SYNC_PULL_LIMIT)
     const eventPage = eventRows.results.slice(0, SYNC_PULL_LIMIT)

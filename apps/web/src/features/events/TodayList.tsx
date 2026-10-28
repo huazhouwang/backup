@@ -1,13 +1,13 @@
 import { type Event, hasKnownDuration, startOfLocalDay } from '@lullabo/shared'
+import { Bun } from '@lullabo/ui/bun'
+import { glowOnce, rowInOut, slideFromSide } from '@lullabo/ui/motion'
+import { showToast } from '@lullabo/ui/toast'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { useState } from 'react'
 
-import { Bun } from '../../components/ui/Bun'
-import { Chevron } from '../../components/ui/Chevron'
-import { showToast } from '../../components/ui/Toast'
+import { Chevron } from '../../components/icons/Chevron'
 import { useLocalStore } from '../../db'
 import { formatDate, formatTime } from '../../lib/i18n'
-import { glowOnce, rowInOut, slideFromSide } from '../../lib/motion'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { saveEvent } from './actions'
@@ -64,7 +64,7 @@ export function TodayList({ events }: { events: readonly Event[] }) {
             type="button"
             aria-label={m.dayPrev()}
             onClick={() => showDay(daysBack + 1)}
-            className="flex size-touch items-center justify-center rounded-full text-fg-muted active:bg-surface"
+            className="flex size-touch items-center justify-center rounded-full text-muted-foreground active:bg-muted"
           >
             <Chevron direction="left" className="size-6" />
           </button>
@@ -73,7 +73,7 @@ export function TodayList({ events }: { events: readonly Event[] }) {
             aria-label={m.dayNext()}
             disabled={daysBack === 0}
             onClick={() => showDay(Math.max(0, daysBack - 1))}
-            className="flex size-touch items-center justify-center rounded-full text-fg-muted active:bg-surface disabled:opacity-30"
+            className="flex size-touch items-center justify-center rounded-full text-muted-foreground active:bg-muted disabled:opacity-30"
           >
             <Chevron direction="right" className="size-6" />
           </button>
@@ -83,7 +83,7 @@ export function TodayList({ events }: { events: readonly Event[] }) {
         <button
           type="button"
           onClick={() => showDay(0)}
-          className="self-start font-bold text-primary-text"
+          className="self-start font-bold text-accent-foreground"
         >
           {m.dayBackToToday()}
         </button>
@@ -93,7 +93,9 @@ export function TodayList({ events }: { events: readonly Event[] }) {
           {today.length === 0 && (
             <div className="flex items-center gap-3">
               <Bun mood="asleep" className="size-14" />
-              <p className="m-0 text-fg-muted">{daysBack === 0 ? m.todayEmpty() : m.dayEmpty()}</p>
+              <p className="m-0 text-muted-foreground">
+                {daysBack === 0 ? m.todayEmpty() : m.dayEmpty()}
+              </p>
             </div>
           )}
           {/* Always mounted, so the first record of the day animates in like the rest. */}
@@ -115,7 +117,7 @@ export function TodayList({ events }: { events: readonly Event[] }) {
                   >
                     <motion.span
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 bg-primary-soft"
+                      className="pointer-events-none absolute inset-0 bg-accent"
                       {...glowOnce}
                     />
                     <button
@@ -125,7 +127,7 @@ export function TodayList({ events }: { events: readonly Event[] }) {
                       className="press-row flex min-h-touch w-full items-center gap-3 py-3 text-left"
                     >
                       <EventIcon {...eventIconProps(event)} className="size-7" />
-                      <span className="flex w-12 shrink-0 flex-col text-fg-muted tabular-nums">
+                      <span className="flex w-12 shrink-0 flex-col text-muted-foreground tabular-nums">
                         {event.startAt < dayStart && (
                           <span className="text-caption">{m.eventDayBefore()}</span>
                         )}
@@ -135,7 +137,7 @@ export function TodayList({ events }: { events: readonly Event[] }) {
                         )}
                       </span>
                       <span className="shrink-0 font-extrabold">{title}</span>
-                      <span className="truncate text-fg-muted">{detail}</span>
+                      <span className="truncate text-muted-foreground">{detail}</span>
                     </button>
                     {/* The row is widened for its pressed background; the divider is not. */}
                     <span aria-hidden className="absolute inset-x-2 bottom-0 h-0.5 bg-border" />

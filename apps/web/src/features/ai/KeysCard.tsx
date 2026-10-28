@@ -1,12 +1,12 @@
+import { Button } from '@lullabo/ui/button'
+import { Card, CardTitle } from '@lullabo/ui/card'
+import { FormError } from '@lullabo/ui/form-error'
+import { Input } from '@lullabo/ui/input'
+import { Sheet } from '@lullabo/ui/sheet'
+import { cn } from '@lullabo/ui/utils'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { clsx } from 'clsx'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Card, CardTitle } from '../../components/ui/Card'
-import { FormError } from '../../components/ui/FormError'
-import { Input } from '../../components/ui/Input'
-import { Sheet } from '../../components/ui/Sheet'
 import { m } from '../../paraglide/messages.js'
 import {
   AI_PROVIDERS,
@@ -50,7 +50,7 @@ export function KeysCard({ ai, providers }: { ai: UserAi; providers?: ProviderMo
           )
         })}
       </ul>
-      <p className="m-0 text-caption text-fg-muted">{m.aiKeysHint()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.aiKeysHint()}</p>
       <Sheet
         open={editing !== null}
         onClose={() => setEditing(null)}
@@ -70,19 +70,19 @@ export function KeysCard({ ai, providers }: { ai: UserAi; providers?: ProviderMo
 }
 
 function KeyStatus({ hint, status }: { hint?: string; status?: ProviderModels['status'] }) {
-  if (!hint) return <span className="text-caption text-fg-muted">{m.aiKeyNone()}</span>
+  if (!hint) return <span className="text-caption text-muted-foreground">{m.aiKeyNone()}</span>
   const [text, tone] =
     status === 'invalid'
-      ? [m.aiKeyInvalidNow(), 'text-danger-text']
+      ? [m.aiKeyInvalidNow(), 'text-destructive-text']
       : status === 'unreachable'
-        ? [m.aiKeyUnreachable(), 'text-fg-muted']
+        ? [m.aiKeyUnreachable(), 'text-muted-foreground']
         : status === 'ok'
-          ? [m.aiKeyWorks(), 'text-primary-text']
+          ? [m.aiKeyWorks(), 'text-accent-foreground']
           : ['', '']
   return (
-    <span className="truncate text-caption text-fg-muted">
+    <span className="truncate text-caption text-muted-foreground">
       {hint}
-      {text && <span className={clsx('font-bold', tone)}>{` · ${text}`}</span>}
+      {text && <span className={cn('font-bold', tone)}>{` · ${text}`}</span>}
     </span>
   )
 }
@@ -150,7 +150,7 @@ function KeyForm({
         <Button
           type="button"
           variant="ghost"
-          tone="danger"
+          tone="destructive"
           onClick={() => {
             remove.mutate()
             onDone()

@@ -1,10 +1,12 @@
+import { Radio } from '@base-ui/react/radio'
+import { RadioGroup } from '@base-ui/react/radio-group'
 import { type AvatarColor, type BabySex, localDateString } from '@lullabo/shared'
-import { clsx } from 'clsx'
-import { type FormEvent, useState } from 'react'
+import { Button } from '@lullabo/ui/button'
+import { Input } from '@lullabo/ui/input'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
+import { cn } from '@lullabo/ui/utils'
+import { type FormEvent, useId, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { m } from '../../paraglide/messages.js'
 import { avatarBackground } from './BabyAvatar'
 import { AVATAR_COLORS, type BabyInput } from './records'
@@ -39,6 +41,7 @@ export interface BabyFormProps {
 export function BabyForm({ initial, submitLabel, onSubmit, onCancel }: BabyFormProps) {
   const [input, setInput] = useState(initial)
   const [errors, setErrors] = useState<Errors>({})
+  const colorLegendId = useId()
   const today = localDateString()
 
   const update = <K extends keyof BabyInput>(key: K, value: BabyInput[K]) =>
@@ -84,37 +87,36 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel }: BabyFormP
         onChange={(sex) => update('sex', sex)}
       />
       <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
-        <legend className="mb-1.5 font-bold">{m.babyFormColor()}</legend>
-        <div className="grid max-w-80 grid-cols-6 gap-2">
+        <legend id={colorLegendId} className="mb-1.5 font-bold">
+          {m.babyFormColor()}
+        </legend>
+        <RadioGroup
+          aria-labelledby={colorLegendId}
+          value={input.avatarColor}
+          onValueChange={(color) => update('avatarColor', color)}
+          className="grid max-w-80 grid-cols-6 gap-2"
+        >
           {AVATAR_COLORS.map((color) => (
-            <label
+            <Radio.Root
               key={color}
-              className={clsx(
-                'aspect-square w-full cursor-pointer rounded-full border-4 border-bg outline-3 outline-transparent',
-                'has-checked:outline-fg has-focus-visible:outline-diaper',
+              value={color}
+              aria-label={colorNames[color]()}
+              className={cn(
+                'aspect-square w-full cursor-pointer rounded-full border-4 border-background outline-3 outline-transparent',
+                'focus-visible:outline-diaper data-checked:outline-foreground',
                 avatarBackground[color],
               )}
-            >
-              <input
-                type="radio"
-                name="avatarColor"
-                value={color}
-                checked={input.avatarColor === color}
-                onChange={() => update('avatarColor', color)}
-                aria-label={colorNames[color]()}
-                className="sr-only"
-              />
-            </label>
+            />
           ))}
-        </div>
+        </RadioGroup>
       </fieldset>
       <div className="flex gap-3 pt-2">
         {onCancel && (
-          <Button variant="outline" className="flex-1" onClick={onCancel}>
+          <Button variant="outline" className="flex-1 shrink-0" onClick={onCancel}>
             {m.actionCancel()}
           </Button>
         )}
-        <Button type="submit" size="lg" className="flex-1">
+        <Button type="submit" size="lg" className="flex-1 shrink-0">
           {submitLabel}
         </Button>
       </div>

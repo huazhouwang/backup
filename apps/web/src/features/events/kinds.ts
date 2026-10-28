@@ -1,12 +1,12 @@
-import { RECORD_KINDS, type RecordKind } from '@lullabo/shared'
+import { type DurationKind, RECORD_KINDS, type RecordKind } from '@lullabo/shared'
+import type { ButtonTone } from '@lullabo/ui/button'
+import type { ChipTone } from '@lullabo/ui/toggle-chip'
 
-import type { ButtonTone } from '../../components/ui/Button'
-import type { ChipTone } from '../../components/ui/ToggleChip'
 import { m } from '../../paraglide/messages.js'
-import { type Category, categoryTone } from './category'
+import { CATEGORY_LOOK, type Category } from './category'
 
 /** Kinds that span time (RECORD_KINDS timing 'duration'): timed live, or logged afterwards. */
-export type DurationKind = Extract<RecordKind, 'breast' | 'bottle' | 'solids' | 'sleep' | 'pumping'>
+export type { DurationKind }
 
 export const isDurationKind = (kind: RecordKind): kind is DurationKind =>
   RECORD_KINDS[kind].timing === 'duration'
@@ -35,7 +35,7 @@ export const DURATION_LOOK: Record<DurationKind, DurationLook> = {
 }
 
 export const durationTone = (kind: DurationKind): ButtonTone =>
-  categoryTone[DURATION_LOOK[kind].type]
+  CATEGORY_LOOK[DURATION_LOOK[kind].type].tone
 
 /** Chips come in fewer colours than buttons. */
 export const durationChipTone = (kind: DurationKind): ChipTone =>

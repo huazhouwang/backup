@@ -1,8 +1,8 @@
 import { localDateString } from '@lullabo/shared'
+import { Bun } from '@lullabo/ui/bun'
+import { Card } from '@lullabo/ui/card'
 import { Link } from '@tanstack/react-router'
 
-import { Bun } from '../../components/ui/Bun'
-import { Card } from '../../components/ui/Card'
 import { useLocalStore } from '../../db'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
@@ -19,7 +19,7 @@ export function BabyOnboarding() {
     <section className="flex flex-col gap-4">
       <Bun mood="happy" className="size-24 self-center" />
       <h1 className="text-display font-extrabold">{m.onboardingTitle()}</h1>
-      <p className="text-fg-muted">{m.onboardingBody()}</p>
+      <p className="text-muted-foreground">{m.onboardingBody()}</p>
       <Card>
         <BabyForm
           initial={{
@@ -36,7 +36,7 @@ export function BabyOnboarding() {
       {!userId && (
         <Link
           to="/settings/account"
-          className="flex min-h-touch items-center self-center font-extrabold text-primary-text"
+          className="flex min-h-touch items-center self-center font-extrabold text-accent-foreground"
         >
           {m.onboardingSignIn()}
         </Link>

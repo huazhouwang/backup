@@ -1,8 +1,13 @@
 import { type Event, newId } from '@lullabo/shared'
 import { describe, expect, it } from 'vitest'
 
-import type { VoiceAction } from '../src/voice/action'
-import { type PlanContext, type PlannedChange, editedBottle, planActions } from '../src/voice/plan'
+import type { VoiceAction } from '../src/agent/plan/action'
+import {
+  type PlanContext,
+  type PlannedChange,
+  editedBottle,
+  planActions,
+} from '../src/agent/plan/plan'
 
 const MINUTE = 60_000
 const NOW = Date.UTC(2026, 9, 17, 2, 0)

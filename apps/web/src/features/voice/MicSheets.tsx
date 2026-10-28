@@ -1,7 +1,7 @@
+import { Button } from '@lullabo/ui/button'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Sheet } from '../../components/ui/Sheet'
 import { m } from '../../paraglide/messages.js'
 
 /** iPhone and iPad (which presents itself as a Mac with touch). */
@@ -45,7 +45,7 @@ export function MicExplainSheet({
         <Steps />
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex min-h-touch flex-1 items-center gap-2 text-caption font-bold text-fg-muted">
+        <label className="flex min-h-touch flex-1 items-center gap-2 text-caption font-bold text-muted-foreground">
           <input
             type="checkbox"
             checked={hide}
@@ -71,7 +71,7 @@ export function MicDeniedSheet({ open, onClose }: { open: boolean; onClose: () =
     <Sheet open={open} onClose={onClose} title={m.micDeniedTitle()}>
       <p className="m-0">{m.micDeniedWhy()}</p>
       <Steps />
-      <p className="m-0 text-fg-muted">{m.micDeniedDictation()}</p>
+      <p className="m-0 text-muted-foreground">{m.micDeniedDictation()}</p>
       <Button size="lg" block onClick={onClose}>
         {m.micDeniedOk()}
       </Button>

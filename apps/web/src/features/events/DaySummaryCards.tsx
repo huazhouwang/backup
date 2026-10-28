@@ -1,7 +1,7 @@
 import type { Event } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { Card } from '@lullabo/ui/card'
+import { cn } from '@lullabo/ui/utils'
 
-import { Card } from '../../components/ui/Card'
 import { formatQuantity, unitLabel } from '../../lib/units'
 import { m } from '../../paraglide/messages.js'
 import { durationLabel } from './duration-label'
@@ -12,7 +12,7 @@ const TEXT = {
   feeding: 'text-feeding-text',
   sleep: 'text-sleep-text',
   diaper: 'text-diaper-text',
-  primary: 'text-primary-text',
+  primary: 'text-accent-foreground',
 } as const
 
 export function DaySummaryCards({
@@ -101,17 +101,17 @@ export function DaySummaryCards({
           as="section"
           key={card.title}
           tone={card.tone}
-          className={clsx('flex flex-col gap-1', TEXT[card.tone])}
+          className={cn('flex flex-col gap-1', TEXT[card.tone])}
         >
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-title font-extrabold">
               {card.icon && <EventIcon kind={card.icon} className="size-8" />}
               {card.title}
             </h2>
-            <span className="text-title font-extrabold text-fg">{card.value}</span>
+            <span className="text-title font-extrabold text-foreground">{card.value}</span>
           </div>
           {card.details.map((detail) => (
-            <p key={detail} className="m-0 text-fg-muted">
+            <p key={detail} className="m-0 text-muted-foreground">
               {detail}
             </p>
           ))}

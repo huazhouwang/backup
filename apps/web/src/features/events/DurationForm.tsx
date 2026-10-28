@@ -7,12 +7,12 @@ import {
   isRunning,
   recordKind,
 } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Input } from '@lullabo/ui/input'
+import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { type FormEvent, type ReactNode, useReducer, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { Input } from '../../components/ui/Input'
-import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { useLocalStore } from '../../db'
 import { quantityInputProps, unitLabel } from '../../lib/units'
 import { useNow } from '../../lib/use-now'
@@ -20,16 +20,21 @@ import { m } from '../../paraglide/messages.js'
 import { addEvent } from './actions'
 import { checkTimes, newTimes, resolveTimes, timesReducer } from './duration-times'
 import { DurationTimesFields } from './DurationTimes'
-import { emptyBottle, parseBottleDraft, parseSolids } from './event-draft'
-import { BottleFields, SolidsField } from './EventFields'
+import {
+  type DraftErrors,
+  emptyDrafts,
+  parseBottleDraft,
+  parsePumping,
+  parseSolids,
+} from './fields/drafts'
+import { RecordFields } from './fields/RecordFields'
 import { type DurationKind, durationTone } from './kinds'
 import { optionsOf, sideLabel } from './labels'
-import { parseVolume } from './measure-input'
 import { type DurationDetails, logRecord, startRecord, suggestedBreastSide } from './records'
 import { useEventsByBaby } from './use-events'
 import { clashingSleep, overlapsSleep, sleepOverlapMessage } from './validation'
 
-type Errors = Partial<Record<'amount' | 'food' | 'start' | 'end' | 'duration' | 'form', string>>
+type Errors = Partial<Record<'start' | 'end' | 'duration' | 'form', string>> & DraftErrors
 type PumpingSide = 'left' | 'right' | 'both'
 
 const runningOf = (events: readonly Event[], kind: DurationKind) =>
@@ -64,10 +69,8 @@ export function DurationForm({
   const lastBreast = events.find(
     (event): event is FeedingEvent => event.type === 'feeding' && event.data.kind === 'breast',
   )
-  const [pumpingSide, setPumpingSide] = useState<PumpingSide>('both')
-  const [bottle, setBottle] = useState(emptyBottle)
-  const [food, setFood] = useState('')
-  const [amount, setAmount] = useState('')
+  const [drafts, setDrafts] = useState(emptyDrafts)
+  const { pumping } = drafts
 
   // Logging afterwards: the usual duration, just ended, until changed (duration-times.ts).
   const [times, dispatch] = useReducer(timesReducer, null, () =>
@@ -94,22 +97,20 @@ export function DurationForm({
           }),
         }
       case 'bottle': {
-        const parsed = parseBottleDraft(bottle)
+        const parsed = parseBottleDraft(drafts.bottle)
         return 'errors' in parsed ? parsed.errors : parsed.data
       }
       case 'solids': {
-        const parsed = parseSolids(food)
+        const parsed = parseSolids(drafts.food)
         return 'errors' in parsed ? parsed.errors : parsed.data
       }
       case 'sleep':
         return { kind }
       case 'pumping': {
         // The amount is known at the end: asked when logging afterwards or stopping.
-        if (!afterwards) return { kind, side: pumpingSide }
-        const volume = parseVolume(amount)
-        return 'error' in volume
-          ? { amount: volume.error }
-          : { kind, side: pumpingSide, amountMl: volume.amountMl }
+        if (!afterwards) return { kind, side: pumping.side }
+        const parsed = parsePumping(pumping)
+        return 'errors' in parsed ? parsed.errors : { kind, ...parsed.data }
       }
       default:
         return kind satisfies never
@@ -188,17 +189,18 @@ export function DurationForm({
           label={m.pumpingSide()}
           labelStyle="field"
           options={optionsOf(sideLabel, definition.sides)}
-          value={pumpingSide}
-          onChange={setPumpingSide}
+          value={pumping.side}
+          onChange={(side) =>
+            setDrafts((current) => ({ ...current, pumping: { ...current.pumping, side } }))
+          }
         />
       )}
-      {kind === 'bottle' && (
-        <BottleFields value={bottle} onChange={setBottle} error={errors.amount} />
+      {(kind === 'bottle' || kind === 'solids') && (
+        <RecordFields kind={kind} drafts={drafts} onChange={setDrafts} errors={errors} />
       )}
-      {kind === 'solids' && <SolidsField value={food} onChange={setFood} error={errors.food} />}
 
       {running ? (
-        <p className="m-0 text-fg-muted">{m.durationAlreadyRunning()}</p>
+        <p className="m-0 text-muted-foreground">{m.durationAlreadyRunning()}</p>
       ) : (
         <Button tone={durationTone(kind)} size="lg" block className="min-h-16" onClick={startNow}>
           {kind === 'sleep' ? m.sleepStartNow() : m.durationStartTimer()}
@@ -217,9 +219,14 @@ export function DurationForm({
             label={m.pumpingAmount({ unit: unitLabel('volume') })}
             {...quantityInputProps('volume')}
             min={0}
-            value={amount}
+            value={pumping.amount}
             error={errors.amount}
-            onChange={(event) => setAmount(event.target.value)}
+            onChange={(event) =>
+              setDrafts((current) => ({
+                ...current,
+                pumping: { ...current.pumping, amount: event.target.value },
+              }))
+            }
           />
         )}
         {errors.form && <FormError>{errors.form}</FormError>}

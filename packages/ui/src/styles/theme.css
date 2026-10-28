@@ -1,0 +1,202 @@
+/*
+ * The theme, laid out as shadcn/ui does: raw values in plain CSS variables named by their
+ * role (background, foreground, primary, muted, accent, destructive, border…), redefined
+ * for dark, and mapped to Tailwind colours through `@theme inline`, so components never
+ * need `dark:`. Beyond shadcn's roles: `*-edge` for the solid bottom edge of buttons and
+ * cards, `*-soft`/`*-text` pairs for tinted cards, and a colour per record kind.
+ *
+ * Accent fills are slightly deeper than Duolingo's so white bold labels reach >= 3:1
+ * (WCAG large text). Brighter hues are used for accent text/icons on dark surfaces.
+ *
+ * The palette follows the logo: night blue for the primary, moon yellow for good news,
+ * warm white (light) and the logo's night sky (dark) behind everything.
+ */
+:root {
+  color-scheme: light;
+  --background: #fffdf8;
+  --muted: #f7f3ea;
+  --border: #ebe4d6;
+  --foreground: #2f3350;
+  --muted-foreground: #5d6380;
+  --primary-foreground: #ffffff;
+  /* Cards, sheets and fields sit on the page's own colours. */
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --input: var(--border);
+  --ring: var(--primary);
+  --radius: 16px;
+  /* Sheets cover everything, toasts included, as a modal dialog's top layer did. */
+  --layer-sheet: 1000000000;
+
+  --primary: #4152b8;
+  --primary-edge: #2e3c8f;
+  --accent: #e8ebfa;
+  --accent-foreground: #3a4bb0;
+
+  --moon: #ffc927;
+  --moon-edge: #e0a800;
+  --moon-soft: #fff4cc;
+  --moon-text: #8a6a00;
+  --moon-foreground: #4a3a00;
+
+  --feeding: #e07a00;
+  --feeding-edge: #b86400;
+  --feeding-soft: #fff0d9;
+  --feeding-text: #c86d00;
+
+  --sleep: #b26ef0;
+  --sleep-edge: #8f4ccf;
+  --sleep-soft: #f4e8ff;
+  --sleep-text: #9a4fe0;
+
+  --diaper: #0e8fd6;
+  --diaper-edge: #0b74ae;
+  --diaper-soft: #ddf4ff;
+  --diaper-text: #0a84c8;
+
+  --destructive: #e83a3a;
+  --destructive-edge: #c22626;
+  --destructive-soft: #ffe1e1;
+  --destructive-text: #d83030;
+
+  --pumping: #e0569a;
+  --pumping-edge: #b83f7c;
+  --pumping-soft: #ffe4f1;
+  --pumping-text: #c13f80;
+
+  --medication: #a87d00;
+  --medication-edge: #876400;
+  --medication-soft: #fff4d1;
+  --medication-text: #9a7200;
+
+  --note: #6b6b6b;
+  --note-edge: #4f4f4f;
+  --note-soft: #f0ece3;
+  --note-text: #5c5c5c;
+
+  /* The avatar called green stays green, now that the primary is blue. */
+  --avatar-green: #46a302;
+  --avatar-pink: #e0569a;
+  --avatar-yellow: #d19b00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --background: #161d38;
+    --muted: #1f2848;
+    --border: #34406a;
+    --foreground: #f1f3fb;
+    --muted-foreground: #a3abc9;
+    --primary: #5668dc;
+    --primary-edge: #4152b8;
+    --accent: #263063;
+    --accent-foreground: #9aa8ff;
+    --moon-soft: #2e2a1a;
+    --moon-text: #ffd84d;
+    --feeding-soft: #3a2a14;
+    --feeding-text: #ff9600;
+    --sleep-soft: #2f2440;
+    --sleep-text: #ce82ff;
+    --diaper-soft: #12313f;
+    --diaper-text: #1cb0f6;
+    --destructive-soft: #3d1c1e;
+    --destructive-text: #ff4b4b;
+    --pumping-soft: #3d1f2e;
+    --pumping-text: #ff7ab8;
+    --medication-soft: #3a3114;
+    --medication-text: #ffc800;
+    --note-soft: #263052;
+    --note-text: #b0b8d6;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #161d38;
+  --muted: #1f2848;
+  --border: #34406a;
+  --foreground: #f1f3fb;
+  --muted-foreground: #a3abc9;
+  --primary: #5668dc;
+  --primary-edge: #4152b8;
+  --accent: #263063;
+  --accent-foreground: #9aa8ff;
+  --moon-soft: #2e2a1a;
+  --moon-text: #ffd84d;
+  --feeding-soft: #3a2a14;
+  --feeding-text: #ff9600;
+  --sleep-soft: #2f2440;
+  --sleep-text: #ce82ff;
+  --diaper-soft: #12313f;
+  --diaper-text: #1cb0f6;
+  --destructive-soft: #3d1c1e;
+  --destructive-text: #ff4b4b;
+  --pumping-soft: #3d1f2e;
+  --pumping-text: #ff7ab8;
+  --medication-soft: #3a3114;
+  --medication-text: #ffc800;
+  --note-soft: #263052;
+  --note-text: #b0b8d6;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-background: var(--background);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-edge: var(--primary-edge);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-moon: var(--moon);
+  --color-moon-edge: var(--moon-edge);
+  --color-moon-soft: var(--moon-soft);
+  --color-moon-text: var(--moon-text);
+  --color-moon-foreground: var(--moon-foreground);
+  --color-feeding: var(--feeding);
+  --color-feeding-edge: var(--feeding-edge);
+  --color-feeding-soft: var(--feeding-soft);
+  --color-feeding-text: var(--feeding-text);
+  --color-sleep: var(--sleep);
+  --color-sleep-edge: var(--sleep-edge);
+  --color-sleep-soft: var(--sleep-soft);
+  --color-sleep-text: var(--sleep-text);
+  --color-diaper: var(--diaper);
+  --color-diaper-edge: var(--diaper-edge);
+  --color-diaper-soft: var(--diaper-soft);
+  --color-diaper-text: var(--diaper-text);
+  --color-destructive: var(--destructive);
+  --color-destructive-edge: var(--destructive-edge);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-text: var(--destructive-text);
+  --color-pumping: var(--pumping);
+  --color-pumping-edge: var(--pumping-edge);
+  --color-pumping-soft: var(--pumping-soft);
+  --color-pumping-text: var(--pumping-text);
+  --color-medication: var(--medication);
+  --color-medication-edge: var(--medication-edge);
+  --color-medication-soft: var(--medication-soft);
+  --color-medication-text: var(--medication-text);
+  --color-note: var(--note);
+  --color-note-edge: var(--note-edge);
+  --color-note-soft: var(--note-soft);
+  --color-note-text: var(--note-text);
+  --color-avatar-green: var(--avatar-green);
+  --color-avatar-pink: var(--avatar-pink);
+  --color-avatar-yellow: var(--avatar-yellow);
+
+  --shadow-segment: 0 2px 0 var(--border);
+}

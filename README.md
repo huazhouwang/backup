@@ -79,6 +79,7 @@ Unit tests run the voice agent with a scripted model. `apps/api/evals` plays sce
 | `apps/web`        | `@lullabo/web`    | TanStack Start client (static SPA), TanStack DB and Query |
 | `apps/api`        | `@lullabo/api`    | Hono API on Cloudflare Workers, D1, TanStack AI agent     |
 | `packages/shared` | `@lullabo/shared` | Schemas and types shared by web and api                   |
+| `packages/ui`     | `@lullabo/ui`     | Theme and components (shadcn/ui-style, on Base UI)        |
 | `e2e`             | `@lullabo/e2e`    | Playwright end-to-end tests                               |
 
 Internal packages export TypeScript source directly; consuming apps compile them with their own bundler.

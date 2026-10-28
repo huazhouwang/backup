@@ -1,24 +1,23 @@
 import type { Event } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Input } from '@lullabo/ui/input'
 import { type FormEvent, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { Input } from '../../components/ui/Input'
 import { useLocalStore } from '../../db'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
-import { type GrowthErrors, emptyGrowth, parseGrowth } from '../growth/growth-input'
 import { addEvent } from './actions'
-import { type InstantCategory, categoryTone } from './category'
-import { emptyMedication, parseCelsius, parseMedication } from './event-draft'
-import { GrowthFields, MedicationFields, TemperatureField } from './EventFields'
+import { CATEGORY_LOOK, type InstantCategory } from './category'
+import { type DraftErrors, emptyDrafts, parseCelsius, parseMedication } from './fields/drafts'
+import { parseGrowth } from './fields/growth-input'
+import { RecordFields } from './fields/RecordFields'
 import { QuickTimeField } from './QuickTimeField'
 import { logGrowth, logMedication, logNote, logTemperature } from './records'
 import { toDateTimeLocal } from './time'
 import { validateTime } from './validation'
 
-type Errors = Partial<Record<'time' | 'amount' | 'celsius' | 'name' | 'text', string>> &
-  GrowthErrors
+type Errors = Partial<Record<'time' | 'text', string>> & DraftErrors
 
 /** Form for the less frequent instant records (temperature, medication, notes, growth). */
 export function OtherEventForm({
@@ -33,29 +32,27 @@ export function OtherEventForm({
   const store = useLocalStore()
   const now = useNow(60_000)
   const [time, setTime] = useState(() => toDateTimeLocal(now))
-  const [celsius, setCelsius] = useState('')
-  const [medication, setMedication] = useState(emptyMedication)
+  const [drafts, setDrafts] = useState(emptyDrafts)
   const [text, setText] = useState('')
-  const [growth, setGrowth] = useState(emptyGrowth)
   const [errors, setErrors] = useState<Errors>({})
 
   /** The record for one baby, or the field errors that block saving. */
   function build(at: number, current: number): ((babyId: string) => Event) | Errors {
     switch (category) {
       case 'temperature': {
-        const parsed = parseCelsius(celsius)
+        const parsed = parseCelsius(drafts.celsius)
         return 'errors' in parsed
           ? parsed.errors
           : (id) => logTemperature(id, at, parsed.data.celsius, current)
       }
       case 'medication': {
-        const parsed = parseMedication(medication)
+        const parsed = parseMedication(drafts.medication)
         return 'errors' in parsed
           ? parsed.errors
           : (id) => logMedication(id, at, parsed.data.name, parsed.data.dose ?? '', current)
       }
       case 'growth': {
-        const parsed = parseGrowth(growth)
+        const parsed = parseGrowth(drafts.growth)
         return 'errors' in parsed ? parsed.errors : (id) => logGrowth(id, at, parsed.data, current)
       }
       case 'note':
@@ -80,18 +77,8 @@ export function OtherEventForm({
 
   return (
     <form noValidate onSubmit={submit} className="flex flex-col gap-4">
-      {category === 'growth' && (
-        <>
-          <GrowthFields value={growth} onChange={setGrowth} errors={errors} />
-          {errors.form && <FormError>{errors.form}</FormError>}
-        </>
-      )}
-      {category === 'temperature' && (
-        <TemperatureField value={celsius} onChange={setCelsius} error={errors.celsius} />
-      )}
-      {category === 'medication' && (
-        <MedicationFields value={medication} onChange={setMedication} error={errors.name} />
-      )}
+      <RecordFields kind={category} drafts={drafts} onChange={setDrafts} errors={errors} />
+      {errors.form && <FormError>{errors.form}</FormError>}
       {category === 'note' && (
         <Input
           label={m.noteText()}
@@ -108,7 +95,7 @@ export function OtherEventForm({
         error={errors.time}
         now={now}
       />
-      <Button type="submit" tone={categoryTone[category]} size="lg" block>
+      <Button type="submit" tone={CATEGORY_LOOK[category].tone} size="lg" block>
         {m.actionLog()}
       </Button>
     </form>

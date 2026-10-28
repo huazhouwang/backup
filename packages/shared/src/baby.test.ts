@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { babySchema } from './baby'
-import { syncMeta } from './fixtures.test-utils'
 import { newId } from './id'
+import { syncMeta } from './testing'
 
 function baby(overrides: Record<string, unknown> = {}) {
   return {

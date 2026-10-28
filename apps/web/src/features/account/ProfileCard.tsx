@@ -1,7 +1,7 @@
+import { Card, CardTitle } from '@lullabo/ui/card'
+import { Input } from '@lullabo/ui/input'
 import { useState } from 'react'
 
-import { Card, CardTitle } from '../../components/ui/Card'
-import { Input } from '../../components/ui/Input'
 import { UserAvatar } from '../../components/UserAvatar'
 import { useLocalStore } from '../../db'
 import { formatList } from '../../lib/i18n'
@@ -53,7 +53,7 @@ export function ProfileCard({
         <UserAvatar name={user.name} image={user.image} size="lg" />
         <div className="flex min-w-0 flex-col">
           <span className="truncate font-extrabold">{user.name}</span>
-          <span className="truncate text-caption text-fg-muted">{user.email}</span>
+          <span className="truncate text-caption text-muted-foreground">{user.email}</span>
         </div>
       </div>
       <Input
@@ -68,7 +68,9 @@ export function ProfileCard({
           else if (next !== user.name) rename.mutate(next)
         }}
       />
-      {via && <p className="m-0 text-caption text-fg-muted">{m.accountSignsInWith({ via })}</p>}
+      {via && (
+        <p className="m-0 text-caption text-muted-foreground">{m.accountSignsInWith({ via })}</p>
+      )}
     </Card>
   )
 }

@@ -1,8 +1,7 @@
-import { base64UrlEncode, newId } from '@lullabo/shared'
+import { DAY, base64UrlEncode, newId } from '@lullabo/shared'
 
-const DAY_MS = 86_400_000
 /** A code nobody has used for this long stops working; every use pushes the date back. */
-export const TOKEN_IDLE_MS = 180 * DAY_MS
+export const TOKEN_IDLE_MS = 180 * DAY
 /** Requests a code may make per UTC day: a leaked code can't run up the AI bill. */
 export const DAILY_LIMIT = 200
 /** From when the app was called Bobo: shortcuts already installed carry codes with it. */

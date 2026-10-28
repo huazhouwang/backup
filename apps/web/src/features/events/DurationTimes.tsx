@@ -1,7 +1,7 @@
 import { RECORD_KINDS } from '@lullabo/shared'
+import { FormError } from '@lullabo/ui/form-error'
 import type { Dispatch } from 'react'
 
-import { FormError } from '../../components/ui/FormError'
 import { m } from '../../paraglide/messages.js'
 import { type DurationTimes, type DurationTimesAction, resolveTimes } from './duration-times'
 import { DurationField } from './DurationField'
@@ -86,7 +86,7 @@ export function DurationTimesFields({
           error={errors.end}
         />
         {times.startAt === null && (
-          <p className="m-0 text-caption text-fg-muted">{m.durationStartDerived()}</p>
+          <p className="m-0 text-caption text-muted-foreground">{m.durationStartDerived()}</p>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
-import { MAX_OUTPUT_TOKENS, decryptKey, modelOptionsFor } from '../src/voice/ai'
+import { decryptKey } from '../src/ai/key-crypto'
+import { MAX_OUTPUT_TOKENS, modelOptionsFor } from '../src/ai/providers'
 import { createTestApp } from './app'
 
 const SECRET = 'test-ai-key-secret-test-ai-key-secret'

@@ -1,5 +1,6 @@
-import { Card, CardTitle } from '../../components/ui/Card'
-import { ToggleChip } from '../../components/ui/ToggleChip'
+import { Card, CardTitle } from '@lullabo/ui/card'
+import { ToggleChip } from '@lullabo/ui/toggle-chip'
+
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { type UserAi, aiApi } from './api'
@@ -35,7 +36,7 @@ export function ShareCard({ ai }: { ai: UserAi }) {
           </ToggleChip>
         ))}
       </div>
-      <p className="m-0 text-caption text-fg-muted">{m.aiShareHint()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.aiShareHint()}</p>
     </Card>
   )
 }

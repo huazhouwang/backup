@@ -143,21 +143,25 @@ test('switching tabs fades the page left out for good, with no ghost of it', asy
   await page.goto('/tips')
   // Stops the change as soon as it starts, at a point past the page left's fade while the
   // new page is still fading in, and reads how much of the page left shows.
+  // Checked every frame: the fade may start a frame after the layer appears, when no
+  // mutation is left to report it.
   const seen = page.evaluate(
     () =>
       new Promise<string>((resolve) => {
-        const watch = new MutationObserver(() => {
+        const check = () => {
           const layer = document.querySelector('[data-leaving-page]')
           const moving = document.getAnimations()
-          if (!layer || moving.length === 0) return
-          watch.disconnect()
+          if (!layer || moving.length === 0) {
+            requestAnimationFrame(check)
+            return
+          }
           for (const animation of moving) {
             animation.pause()
             animation.currentTime = 200
           }
           resolve(getComputedStyle(layer).opacity)
-        })
-        watch.observe(document.body, { childList: true, subtree: true, attributes: true })
+        }
+        requestAnimationFrame(check)
       }),
   )
   await page.getByRole('navigation').getByRole('link', { name: '设置' }).click()

@@ -2,7 +2,7 @@ import { type FamilySummary, familyDisplayName } from '@lullabo/shared'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
-import { DeleteConfirmSheet } from '../../components/ui/DeleteConfirmSheet'
+import { DeleteConfirmSheet } from '../../components/DeleteConfirmSheet'
 import { m } from '../../paraglide/messages.js'
 import { requestSync } from '../../sync/runner'
 import { familyApi } from './api'

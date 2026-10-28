@@ -387,6 +387,8 @@ test('talks to the AI from the tab bar, over the blurred page', async ({ browser
   await expect(page.getByText('我说：换尿布 1')).toBeVisible()
   await expect(page.getByText('已记录：换尿布 1。还有吗？')).toBeVisible()
   await expect(page.getByText('按住麦克风继续说 · 点空白处关闭')).toBeVisible()
+  // The chat bar's example changes by the day.
+  await expect(page).toHaveScreenshot('tab-mic-answered.png', { mask: [page.getByText(/^比如：/)] })
   // Down (Today's pull to refresh) and up (the page's bounce at its end).
   await slideOverFrost(page, [60, 150], [60, 420])
   await slideOverFrost(page, [60, 420], [60, 150])
@@ -449,6 +451,9 @@ test('talks to the AI from the tab bar, over the blurred page', async ({ browser
   await expect(page.getByText('已记录：换尿布 3。还有吗？')).toBeVisible()
   await page.getByRole('button', { name: '打开对话' }).click()
   await expect(page).toHaveURL(/\/chat/)
+  await expect(page.getByText('已记录：换尿布 3。还有吗？')).toBeVisible()
+  // When the conversation started changes every run.
+  await expect(page).toHaveScreenshot('chat.png', { mask: [page.getByText(/^今天 \d/)] })
   await context.close()
 })
 

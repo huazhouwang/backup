@@ -1,25 +1,25 @@
 import { type Event, breastSideDurations, isRunning, recordKind } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { Bun } from '@lullabo/ui/bun'
+import { Button } from '@lullabo/ui/button'
+import { Card, type CardTone } from '@lullabo/ui/card'
+import { Input } from '@lullabo/ui/input'
+import { growInOut } from '@lullabo/ui/motion'
+import { Sheet } from '@lullabo/ui/sheet'
+import { cn } from '@lullabo/ui/utils'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { type FormEvent, useState } from 'react'
 
-import { Bun } from '../../components/ui/Bun'
-import { Button } from '../../components/ui/Button'
-import { Card, type CardTone } from '../../components/ui/Card'
-import { Input } from '../../components/ui/Input'
-import { Sheet } from '../../components/ui/Sheet'
 import { useLocalStore } from '../../db'
 import { formatTime } from '../../lib/i18n'
-import { growInOut } from '../../lib/motion'
 import { quantityInputProps, unitLabel } from '../../lib/units'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { saveEvent } from './actions'
 import { EventIcon, eventIconProps } from './EventIcon'
+import { parseVolume } from './fields/measure-input'
 import { type DurationKind, DURATION_LOOK, durationTone, isDurationKind } from './kinds'
 import { sideLabel } from './labels'
-import { parseVolume } from './measure-input'
 import { currentBreastSide, stopEvent, switchBreastSide } from './records'
 import { formatClock } from './time'
 
@@ -137,10 +137,10 @@ function TimerCard({
           <EventIcon {...eventIconProps(event)} className="size-10" />
         )}
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className={clsx('truncate font-extrabold', TITLE_TONE[kind])}>
+          <span className={cn('truncate font-extrabold', TITLE_TONE[kind])}>
             {title(event, kind)}
           </span>
-          <span className="text-caption text-fg-muted">
+          <span className="text-caption text-muted-foreground">
             {m.timerStartedAt({ time: formatTime(event.startAt) })}
           </span>
         </div>
@@ -153,11 +153,11 @@ function TimerCard({
           {(['left', 'right'] as const).map((s) => (
             <div
               key={s}
-              className={clsx(
+              className={cn(
                 'rounded-lg border-2 py-1',
                 s === side
-                  ? 'border-feeding bg-bg font-extrabold'
-                  : 'border-transparent text-fg-muted',
+                  ? 'border-feeding bg-background font-extrabold'
+                  : 'border-transparent text-muted-foreground',
               )}
             >
               <div className="text-caption">{sideLabel[s]()}</div>
@@ -167,7 +167,7 @@ function TimerCard({
         </div>
       )}
       {canEdit && (
-        <div className={clsx('grid gap-3', breast ? 'grid-cols-2' : 'grid-cols-1')}>
+        <div className={cn('grid gap-3', breast ? 'grid-cols-2' : 'grid-cols-1')}>
           {breast && (
             <Button
               variant="outline"

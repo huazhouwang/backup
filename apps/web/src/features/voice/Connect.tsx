@@ -1,9 +1,9 @@
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { Sheet } from '../../components/ui/Sheet'
 import { formatDate, formatTime } from '../../lib/i18n'
 import { m } from '../../paraglide/messages.js'
 import { SHORTCUT_NAME, type VoiceSettings, copyWhenReady, openShortcut, voiceApi } from './api'
@@ -37,7 +37,9 @@ export function Connect({ settings }: { settings: VoiceSettings }) {
           )}
           <li>{m.voiceGuideTry({ phrase: settings.phrase })}</li>
         </ol>
-        {settings.token && <p className="m-0 text-caption text-fg-muted">{m.voiceReaddHint()}</p>}
+        {settings.token && (
+          <p className="m-0 text-caption text-muted-foreground">{m.voiceReaddHint()}</p>
+        )}
         <Button size="lg" block disabled={add.isPending} onClick={() => add.mutate()}>
           {m.voiceGuideGo()}
         </Button>
@@ -61,8 +63,8 @@ export function Connect({ settings }: { settings: VoiceSettings }) {
   return (
     <>
       <div className="flex flex-col">
-        <span className="font-extrabold text-primary-text">{m.voiceConnected()}</span>
-        <span className="text-caption text-fg-muted">
+        <span className="font-extrabold text-accent-foreground">{m.voiceConnected()}</span>
+        <span className="text-caption text-muted-foreground">
           {[
             m.voiceAddedOn({ date: formatDate(createdAt) }),
             lastUsedAt
@@ -72,15 +74,15 @@ export function Connect({ settings }: { settings: VoiceSettings }) {
         </span>
       </div>
       {/* Shortcuts may stay on its add sheet although it added the shortcut: a first try settles it. */}
-      {!lastUsedAt && <p className="m-0 text-caption text-fg-muted">{m.voiceTryNow()}</p>}
+      {!lastUsedAt && <p className="m-0 text-caption text-muted-foreground">{m.voiceTryNow()}</p>}
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={() => setGuide(true)}>
+        <Button variant="outline" className="flex-1 shrink-0" onClick={() => setGuide(true)}>
           {m.voiceReadd()}
         </Button>
         <Button
           variant="ghost"
-          tone="danger"
-          className="flex-1"
+          tone="destructive"
+          className="flex-1 shrink-0"
           disabled={revoke.isPending}
           onClick={() => revoke.mutate()}
         >

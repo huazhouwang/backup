@@ -1,5 +1,5 @@
 import type { Event, PoopDetails } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { cn } from '@lullabo/ui/utils'
 import type { ReactNode } from 'react'
 
 import type { Category } from './category'
@@ -64,7 +64,7 @@ const TONE: Record<IconKind, string> = {
   diaperDirty: 'fill-diaper',
   diaperMixed: 'fill-diaper',
   pumping: 'fill-pumping',
-  temperature: 'fill-danger',
+  temperature: 'fill-destructive',
   medication: 'fill-medication',
   note: 'fill-note',
   growth: 'fill-primary',
@@ -226,7 +226,7 @@ export function EventIcon({
 }) {
   const tone = TONE[kind]
   return (
-    <svg aria-hidden viewBox="0 0 48 48" className={clsx('shrink-0', className)}>
+    <svg aria-hidden viewBox="0 0 48 48" className={cn('shrink-0', className)}>
       {variant === 'badge' && <circle cx="24" cy="24" r="24" className={tone} />}
       {glyph(kind, tone, poop)}
     </svg>

@@ -1,9 +1,9 @@
 import type { FamilySummary } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { Input } from '@lullabo/ui/input'
+import { Sheet } from '@lullabo/ui/sheet'
 import { type FormEvent, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { Sheet } from '../../components/ui/Sheet'
 import { toastIfRefused } from '../../lib/server-collection'
 import { m } from '../../paraglide/messages.js'
 import { familyApi } from './api'

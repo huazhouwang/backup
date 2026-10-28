@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 
-import { PageReason, SettingsPage } from '../components/SettingsLayout'
-import { isSignedIn } from '../db'
 import { AccountSettings } from '../features/account/AccountSettings'
 import { accountQueries } from '../features/account/queries'
+import { PageReason, SettingsPage } from '../features/settings/SettingsLayout'
+import { fromMic } from '../features/voice/search'
+import { prefetchWhenSignedIn } from '../lib/query'
 import { m } from '../paraglide/messages.js'
 
 const searchSchema = z.object({
@@ -15,20 +16,19 @@ const searchSchema = z.object({
     .optional()
     .catch(undefined),
   /** Opened by the tab bar's microphone, which needs an account. */
-  from: z.literal('mic').optional().catch(undefined),
+  from: fromMic,
 })
 
 export const Route = createFileRoute('/settings/account')({
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient } }) => {
-    // Started, not awaited: the page opens at once and finds the data on its way.
-    if (await isSignedIn()) {
-      void queryClient.prefetchQuery(accountQueries.me())
-      void queryClient.prefetchQuery(accountQueries.methods())
-      void queryClient.prefetchQuery(accountQueries.passkeys())
-    } else {
-      void queryClient.prefetchQuery(accountQueries.signInOptions())
-    }
+    const signedIn = await prefetchWhenSignedIn(
+      queryClient,
+      accountQueries.me(),
+      accountQueries.methods(),
+      accountQueries.passkeys(),
+    )
+    if (!signedIn) void queryClient.prefetchQuery(accountQueries.signInOptions())
   },
   component: AccountPage,
 })

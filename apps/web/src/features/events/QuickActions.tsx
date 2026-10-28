@@ -1,20 +1,14 @@
 import type { Baby, Event } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { RollingText } from '@lullabo/ui/rolling-text'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useId, useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { RollingText } from '../../components/ui/RollingText'
-import { Sheet } from '../../components/ui/Sheet'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { useBabies } from '../babies/use-babies'
-import {
-  type Category,
-  OTHER_CATEGORIES,
-  categoryTitle,
-  categoryTone,
-  isInstantCategory,
-} from './category'
+import { type Category, OTHER_CATEGORIES, CATEGORY_LOOK, isInstantCategory } from './category'
 import { DiaperForm } from './DiaperForm'
 import { DurationForm } from './DurationForm'
 import { EventIcon, categoryIconKind } from './EventIcon'
@@ -27,7 +21,7 @@ import { sinceText } from './SinceLast'
 const MAIN_CATEGORIES = ['feeding', 'sleep', 'diaper'] as const
 
 const sheetTitle = (category: Category | undefined) =>
-  category === 'diaper' ? m.diaperSheetTitle() : category ? categoryTitle[category]() : ''
+  category === 'diaper' ? m.diaperSheetTitle() : category ? CATEGORY_LOOK[category].title() : ''
 
 /**
  * The three big logging buttons, each saying how long since the last of its kind, plus a menu
@@ -67,14 +61,14 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
           {MAIN_CATEGORIES.map((category) => (
             <Button
               key={category}
-              tone={categoryTone[category]}
+              tone={CATEGORY_LOOK[category].tone}
               size="lg"
-              className="aspect-square min-h-28 flex-col gap-0.5 py-3"
+              className="aspect-square min-h-28 flex-col py-3"
               aria-describedby={`${sinceId}-${category}`}
               onClick={() => setOpen(category)}
             >
               <EventIcon kind={categoryIconKind(category)} variant="plain" className="size-9" />
-              {categoryTitle[category]()}
+              {CATEGORY_LOOK[category].title()}
               {/* Read as the button's description, not part of its name. */}
               <span
                 id={`${sinceId}-${category}`}
@@ -118,13 +112,13 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
             <Button
               key={category}
               variant="soft"
-              tone={categoryTone[category]}
+              tone={CATEGORY_LOOK[category].tone}
               size="lg"
-              className="min-h-20 flex-col gap-1.5"
+              className="min-h-20 flex-col"
               onClick={() => setOpen(category)}
             >
               <EventIcon kind={categoryIconKind(category)} className="size-9" />
-              {categoryTitle[category]()}
+              {CATEGORY_LOOK[category].title()}
             </Button>
           ))}
         </div>

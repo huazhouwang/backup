@@ -2,7 +2,7 @@ import { appendFile, writeFile } from 'node:fs/promises'
 
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
-import { AI_PROVIDERS, type AiProvider, aiAdapter, modelOptionsFor } from '../src/voice/ai'
+import { AI_PROVIDERS, type AiProvider, aiAdapter, modelOptionsFor } from '../src/ai/providers'
 import { createTestApp } from '../test/app'
 import { type RunResult, pool, report, runScenario } from './harness'
 import { SCENARIOS } from './scenarios'

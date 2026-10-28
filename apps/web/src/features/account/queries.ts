@@ -1,12 +1,10 @@
 import { queryOptions } from '@tanstack/react-query'
 
+import { PERSIST } from '../../lib/query'
 import { fetchSignInMethods, fetchSignInOptions, httpAccountApi } from './account'
 import { listPasskeys } from './passkey'
 
 // Not keyed by user: signing out clears the whole query cache (AccountSettings).
-
-/** Kept on the device across reloads and offline (lib/persist-queries.ts). */
-const persist = { persist: true }
 
 export const accountKeys = {
   me: ['account', 'me'] as const,
@@ -17,11 +15,11 @@ export const accountKeys = {
 
 export const accountQueries = {
   me: () =>
-    queryOptions({ queryKey: accountKeys.me, queryFn: () => httpAccountApi.me(), meta: persist }),
+    queryOptions({ queryKey: accountKeys.me, queryFn: () => httpAccountApi.me(), meta: PERSIST }),
   methods: () =>
-    queryOptions({ queryKey: accountKeys.methods, queryFn: fetchSignInMethods, meta: persist }),
+    queryOptions({ queryKey: accountKeys.methods, queryFn: fetchSignInMethods, meta: PERSIST }),
   passkeys: () =>
-    queryOptions({ queryKey: accountKeys.passkeys, queryFn: listPasskeys, meta: persist }),
+    queryOptions({ queryKey: accountKeys.passkeys, queryFn: listPasskeys, meta: PERSIST }),
   /** Changes only when the deployment is reconfigured. */
   signInOptions: () =>
     queryOptions({

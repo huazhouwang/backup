@@ -1,13 +1,13 @@
-import { clsx } from 'clsx'
+import { Badge } from '@lullabo/ui/badge'
+import { Button } from '@lullabo/ui/button'
+import { Card, CardTitle } from '@lullabo/ui/card'
+import { Input } from '@lullabo/ui/input'
+import { Sheet } from '@lullabo/ui/sheet'
+import { cn } from '@lullabo/ui/utils'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { Card, CardTitle } from '../../components/ui/Card'
-import { Chevron } from '../../components/ui/Chevron'
-import { Input } from '../../components/ui/Input'
-import { ListRow } from '../../components/ui/ListRow'
-import { Pill } from '../../components/ui/Pill'
-import { Sheet } from '../../components/ui/Sheet'
+import { Chevron } from '../../components/icons/Chevron'
+import { ListRow } from '../../components/ListRow'
 import { m } from '../../paraglide/messages.js'
 import {
   type AiModel,
@@ -36,7 +36,7 @@ export function ModelCard({
     return (
       <Card as="section" className="flex flex-col gap-1">
         <CardTitle small>{m.aiModelTitle()}</CardTitle>
-        <p className="m-0 text-caption text-fg-muted">{m.aiModelNeedsKey()}</p>
+        <p className="m-0 text-caption text-muted-foreground">{m.aiModelNeedsKey()}</p>
       </Card>
     )
   }
@@ -46,7 +46,7 @@ export function ModelCard({
       <ListRow
         onClick={() => setOpen(true)}
         title={
-          <span className={clsx('truncate', !choice && 'text-fg-muted')}>
+          <span className={cn('truncate', !choice && 'text-muted-foreground')}>
             {choice ? choice.model : m.aiModelNone()}
           </span>
         }
@@ -168,12 +168,12 @@ function ModelPicker({
         onChange={(event) => setQuery(event.target.value)}
       />
       {broken.map((entry) => (
-        <p key={entry.provider} className="m-0 text-caption font-bold text-danger-text">
+        <p key={entry.provider} className="m-0 text-caption font-bold text-destructive-text">
           {m.aiModelsMissing({ provider: PROVIDER_LABEL[entry.provider] })}
         </p>
       ))}
       {loading ? (
-        <p className="m-0 text-fg-muted">{m.aiModelsLoading()}</p>
+        <p className="m-0 text-muted-foreground">{m.aiModelsLoading()}</p>
       ) : (
         <>
           <div className="flex flex-col gap-4">
@@ -183,7 +183,7 @@ function ModelPicker({
               </ModelGroup>
             )}
             {recommended.length > 0 && groups.size > 0 && (
-              <p className="m-0 text-caption text-fg-muted">{m.aiModelsUnverified()}</p>
+              <p className="m-0 text-caption text-muted-foreground">{m.aiModelsUnverified()}</p>
             )}
             {[...groups].map(([key, group]) => (
               <ModelGroup key={key} title={group.title}>
@@ -191,13 +191,13 @@ function ModelPicker({
               </ModelGroup>
             ))}
           </div>
-          {shown.length === 0 && <p className="m-0 text-fg-muted">{m.aiModelsNone()}</p>}
+          {shown.length === 0 && <p className="m-0 text-muted-foreground">{m.aiModelsNone()}</p>}
           {!search && hidden > 0 && (
             <Button variant="ghost" onClick={() => setShowAll(!showAll)}>
               {showAll ? m.aiModelsEveryday() : m.aiModelsShowAll({ count: hidden })}
             </Button>
           )}
-          <p className="m-0 text-caption text-fg-muted">{m.aiModelPriceNote()}</p>
+          <p className="m-0 text-caption text-muted-foreground">{m.aiModelPriceNote()}</p>
         </>
       )}
     </div>
@@ -207,7 +207,7 @@ function ModelPicker({
 function ModelGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col">
-      <h3 className="m-0 pb-1 text-caption font-bold text-fg-muted">{title}</h3>
+      <h3 className="m-0 pb-1 text-caption font-bold text-muted-foreground">{title}</h3>
       <ul className="m-0 flex list-none flex-col p-0">{children}</ul>
     </section>
   )
@@ -237,7 +237,7 @@ function ModelRow({
         title={
           <>
             <span className="truncate">{label}</span>
-            {showProvider && <Pill>{PROVIDER_LABEL[model.provider]}</Pill>}
+            {showProvider && <Badge>{PROVIDER_LABEL[model.provider]}</Badge>}
           </>
         }
         detailWraps
@@ -269,7 +269,12 @@ const formatUsd = (value: number) => `$${Number(value.toPrecision(2))}`
 
 function Tick() {
   return (
-    <svg viewBox="0 0 24 24" className="size-6 shrink-0 text-primary-text" fill="none" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      className="size-6 shrink-0 text-accent-foreground"
+      fill="none"
+      aria-hidden
+    >
       <path
         d="m5.5 12.5 4.5 4.5 8.5-9"
         stroke="currentColor"

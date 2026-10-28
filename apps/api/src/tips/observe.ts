@@ -2,8 +2,8 @@ import { type BabyAge, type Event, shiftDay } from '@lullabo/shared'
 import { type AnyTextAdapter, chat } from '@tanstack/ai'
 
 import { ageLabel, referenceLine } from '../agent/guide'
-import { withoutThinking } from '../agent/run'
-import { localDay } from '../voice/plan'
+import { withoutThinking } from '../agent/text'
+import { localDay } from '../time-zone'
 
 /** The week looked at: the last complete days, not today, which is still going. */
 export const WEEK = 7

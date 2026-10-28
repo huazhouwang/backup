@@ -90,4 +90,27 @@ describe('account deletion', () => {
       await count('select count(*) as n from memberships where user_id = ?', owner.user.id),
     ).toBe(0)
   })
+
+  it("deletes the observations of the families it deletes, and keeps shared families'", async () => {
+    const owner = await t.signIn('主人')
+    const other = await t.signIn('家人')
+    const sole = await familyWithBaby(owner.headers)
+    const shared = await familyWithBaby(owner.headers)
+    await t.env.DB.batch([
+      t.env.DB.prepare(
+        "insert into memberships (family_id, user_id, role, baby_scope, created_at) values (?, ?, 'caregiver', 'all', ?)",
+      ).bind(shared.familyId, other.user.id, Date.now()),
+      ...[sole.babyId, shared.babyId].map((babyId) =>
+        t.env.DB.prepare(
+          "insert into observations (baby_id, day, text, created_at) values (?, '2026-10-17', '很规律。', ?)",
+        ).bind(babyId, Date.now()),
+      ),
+    ])
+
+    await t.request('/api/account', { method: 'DELETE', headers: owner.headers })
+
+    const observations = 'select count(*) as n from observations where baby_id = ?'
+    expect(await count(observations, sole.babyId)).toBe(0)
+    expect(await count(observations, shared.babyId)).toBe(1)
+  })
 })

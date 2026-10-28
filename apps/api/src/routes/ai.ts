@@ -1,21 +1,20 @@
+import type { FamilyAi, ProviderModels, UserAi } from '@lullabo/shared'
 import { Hono } from 'hono'
 import { z } from 'zod'
 
 import { type FamilyEnv, familyManager, familyMember, loadAccess } from '../access'
 import { sharedAis } from '../agent/keys'
-import { fail, json } from '../http'
-import type { AppEnv } from '../types'
+import { decryptKey, encryptKey, keyHint } from '../ai/key-crypto'
 import {
   AI_PROVIDERS,
   type AiModel,
   AiKeyError,
   type AiProvider,
-  decryptKey,
-  encryptKey,
   firstChoice,
-  keyHint,
   listModels,
-} from '../voice/ai'
+} from '../ai/providers'
+import { fail, json } from '../http'
+import type { AppEnv } from '../types'
 
 const providerSchema = z.enum(AI_PROVIDERS)
 const keySchema = z.object({ apiKey: z.string().trim().min(8).max(300) })
@@ -52,7 +51,7 @@ const saveChoice = (db: D1Database, userId: string, provider: AiProvider, model:
     )
     .bind(userId, provider, model, Date.now())
 
-async function view(db: D1Database, userId: string) {
+async function view(db: D1Database, userId: string): Promise<UserAi> {
   const [keys, choice, shares] = await Promise.all([
     readKeys(db, userId),
     db
@@ -71,10 +70,6 @@ async function view(db: D1Database, userId: string) {
     sharedFamilyIds: shares.results.map((row) => row.familyId),
   }
 }
-
-type ProviderModels =
-  | { provider: AiProvider; status: 'ok'; models: AiModel[] }
-  | { provider: AiProvider; status: 'invalid' | 'unreachable' }
 
 /** The models each saved key can use; a key that stopped working says so instead. */
 async function modelsFor(secret: string, key: SavedKey): Promise<ProviderModels> {
@@ -191,7 +186,7 @@ export const userAiRoutes = new Hono<AppEnv>()
     return c.json(await view(db, userId))
   })
 
-async function familyView(db: D1Database, familyId: string) {
+async function familyView(db: D1Database, familyId: string): Promise<FamilyAi> {
   const shared = await sharedAis(db, [familyId])
   const shares = shared.map(({ userId, name, provider, model }) => ({
     userId,

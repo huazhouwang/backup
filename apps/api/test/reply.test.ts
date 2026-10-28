@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { replyLanguage, withoutThinking } from '../src/agent/run'
+import { replyLanguage } from '../src/agent/prompt'
+import { withoutThinking } from '../src/agent/text'
 
 describe('replies', () => {
   it('drop the thinking some hosts leave in the text', () => {

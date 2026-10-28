@@ -21,6 +21,7 @@ import {
   roleOf,
   toSummaries,
 } from '../access'
+import { deleteFamilyStatements } from '../db/cascade'
 import { fail, json } from '../http'
 import type { AppEnv } from '../types'
 
@@ -68,19 +69,7 @@ export const familyRoutes = new Hono<AppEnv>()
     if (c.var.role !== 'owner') fail('forbidden')
     const db = c.env.DB
     const familyId = c.req.param('familyId')
-    await db.batch([
-      db
-        .prepare(
-          'delete from reminders where baby_id in (select id from babies where family_id = ?)',
-        )
-        .bind(familyId),
-      db.prepare('delete from events where family_id = ?').bind(familyId),
-      db.prepare('delete from membership_babies where family_id = ?').bind(familyId),
-      db.prepare('delete from invites where family_id = ?').bind(familyId),
-      db.prepare('delete from memberships where family_id = ?').bind(familyId),
-      db.prepare('delete from babies where family_id = ?').bind(familyId),
-      db.prepare('delete from families where id = ?').bind(familyId),
-    ])
+    await db.batch(deleteFamilyStatements(db, familyId))
     return c.body(null, 204)
   })
   .get('/:familyId/members', familyMember, async (c) => {

@@ -1,10 +1,10 @@
 import { type Baby, type FamilySummary, type MemberRole, assignableRoles } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { Sheet } from '../../components/ui/Sheet'
 import { m } from '../../paraglide/messages.js'
 import { familyApi, inviteUrl } from './api'
 import { BabyScopePicker } from './BabyScopePicker'
@@ -69,10 +69,10 @@ function InviteContent({
   return invite ? (
     <div className="flex flex-col gap-3">
       <p className="m-0 font-bold">{m.inviteLinkTitle()}</p>
-      <p className="m-0 rounded-lg border-2 border-border bg-surface p-3 text-caption break-all select-all">
+      <p className="m-0 rounded-lg border-2 border-border bg-muted p-3 text-caption break-all select-all">
         {url}
       </p>
-      <p className="m-0 text-caption text-fg-muted">{m.inviteLinkHint()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{m.inviteLinkHint()}</p>
       {'share' in navigator && (
         <Button size="lg" block onClick={() => void share()}>
           {m.inviteShare()}

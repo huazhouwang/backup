@@ -10,8 +10,8 @@ export const TOPIC_STYLE: Record<TipTopic, { card: string; text: string; icon: s
   },
   play: { card: 'bg-diaper-soft border-diaper/30', text: 'text-diaper-text', icon: 'text-diaper' },
   care: {
-    card: 'bg-primary-soft border-primary/30',
-    text: 'text-primary-text',
+    card: 'bg-accent border-primary/30',
+    text: 'text-accent-foreground',
     icon: 'text-primary',
   },
   safety: {

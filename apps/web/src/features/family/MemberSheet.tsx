@@ -6,12 +6,12 @@ import {
   assignableRoles,
   familyDisplayName,
 } from '@lullabo/shared'
+import { Button } from '@lullabo/ui/button'
+import { FormError } from '@lullabo/ui/form-error'
+import { Sheet } from '@lullabo/ui/sheet'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/Button'
-import { FormError } from '../../components/ui/FormError'
-import { Sheet } from '../../components/ui/Sheet'
 import { toastIfRefused } from '../../lib/server-collection'
 import { m } from '../../paraglide/messages.js'
 import { familyApi } from './api'
@@ -98,7 +98,7 @@ function MemberForm({
       <Button size="lg" block disabled={babyIds?.length === 0 || transfer.isPending} onClick={save}>
         {m.actionSave()}
       </Button>
-      <Button variant="ghost" tone="danger" disabled={transfer.isPending} onClick={remove}>
+      <Button variant="ghost" tone="destructive" disabled={transfer.isPending} onClick={remove}>
         {m.memberRemove()}
       </Button>
       {family.role === 'owner' &&

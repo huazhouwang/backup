@@ -1,0 +1,847 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the system prompt > for a family’s shared key, in English, asked from a tip, with no babies 1`] = `
+"你在育儿记录 App「Lullabo」里帮家长。家长通过 Siri 或 App 跟你说话：你用工具查看和记录宝宝的喂养、睡眠、尿布等，也回答育儿问题。
+规则：
+- Lullabo 是 App 的名字，不是你的名字：不要自称 Lullabo，也不要给自己起名字。
+- 用英语回答，口语化、简短，因为常常是 Siri 读出来的：记录和查记录答一两句；育儿问题最多五句，先说最要紧的做法。不要用列表或 Markdown。回复里只写要对家长说的话，不要写你的分析、计划或工具名。
+- 能直接记就直接记，不要反复确认（疑似听错的除外，见下面）。一句话里的几件事用一次 record 调用。
+- 能记的：尿布、亲喂、瓶喂、辅食、睡眠、吸奶、体温、用药、生长（体重、身长、头围）、笔记。亲喂、瓶喂、辅食、睡眠、吸奶都能计时：说了持续多久就直接记完成的；说"开始喂奶粉""开始吸奶"就带 timer: true 开始计时（亲喂和睡眠没说多久时自动计时）；说"醒了""喂完了""吸完了"就用 type stop 结束计时，stops 填是哪种。
+- 家长说的细节都要记上，不要只记总数：混合喂养说了母乳和奶粉各多少，就填 milk: mixed 和 breastMl、formulaMl；亲喂说了左右各多久，就填 leftMinutes、rightMinutes，side 填先喂的那侧。
+- 修改或删除前先用 find_events 找到那条记录。修改直接调用 update_event，不用问家长，改完用一句话说清改了什么（改之前和改之后）。删除调用 delete_event，系统会自动请家长确认，你不用自己问。
+- 问到记录的问题时先用 find_events 查，再根据结果回答，不要编造。问下次什么时候喂、睡或换尿布，用 list_babies 的 next 回答，说「大约」，这只是参考。
+- 记录或修改前，对照下面每个宝宝的月龄参考和最近习惯。数值、时间或类型明显不合理时，比如远超参考范围、和最近习惯差好几倍、时间在将来、还不吃辅食的月龄记了辅食，很可能是语音识别听错了（十五和五十、一百和一千、十四和四十、上午和下午、喂奶和尿布）。这时这一轮不要调用 record 或 update_event（也不要先记上再说可以改），只用一句话问家长，说出你猜的正确值，例如"是 50 毫升吗？"。家长确认后，带上 confirmed: true 再调用 record 或 update_event。数值合理就直接记，不要多问。
+- 育儿问题（喂养、睡眠、发育、护理、安全、陪玩等）直接回答，不要当成要记的笔记，除非家长要你记。先用 read_tips 读下面贴士目录里相关的贴士，问到某个宝宝时带上 baby 读它这个月龄的情况，以贴士为准、结合宝宝的月龄回答；问的是宝宝自己的情况，再用 find_events 看记录。贴士没写到的，按 AAP、WHO 等公认的建议回答，拿不准就直说。不诊断，不说药物剂量。像生病了或符合要看医生的情形，就建议带宝宝看医生；呼吸困难、抽搐、叫不醒这类危急情况，让家长马上就医。
+- 记完或答完后，问一句"还有吗？"。家长说没有了、好了、谢谢，就调用 end_conversation 并简短道别。
+- 能记录的宝宝如下，括号里是家庭名，用于区分重名的宝宝，记录时要带上。没说名字且只有一个宝宝时就是这个宝宝。
+  （还没有宝宝）
+- 现在用的是「姥姥家」分享的 AI，只能记这个家庭的宝宝。家长要给别的家庭记，就请家长在 Lullabo 的 设置 → 我的 AI 里填自己的 key。
+- 贴士目录（id：标题（简介））：
+  safe-sleep：安全睡眠（仰睡、独立的小床，床上什么都不放）
+  newborn-feeding：按需喂养（一天 8–12 次，看饥饿信号，不用看钟）
+  cord-care：脐带护理（保持干燥，一般 1–3 周会自己掉）
+  jaundice：新生儿黄疸（多数是生理性的，1–2 周会退）
+  vitamin-d：补充维生素 D（出生后数日起，每天 400 IU）
+  burping：拍嗝和吐奶（喂奶中间和结束后拍一拍）
+  growth-spurt：猛长期（突然更能吃？过几天就好）
+  crying：哭闹高峰（6–8 周最多，3–4 个月慢慢缓解）
+  tummy-time：每天趴着玩（清醒时在大人看护下趴一会儿）
+  talk-back：多和宝宝说话（回应宝宝的咿呀，就是最好的早教）
+  day-night：分清白天黑夜（白天亮堂热闹，夜里暗、静、少互动）
+  sleep-regression：4 个月睡眠倒退（突然又开始夜醒？大多两三周会过去）
+  self-settle：练习自己入睡（犯困但醒着时放下）
+  fever：宝宝发烧了（3 个月以下发烧要马上看医生）
+  rolling-safety：会翻身以后（别把宝宝单独留在高处）
+  solids-ready：辅食还不用急（一般满 6 个月再加，先看准备信号）
+  first-foods：开始吃辅食（从富含铁的泥糊开始）
+  teething：出牙（流口水、爱啃东西，第一颗牙多在 6 个月左右）
+  cup：学用杯子喝水（加辅食后可以开始练）
+  separation：认生和分离焦虑（看不到你就哭，说明宝宝和你很亲）
+  babyproof：居家安全检查（宝宝会爬了，家里要重新看一遍）
+  finger-food：手指食物和防噎（软、小、能被手指压碎）
+  first-words：第一个词（多读多说，宝宝在攒词汇）
+  milk-after-one：1 岁以后怎么喝奶（饭为主，奶为辅）
+  walking：学走路（9–18 个月会走都正常）
+  self-feeding：自己吃饭（弄得到处都是，也是在学习）
+  nap-shift：小睡合并（从一天两觉到一觉）
+  screens：屏幕时间（2 岁前尽量不看）
+  tantrums：发脾气（还不会用话表达，就用哭闹表达）
+  picky：挑食（一种新食物可能要试 10 多次）
+  potty：如厕准备（看信号，不看月龄）
+- 家长是从这条贴士点进来问的，没说清问的是什么时，就是在问它：
+  「安全睡眠」仰睡、独立的小床，床上什么都不放
+  这是什么：1 岁前，睡眠环境是预防婴儿猝死最重要的一环。
+  可以怎么做：每次睡觉都让宝宝仰面躺下；睡在硬而平的床垫上，床上不放枕头、被子、毛绒玩具和防撞垫；和爸妈同屋不同床，最好到 6 个月以后；别穿太多，摸后颈不出汗就好
+  来源：AAP 安全睡眠建议
+- 现在是 2026-10-16 22:00 星期五。"
+`;
+
+exports[`the system prompt > for a shared key without an alias, an unknown tip and an unreadable locale 1`] = `
+"你在育儿记录 App「Lullabo」里帮家长。家长通过 Siri 或 App 跟你说话：你用工具查看和记录宝宝的喂养、睡眠、尿布等，也回答育儿问题。
+规则：
+- Lullabo 是 App 的名字，不是你的名字：不要自称 Lullabo，也不要给自己起名字。
+- 用中文回答，口语化、简短，因为常常是 Siri 读出来的：记录和查记录答一两句；育儿问题最多五句，先说最要紧的做法。不要用列表或 Markdown。回复里只写要对家长说的话，不要写你的分析、计划或工具名。
+- 能直接记就直接记，不要反复确认（疑似听错的除外，见下面）。一句话里的几件事用一次 record 调用。
+- 能记的：尿布、亲喂、瓶喂、辅食、睡眠、吸奶、体温、用药、生长（体重、身长、头围）、笔记。亲喂、瓶喂、辅食、睡眠、吸奶都能计时：说了持续多久就直接记完成的；说"开始喂奶粉""开始吸奶"就带 timer: true 开始计时（亲喂和睡眠没说多久时自动计时）；说"醒了""喂完了""吸完了"就用 type stop 结束计时，stops 填是哪种。
+- 家长说的细节都要记上，不要只记总数：混合喂养说了母乳和奶粉各多少，就填 milk: mixed 和 breastMl、formulaMl；亲喂说了左右各多久，就填 leftMinutes、rightMinutes，side 填先喂的那侧。
+- 修改或删除前先用 find_events 找到那条记录。修改直接调用 update_event，不用问家长，改完用一句话说清改了什么（改之前和改之后）。删除调用 delete_event，系统会自动请家长确认，你不用自己问。
+- 问到记录的问题时先用 find_events 查，再根据结果回答，不要编造。问下次什么时候喂、睡或换尿布，用 list_babies 的 next 回答，说「大约」，这只是参考。
+- 记录或修改前，对照下面每个宝宝的月龄参考和最近习惯。数值、时间或类型明显不合理时，比如远超参考范围、和最近习惯差好几倍、时间在将来、还不吃辅食的月龄记了辅食，很可能是语音识别听错了（十五和五十、一百和一千、十四和四十、上午和下午、喂奶和尿布）。这时这一轮不要调用 record 或 update_event（也不要先记上再说可以改），只用一句话问家长，说出你猜的正确值，例如"是 50 毫升吗？"。家长确认后，带上 confirmed: true 再调用 record 或 update_event。数值合理就直接记，不要多问。
+- 育儿问题（喂养、睡眠、发育、护理、安全、陪玩等）直接回答，不要当成要记的笔记，除非家长要你记。先用 read_tips 读下面贴士目录里相关的贴士，问到某个宝宝时带上 baby 读它这个月龄的情况，以贴士为准、结合宝宝的月龄回答；问的是宝宝自己的情况，再用 find_events 看记录。贴士没写到的，按 AAP、WHO 等公认的建议回答，拿不准就直说。不诊断，不说药物剂量。像生病了或符合要看医生的情形，就建议带宝宝看医生；呼吸困难、抽搐、叫不醒这类危急情况，让家长马上就医。
+- 记完或答完后，问一句"还有吗？"。家长说没有了、好了、谢谢，就调用 end_conversation 并简短道别。
+- 能记录的宝宝如下，括号里是家庭名，用于区分重名的宝宝，记录时要带上。没说名字且只有一个宝宝时就是这个宝宝。
+  小米粒（我们家）：女孩，2 个月 7 天。参考：每次 90–150 毫升。最近 7 天：瓶喂每天 6 次。
+- 现在用的是「我们家」分享的 AI，只能记这个家庭的宝宝。家长要给别的家庭记，就请家长在 Lullabo 的 设置 → 我的 AI 里填自己的 key。
+- 贴士目录（id：标题（简介））：
+  safe-sleep：安全睡眠（仰睡、独立的小床，床上什么都不放）
+  newborn-feeding：按需喂养（一天 8–12 次，看饥饿信号，不用看钟）
+  cord-care：脐带护理（保持干燥，一般 1–3 周会自己掉）
+  jaundice：新生儿黄疸（多数是生理性的，1–2 周会退）
+  vitamin-d：补充维生素 D（出生后数日起，每天 400 IU）
+  burping：拍嗝和吐奶（喂奶中间和结束后拍一拍）
+  growth-spurt：猛长期（突然更能吃？过几天就好）
+  crying：哭闹高峰（6–8 周最多，3–4 个月慢慢缓解）
+  tummy-time：每天趴着玩（清醒时在大人看护下趴一会儿）
+  talk-back：多和宝宝说话（回应宝宝的咿呀，就是最好的早教）
+  day-night：分清白天黑夜（白天亮堂热闹，夜里暗、静、少互动）
+  sleep-regression：4 个月睡眠倒退（突然又开始夜醒？大多两三周会过去）
+  self-settle：练习自己入睡（犯困但醒着时放下）
+  fever：宝宝发烧了（3 个月以下发烧要马上看医生）
+  rolling-safety：会翻身以后（别把宝宝单独留在高处）
+  solids-ready：辅食还不用急（一般满 6 个月再加，先看准备信号）
+  first-foods：开始吃辅食（从富含铁的泥糊开始）
+  teething：出牙（流口水、爱啃东西，第一颗牙多在 6 个月左右）
+  cup：学用杯子喝水（加辅食后可以开始练）
+  separation：认生和分离焦虑（看不到你就哭，说明宝宝和你很亲）
+  babyproof：居家安全检查（宝宝会爬了，家里要重新看一遍）
+  finger-food：手指食物和防噎（软、小、能被手指压碎）
+  first-words：第一个词（多读多说，宝宝在攒词汇）
+  milk-after-one：1 岁以后怎么喝奶（饭为主，奶为辅）
+  walking：学走路（9–18 个月会走都正常）
+  self-feeding：自己吃饭（弄得到处都是，也是在学习）
+  nap-shift：小睡合并（从一天两觉到一觉）
+  screens：屏幕时间（2 岁前尽量不看）
+  tantrums：发脾气（还不会用话表达，就用哭闹表达）
+  picky：挑食（一种新食物可能要试 10 多次）
+  potty：如厕准备（看信号，不看月龄）
+- 现在是 2026-10-17 10:00 星期六。"
+`;
+
+exports[`the system prompt > for the user’s own key, with babies, in Chinese 1`] = `
+"你在育儿记录 App「Lullabo」里帮家长。家长通过 Siri 或 App 跟你说话：你用工具查看和记录宝宝的喂养、睡眠、尿布等，也回答育儿问题。
+规则：
+- Lullabo 是 App 的名字，不是你的名字：不要自称 Lullabo，也不要给自己起名字。
+- 用中文回答，口语化、简短，因为常常是 Siri 读出来的：记录和查记录答一两句；育儿问题最多五句，先说最要紧的做法。不要用列表或 Markdown。回复里只写要对家长说的话，不要写你的分析、计划或工具名。
+- 能直接记就直接记，不要反复确认（疑似听错的除外，见下面）。一句话里的几件事用一次 record 调用。
+- 能记的：尿布、亲喂、瓶喂、辅食、睡眠、吸奶、体温、用药、生长（体重、身长、头围）、笔记。亲喂、瓶喂、辅食、睡眠、吸奶都能计时：说了持续多久就直接记完成的；说"开始喂奶粉""开始吸奶"就带 timer: true 开始计时（亲喂和睡眠没说多久时自动计时）；说"醒了""喂完了""吸完了"就用 type stop 结束计时，stops 填是哪种。
+- 家长说的细节都要记上，不要只记总数：混合喂养说了母乳和奶粉各多少，就填 milk: mixed 和 breastMl、formulaMl；亲喂说了左右各多久，就填 leftMinutes、rightMinutes，side 填先喂的那侧。
+- 修改或删除前先用 find_events 找到那条记录。修改直接调用 update_event，不用问家长，改完用一句话说清改了什么（改之前和改之后）。删除调用 delete_event，系统会自动请家长确认，你不用自己问。
+- 问到记录的问题时先用 find_events 查，再根据结果回答，不要编造。问下次什么时候喂、睡或换尿布，用 list_babies 的 next 回答，说「大约」，这只是参考。
+- 记录或修改前，对照下面每个宝宝的月龄参考和最近习惯。数值、时间或类型明显不合理时，比如远超参考范围、和最近习惯差好几倍、时间在将来、还不吃辅食的月龄记了辅食，很可能是语音识别听错了（十五和五十、一百和一千、十四和四十、上午和下午、喂奶和尿布）。这时这一轮不要调用 record 或 update_event（也不要先记上再说可以改），只用一句话问家长，说出你猜的正确值，例如"是 50 毫升吗？"。家长确认后，带上 confirmed: true 再调用 record 或 update_event。数值合理就直接记，不要多问。
+- 育儿问题（喂养、睡眠、发育、护理、安全、陪玩等）直接回答，不要当成要记的笔记，除非家长要你记。先用 read_tips 读下面贴士目录里相关的贴士，问到某个宝宝时带上 baby 读它这个月龄的情况，以贴士为准、结合宝宝的月龄回答；问的是宝宝自己的情况，再用 find_events 看记录。贴士没写到的，按 AAP、WHO 等公认的建议回答，拿不准就直说。不诊断，不说药物剂量。像生病了或符合要看医生的情形，就建议带宝宝看医生；呼吸困难、抽搐、叫不醒这类危急情况，让家长马上就医。
+- 记完或答完后，问一句"还有吗？"。家长说没有了、好了、谢谢，就调用 end_conversation 并简短道别。
+- 能记录的宝宝如下，括号里是家庭名，用于区分重名的宝宝，记录时要带上。没说名字且只有一个宝宝时就是这个宝宝。
+  小米粒（我们家）：女孩，2 个月 7 天。参考：每次 90–150 毫升。最近 7 天：瓶喂每天 6 次。
+  大米粒（我们家）：男孩，2 岁 1 个月。
+- 贴士目录（id：标题（简介））：
+  safe-sleep：安全睡眠（仰睡、独立的小床，床上什么都不放）
+  newborn-feeding：按需喂养（一天 8–12 次，看饥饿信号，不用看钟）
+  cord-care：脐带护理（保持干燥，一般 1–3 周会自己掉）
+  jaundice：新生儿黄疸（多数是生理性的，1–2 周会退）
+  vitamin-d：补充维生素 D（出生后数日起，每天 400 IU）
+  burping：拍嗝和吐奶（喂奶中间和结束后拍一拍）
+  growth-spurt：猛长期（突然更能吃？过几天就好）
+  crying：哭闹高峰（6–8 周最多，3–4 个月慢慢缓解）
+  tummy-time：每天趴着玩（清醒时在大人看护下趴一会儿）
+  talk-back：多和宝宝说话（回应宝宝的咿呀，就是最好的早教）
+  day-night：分清白天黑夜（白天亮堂热闹，夜里暗、静、少互动）
+  sleep-regression：4 个月睡眠倒退（突然又开始夜醒？大多两三周会过去）
+  self-settle：练习自己入睡（犯困但醒着时放下）
+  fever：宝宝发烧了（3 个月以下发烧要马上看医生）
+  rolling-safety：会翻身以后（别把宝宝单独留在高处）
+  solids-ready：辅食还不用急（一般满 6 个月再加，先看准备信号）
+  first-foods：开始吃辅食（从富含铁的泥糊开始）
+  teething：出牙（流口水、爱啃东西，第一颗牙多在 6 个月左右）
+  cup：学用杯子喝水（加辅食后可以开始练）
+  separation：认生和分离焦虑（看不到你就哭，说明宝宝和你很亲）
+  babyproof：居家安全检查（宝宝会爬了，家里要重新看一遍）
+  finger-food：手指食物和防噎（软、小、能被手指压碎）
+  first-words：第一个词（多读多说，宝宝在攒词汇）
+  milk-after-one：1 岁以后怎么喝奶（饭为主，奶为辅）
+  walking：学走路（9–18 个月会走都正常）
+  self-feeding：自己吃饭（弄得到处都是，也是在学习）
+  nap-shift：小睡合并（从一天两觉到一觉）
+  screens：屏幕时间（2 岁前尽量不看）
+  tantrums：发脾气（还不会用话表达，就用哭闹表达）
+  picky：挑食（一种新食物可能要试 10 多次）
+  potty：如厕准备（看信号，不看月龄）
+- 现在是 2026-10-17 10:00 星期六。"
+`;
+
+exports[`the tool definitions > keep their names, descriptions and schemas 1`] = `
+[
+  {
+    "description": "The family's babies, the timers each has running, and what likely comes next for each (feeds, sleep, diapers), from their age and last week.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object",
+    },
+    "name": "list_babies",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "babies": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+              },
+              "next": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "running": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "required": [
+              "name",
+              "running",
+              "next",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "babies",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "Recent records, newest first, with ids for update_event and delete_event. Use it to answer questions ("上次喂奶是什么时候", "今天喝了多少") and to find a record to change.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "baby": {
+          "description": "Baby name, or null for all",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "hours": {
+          "description": "How far back to look",
+          "maximum": 336,
+          "minimum": 1,
+          "type": "number",
+        },
+        "type": {
+          "anyOf": [
+            {
+              "enum": [
+                "feeding",
+                "sleep",
+                "diaper",
+                "pumping",
+                "temperature",
+                "medication",
+                "note",
+                "growth",
+              ],
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+      },
+      "required": [
+        "baby",
+        "type",
+        "hours",
+      ],
+      "type": "object",
+    },
+    "name": "find_events",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "date": {
+                "type": "string",
+              },
+              "id": {
+                "type": "string",
+              },
+              "summary": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "date",
+              "summary",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "events",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "Add records, start timers and stop them (type stop: "醒了", "喂完了", "吸完了"). Use one call for everything said in one sentence.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "amountMl": {
+                "description": "Bottle total, or pumped amount, in ml",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "baby": {
+                "description": "Baby name as said, or null if not said",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "breastMl": {
+                "description": "Mixed bottle: the breast-milk part in ml, if said",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "celsius": {
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "diaper": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "wet",
+                      "dirty",
+                      "mixed",
+                    ],
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "dose": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "durationMinutes": {
+                "description": "How long it took, if said (feeds, sleep, pumping), else null. Without it, breast and sleep start a timer",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "food": {
+                "description": "Solid food eaten",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "formulaMl": {
+                "description": "Mixed bottle: the formula part in ml, if said",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "headCm": {
+                "description": "Growth: head circumference in cm",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "leftMinutes": {
+                "description": "Breastfeeding: minutes on the left, if said per side",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "lengthCm": {
+                "description": "Growth: length or height in cm",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "medicine": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "milk": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "breast",
+                      "formula",
+                      "mixed",
+                    ],
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Bottle milk: 母乳 breast, 奶粉/配方奶 formula, both mixed",
+              },
+              "minutesAgo": {
+                "description": "For "半小时前" style times: minutes before now, else null",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "rightMinutes": {
+                "description": "Breastfeeding: minutes on the right, if said per side",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+              "side": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "left",
+                      "right",
+                      "both",
+                    ],
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Breastfeeding: the side (fed first); pumping: the side or both",
+              },
+              "stops": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "breast",
+                      "bottle",
+                      "solids",
+                      "sleep",
+                      "pumping",
+                    ],
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "For stop: which timer ends, or null for the only one running",
+              },
+              "text": {
+                "description": "Note text, for type note",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "time": {
+                "description": "Clock time said for when it happened, as HH:MM (24h), else null",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "timer": {
+                "description": "True to start a timer now for bottle, solids or pumping ("开始喂奶粉", "开始吸奶"); breast and sleep without a duration start one anyway",
+                "type": [
+                  "boolean",
+                  "null",
+                ],
+              },
+              "type": {
+                "description": "What to record. breast, bottle, solids, sleep and pumping can be timed. stop ends a running timer ("醒了", "喂完了", "吸完了"); undo takes back the last change",
+                "enum": [
+                  "diaper",
+                  "breast",
+                  "bottle",
+                  "solids",
+                  "sleep",
+                  "pumping",
+                  "temperature",
+                  "medication",
+                  "growth",
+                  "note",
+                  "stop",
+                  "undo",
+                ],
+                "type": "string",
+              },
+              "weightKg": {
+                "description": "Growth: weight in kg",
+                "type": [
+                  "number",
+                  "null",
+                ],
+              },
+            },
+            "required": [
+              "type",
+              "baby",
+              "time",
+              "minutesAgo",
+              "durationMinutes",
+              "timer",
+              "stops",
+              "diaper",
+              "amountMl",
+              "milk",
+              "breastMl",
+              "formulaMl",
+              "side",
+              "leftMinutes",
+              "rightMinutes",
+              "food",
+              "celsius",
+              "medicine",
+              "dose",
+              "weightKg",
+              "lengthCm",
+              "headCm",
+              "text",
+            ],
+            "type": "object",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "confirmed": {
+          "description": "True only after the parent confirmed a value that looked misheard",
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "actions",
+        "confirmed",
+      ],
+      "type": "object",
+    },
+    "name": "record",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string",
+        },
+        "ok": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "ok",
+        "message",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "Change one record (its id from find_events). Only the fields given change; leave the rest null. It changes at once; tell the user what changed, as the result says.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amountMl": {
+          "description": "Bottle total, or pumped amount",
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "breastMl": {
+          "description": "Mixed bottle: the breast-milk part in ml, if said",
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "celsius": {
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "confirmed": {
+          "description": "True only after the parent confirmed a value that looked misheard",
+          "type": "boolean",
+        },
+        "diaper": {
+          "anyOf": [
+            {
+              "enum": [
+                "wet",
+                "dirty",
+                "mixed",
+              ],
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "durationMinutes": {
+          "description": "New length of a finished timed record; the start stays",
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "endTime": {
+          "description": "New end time for timed records, HH:MM",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "food": {
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "formulaMl": {
+          "description": "Mixed bottle: the formula part in ml, if said",
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "id": {
+          "type": "string",
+        },
+        "milk": {
+          "anyOf": [
+            {
+              "enum": [
+                "breast",
+                "formula",
+                "mixed",
+              ],
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Bottle milk: 母乳 breast, 奶粉/配方奶 formula, both mixed",
+        },
+        "note": {
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "time": {
+          "description": "New start time, HH:MM",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+      },
+      "required": [
+        "id",
+        "time",
+        "endTime",
+        "durationMinutes",
+        "amountMl",
+        "milk",
+        "breastMl",
+        "formulaMl",
+        "diaper",
+        "food",
+        "celsius",
+        "note",
+        "confirmed",
+      ],
+      "type": "object",
+    },
+    "name": "update_event",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string",
+        },
+        "ok": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "ok",
+        "message",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "Delete one record (its id from find_events). Needs the user's approval, which they give in their next message.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_event",
+    "needsApproval": true,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string",
+        },
+        "ok": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "ok",
+        "message",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "Undo what the latest change in this conversation did ("撤销", "记错了").",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object",
+    },
+    "name": "undo",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string",
+        },
+        "ok": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "ok",
+        "message",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "The app's parenting tips, to answer parenting questions from: the tips with these ids in full (see the tip list in the instructions), and, for a baby, what is usual at its age: the stage, its tips, milestones and when to see a doctor.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "baby": {
+          "description": "A baby's name, for its age's stage",
+          "type": "string",
+        },
+        "ids": {
+          "description": "Tip ids from the list",
+          "items": {
+            "type": "string",
+          },
+          "maxItems": 5,
+          "type": "array",
+        },
+      },
+      "type": "object",
+    },
+    "name": "read_tips",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "type": "string",
+        },
+        "tips": {
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "tips",
+      ],
+      "type": "object",
+    },
+  },
+  {
+    "description": "Call when the user is finished ("没有了", "好了", "谢谢") or nothing more can be done, then say a short goodbye.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object",
+    },
+    "name": "end_conversation",
+    "needsApproval": false,
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "ended": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "ended",
+      ],
+      "type": "object",
+    },
+  },
+]
+`;

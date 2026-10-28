@@ -1,16 +1,16 @@
-import { type Event, newId } from '@lullabo/shared'
+import { DAY, type Event, newId } from '@lullabo/shared'
 import type { AnyTextAdapter } from '@tanstack/ai'
 
 import { loadAccess } from '../src/access'
-import { type AgentScope, FAILED_REPLY, runAgent } from '../src/agent/run'
-import { localDay } from '../src/voice/plan'
+import { FAILED_REPLY, runAgent } from '../src/agent/run'
+import type { AgentScope } from '../src/agent/scope'
+import { localDay } from '../src/time-zone'
 import type { createTestApp } from '../test/app'
 import { baby } from '../test/fixtures'
 import type { Category, Expect, RecordMatch, Scenario, Turn } from './scenarios'
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>
 
-const DAY = 86_400_000
 const ZONE = 'Asia/Shanghai'
 
 interface Stored {

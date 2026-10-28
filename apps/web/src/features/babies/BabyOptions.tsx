@@ -1,8 +1,8 @@
 import { type Baby, type FamilySummary, familyDisplayName } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { Badge, type BadgeTone } from '@lullabo/ui/badge'
+import { cn } from '@lullabo/ui/utils'
 import type { ReactNode } from 'react'
 
-import { Pill, type PillTone } from '../../components/ui/Pill'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { sortFamilies } from '../family/FamilyList'
@@ -30,15 +30,15 @@ function groupByFamily(babies: readonly Baby[], access: readonly FamilySummary[]
 
 export interface OptionBadge {
   label: string
-  tone: PillTone
+  tone: BadgeTone
 }
 
-function Badge({ badge }: { badge: OptionBadge | undefined }) {
+function OptionBadgeLabel({ badge }: { badge: OptionBadge | undefined }) {
   if (!badge) return null
   return (
-    <Pill tone={badge.tone} className="ml-auto">
+    <Badge tone={badge.tone} className="ml-auto">
       {badge.label}
-    </Pill>
+    </Badge>
   )
 }
 
@@ -57,7 +57,7 @@ export function OptionButton({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={clsx(
+      className={cn(
         'flex min-h-touch w-full items-center gap-3 rounded-xl border-2 px-3 py-2 text-left',
         selected ? 'border-diaper bg-diaper-soft' : 'border-border',
       )}
@@ -87,7 +87,7 @@ export function BabyOptions({
       {groups.map((group) => (
         <section key={group.key} className="flex flex-col gap-2">
           {groups.length > 1 && (
-            <h3 className="text-caption font-bold text-fg-muted">{group.title}</h3>
+            <h3 className="text-caption font-bold text-muted-foreground">{group.title}</h3>
           )}
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {group.babies.map((option) => (
@@ -99,9 +99,11 @@ export function BabyOptions({
                   <BabyAvatar name={option.name} color={option.avatarColor} />
                   <span className="flex flex-col">
                     <span className="font-extrabold">{option.name}</span>
-                    <span className="text-caption text-fg-muted">{ageLabel(option.birthDate)}</span>
+                    <span className="text-caption text-muted-foreground">
+                      {ageLabel(option.birthDate)}
+                    </span>
                   </span>
-                  <Badge badge={badges?.get(option.id)} />
+                  <OptionBadgeLabel badge={badges?.get(option.id)} />
                 </OptionButton>
               </li>
             ))}

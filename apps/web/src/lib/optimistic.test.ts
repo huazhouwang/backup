@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { optimisticOptions } from './optimistic'
 
 const showToast = vi.hoisted(() => vi.fn<(message: string, options?: object) => void>())
-vi.mock('../components/ui/Toast', () => ({ showToast }))
+vi.mock('@lullabo/ui/toast', () => ({ showToast }))
 
 const KEY = ['ai', 'mine']
 

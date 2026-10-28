@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  EVENT_TYPES,
   breastSideDurations,
   eventDurationMs,
   eventSchema,
@@ -8,7 +9,7 @@ import {
   hasKnownDuration,
   isRunning,
 } from './event'
-import { MINUTE, T0, baseEvent } from './fixtures.test-utils'
+import { MINUTE, T0, baseEvent } from './testing'
 
 const sleep = (endAt: number | null) => ({
   ...baseEvent(),
@@ -212,5 +213,9 @@ describe('event helpers', () => {
       T0 + 20 * MINUTE,
     )
     expect(totals).toEqual({ left: 15 * MINUTE, right: 5 * MINUTE })
+  })
+
+  it('lists every record type in the schema, in its order', () => {
+    expect(EVENT_TYPES).toEqual(eventSchema.options.map((option) => option.shape.type.value))
   })
 })

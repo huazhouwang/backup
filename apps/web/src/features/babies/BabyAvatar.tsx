@@ -1,5 +1,5 @@
 import type { AvatarColor } from '@lullabo/shared'
-import { clsx } from 'clsx'
+import { cn } from '@lullabo/ui/utils'
 
 export const avatarBackground: Record<AvatarColor, string> = {
   green: 'bg-avatar-green',
@@ -22,8 +22,8 @@ export function BabyAvatar({
   return (
     <span
       aria-hidden
-      className={clsx(
-        'inline-flex shrink-0 items-center justify-center rounded-full font-extrabold text-on-accent',
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-full font-extrabold text-primary-foreground',
         size === 'sm'
           ? 'size-8 text-caption'
           : size === 'md'

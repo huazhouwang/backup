@@ -2,8 +2,8 @@ import { type Event, type PullResponse, newId } from '@lullabo/shared'
 import { fakeText } from '@tanstack/ai/testing'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { VoiceAction } from '../src/voice/action'
-import { clockToTime } from '../src/voice/plan'
+import type { VoiceAction } from '../src/agent/plan/action'
+import { clockToTime } from '../src/time-zone'
 import { createTestApp } from './app'
 import { baby } from './fixtures'
 

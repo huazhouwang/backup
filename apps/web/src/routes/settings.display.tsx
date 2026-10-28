@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { CuesCard } from '../components/CueSettings'
-import { LanguageCard, ThemeCard } from '../components/DisplaySettings'
-import { SettingsPage } from '../components/SettingsLayout'
-import { UnitsCard } from '../components/UnitsCard'
+import { CuesCard } from '../features/settings/CueSettings'
+import { LanguageCard, ThemeCard } from '../features/settings/DisplaySettings'
+import { SettingsPage } from '../features/settings/SettingsLayout'
+import { UnitsCard } from '../features/settings/UnitsCard'
 import { m } from '../paraglide/messages.js'
 
 export const Route = createFileRoute('/settings/display')({
