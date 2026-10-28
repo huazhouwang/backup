@@ -1,4 +1,4 @@
-import { HistoryIcon, MessageSquareIcon, MessagesSquareIcon, RulerIcon, InfoIcon } from 'lucide-react';
+import { HistoryIcon, MessageSquareIcon, MessagesSquareIcon, PaletteIcon, RulerIcon, InfoIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { AreasPanel, CommentsPanel, PropsPanel, VersionsPanel } from '../panels'
 import { svgToPng } from '@/lib/theme';
 import { ShareDialog } from '../ShareDialog';
 import { useEditor } from '../store';
+import { StylesPanel } from '../styles/StylesPanel';
 import { download } from '@/lib/download';
 import { useIsMobile } from '@/lib/use-is-mobile';
 import { Conflict } from './SaveStatus';
@@ -17,9 +18,10 @@ import { EditorCanvas } from './EditorCanvas';
 import { Thumbnail } from './Thumbnail';
 import { Toolbar } from './Toolbar';
 
-type Tab = 'chat' | 'props' | 'areas' | 'comments' | 'versions';
+type Tab = 'chat' | 'styles' | 'props' | 'areas' | 'comments' | 'versions';
 const TABS: { id: Tab; label: () => string; icon: typeof InfoIcon }[] = [
   { id: 'chat', label: m.editor_tab_chat, icon: MessagesSquareIcon },
+  { id: 'styles', label: m.editor_tab_styles, icon: PaletteIcon },
   { id: 'props', label: m.editor_tab_props, icon: InfoIcon },
   { id: 'areas', label: m.editor_tab_areas, icon: RulerIcon },
   { id: 'comments', label: m.editor_tab_comments, icon: MessageSquareIcon },
@@ -31,6 +33,9 @@ function PanelBody() {
     <>
       <TabsContent value="chat" keepMounted className="min-h-0 flex-1 data-[hidden]:hidden">
         <ChatPanel />
+      </TabsContent>
+      <TabsContent value="styles" className="min-h-0 flex-1 overflow-y-auto">
+        <StylesPanel />
       </TabsContent>
       <TabsContent value="props" className="min-h-0 flex-1 overflow-y-auto">
         <PropsPanel />

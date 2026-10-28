@@ -94,6 +94,9 @@ Repository Settings → Secrets and variables → Actions:
 | `PLATFORM_CREDITS_GUEST` / `PLATFORM_CREDITS_USER` | Free credits: a guest's one-off allowance (default 100) and a signed-in user's monthly one (default 500) |
 | `PLATFORM_PRICE_INPUT` / `PLATFORM_PRICE_OUTPUT` | Credits per million input / output tokens (defaults 300 / 1500: one credit is one US cent for a $3 / $15 model) |
 | `PLATFORM_DAILY_CAP` | Credits everyone together may spend in a day (default 20000); past it, chats ask people to come back tomorrow or add their own key |
+| `RENDER_KEY` | Optional. The API key of the image model for style renders, paid by you; without it, renders are illustrations made from the 3D view, labelled as such |
+| `RENDER_PROVIDER` / `RENDER_MODEL` | With `RENDER_KEY`: `openai` (default model `gpt-image-1`, an image edit of the 3D view), `seedream` (Volcengine Ark, default `doubao-seedream-4-0-250828`) or `fal` (default `fal-ai/flux-pro/v1/depth`, conditioned on the depth pass); `RENDER_BASE_URL` to use another endpoint |
+| `RENDER_CREDITS` | Free credits one image costs (defaults: 1 for the illustrations, 4 for openai and seedream, 5 for fal) |
 
 ### Free credits
 

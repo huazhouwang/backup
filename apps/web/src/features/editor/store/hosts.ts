@@ -1,6 +1,7 @@
 /** What the capabilities reach outside the project through the editor: look libraries, look previews and comments, via the API */
 import type { LibrariesHost } from '../agent/library-capabilities';
 import type { LooksHost } from '../agent/look-capabilities';
+import type { RendersHost } from '../agent/render-capabilities';
 import type { CommentsHost } from '../agent/view-capabilities';
 import { api } from '@/lib/api';
 import { m } from '@/lib/i18n';
@@ -24,6 +25,21 @@ export function commentsHost(projectId: string): CommentsHost {
       await api(`/projects/${projectId}/comments`, { method: 'POST', json: { body: m.store_agent_comment({ body }), parentId } });
       if (status) await api(`/projects/${projectId}/comments/${parentId}`, { method: 'PATCH', json: { status } });
       await queryClient.invalidateQueries({ queryKey: ['comments', projectId] });
+    },
+  };
+}
+
+/** Style renders for the agent: made like the styles panel makes them, which then lists them */
+export function rendersHost(projectId: string): RendersHost {
+  return {
+    async render(project, style, shots) {
+      const { renderStyle, shotsFor } = await import('@/features/renders/renders');
+      try {
+        return await renderStyle(projectId, project, style, shotsFor(project, shots));
+      } finally {
+        await queryClient.invalidateQueries({ queryKey: ['renders', projectId] });
+        await queryClient.invalidateQueries({ queryKey: ['credits'] });
+      }
     },
   };
 }

@@ -5,7 +5,7 @@ import { canvasHost } from '../sandbox/host';
 import { m } from '@/lib/i18n';
 import { can } from '@/shared/roles';
 import type { StoreContext } from './create';
-import { commentsHost, librariesHost, LOOK_EDITS, looksHost } from './hosts';
+import { commentsHost, librariesHost, LOOK_EDITS, looksHost, rendersHost } from './hosts';
 import type { EditorActions, EditorState } from './types';
 
 type Edits = Pick<EditorState, 'lastChange' | 'lookChange' | 'pendingLabels'> &
@@ -20,6 +20,7 @@ export const editsSlice = ({ set, get, session }: StoreContext): Edits => {
     canvas: canvasHost,
     ask: get().askHost,
     choose: get().chooseHost,
+    renders: rendersHost(get().projectId),
   });
   return {
     lastChange: null,

@@ -5,6 +5,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-e
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { m } from '@/lib/i18n';
 import { safeJson, titleOf, type ToolCallPart, type ToolResultPart } from './common';
+import { renderImageUrl } from '@/shared/renders';
 
 type ToolState = 'input-streaming' | 'input-available' | 'approval-requested' | 'approval-responded' | 'output-available' | 'output-error' | 'output-denied';
 
@@ -64,6 +65,20 @@ export function MessageView({ msg, results, streaming }: { msg: UIMessage; resul
             }
             // The brief card shows what was recorded
             if (p.name === 'brief_update' && out?.ok !== false) return null;
+            // Style renders show as the images, each opening in the styles panel's gallery (issue 195)
+            if (p.name === 'render_style' && out?.ok) {
+              const images = (out.result as { images?: { id: string; shot: string }[] }).images ?? [];
+              return (
+                <div key={i} className="grid grid-cols-2 gap-2" aria-label={m.render_gallery_aria()}>
+                  {images.map(img => (
+                    <figure key={img.id} className="flex flex-col gap-1">
+                      <img src={renderImageUrl(img.id)} alt={img.shot} className="aspect-[4/3] w-full rounded-md border object-cover" loading="lazy" />
+                      <figcaption className="text-xs text-muted-foreground">{img.shot}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              );
+            }
             return (
               <Tool key={i}>
                 <ToolHeader type="dynamic-tool" toolName={p.name} title={titleOf(p.name)} state={toolState(p, r)} />
