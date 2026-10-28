@@ -14,6 +14,7 @@ import { themeColor } from '@/lib/theme';
 import { framed, nearPlane } from './framing';
 import { houseScene, type HousePart } from './house-scene';
 import { withStillRenderer } from './look-preview';
+import { beautyComposer, toneMap } from './beauty';
 import { M } from './scene';
 
 export const PASSES = ['color', 'depth', 'lines', 'mask'] as const;
@@ -32,7 +33,7 @@ const exact = ([r, g, b]: [number, number, number]) => new THREE.Color().setRGB(
 
 async function draw(renderer: THREE.WebGLRenderer, p: Project, shot: Shot, W: number, H: number): Promise<Passes> {
   const doc = await lightDocument();
-  const hs = await houseScene(p, doc);
+  const hs = await houseScene(p, doc, { renderer });
   const { scene, house, ground, sun } = hs;
   const inside = shot.kind === 'room';
 
@@ -56,8 +57,7 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, shot: Shot, W: nu
   renderer.setSize(W, H, false);
   renderer.setScissorTest(false);
   renderer.setViewport(0, 0, W, H);
-  renderer.toneMapping = THREE.NoToneMapping;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   const meshes: THREE.Mesh[] = [];
   house.traverse(o => o instanceof THREE.Mesh && meshes.push(o));
   const snap = (type: 'image/jpeg' | 'image/png') => renderer.domElement.toDataURL(type, 0.9);
@@ -76,8 +76,13 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, shot: Shot, W: nu
   // Colour: outside in the sun with shadows; inside without them, so the room isn't lost in the roof's shadow
   renderer.shadowMap.enabled = !inside;
   sun.castShadow = !inside;
-  renderer.render(scene, camera);
+  // Finished like the 3D view (beauty.ts); the passes after it are data, written exactly
+  toneMap(renderer);
+  const composer = beautyComposer(renderer, scene, camera, W, H);
+  composer.render();
   const color = snap('image/jpeg');
+  composer.dispose();
+  renderer.toneMapping = THREE.NoToneMapping;
   for (const [m, mat] of finishes) m.material = mat;
   ceiling.dispose();
   renderer.shadowMap.enabled = false;

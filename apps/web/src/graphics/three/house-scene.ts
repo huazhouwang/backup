@@ -14,6 +14,7 @@ import {
   projectBoxes,
   projectElements,
   requestBuild,
+  buildError,
   roofs,
   SLAB_THICKNESS,
   wallTarget,
@@ -28,9 +29,12 @@ import { themeColor } from '@/lib/theme';
 import { modelStyle } from '../model-style';
 import { materialPattern } from '../plan/floor-materials';
 import { floorTexture } from './floor-textures';
+import { LOOK, type Look } from './beauty';
 import { lookMaterial, partsGeometry } from './looks';
 import {
   backdrop,
+  DEFAULT_SUN,
+  skyEnvironment,
   castsShadow,
   elementLook,
   floorMaterial,
@@ -39,7 +43,6 @@ import {
   M,
   railingPieces,
   shadowGround,
-  SKYLIGHT_INTENSITY,
   slabGeometry,
   slabLevel,
   solidFallbackColor,
@@ -67,7 +70,9 @@ export interface HouseScene {
   dispose(): void;
 }
 
-export async function houseScene(p: Project, doc: Document): Promise<HouseScene> {
+/** `renderer`: light the scene with the sky environment too (it is prefiltered on that renderer); `look`: other light values */
+export async function houseScene(p: Project, doc: Document, opts: { renderer?: THREE.WebGLRenderer; look?: Look } = {}): Promise<HouseScene> {
+  const light = opts.look ?? LOOK;
   const color = (t: string) => new THREE.Color(themeColor(t, doc));
   const disposables: { dispose(): void }[] = [];
   const keep = <T extends { dispose(): void }>(x: T) => (disposables.push(x), x);
@@ -85,7 +90,9 @@ export async function houseScene(p: Project, doc: Document): Promise<HouseScene>
   // A look built at a size, as meshes in its materials
   const look = async (recipe: Recipe | null, size: RecipeSize, part: HousePart, params?: Record<string, unknown>) => {
     const g = new THREE.Group();
-    const built = recipe && (await requestBuild(recipe, size, params));
+    let built = recipe && (await requestBuild(recipe, size, params));
+    // A build that ran out of time (the page was busy) is left unbuilt, not failed: ask once more rather than leave it out
+    if (recipe && !built && !buildError(recipe, size, params)) built = await requestBuild(recipe, size, params);
     if (!built) return g;
     for (const [mat, geo] of partsGeometry(built.parts)) {
       const style = lookMaterial(mat, recipe, p.library.materials);
@@ -198,9 +205,27 @@ export async function houseScene(p: Project, doc: Document): Promise<HouseScene>
   scene.add(ground);
 
   // The 3D view's light
-  scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, SKYLIGHT_INTENSITY));
+  scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, light.sky));
   const sun = sunLight(color('--canvas-sun'), center, radius);
+  sun.intensity = light.sun;
   scene.add(sun, sun.target);
+  // The sky as image-based light (issue 208)
+  const env =
+    opts.renderer &&
+    skyEnvironment(
+      opts.renderer,
+      {
+        sky: themeColor('--canvas-sky', doc),
+        horizon: themeColor('--canvas-backdrop', doc),
+        ground: themeColor('--canvas-ground', doc),
+        sun: themeColor('--canvas-sun', doc),
+      },
+      DEFAULT_SUN,
+    );
+  if (env) {
+    scene.environment = keep(env);
+    scene.environmentIntensity = light.environment;
+  }
 
   return {
     scene,

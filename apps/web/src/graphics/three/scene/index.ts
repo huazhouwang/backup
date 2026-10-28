@@ -4,3 +4,4 @@ export * from './materials';
 export * from './geometry';
 export * from './lighting';
 export * from './house';
+export * from './environment';

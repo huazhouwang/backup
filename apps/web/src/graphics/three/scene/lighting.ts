@@ -6,8 +6,13 @@
  */
 import * as THREE from 'three';
 
-export const SKYLIGHT_INTENSITY = 2.4;
-export const SUN_INTENSITY = 1.4;
+/** The hemisphere's share of the sky light: most of it now comes from the sky environment (environment.ts, issue 208) */
+export const SKYLIGHT_INTENSITY = 0.15;
+export const SUN_INTENSITY = 2.8;
+/** The sky environment's strength: the ambient light and reflections of the scene */
+export const ENVIRONMENT_INTENSITY = 0.6;
+/** Exposure for the Neutral tone mapping: white walls in the sun stay white */
+export const TONE_EXPOSURE = 1.0;
 /** How dark the shadows are on the ground around the house */
 export const GROUND_SHADOW_OPACITY = 0.35;
 

@@ -64,6 +64,7 @@ import {
   solidMaterial,
   wallFinish,
 } from '@/graphics/three/scene';
+import { toneMap } from '@/graphics/three/beauty';
 
 /** The 3D view's own colors (light, backdrop, selection) come from the theme; materials come from libraries */
 const useColors = () =>
@@ -178,8 +179,6 @@ export function Model3D() {
           frameloop="demand"
           // Full resolution for crisp edges; low-end phones a little less
           dpr={q === 'high' ? [1, 2] : [1, 1.5]}
-          // No tone mapping: white surfaces stay white instead of the filmic gray
-          flat
           gl={{ preserveDrawingBuffer: true, antialias: true }}
           camera={{ position: [cx + span * 0.9, span * 0.8, cz + span * 1.1], fov: FOV, near: 0.1, far: 2000 }}
           // White like the plan's page until the first frame: switching from the plan shows no gray flash
@@ -189,6 +188,8 @@ export function Model3D() {
           // so the model sits off-center and clicks miss. Fill the wrapper instead.
           onCreated={({ gl, scene }) => {
             Object.assign(gl.domElement.style, { width: '100%', height: '100%' });
+            // Khronos PBR Neutral: true base colours, highlights rolled off rather than clipped (issue 208)
+            toneMap(gl);
             scene.background = backdrop(style, { backdrop: c.backdrop, sky: c.sky, horizon: c.backdrop, ground: c.ground });
             setQuality(detectQuality(doc.defaultView!, gl.getContext()));
           }}
@@ -315,7 +316,7 @@ export function Model3D() {
           {current && <Effects3D project={project} current={current.id} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
-          <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />
+          <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} quality={q} />
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
           {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
           <Wake on={[view.selection, view.highlight]} />

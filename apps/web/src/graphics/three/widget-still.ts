@@ -10,6 +10,7 @@ import { themeColor } from '@/lib/theme';
 import { BIRD, FOV, framed, nearPlane } from './framing';
 import { houseScene } from './house-scene';
 import { withStillRenderer } from './look-preview';
+import { beautyComposer, toneMap } from './beauty';
 import { particlePoints, pixelsPerMetre, SKY_MOOD_LIGHT } from './particles';
 import { M } from './scene';
 
@@ -19,7 +20,7 @@ export function renderWidgetStill(project: Project, items: WidgetItem[], level: 
 
 async function draw(renderer: THREE.WebGLRenderer, p: Project, items: WidgetItem[], current: string, W: number, H: number): Promise<string> {
   const doc = await lightDocument();
-  const hs = await houseScene(p, doc);
+  const hs = await houseScene(p, doc, { renderer });
   const { scene } = hs;
   const extra: { dispose(): void }[] = [];
   const elev = new Map(p.levels.map(l => [l.id, l.elevation]));
@@ -75,6 +76,7 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, items: WidgetItem
     scene.background = new THREE.Color(themeColor(`--canvas-sky-${fx.sky.mood}`, doc));
     hs.sun.intensity *= dim.sun;
     scene.traverse(o => o instanceof THREE.HemisphereLight && (o.intensity *= dim.sky));
+    scene.environmentIntensity *= dim.sky;
   }
 
   const pose = framed(hs.box, W / H, BIRD);
@@ -85,10 +87,14 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, items: WidgetItem
   renderer.setSize(W, H, false);
   renderer.setScissorTest(false);
   renderer.setViewport(0, 0, W, H);
-  renderer.toneMapping = THREE.NoToneMapping;
+  toneMap(renderer);
   renderer.shadowMap.enabled = true;
-  renderer.render(scene, camera);
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  const composer = beautyComposer(renderer, scene, camera, W, H);
+  composer.render();
   const url = renderer.domElement.toDataURL('image/jpeg', 0.85);
+  composer.dispose();
+  renderer.toneMapping = THREE.NoToneMapping;
   extra.forEach(x => x.dispose());
   hs.dispose();
   return url;

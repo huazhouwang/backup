@@ -5,7 +5,19 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { hops } from '@/canvas/hop';
 import { useSkyMood } from './Effects3D';
-import { M, shadowGround, siteBounds, SKYLIGHT_INTENSITY, SUN_INTENSITY, sunLight, sunSetup, type ShadowQuality } from '@/graphics/three/scene';
+import {
+  DEFAULT_SUN,
+  ENVIRONMENT_INTENSITY,
+  M,
+  shadowGround,
+  siteBounds,
+  SKYLIGHT_INTENSITY,
+  skyEnvironment,
+  SUN_INTENSITY,
+  sunLight,
+  sunSetup,
+  type ShadowQuality,
+} from '@/graphics/three/scene';
 
 export function HouseStage({
   project,
@@ -23,7 +35,7 @@ export function HouseStage({
   /** The site's larger side in metres: the ground reaches well beyond it and the house */
   span: number;
   quality: ShadowQuality;
-  colors: { skylight: string; wall: string; sun: string; shadow: string };
+  colors: { skylight: string; wall: string; sun: string; shadow: string; sky: string; ground: string; backdrop: string };
   /** Toward the sun (see lib/solar.ts), and how strong it shines (0–1, low near the horizon) */
   toward?: THREE.Vector3;
   strength?: number;
@@ -48,6 +60,21 @@ export function HouseStage({
     sun.intensity = SUN_INTENSITY * strength * mood.sun;
     invalidate();
   }, [sun, toward?.x, toward?.y, toward?.z, strength, mood.sun]);
+  // The sky as image-based light (issue 208): soft shading by the sky's direction, and reflections in glass and glossy finishes
+  const { gl, scene } = useThree();
+  const env = useMemo(
+    () => skyEnvironment(gl, { sky: colors.sky, horizon: colors.backdrop, ground: colors.ground, sun: colors.sun }, toward ?? DEFAULT_SUN),
+    [gl, colors.sky, colors.backdrop, colors.ground, colors.sun, toward?.x, toward?.y, toward?.z],
+  );
+  useEffect(() => {
+    scene.environment = env;
+    scene.environmentIntensity = ENVIRONMENT_INTENSITY * mood.sky;
+    invalidate();
+    return () => {
+      if (scene.environment === env) scene.environment = null;
+      env.dispose();
+    };
+  }, [env, mood.sky]);
   const [cx, cz] = useMemo(() => {
     const [x0, y0, x1, y1] = siteBounds(project);
     return [((x0 + x1) / 2) * M, ((y0 + y1) / 2) * M];
