@@ -53,7 +53,7 @@ export function useWidgetOutputs(project: Project, level: string, view: 'plan' |
 
 /** The items of these outputs that belong on a level: their own level, else the current one */
 export const itemsOn = (outputs: WidgetOutput[], level: string, current: string) =>
-  outputs.flatMap(o => o.items.filter(i => (i.level ?? current) === level).map(item => ({ widget: o.id, item })));
+  outputs.flatMap(o => o.items.filter(i => (('level' in i ? i.level : undefined) ?? current) === level).map(item => ({ widget: o.id, item })));
 
 /** Every snap point on the current level */
 export const snapPoints = (outputs: WidgetOutput[], level: string) =>

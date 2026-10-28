@@ -1,0 +1,97 @@
+{
+  "exchanges": [
+    {
+      "user": "在庭院里加上下雨的效果",
+      "tools": 70,
+      "hash": "7ddb91978f9c8fe1",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_catalog",
+            "arguments": {
+              "scripts": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "在庭院里加上下雨的效果",
+      "tools": 70,
+      "hash": "dbde448ffd1f9cbd",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_install",
+            "arguments": {
+              "library": "builtin-widgets",
+              "widget": "rain",
+              "params": {
+                "space": "庭院·透水砖"
+              },
+              "name": "庭院下雨"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "在庭院里加上下雨的效果",
+      "tools": 70,
+      "hash": "1942b886a3efbcc8",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "view_set",
+            "arguments": {
+              "mode": "3d",
+              "level": null,
+              "layers": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "在庭院里加上下雨的效果",
+      "tools": 70,
+      "hash": "0e7f3d0040973d66",
+      "answer": {
+        "text": "庭院里已经下起雨了，3D 视图里就能看到。\n- 雨落在「庭院·透水砖」上方，中等雨量，带一点微风。\n- 想要雨更大、风更强，或者把旁边的「庭院·碎石」也一起罩进来，跟我说一声就行。",
+        "tool_calls": []
+      }
+    },
+    {
+      "user": "雨再大一点，带点风",
+      "tools": 70,
+      "hash": "4e50d57dc199f41f",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_configure",
+            "arguments": {
+              "widget": "庭院下雨",
+              "params": {
+                "intensity": 0.9,
+                "wind": 4
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "雨再大一点，带点风",
+      "tools": 70,
+      "hash": "9274287d41c041f3",
+      "answer": {
+        "text": "雨已经调大了，还加了一阵从西往东吹的风，雨丝会斜着落进庭院。\n- 雨量从中雨调到了接近大雨。\n- 风调到了约 4 米/秒，属于明显但不算猛的风；想再猛些或换个风向，告诉我即可。",
+        "tool_calls": []
+      }
+    }
+  ]
+}

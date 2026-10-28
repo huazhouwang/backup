@@ -41,6 +41,7 @@ import { sunDirection, sunPosition } from '@/lib/solar';
 import { Sun3D } from './Sun3D';
 import { HeightDims3D } from './HeightDims3D';
 import { Widgets3D } from './Widgets3D';
+import { Effects3D } from './Effects3D';
 import { movedBy, useMoving } from './doors';
 import { HouseStage } from './HouseStage';
 import { Picker, SafariPinch } from './interaction';
@@ -311,6 +312,7 @@ export function Model3D() {
             <HeightDims3D project={project} level={current.id} shown={levels.map(l => l.id)} quality={q} growth={growth} />
           )}
           {current && !camera3d.walking && <Widgets3D project={project} current={current.id} editable={canEdit} />}
+          {current && <Effects3D project={project} current={current.id} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
           <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} />

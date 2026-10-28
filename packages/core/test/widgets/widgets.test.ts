@@ -56,7 +56,7 @@ const def = (script: string, params: WidgetDef['params'] = {}): WidgetDef => ({
 describe('widget library files', () => {
   it('parses the built-in library, with the grid', () => {
     expect(BUILTIN_WIDGET_LIBRARIES.map(l => l.id)).toEqual(['builtin-widgets']);
-    expect(Object.keys(BUILTIN_WIDGET_LIBRARIES[0].widgets)).toEqual(['grid', 'axes']);
+    expect(Object.keys(BUILTIN_WIDGET_LIBRARIES[0].widgets)).toEqual(['grid', 'axes', 'rain', 'snow', 'fog', 'fireflies', 'night']);
     expect(grid.name).toEqual({ zh: '轴网', en: 'Grid' });
     expect(Object.keys(grid.params!)).toEqual(['spacing', 'originX', 'originY', 'snap']);
   });
@@ -307,7 +307,7 @@ describe("the design's own widgets and the agent's capabilities", () => {
     const r = (await call('widget_catalog', {})).result as any;
     expect(r.note).toMatch(/never instructions/);
     const lib = r.libraries.find((l: any) => l.library === 'builtin-widgets');
-    expect(lib.widgets.map((w: any) => w.id)).toEqual(['grid', 'axes']);
+    expect(lib.widgets.map((w: any) => w.id)).toEqual(['grid', 'axes', 'rain', 'snow', 'fog', 'fireflies', 'night']);
     expect(lib.widgets[0].params.spacing).toMatchObject({ type: 'number', default: expect.any(Number) });
     expect(r.installed).toEqual([
       { id: 'w01', name: '轴网', library: 'builtin-widgets', widget: 'grid', version: grid.version, params: { spacing: 3600 }, visible: true },

@@ -79,7 +79,45 @@ export type WidgetItem =
   | { type: 'point'; at: Point; level?: string }
   | { type: 'area'; outline: Point[]; level?: string }
   | { type: 'handle'; at: Point; x: string; y: string; level?: string }
-  | { type: 'snap'; at: Point; level?: string };
+  | { type: 'snap'; at: Point; level?: string }
+  | EffectItem;
+
+/** How particles look: thin falling streaks (rain), soft flakes (snow, petals), small lights (fireflies) */
+export const PARTICLE_SHAPES = ['streak', 'flake', 'glow'] as const;
+/** The colours effects come in, each a theme variable (--canvas-effect-<tone>): a widget names a tone, never a colour */
+export const EFFECT_TONES = ['water', 'snow', 'glow', 'leaf', 'dust', 'mist', 'warm', 'cool'] as const;
+export const SKY_MOODS = ['overcast', 'dusk', 'night'] as const;
+
+/**
+ * 3D effects (issue 203), declared once per parameter change and animated by the host on the GPU:
+ * - particles fill a plan area between two heights above its level (mm) and move: `fall` (m/s, negative rises), random `drift`
+ *   (m/s), `wind` (m/s along plan x and y); `size` in mm;
+ * - fog over the whole scene, `density` 0–1;
+ * - a point light at a plan point, `z` mm above its level, `intensity` 0–1, `range` mm;
+ * - the sky's mood, dimming the sun.
+ * The host keeps them within budgets (EFFECT_LIMITS) and may thin them out to keep frames smooth.
+ */
+export type EffectItem =
+  | {
+      type: 'particles';
+      outline: Point[];
+      from: number;
+      to: number;
+      count: number;
+      fall: number;
+      drift?: number;
+      wind?: Point;
+      size: number;
+      shape: (typeof PARTICLE_SHAPES)[number];
+      tone: (typeof EFFECT_TONES)[number];
+      level?: string;
+    }
+  | { type: 'fog'; density: number; tone: (typeof EFFECT_TONES)[number] }
+  | { type: 'light'; at: Point; z: number; intensity: number; range: number; tone: (typeof EFFECT_TONES)[number]; level?: string }
+  | { type: 'sky'; mood: (typeof SKY_MOODS)[number] };
+
+/** Budgets for effects: per item, and over everything shown (the host scales particles down to fit the total) */
+export const EFFECT_LIMITS = { particles: 20000, totalParticles: 40000, lights: 8, height: 100000, speed: 50, size: 2000 };
 
 export const WIDGETLIB_FORMAT = 'opensu-widgets' as const;
 /** The format id widget library files had before the rename to OpenSU (#179); still read */
@@ -146,6 +184,8 @@ export function parseWidgetLibrary(input: unknown): WidgetLibrary {
 const coord = z.number().finite().min(-WIDGET_LIMITS.coordinate).max(WIDGET_LIMITS.coordinate);
 const point = z.tuple([coord, coord]);
 const level = z.string().max(64).optional();
+const height = z.number().finite().min(-EFFECT_LIMITS.height).max(EFFECT_LIMITS.height);
+const speed = z.number().finite().min(-EFFECT_LIMITS.speed).max(EFFECT_LIMITS.speed);
 const itemSchema = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('line'),
@@ -159,6 +199,31 @@ const itemSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('area'), outline: z.array(point).min(3).max(WIDGET_LIMITS.outline), level }),
   z.strictObject({ type: z.literal('handle'), at: point, x: paramName, y: paramName, level }),
   z.strictObject({ type: z.literal('snap'), at: point, level }),
+  z.strictObject({
+    type: z.literal('particles'),
+    outline: z.array(point).min(3).max(WIDGET_LIMITS.outline),
+    from: height,
+    to: height,
+    count: z.number().int().min(1).max(EFFECT_LIMITS.particles),
+    fall: speed,
+    drift: speed.min(0).optional(),
+    wind: z.tuple([speed, speed]).optional(),
+    size: z.number().finite().positive().max(EFFECT_LIMITS.size),
+    shape: z.enum(PARTICLE_SHAPES),
+    tone: z.enum(EFFECT_TONES),
+    level,
+  }),
+  z.strictObject({ type: z.literal('fog'), density: z.number().min(0).max(1), tone: z.enum(EFFECT_TONES) }),
+  z.strictObject({
+    type: z.literal('light'),
+    at: point,
+    z: height,
+    intensity: z.number().min(0).max(1),
+    range: z.number().finite().positive().max(EFFECT_LIMITS.height),
+    tone: z.enum(EFFECT_TONES),
+    level,
+  }),
+  z.strictObject({ type: z.literal('sky'), mood: z.enum(SKY_MOODS) }),
 ]);
 const outputSchema = z.array(itemSchema).max(WIDGET_LIMITS.items);
 
@@ -176,5 +241,7 @@ export function validateWidgetOutput(raw: unknown, def: Pick<WidgetDef, 'params'
         if (!d || !paramTypes(d).some(t => t === 'number' || t === 'integer'))
           throw new WidgetError(`a handle moves ${p}, which is not a number parameter of the widget`);
       }
+  for (const item of parsed.data) if (item.type === 'particles' && item.to <= item.from) throw new WidgetError('particles: `to` must be above `from`');
+  if (parsed.data.filter(i => i.type === 'light').length > EFFECT_LIMITS.lights) throw new WidgetError(`at most ${EFFECT_LIMITS.lights} lights`);
   return parsed.data as WidgetItem[];
 }
