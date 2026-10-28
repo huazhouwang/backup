@@ -3,6 +3,7 @@ import type { UIMessage } from '@tanstack/ai-react';
 import { Message, MessageContent, MessageResponse } from '@/components/ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning';
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
+import { m } from '@/lib/i18n';
 import { safeJson, titleOf, type ToolCallPart, type ToolResultPart } from './common';
 
 type ToolState = 'input-streaming' | 'input-available' | 'approval-requested' | 'approval-responded' | 'output-available' | 'output-error' | 'output-denied';
@@ -46,6 +47,23 @@ export function MessageView({ msg, results, streaming }: { msg: UIMessage; resul
           if (p.type === 'tool-call') {
             const r = results.get(p.id);
             const out = p.output ?? (r ? safeJson(typeof r.content === 'string' ? r.content : '') : undefined);
+            // The interview reads as a conversation: the question in the agent's words, the owner's answer beneath it (issue 186)
+            if (p.name === 'ask_user') {
+              const q = (p.input ?? safeJson(p.arguments)) as { question?: string } | null;
+              const a = out?.ok ? (out.result as { picked?: string[]; text?: string; deferred?: boolean }) : null;
+              return (
+                <div key={i} className="flex flex-col gap-2">
+                  {q?.question && <MessageResponse>{q.question}</MessageResponse>}
+                  {a && (
+                    <p className="self-end rounded-lg bg-secondary px-3 py-1.5 text-sm text-secondary-foreground">
+                      {a.picked?.join(m.list_separator()) ?? a.text ?? m.chat_question_defer()}
+                    </p>
+                  )}
+                </div>
+              );
+            }
+            // The brief card shows what was recorded
+            if (p.name === 'brief_update' && out?.ok !== false) return null;
             return (
               <Tool key={i}>
                 <ToolHeader type="dynamic-tool" toolName={p.name} title={titleOf(p.name)} state={toolState(p, r)} />

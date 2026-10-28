@@ -12,11 +12,12 @@
 import type { Material, Names } from '../looks/material.js';
 import type { ParamValue, Recipe } from '../looks/script.js';
 import type { WidgetDef } from '../widgets/format.js';
+import type { HouseProgram } from '../generate/program.js';
 
 export const SCHEMA = 'opensu/project' as const;
 /** The schema id project files had up to v19, before the rename to OpenSU (#179) */
 export const LEGACY_SCHEMA = 'plinth/project' as const;
-export const SCHEMA_VERSION = 20 as const;
+export const SCHEMA_VERSION = 21 as const;
 
 /** Language of the names written into project data (levels, walls, openings, catalog); independent of the UI language */
 export type ProjectLanguage = 'zh' | 'en';
@@ -243,6 +244,10 @@ export interface Brief {
   preferences?: string[];
   budget?: string;
   notes?: string[];
+  /** The room program the interview arrived at (issue 186): what house_options builds from. Added in v21. */
+  program?: HouseProgram;
+  /** Styles the owner picked, as style keys (e.g. 'chinese', 'french'). Added in v21. */
+  style?: string[];
 }
 
 export interface Decision {

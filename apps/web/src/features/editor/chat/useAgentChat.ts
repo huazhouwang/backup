@@ -71,6 +71,13 @@ export function useAgentChat({ autonomy, editable, modelId }: { autonomy: Autono
       .finally(() => setLoaded(true));
   }, [projectId]);
 
+  // While the agent waits on a question the turn stays open: save the thread so far, so a reload keeps the interview
+  const question = useEditor(s => s.question);
+  useEffect(() => {
+    if (question && loaded && editable && messages.length)
+      api(`/projects/${projectId}/chat-thread`, { method: 'PUT', json: lighten(messages.slice(-80)) }).catch(() => {});
+  }, [question]);
+
   // Save the thread after each turn
   const prevStatus = useRef(status);
   useEffect(() => {
@@ -100,5 +107,5 @@ export function useAgentChat({ autonomy, editable, modelId }: { autonomy: Autono
     if (ask) sendRef.current(ask.text);
   }, [ask]);
 
-  return { ...chat, send, shots };
+  return { ...chat, send, shots, loaded };
 }

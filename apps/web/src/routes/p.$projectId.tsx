@@ -8,6 +8,8 @@ export const Route = createFileRoute('/p/$projectId')({
     mode: z.enum(['2d', '3d']).optional(),
     focus: z.string().optional(),
     v: z.coerce.number().int().positive().optional(),
+    /** interview: a new design opens with the agent interviewing the owner (issue 186) */
+    start: z.enum(['interview']).optional(),
   }),
   component: ProjectPage,
 });

@@ -1,6 +1,6 @@
 import { sampleFile } from '../support.js';
 import { describe, expect, it } from 'vitest';
-import { areaReport, fromLegacy, migrate, validate } from '../../src/index.js';
+import { areaReport, fromLegacy, migrate, SCHEMA_VERSION, validate } from '../../src/index.js';
 
 const read = sampleFile;
 const legacy = read('legacy.json');
@@ -58,7 +58,7 @@ describe('migrate', () => {
 
   it('opens projects saved as plinth/project before the rename (v20, #179)', () => {
     const old = { ...migrate(read()), schema: 'plinth/project', version: 19 };
-    expect(migrate(old)).toMatchObject({ schema: 'opensu/project', version: 20 });
+    expect(migrate(old)).toMatchObject({ schema: 'opensu/project', version: SCHEMA_VERSION });
   });
 
   it('drops the model axes (v13) and the guides (v14) of older projects', () => {

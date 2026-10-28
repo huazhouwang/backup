@@ -62,6 +62,8 @@ const MIGRATIONS: Record<number, (doc: any) => any> = {
   18: doc => doc,
   // v20: the product is renamed OpenSU (#179), so the schema id changes from plinth/project to opensu/project
   19: doc => ({ ...doc, schema: SCHEMA }),
+  // v21 adds the interview's room program and style picks to the brief (brief.program, brief.style); optional, nothing to convert
+  20: doc => doc,
 };
 
 /**

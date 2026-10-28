@@ -4,7 +4,7 @@
  */
 import { findObject, type Project } from '@opensu/core';
 import type { ToolApprovalInterrupt } from '@tanstack/ai-client';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowUpIcon, CircleStopIcon, ImagePlusIcon, ShieldQuestionIcon, SparklesIcon, SettingsIcon, XIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from '@/components/ai-elements/conversation';
@@ -19,15 +19,17 @@ import { m } from '@/lib/i18n';
 import { AUTONOMIES, autonomyHint, autonomyLabel, getAutonomy, getChatModel, setAutonomy, setChatModel } from '@/lib/prefs';
 import type { Autonomy } from '@/features/editor/agent/policy';
 import { can } from '@/shared/roles';
+import { BriefCard } from './chat/BriefCard';
 import { ChangeCard } from './chat/ChangeCard';
 import { LookCard } from './chat/LookCard';
 import { titleOf, type ToolResultPart } from './chat/common';
 import { MessageView } from './chat/MessageView';
+import { QuestionCard } from './chat/QuestionCard';
 import { useAgentChat } from './chat/useAgentChat';
 import { projectModel, useEditor } from './store';
 
 const SUGGESTIONS = [m.chat_suggestion_size, m.chat_suggestion_enlarge, m.chat_suggestion_window, m.chat_suggestion_check];
-const SUGGESTIONS_BLANK = [m.chat_suggestion_blank_family, m.chat_suggestion_blank_yard];
+const SUGGESTIONS_BLANK = [m.chat_suggestion_blank_interview, m.chat_suggestion_blank_family, m.chat_suggestion_blank_yard];
 
 /** Describe a capability call in one sentence (for the confirmation card) */
 function describeCall(name: string, args: unknown, project: Project) {
@@ -83,8 +85,18 @@ export function ChatPanel() {
     setChatModel(projectId, next);
   };
 
-  const { messages, send: sendText, isLoading, stop, error, interrupts, shots } = useAgentChat({ autonomy, editable, modelId: model?.id });
+  const { messages, send: sendText, isLoading, stop, error, interrupts, shots, loaded } = useAgentChat({ autonomy, editable, modelId: model?.id });
+  const question = useEditor(s => s.question);
+  const answerQuestion = useEditor(s => s.answerQuestion);
+  const interview = useEditor(s => s.interview);
+  const interviewStarted = useEditor(s => s.interviewStarted);
   const send = (text: string) => {
+    // Typing while the agent waits on a question answers it
+    if (question && text.trim()) {
+      setInput('');
+      answerQuestion({ text: text.trim() });
+      return;
+    }
     if ((!text.trim() && !images.length) || isLoading) return;
     setInput('');
     setImages([]);
@@ -100,6 +112,16 @@ export function ChatPanel() {
     setImages(s => [...s, ...picked].slice(0, 4));
     if (fileRef.current) fileRef.current.value = '';
   };
+
+  // A design created to start with an interview: open it once the (empty) thread has loaded
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!interview || !loaded) return;
+    interviewStarted();
+    // Once: a reload mustn't start the interview again
+    void navigate({ to: '.', search: (old: Record<string, unknown>) => ({ ...old, start: undefined }), replace: true });
+    if (messages.length === 0 && editable && model) sendText(m.chat_suggestion_blank_interview());
+  }, [interview, loaded]);
 
   const selection = view.selection.map(id => findObject(project, id)?.name).filter(Boolean);
   const results = new Map<string, ToolResultPart>();
@@ -177,6 +199,7 @@ export function ChatPanel() {
 
       <Conversation className="min-h-0 flex-1">
         <ConversationContent className="gap-4 px-3">
+          {blank && <BriefCard editable={editable} />}
           {messages.length === 0 ? (
             <ConversationEmptyState
               icon={<SparklesIcon className="size-6" />}
@@ -234,6 +257,7 @@ export function ChatPanel() {
         </Alert>
       ))}
 
+      <QuestionCard />
       <LookCard />
       <ChangeCard />
 
@@ -306,7 +330,7 @@ export function ChatPanel() {
             >
               <ImagePlusIcon />
             </InputGroupButton>
-            {isLoading ? (
+            {isLoading && !question ? (
               <InputGroupButton size="icon-sm" variant="secondary" onClick={() => stop()} aria-label={m.chat_stop()}>
                 <CircleStopIcon />
               </InputGroupButton>

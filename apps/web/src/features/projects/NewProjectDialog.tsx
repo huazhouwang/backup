@@ -18,7 +18,7 @@ export function NewProject({ open, onOpenChange }: { open: boolean; onOpenChange
   const [floors, setFloors] = useState('2');
   const create = useMutation({
     mutationFn: () => api<{ id: string }>('/projects', { method: 'POST', json: { name, template, floors: Number(floors) } }),
-    onSuccess: r => navigate({ to: '/p/$projectId', params: { projectId: r.id } }),
+    onSuccess: r => navigate({ to: '/p/$projectId', params: { projectId: r.id }, search: template === 'blank' ? { start: 'interview' } : {} }),
     onError: e => toast.error(e.message),
   });
   return (

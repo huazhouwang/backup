@@ -77,7 +77,8 @@ function canvasWheels(): Plugin {
  */
 export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { port: 3000 },
+  // Tests write into e2e/ while they run (recordings, the model bridge's queue); they aren't part of the app, so no reloads
+  server: { port: 3000, watch: { ignored: ['**/e2e/**', '**/test-results/**'] } },
   build: { sourcemap: false },
   // Minify the Worker environment too (named after `name` in wrangler.jsonc): faster parsing on cold start
   environments: { plinth: { build: { minify: true } } },

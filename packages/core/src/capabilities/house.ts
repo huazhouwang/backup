@@ -1,10 +1,15 @@
 /** Generating a whole house from a room program (issue 187): the options to choose from, and building the chosen one. */
 import { z } from 'zod';
-import { buildHouse, houseOptions, ROOM_TYPES, TYPOLOGIES, type HouseProgram } from '../generate/index.js';
+import { buildHouse, houseOptions, parseOptionId, ROOM_TYPES, TYPOLOGIES, type HouseProgram, type Typology } from '../generate/index.js';
+
+/** The typologies in plain words (English fallbacks of core_house_typology_*) */
+const TYPOLOGY_NAMES: Record<Typology, string> = { bar: 'two bands', hall: 'central hall', courtyard: 'courtyard' };
 import { text } from '../i18n.js';
 import { defineEdit, defineRead } from './capability.js';
+import { TxError } from '../session/session.js';
+import type { Project } from '../model/schema.js';
 
-const zProgram = z.object({
+export const zProgram = z.object({
   floors: z.number().int().min(1).max(3).describe('Storeys above ground'),
   rooms: z
     .array(
@@ -23,14 +28,21 @@ const zProgram = z.object({
   storeyHeight: z.number().min(2600).max(4500).optional().describe('mm, default 3000'),
 });
 
+/** The program given, or the one recorded in the brief */
+function programOf(given: z.output<typeof zProgram> | undefined, p: Project): HouseProgram {
+  const program = (given as HouseProgram | undefined) ?? p.brief.program;
+  if (!program) throw new TxError('invalid-input', text('err_no_program', 'No room program: pass one, or record it in the brief first (brief_update)'));
+  return program;
+}
+
 export const houseOptionsCap = defineRead({
   name: 'house_options',
   title: 'House options',
   description:
     'Generate 2–3 different whole-house layouts from a room program (typologies: bar = a corridor between a sunny south band and a service band; hall = a central living hall through the depth with a wing either side; courtyard = one storey around a courtyard). Each option lists its footprint, gross area and every room with target and built area. Deterministic. Show the options to the owner and let them pick, then call house_build with the picked id.',
-  input: z.object({ program: zProgram }),
+  input: z.object({ program: zProgram.optional().describe("Default: the brief's program (brief_update)") }),
   run: (i, { session }) => {
-    const { program, options } = houseOptions(i.program as HouseProgram, session.project.language);
+    const { program, options } = houseOptions(programOf(i.program, session.project), session.project.language);
     return {
       program,
       options: options.map(({ project: _p, ...o }) => o),
@@ -41,13 +53,20 @@ export const houseOptionsCap = defineRead({
 export const houseBuild = defineEdit({
   name: 'house_build',
   title: 'Build house',
-  permission: 'main',
+  // Undoable, and called once the owner has picked an option: no second confirmation
+  permission: 'reversible',
   description:
     "Replace the design's building (storeys, walls, rooms, doors and windows, stairs, furniture) with the house option picked from house_options, built from the same program. The site, brief, decisions, looks and widgets stay. Undoable.",
-  input: z.object({ program: zProgram, option: z.string().describe(`An option id from house_options: ${TYPOLOGIES.join(', ')}, optionally with -mirrored`) }),
-  label: i => text('log_house_build', 'Build house ({option})', { option: i.option }),
+  input: z.object({
+    program: zProgram.optional().describe("Default: the brief's program"),
+    option: z.string().describe(`An option id from house_options: ${TYPOLOGIES.join(', ')}, optionally with -mirrored`),
+  }),
+  label: i => {
+    const typology = parseOptionId(i.option)?.typology ?? 'bar';
+    return text('log_house_build', 'Build the house: {name}', { name: text(`house_typology_${typology}`, TYPOLOGY_NAMES[typology]) });
+  },
   apply: (p, i) => {
-    const { program, layout } = buildHouse(p, i.program as HouseProgram, i.option);
+    const { program, layout } = buildHouse(p, programOf(i.program, p), i.option);
     return { option: i.option, width: layout.width / 1000, depth: layout.depth / 1000, floors: program.floors, rooms: program.rooms.map(r => r.name) };
   },
   examples: [

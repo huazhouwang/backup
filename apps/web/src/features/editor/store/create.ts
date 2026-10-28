@@ -9,6 +9,7 @@ import type { ViewState } from '../agent/view-capabilities';
 import { editsSlice } from './edits';
 import { persistenceSlice } from './persistence';
 import type { EditorActions, EditorState, InitialProject } from './types';
+import { interviewSlice } from './interview';
 import { uiSlice } from './ui';
 import { viewSlice } from './view';
 
@@ -30,7 +31,7 @@ const firstLevel = (p: Project) => p.levels.find(l => !l.roof)?.id ?? p.levels[0
 /** Floor the object is on */
 export const levelOf = (p: Project, id: string): string | undefined => findObject(p, id)?.level;
 
-export function createEditorStore(init: InitialProject, opts: { level?: string; mode?: '2d' | '3d'; focus?: string[] } = {}) {
+export function createEditorStore(init: InitialProject, opts: { level?: string; mode?: '2d' | '3d'; focus?: string[]; interview?: boolean } = {}) {
   const session = new Session(init.content);
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -72,6 +73,7 @@ export function createEditorStore(init: InitialProject, opts: { level?: string; 
       ...editsSlice(ctx),
       ...persistenceSlice(ctx),
       ...uiSlice(ctx),
+      ...interviewSlice(ctx, !!opts.interview),
     };
   });
 }

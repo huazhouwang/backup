@@ -58,7 +58,7 @@ echo '{"text":"…","tool_calls":[{"name":"…","arguments":{}}]}' | node e2e/mo
 npx playwright test agent-bridge                    # replay: answers come from the cassette; a different conversation fails loudly
 ```
 
-A test that uses the bridge starts its own server (`serve(port, { mode, cassette })`), live when `E2E_MODEL=bridge` and replaying otherwise, so CI needs neither a key nor a subagent. Re-record a cassette when the prompt or the tools change enough for the conversation to differ.
+A test that uses the bridge starts its own server (`serve(port, { mode, cassette })`), live when `E2E_MODEL=bridge` and replaying otherwise, so CI needs neither a key nor a subagent. Re-record a cassette when the prompt or the tools change enough for the conversation to differ. `interview.spec.mjs` runs the new-design interview this way for three personas (a couple, three generations, someone who leaves every question to the agent), from "从零开始" to a built house.
 
 ## Deployment (Cloudflare Workers free plan, via GitHub Actions)
 

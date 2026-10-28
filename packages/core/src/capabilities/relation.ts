@@ -5,6 +5,7 @@ import { SUPPORTED_CONSTRAINTS } from '../rules/constraints.js';
 import { nextId } from '../geometry/topology.js';
 import { text } from '../i18n.js';
 import { findAny, resolve } from '../model/refs.js';
+import { zProgram } from './house.js';
 
 export const constraintAdd = defineEdit({
   name: 'constraint_add',
@@ -66,13 +67,16 @@ export const briefUpdate = defineEdit({
   name: 'brief_update',
   title: 'Record brief',
   kind: 'relation',
-  description: "Record or update the owner's brief: household members, room list, preferences, budget, notes. Array fields are replaced wholesale.",
+  description:
+    "Record or update the owner's brief: household members, room list, preferences, budget, notes; the room program the interview arrived at (program: storeys, rooms by type, plot), which house_options builds from; and the styles the owner picked (style keys). Array fields and the program are replaced wholesale.",
   input: z.object({
     household: z.array(z.string()).optional(),
     rooms: z.array(z.string()).optional(),
     preferences: z.array(z.string()).optional(),
     budget: z.string().optional(),
     notes: z.array(z.string()).optional(),
+    program: zProgram.optional(),
+    style: z.array(z.string()).optional(),
   }),
   label: () => text('log_brief_update', 'Update brief'),
   apply: (p, i) => {

@@ -12,7 +12,14 @@ type Edits = Pick<EditorState, 'lastChange' | 'lookChange' | 'pendingLabels'> &
   Pick<EditorActions, 'call' | 'preview' | 'undo' | 'redo' | 'canEdit' | 'clearLookChange'>;
 
 export const editsSlice = ({ set, get, session }: StoreContext): Edits => {
-  const host = () => ({ view: get().viewHost(), comments: commentsHost(get().projectId), looks: looksHost, libraries: librariesHost, canvas: canvasHost });
+  const host = () => ({
+    view: get().viewHost(),
+    comments: commentsHost(get().projectId),
+    looks: looksHost,
+    libraries: librariesHost,
+    canvas: canvasHost,
+    ask: get().askHost,
+  });
   return {
     lastChange: null,
     lookChange: null,

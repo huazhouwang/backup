@@ -23,9 +23,21 @@ declare global {
   }
 }
 
-export function Editor({ initial, search }: { initial: InitialProject; search: { level?: string; mode?: '2d' | '3d'; focus?: string; v?: number } }) {
+export function Editor({
+  initial,
+  search,
+}: {
+  initial: InitialProject;
+  search: { level?: string; mode?: '2d' | '3d'; focus?: string; v?: number; start?: 'interview' };
+}) {
   const store = useMemo(
-    () => createEditorStore(initial, { level: search.level, mode: search.mode, focus: search.focus?.split(',').filter(Boolean) }),
+    () =>
+      createEditorStore(initial, {
+        level: search.level,
+        mode: search.mode,
+        focus: search.focus?.split(',').filter(Boolean),
+        interview: search.start === 'interview',
+      }),
     [initial.id],
   );
   useEffect(() => store.getState().connect(), [store]);

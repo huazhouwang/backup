@@ -30,7 +30,8 @@ export function HomePage() {
     setBusy(t);
     try {
       const id = await startTrial(t);
-      await navigate({ to: '/p/$projectId', params: { projectId: id } });
+      // A blank design opens with the agent's interview (issue 186)
+      await navigate({ to: '/p/$projectId', params: { projectId: id }, search: t === 'blank' ? { start: 'interview' } : {} });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : m.home_error());
       setBusy(null);
