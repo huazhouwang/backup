@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/styles.schema.json",
+  "title": "OpenSU style presets",
+  "description": "Styles a design can be rendered in (issue 195): what the image model is asked for outside and inside, and a palette for swatches and previews. See packages/core/src/render/styles.ts.",
+  "type": "object",
+  "required": [
+    "format",
+    "formatVersion",
+    "styles"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "format": {
+      "const": "opensu-styles"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "exterior",
+          "interior",
+          "palette"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "object",
+            "required": [
+              "zh",
+              "en"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "zh": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "description": "Other keys the style is known by (as the brief records styles: modern, chinese, nordic\u2026)"
+          },
+          "exterior": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The style outside, in English: facade, roof, landscape"
+          },
+          "interior": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The style inside, in English: surfaces, furniture, light"
+          },
+          "negative": {
+            "type": "string",
+            "description": "What to avoid, in addition to the common negative prompt"
+          },
+          "palette": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 6,
+            "items": {
+              "type": "string",
+              "pattern": "^#[0-9a-f]{6}$"
+            },
+            "description": "The style's main colours, lightest first"
+          }
+        }
+      }
+    }
+  }
+}

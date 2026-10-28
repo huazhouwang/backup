@@ -2,7 +2,7 @@
  * Chat with the agent. Every capability in the list is a browser-side tool: agent calls run here (same transaction and undo);
  * actions needing confirmation show a confirmation card. Chats are saved per user and per plan.
  */
-import { findObject, type Project } from '@opensu/core';
+import { findObject, stylePreset, type Project } from '@opensu/core';
 import type { ToolApprovalInterrupt } from '@tanstack/ai-client';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowUpIcon, CircleStopIcon, ImagePlusIcon, ShieldQuestionIcon, SparklesIcon, SettingsIcon, XIcon } from 'lucide-react';
@@ -16,7 +16,7 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { registry } from '@/features/editor/agent/registry';
 import { track } from '@/lib/events';
-import { m } from '@/lib/i18n';
+import { m, uiName } from '@/lib/i18n';
 import { AUTONOMIES, autonomyHint, autonomyLabel, getAutonomy, getChatModel, setAutonomy, setChatModel } from '@/lib/prefs';
 import type { Autonomy } from '@/features/editor/agent/policy';
 import { can } from '@/shared/roles';
@@ -99,6 +99,8 @@ export function ChatPanel() {
   const interview = useEditor(s => s.interview);
   const choice = useEditor(s => s.choice);
   const justBuilt = useEditor(s => s.justBuilt);
+  // The style the homeowner likes (from the brief), else French: seeing the house in it is the next aha (issue 195)
+  const builtStyle = stylePreset(project.brief.style?.[0] ?? '') ?? stylePreset('french')!;
   const clearJustBuilt = useEditor(s => s.clearJustBuilt);
   const interviewStarted = useEditor(s => s.interviewStarted);
   const send = (text: string) => {
@@ -310,7 +312,7 @@ export function ChatPanel() {
       <OptionsCard />
       {justBuilt && !question && !choice && !isLoading && (
         <div className="mx-3 mb-2 flex shrink-0 flex-wrap gap-2" aria-label={m.chat_suggestions_built_aria()}>
-          {SUGGESTIONS_BUILT.map(suggestion => suggestion()).map(s => (
+          {[...SUGGESTIONS_BUILT.map(suggestion => suggestion()), m.chat_suggestion_built_style({ style: uiName(builtStyle.name) })].map(s => (
             <Button
               key={s}
               variant="outline"

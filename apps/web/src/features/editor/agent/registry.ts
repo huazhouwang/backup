@@ -5,6 +5,7 @@ import { LOOK_CAPABILITIES } from './look-capabilities';
 import { VIEW_CAPABILITIES } from './view-capabilities';
 import { CANVAS_CAPABILITIES } from './canvas-capabilities';
 import { INTERVIEW_CAPABILITIES } from './interview-capabilities';
+import { RENDER_CAPABILITIES } from './render-capabilities';
 
 export const registry = createRegistry([
   ...VIEW_CAPABILITIES,
@@ -12,4 +13,5 @@ export const registry = createRegistry([
   ...LIBRARY_CAPABILITIES,
   ...CANVAS_CAPABILITIES,
   ...INTERVIEW_CAPABILITIES,
+  ...RENDER_CAPABILITIES,
 ]);

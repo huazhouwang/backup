@@ -23,3 +23,10 @@ PLATFORM_CREDITS_USER=500
 PLATFORM_PRICE_INPUT=300
 PLATFORM_PRICE_OUTPUT=1500
 PLATFORM_DAILY_CAP=20000
+# The image model for style renders (optional): openai (gpt-image-1, image edit), seedream (Volcengine Ark) or fal (FLUX with depth).
+# Without RENDER_KEY, renders are illustrations made from the 3D view (labelled 效果示意). RENDER_CREDITS: credits per image.
+RENDER_PROVIDER=
+RENDER_MODEL=
+RENDER_KEY=
+RENDER_BASE_URL=
+RENDER_CREDITS=

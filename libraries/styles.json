@@ -1,0 +1,189 @@
+{
+  "$schema": "./styles.schema.json",
+  "format": "opensu-styles",
+  "formatVersion": 1,
+  "styles": [
+    {
+      "id": "modern-minimal",
+      "name": {
+        "zh": "现代简约",
+        "en": "Modern minimal"
+      },
+      "aliases": [
+        "modern",
+        "minimal",
+        "contemporary"
+      ],
+      "exterior": "contemporary minimalist house, smooth white render walls, large frameless glass, flat roof with thin edges, light grey stone paving, a few ornamental grasses and one specimen tree",
+      "interior": "minimalist interior, white walls, pale oak floor, handleless cabinetry, low-profile sofa in warm grey, linen curtains, recessed lighting, almost no decoration",
+      "palette": [
+        "#f2f1ee",
+        "#d9d6d0",
+        "#a9a39a",
+        "#3b3a38"
+      ]
+    },
+    {
+      "id": "new-chinese",
+      "name": {
+        "zh": "新中式",
+        "en": "New Chinese"
+      },
+      "aliases": [
+        "chinese",
+        "neo-chinese"
+      ],
+      "exterior": "new Chinese style house, white walls with dark grey tile roof edges, dark walnut timber lattice screens, grey brick base, stone courtyard paving, bamboo and a pine tree, a small water feature",
+      "interior": "new Chinese style interior, walnut furniture with clean lines, lattice screens, ink-wash painting, ceramic vases, beige and dark wood palette, soft warm lighting",
+      "palette": [
+        "#efe9df",
+        "#8a6a4f",
+        "#4a3b30",
+        "#6b7a6a"
+      ]
+    },
+    {
+      "id": "ancient-chinese",
+      "name": {
+        "zh": "古风",
+        "en": "Classical Chinese"
+      },
+      "aliases": [
+        "classical-chinese",
+        "ancient"
+      ],
+      "exterior": "classical Chinese courtyard architecture, curved grey tile roofs with upturned eaves, red-lacquered timber columns and window lattices, white plaster walls, stone steps, lanterns, plum blossom and willow trees",
+      "interior": "classical Chinese interior, carved rosewood furniture, red lacquer, silk lanterns, folding screen, calligraphy scrolls, warm candle-like light",
+      "palette": [
+        "#b23a2e",
+        "#3d3a36",
+        "#e9dfcf",
+        "#7a5a3a"
+      ]
+    },
+    {
+      "id": "japanese",
+      "name": {
+        "zh": "日式",
+        "en": "Japanese"
+      },
+      "aliases": [
+        "japan",
+        "zen"
+      ],
+      "exterior": "modern Japanese house, charred cedar (yakisugi) cladding, light timber eaves, shoji-like screens behind glass, gravel and moss garden, maple tree, stepping stones",
+      "interior": "Japanese interior, tatami and light hinoki wood, shoji paper screens, low furniture, ikebana, soft diffused daylight, calm and uncluttered",
+      "palette": [
+        "#e8e1d3",
+        "#b89a74",
+        "#2f2e2c",
+        "#7d8b6a"
+      ]
+    },
+    {
+      "id": "scandinavian",
+      "name": {
+        "zh": "北欧",
+        "en": "Scandinavian"
+      },
+      "aliases": [
+        "nordic"
+      ],
+      "exterior": "Scandinavian house, white-painted vertical timber cladding, black window frames, pitched-roof feel at the eaves, birch trees, wild meadow, simple deck",
+      "interior": "Scandinavian interior, white walls, light ash floor, wool throws, light grey sofa, wishbone chairs, pendant lamps, plants, bright soft daylight",
+      "palette": [
+        "#f5f4f0",
+        "#dcd3c3",
+        "#9fb1b8",
+        "#2e3133"
+      ]
+    },
+    {
+      "id": "french",
+      "name": {
+        "zh": "法式",
+        "en": "French"
+      },
+      "aliases": [
+        "parisian"
+      ],
+      "exterior": "French classical villa, cream limestone facade, tall French windows with white shutters, wrought-iron balconies, mansard-style roof edge in slate grey, gravel forecourt, clipped boxwood and lavender",
+      "interior": "French Parisian interior, wall panelling with mouldings, herringbone parquet, marble fireplace, gilded mirror, velvet armchairs, crystal chandelier, soft afternoon light",
+      "palette": [
+        "#efe6d6",
+        "#c9b48f",
+        "#6f7c8a",
+        "#a88a5a"
+      ]
+    },
+    {
+      "id": "american",
+      "name": {
+        "zh": "美式",
+        "en": "American"
+      },
+      "aliases": [
+        "farmhouse"
+      ],
+      "exterior": "American farmhouse style house, white lap siding, dark grey roof edges, covered front porch with columns, black windows, lawn, hydrangea bushes, oak tree",
+      "interior": "American interior, wide-plank wood floor, shaker cabinets, leather and linen sofas, brick fireplace, warm table lamps, framed art, cozy",
+      "palette": [
+        "#f3efe7",
+        "#8b6b4e",
+        "#3f4a52",
+        "#9a7b5c"
+      ]
+    },
+    {
+      "id": "mediterranean",
+      "name": {
+        "zh": "地中海",
+        "en": "Mediterranean"
+      },
+      "exterior": "Mediterranean villa, white lime-washed walls, arched openings, blue painted shutters and doors, terracotta roof edges, olive trees, bougainvillea, sunny sky",
+      "interior": "Mediterranean interior, white plaster walls, terracotta tile floor, blue accents, rattan furniture, arched niches, bright sunlight",
+      "palette": [
+        "#f7f5f0",
+        "#2f5f8a",
+        "#c66b3d",
+        "#8a9a5b"
+      ]
+    },
+    {
+      "id": "industrial",
+      "name": {
+        "zh": "工业风",
+        "en": "Industrial"
+      },
+      "aliases": [
+        "loft"
+      ],
+      "exterior": "industrial loft style house, exposed red brick and dark steel frames, large black-framed windows, board-formed concrete, gravel and steel planters",
+      "interior": "industrial loft interior, exposed brick, polished concrete floor, black steel shelving, leather sofa, Edison bulb pendants, ductwork on the ceiling",
+      "palette": [
+        "#8c4a32",
+        "#3a3a3a",
+        "#9c9c97",
+        "#c9b79c"
+      ]
+    },
+    {
+      "id": "wabi-sabi",
+      "name": {
+        "zh": "侘寂",
+        "en": "Wabi-sabi"
+      },
+      "aliases": [
+        "wabisabi"
+      ],
+      "exterior": "wabi-sabi house, earthy hand-troweled plaster walls, aged timber, rough stone, minimal openings framed in wood, dry garden with rocks and grasses",
+      "interior": "wabi-sabi interior, lime plaster walls in warm beige, raw wood, linen, handmade ceramics, low light, quiet and imperfect textures",
+      "palette": [
+        "#d8cdbd",
+        "#a8957c",
+        "#6b5d4f",
+        "#4a453f"
+      ]
+    }
+  ]
+}

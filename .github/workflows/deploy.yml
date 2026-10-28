@@ -171,11 +171,18 @@ jobs:
           PLATFORM_PRICE_INPUT: ${{ vars.PLATFORM_PRICE_INPUT }}
           PLATFORM_PRICE_OUTPUT: ${{ vars.PLATFORM_PRICE_OUTPUT }}
           PLATFORM_DAILY_CAP: ${{ vars.PLATFORM_DAILY_CAP }}
+          # The image model for style renders (issue 195); without it, renders are illustrations from the 3D view
+          RENDER_KEY: ${{ secrets.RENDER_KEY }}
+          RENDER_PROVIDER: ${{ vars.RENDER_PROVIDER }}
+          RENDER_MODEL: ${{ vars.RENDER_MODEL }}
+          RENDER_BASE_URL: ${{ vars.RENDER_BASE_URL }}
+          RENDER_CREDITS: ${{ vars.RENDER_CREDITS }}
         run: |
           node -e '
             const names = ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET", "RESEND_API_KEY", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "MAIL_FROM", "APP_URL",
               "PLATFORM_MODEL_KEY", "PLATFORM_MODEL_PROVIDER", "PLATFORM_MODEL", "PLATFORM_MODEL_BASE_URL", "PLATFORM_CREDITS_GUEST", "PLATFORM_CREDITS_USER",
-              "PLATFORM_PRICE_INPUT", "PLATFORM_PRICE_OUTPUT", "PLATFORM_DAILY_CAP"];
+              "PLATFORM_PRICE_INPUT", "PLATFORM_PRICE_OUTPUT", "PLATFORM_DAILY_CAP", "RENDER_KEY", "RENDER_PROVIDER", "RENDER_MODEL", "RENDER_BASE_URL",
+              "RENDER_CREDITS"];
             const out = Object.fromEntries(names.map(n => [n, (process.env[n] ?? "").trim()]).filter(([, v]) => v));
             for (const n of ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET"]) if (!out[n]) { console.error(`Missing ${n}`); process.exit(1); }
             require("fs").writeFileSync(process.env.RUNNER_TEMP + "/secrets.json", JSON.stringify(out));
