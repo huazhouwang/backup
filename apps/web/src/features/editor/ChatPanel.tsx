@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { registry } from '@/features/editor/agent/registry';
+import { track } from '@/lib/events';
 import { m } from '@/lib/i18n';
 import { AUTONOMIES, autonomyHint, autonomyLabel, getAutonomy, getChatModel, setAutonomy, setChatModel } from '@/lib/prefs';
 import type { Autonomy } from '@/features/editor/agent/policy';
@@ -24,6 +25,7 @@ import { ChangeCard } from './chat/ChangeCard';
 import { LookCard } from './chat/LookCard';
 import { titleOf, type ToolResultPart } from './chat/common';
 import { MessageView } from './chat/MessageView';
+import { OptionsCard } from './chat/OptionsCard';
 import { QuestionCard } from './chat/QuestionCard';
 import { useAgentChat } from './chat/useAgentChat';
 import { projectModel, useEditor } from './store';
@@ -33,6 +35,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { CreditState } from '@/shared/credits';
 
 const SUGGESTIONS = [m.chat_suggestion_size, m.chat_suggestion_enlarge, m.chat_suggestion_window, m.chat_suggestion_check];
+/** Right after the owner built a house from the options: what people usually want next (issue 188) */
+const SUGGESTIONS_BUILT = [m.chat_suggestion_built_bigger, m.chat_suggestion_built_check, m.chat_suggestion_built_explain];
 const SUGGESTIONS_BLANK = [m.chat_suggestion_blank_interview, m.chat_suggestion_blank_family, m.chat_suggestion_blank_yard];
 
 /** Describe a capability call in one sentence (for the confirmation card) */
@@ -93,8 +97,15 @@ export function ChatPanel() {
   const question = useEditor(s => s.question);
   const answerQuestion = useEditor(s => s.answerQuestion);
   const interview = useEditor(s => s.interview);
+  const choice = useEditor(s => s.choice);
+  const justBuilt = useEditor(s => s.justBuilt);
+  const clearJustBuilt = useEditor(s => s.clearJustBuilt);
   const interviewStarted = useEditor(s => s.interviewStarted);
   const send = (text: string) => {
+    if (justBuilt && text.trim()) {
+      track('followup', projectId);
+      clearJustBuilt();
+    }
     // Typing while the agent waits on a question answers it
     if (question && text.trim()) {
       setInput('');
@@ -124,7 +135,10 @@ export function ChatPanel() {
     interviewStarted();
     // Once: a reload mustn't start the interview again
     void navigate({ to: '.', search: (old: Record<string, unknown>) => ({ ...old, start: undefined }), replace: true });
-    if (messages.length === 0 && editable && model) sendText(m.chat_suggestion_blank_interview());
+    if (messages.length === 0 && editable && model) {
+      sendText(m.chat_suggestion_blank_interview());
+      track('interview_started', projectId);
+    }
   }, [interview, loaded]);
 
   // Free credits on the platform's model (issue 185): the balance, refreshed after every turn
@@ -241,7 +255,7 @@ export function ChatPanel() {
               title={blank ? m.chat_empty_title_blank() : m.chat_empty_title()}
               description={blank ? m.chat_empty_description_blank() : m.chat_empty_description()}
             >
-              <div className="mt-3 flex flex-col gap-2">
+              <div className="mt-3 flex flex-col gap-2" hidden={!!justBuilt}>
                 {(blank ? SUGGESTIONS_BLANK : SUGGESTIONS)
                   .map(suggestion => suggestion())
                   .map(s => (
@@ -293,6 +307,23 @@ export function ChatPanel() {
       ))}
 
       <QuestionCard />
+      <OptionsCard />
+      {justBuilt && !question && !choice && !isLoading && (
+        <div className="mx-3 mb-2 flex shrink-0 flex-wrap gap-2" aria-label={m.chat_suggestions_built_aria()}>
+          {SUGGESTIONS_BUILT.map(suggestion => suggestion()).map(s => (
+            <Button
+              key={s}
+              variant="outline"
+              size="sm"
+              className="h-auto whitespace-normal py-1.5 text-left"
+              disabled={!editable || !model}
+              onClick={() => send(s)}
+            >
+              {s}
+            </Button>
+          ))}
+        </div>
+      )}
       <LookCard />
       <ChangeCard />
 

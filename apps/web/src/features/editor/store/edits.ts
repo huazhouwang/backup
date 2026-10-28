@@ -19,6 +19,7 @@ export const editsSlice = ({ set, get, session }: StoreContext): Edits => {
     libraries: librariesHost,
     canvas: canvasHost,
     ask: get().askHost,
+    choose: get().chooseHost,
   });
   return {
     lastChange: null,

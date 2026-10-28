@@ -21,7 +21,7 @@ export const TintColors = createContext<{ sel: THREE.Color; selCss: string; chan
  * one-time hop.
  * userData.restY and userData.baseColor record the resting state; screenshots put objects back to it first.
  */
-export function useFeedback<T extends THREE.Object3D>(id: string, color: string | null, selected: boolean) {
+export function useFeedback<T extends THREE.Object3D>(id: string, color: string | null, selected: boolean, buildKey = id) {
   const ref = useRef<T>(null);
   const tints = useContext(TintColors);
   const base = useMemo(() => color && new THREE.Color(color), [color]);
@@ -40,6 +40,13 @@ export function useFeedback<T extends THREE.Object3D>(id: string, color: string 
       if (k > 0) mat.color.lerp(tints.changed, CHANGED_TINT * k);
       stipple(part as THREE.Mesh, selected, tints.sel);
     });
+    // The build-up of a house just built: grows up from its base, hidden until its turn (issue 188)
+    const g = hops.grow(buildKey, now);
+    if (g < 1 || o.scale.y !== 1) {
+      o.scale.y = Math.max(1e-4, g);
+      o.visible = g > 0;
+      if (g < 1) invalidate();
+    }
     const px = hops.lift(id, now);
     o.position.y = o.userData.restY;
     if (!px) return;

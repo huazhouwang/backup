@@ -2,7 +2,8 @@
 import type { Project } from '@opensu/core';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
+import { hops } from '@/canvas/hop';
 import { M, shadowGround, siteBounds, SKYLIGHT_INTENSITY, SUN_INTENSITY, sunLight, sunSetup, type ShadowQuality } from '@/graphics/three/scene';
 
 export function HouseStage({
@@ -29,6 +30,15 @@ export function HouseStage({
   // A shadow map keeps its size once created: a new sun when the quality changes
   const sun = useMemo(() => sunLight(colors.sun, center, radius, quality), [colors.sun, center.x, center.y, center.z, radius, quality]);
   useEffect(() => () => sun.shadow.map?.dispose(), [sun]);
+  // While a house just built goes up (issue 188) the sun casts no shadows: they come back once it stands
+  const casts = useMemo(() => sun.castShadow, [sun]);
+  useFrame(({ invalidate: again }) => {
+    const on = casts && !hops.buildActive;
+    if (sun.castShadow !== on) {
+      sun.castShadow = on;
+      again();
+    }
+  });
   // The sun moves with the chosen day and time
   const invalidate = useThree(s => s.invalidate);
   useEffect(() => {

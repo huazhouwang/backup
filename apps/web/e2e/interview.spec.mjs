@@ -94,6 +94,15 @@ for (const [persona, { prefer }] of Object.entries(PERSONAS))
           quiet = 0;
           continue;
         }
+        // The houses offered as cards (house_choose): the homeowner picks the first
+        const options = page.locator('[aria-label="可选的方案"]');
+        if (await options.isVisible()) {
+          questions.push('(the houses as cards) → 选这个');
+          await page.screenshot({ path: `${OUT}/interview-${persona}-2b-options.png` });
+          await options.getByRole('button', { name: '选这个' }).first().click();
+          quiet = 0;
+          continue;
+        }
         // Confirmation cards (an action the policy asks about): the homeowner agrees
         const approve = page.getByRole('button', { name: '同意' });
         if (await approve.first().isVisible()) {
