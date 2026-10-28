@@ -360,7 +360,7 @@
   "micExplainTitle": "需要打开麦克风",
   "micExplainWhy": "只在你说话时录音，录音只用来识别成文字，不会保存。接下来系统会询问是否允许使用麦克风。",
   "micStepAllow": "选择「网站设置」，把「麦克风」设为「允许」",
-  "micStepMenu": "点地址栏左侧的「大小」按钮",
+  "micStepMenu": "点地址栏左侧按钮",
   "micStepOpen": "在 Safari 里打开 {site}",
   "micStepsOther": "在浏览器的网站设置里，把这个网站的麦克风设为「允许」。",
   "milkBreast": "母乳",
