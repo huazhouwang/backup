@@ -27,6 +27,13 @@ test('blocks made by talking, saved and reused', async ({ browser: b }) => {
     // The agent is done when no model turn is in flight and the chat is no longer running (a tool may run for a while between turns)
     const settled = async () => {
       for (let quiet = 0; quiet < 6; await page.waitForTimeout(500)) {
+        // The homeowner agrees to what the agent asks to do (writing a widget or a look asks first)
+        const approve = page.getByRole('button', { name: '同意' });
+        if (await approve.first().isVisible().catch(() => false)) {
+          await approve.first().click();
+          quiet = 0;
+          continue;
+        }
         const running = await page.locator('[aria-label="停止"]').count();
         quiet = started > 0 && started === finished && !running ? quiet + 1 : 0;
       }
