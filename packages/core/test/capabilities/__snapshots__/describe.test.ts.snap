@@ -1368,6 +1368,246 @@ exports[`capability descriptions are stable 1`] = `
     "title": "Record brief",
   },
   {
+    "description": "Generate 2–3 different whole-house layouts from a room program (typologies: bar = a corridor between a sunny south band and a service band; hall = a central living hall through the depth with a wing either side; courtyard = one storey around a courtyard). Each option lists its footprint, gross area and every room with target and built area. Deterministic. Show the options to the owner and let them pick, then call house_build with the picked id.",
+    "examples": [],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "program": {
+          "properties": {
+            "floors": {
+              "description": "Storeys above ground",
+              "maximum": 3,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "plot": {
+              "description": "Buildable area on the plot (mm), east-west by north-south",
+              "properties": {
+                "depth": {
+                  "exclusiveMinimum": 0,
+                  "type": "number",
+                },
+                "width": {
+                  "exclusiveMinimum": 0,
+                  "type": "number",
+                },
+              },
+              "required": [
+                "width",
+                "depth",
+              ],
+              "type": "object",
+            },
+            "rooms": {
+              "description": "Rooms wanted. Missing essentials (living room, kitchen, a bedroom, a bathroom per storey with bedrooms) are added",
+              "items": {
+                "properties": {
+                  "area": {
+                    "description": "Target net area, m²",
+                    "exclusiveMinimum": 0,
+                    "type": "number",
+                  },
+                  "floor": {
+                    "description": "0 = ground floor; omit to let the generator choose",
+                    "maximum": 2,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "name": {
+                    "description": "Name to write into the design, in the language the project data uses; default: the type",
+                    "type": "string",
+                  },
+                  "type": {
+                    "enum": [
+                      "living",
+                      "dining",
+                      "kitchen",
+                      "master",
+                      "bedroom",
+                      "elder",
+                      "kids",
+                      "study",
+                      "bath",
+                      "storage",
+                      "laundry",
+                      "shrine",
+                      "tea",
+                      "family",
+                      "garage",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "type",
+                ],
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "storeyHeight": {
+              "description": "mm, default 3000",
+              "maximum": 4500,
+              "minimum": 2600,
+              "type": "number",
+            },
+          },
+          "required": [
+            "floors",
+            "rooms",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "program",
+      ],
+      "type": "object",
+    },
+    "kind": "query",
+    "name": "house_options",
+    "permission": "read",
+    "runtime": "any",
+    "title": "House options",
+  },
+  {
+    "description": "Replace the design's building (storeys, walls, rooms, doors and windows, stairs, furniture) with the house option picked from house_options, built from the same program. The site, brief, decisions, looks and widgets stay. Undoable.",
+    "examples": [
+      {
+        "input": {
+          "option": "bar",
+          "program": {
+            "floors": 2,
+            "rooms": [
+              {
+                "type": "living",
+              },
+              {
+                "type": "kitchen",
+              },
+              {
+                "type": "elder",
+              },
+              {
+                "type": "master",
+              },
+              {
+                "type": "kids",
+              },
+            ],
+          },
+        },
+        "note": "Build the bar option for a three-generation family: elders downstairs, parents and child upstairs",
+      },
+    ],
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "option": {
+          "description": "An option id from house_options: bar, hall, courtyard, optionally with -mirrored",
+          "type": "string",
+        },
+        "program": {
+          "properties": {
+            "floors": {
+              "description": "Storeys above ground",
+              "maximum": 3,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "plot": {
+              "description": "Buildable area on the plot (mm), east-west by north-south",
+              "properties": {
+                "depth": {
+                  "exclusiveMinimum": 0,
+                  "type": "number",
+                },
+                "width": {
+                  "exclusiveMinimum": 0,
+                  "type": "number",
+                },
+              },
+              "required": [
+                "width",
+                "depth",
+              ],
+              "type": "object",
+            },
+            "rooms": {
+              "description": "Rooms wanted. Missing essentials (living room, kitchen, a bedroom, a bathroom per storey with bedrooms) are added",
+              "items": {
+                "properties": {
+                  "area": {
+                    "description": "Target net area, m²",
+                    "exclusiveMinimum": 0,
+                    "type": "number",
+                  },
+                  "floor": {
+                    "description": "0 = ground floor; omit to let the generator choose",
+                    "maximum": 2,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "name": {
+                    "description": "Name to write into the design, in the language the project data uses; default: the type",
+                    "type": "string",
+                  },
+                  "type": {
+                    "enum": [
+                      "living",
+                      "dining",
+                      "kitchen",
+                      "master",
+                      "bedroom",
+                      "elder",
+                      "kids",
+                      "study",
+                      "bath",
+                      "storage",
+                      "laundry",
+                      "shrine",
+                      "tea",
+                      "family",
+                      "garage",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "type",
+                ],
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "storeyHeight": {
+              "description": "mm, default 3000",
+              "maximum": 4500,
+              "minimum": 2600,
+              "type": "number",
+            },
+          },
+          "required": [
+            "floors",
+            "rooms",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "program",
+        "option",
+      ],
+      "type": "object",
+    },
+    "kind": "edit",
+    "name": "house_build",
+    "permission": "main",
+    "runtime": "any",
+    "title": "Build house",
+  },
+  {
     "description": "Write a trade-off to the decision log: what was done, why, and which options were rejected.",
     "examples": [],
     "input": {

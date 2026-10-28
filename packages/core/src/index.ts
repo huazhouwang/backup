@@ -8,3 +8,4 @@ export * from './session/index.js';
 export * from './capabilities/index.js';
 export * from './i18n.js';
 export { fromLegacy, type LegacyExport } from './legacy/fromLegacy.js';
+export * from './generate/index.js';
