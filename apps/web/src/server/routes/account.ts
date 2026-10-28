@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { googleEnabled } from '../auth';
 import { mailEnabled } from '../mail';
+import { creditState, periodStart } from '../platform';
 import * as repo from '../repo';
 import { requireUser, type AppEnv } from '../http';
 
@@ -13,6 +14,13 @@ routes.get('/me', async c => {
   const u = c.get('user');
   if (u && !u.isAnonymous) await repo.acceptInvites(u.id, u.email);
   return c.json({ user: u, googleEnabled: googleEnabled(), mailEnabled: mailEnabled() });
+});
+
+/** The user's free credits on the platform's model (issue 185) */
+routes.get('/me/credits', async c => {
+  const u = requireUser(c);
+  const guest = !!u.isAnonymous;
+  return c.json(creditState(guest, await repo.creditsSpent(u.id, periodStart(guest))));
 });
 
 routes.get('/account/export', async c => {

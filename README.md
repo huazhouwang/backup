@@ -82,6 +82,7 @@ Repository Settings → Secrets and variables → Actions:
 | `KEY_ENCRYPTION_SECRET` | Required. Encrypts users' model API keys; a random string of 24+ characters. **Never change it once set** — saved model keys can no longer be decrypted |
 | `RESEND_API_KEY` | Needed for email sign-in. Sends OTP codes (resend.com; free tier: 100 emails/day) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional. Redirect URI: `<site URL>/api/auth/callback/google` |
+| `PLATFORM_MODEL_KEY` | Optional. The API key of the platform's own model, paid by you: with it, anyone can design without a key of their own, on free credits (see below) |
 
 **Variables**
 
@@ -89,6 +90,14 @@ Repository Settings → Secrets and variables → Actions:
 |---|---|
 | `MAIL_FROM` | Needed for email sign-in. Sender, e.g. `OpenSU <noreply@your-domain>`; the domain must be verified in Resend |
 | `APP_URL` | Optional. Set it when using a custom domain, e.g. `https://opensu.example.com`; otherwise it's inferred from the request URL |
+| `PLATFORM_MODEL_PROVIDER` / `PLATFORM_MODEL` | With `PLATFORM_MODEL_KEY`: the provider (`anthropic`, `openai`, `gemini`, `openrouter`, `compatible`) and model id of the platform's model; `PLATFORM_MODEL_BASE_URL` for `compatible` |
+| `PLATFORM_CREDITS_GUEST` / `PLATFORM_CREDITS_USER` | Free credits: a guest's one-off allowance (default 100) and a signed-in user's monthly one (default 500) |
+| `PLATFORM_PRICE_INPUT` / `PLATFORM_PRICE_OUTPUT` | Credits per million input / output tokens (defaults 300 / 1500: one credit is one US cent for a $3 / $15 model) |
+| `PLATFORM_DAILY_CAP` | Credits everyone together may spend in a day (default 20000); past it, chats ask people to come back tomorrow or add their own key |
+
+### Free credits
+
+When the platform's model is configured, a design whose owner has no model of their own chats with it, and each call costs the person chatting credits by its tokens (`usage.credits`). Guests get a one-off allowance and signed-in users a monthly one, refilled on the 1st (UTC); the chat shows the balance and, when it runs out, how to get more (sign in, or add their own key, which never spends credits). A user with their own model uses it by default and can still pick OpenSU's in the chat.
 
 ### Sign-in methods
 

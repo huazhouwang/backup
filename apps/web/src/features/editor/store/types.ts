@@ -31,8 +31,12 @@ export interface ModelOption {
 }
 
 /** The model the project uses: the pinned one, else the owner's default */
+/** The id of the platform's own model (free credits, issue 185) in the model list */
+export const PLATFORM_MODEL_ID = 'platform';
+
+/** The project's model: pinned, else the owner's default, else the platform's when the deployment has one */
 export const projectModel = (s: Pick<EditorState, 'models' | 'projectModelId' | 'defaultModelId'>) =>
-  s.models.find(x => x.id === (s.projectModelId ?? s.defaultModelId)) ?? null;
+  s.models.find(x => x.id === (s.projectModelId ?? s.defaultModelId)) ?? s.models.find(x => x.id === PLATFORM_MODEL_ID) ?? null;
 
 export interface EditorState {
   projectId: string;
@@ -144,4 +148,6 @@ export interface InitialProject {
   models?: ModelOption[];
   projectModelId?: string | null;
   defaultModelId?: string | null;
+  /** The deployment has its own model, paid for with free credits */
+  platformModel?: boolean;
 }

@@ -27,6 +27,10 @@ import { MessageView } from './chat/MessageView';
 import { QuestionCard } from './chat/QuestionCard';
 import { useAgentChat } from './chat/useAgentChat';
 import { projectModel, useEditor } from './store';
+import { PLATFORM_MODEL_ID } from './store/types';
+import { api } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import type { CreditState } from '@/shared/credits';
 
 const SUGGESTIONS = [m.chat_suggestion_size, m.chat_suggestion_enlarge, m.chat_suggestion_window, m.chat_suggestion_check];
 const SUGGESTIONS_BLANK = [m.chat_suggestion_blank_interview, m.chat_suggestion_blank_family, m.chat_suggestion_blank_yard];
@@ -123,6 +127,14 @@ export function ChatPanel() {
     if (messages.length === 0 && editable && model) sendText(m.chat_suggestion_blank_interview());
   }, [interview, loaded]);
 
+  // Free credits on the platform's model (issue 185): the balance, refreshed after every turn
+  const onPlatform = model?.id === PLATFORM_MODEL_ID;
+  const credits = useQuery({ queryKey: ['credits'], queryFn: () => api<CreditState>('/me/credits'), enabled: onPlatform && editable });
+  useEffect(() => {
+    if (onPlatform && !isLoading) void credits.refetch();
+  }, [isLoading, onPlatform]);
+  const outOfCredits = onPlatform && credits.data?.balance === 0;
+
   const selection = view.selection.map(id => findObject(project, id)?.name).filter(Boolean);
   const results = new Map<string, ToolResultPart>();
   for (const msg of messages) for (const p of msg.parts) if (p.type === 'tool-result') results.set(p.toolCallId, p);
@@ -154,6 +166,9 @@ export function ChatPanel() {
             <span>{m.chat_no_model()}</span>
           )}
         </div>
+        {onPlatform && credits.data && (
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{m.chat_credits({ balance: credits.data.balance })}</span>
+        )}
         <Select
           value={autonomy}
           onValueChange={v => {
@@ -193,6 +208,26 @@ export function ChatPanel() {
             ) : (
               <span>{m.chat_setup_model_member()}</span>
             )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {outOfCredits && (
+        <Alert className="m-3 w-auto">
+          <SettingsIcon />
+          <AlertTitle>{m.chat_credits_out_title()}</AlertTitle>
+          <AlertDescription>
+            <span>{credits.data?.guest ? m.chat_credits_out_guest() : m.chat_credits_out_user()}</span>
+            <span className="flex gap-3">
+              {credits.data?.guest && (
+                <Button variant="link" className="h-auto p-0" nativeButton={false} render={<Link to="/login" />}>
+                  {m.chat_credits_sign_in()}
+                </Button>
+              )}
+              <Button variant="link" className="h-auto p-0" nativeButton={false} render={<Link to="/settings" />}>
+                {m.chat_credits_own_key()}
+              </Button>
+            </span>
           </AlertDescription>
         </Alert>
       )}
@@ -316,7 +351,7 @@ export function ChatPanel() {
                   ? m.chat_placeholder_no_model()
                   : m.chat_placeholder()
             }
-            disabled={!editable || !model}
+            disabled={!editable || !model || outOfCredits}
             rows={2}
             className="max-h-40"
           />

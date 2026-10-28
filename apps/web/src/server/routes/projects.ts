@@ -2,6 +2,7 @@
 import { createProject as newProjectData, type Project } from '@opensu/core';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { platformModel } from '../platform';
 import { z } from 'zod';
 import sample from '../../../../../samples/wushi-10/project.json';
 import { getLocale, m } from '@/lib/i18n';
@@ -51,6 +52,8 @@ projectRoutes.get('/', minRole('viewer'), async c => {
     models: models.map(x => ({ id: x.id, label: x.label, provider: x.provider, model: x.model })),
     projectModelId: models.some(x => x.id === p.model_config_id) ? p.model_config_id : null,
     defaultModelId: models.length ? await repo.defaultModelId(p.owner_id, models) : null,
+    // The platform's model is there for editors when the deployment has one (issue 185)
+    platformModel: can(role, 'editor') && !!platformModel(),
     content: stored(v.content),
   });
 });
