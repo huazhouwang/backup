@@ -4,7 +4,7 @@
  * hops once (it helps find objects behind walls); nothing repeats, and the plan doesn't hop at all.
  * Feel by weight: load-bearing walls hop low and land heavy, partitions and railings are light, furniture lightest.
  */
-import { findObject, type Project } from '@opensu/core';
+import { findObject, levelStack, roofs, type Project } from '@opensu/core';
 
 export type Weight = 'heavy' | 'light' | 'furniture' | 'floor';
 
@@ -18,6 +18,14 @@ export const PROFILE: Record<Weight, { lift: number; ms: number }> = {
 
 /** How long the camera takes to turn to a hidden selected object */
 export const REVEAL = { ms: 600 };
+
+/**
+ * A house just built goes up storey by storey (issue 188): within a storey its floor, then its walls, the stair, doors and
+ * windows, furniture; roofs last. Seconds from the start; each part grows for DURATION.
+ */
+export const BUILD = { storey: 1.2, walls: 0.2, elements: 0.4, openings: 0.7, furniture: 1.0, roof: 1.2, duration: 0.8 };
+/** The key a roof grows under (it shares its room's id) */
+export const roofKey = (space: string) => `roof:${space}`;
 
 /** How long the tint on changed objects takes to fade out */
 export const CHANGE_FADE_MS = 2000;
@@ -59,6 +67,8 @@ class Hops {
   private changed = new Map<string, number>();
   private selected: string[] = [];
   private project: Project | null = null;
+  /** A build-up playing: when it started, and when each object starts growing (seconds after) */
+  private building: { at: number | null; start: Map<string, number>; end: number } | null = null;
   reduced = false;
 
   setProject(p: Project) {
@@ -106,6 +116,61 @@ class Hops {
   changeTint(id: string, now: number) {
     const at = this.changed.get(id);
     return at == null ? 0 : Math.max(0, 1 - (now - at) / CHANGE_FADE_MS);
+  }
+
+  /** Play the build-up for a house just built (nothing with reduced motion) */
+  build(p: Project) {
+    if (this.reduced) return;
+    const storey = new Map(
+      levelStack(p)
+        .filter(l => !l.roof)
+        .map((l, i) => [l.id, i * BUILD.storey]),
+    );
+    const start = new Map<string, number>();
+    const at = (level: string, offset: number) => (storey.get(level) ?? 0) + offset;
+    for (const s of p.spaces) start.set(s.id, at(s.level, 0));
+    for (const w of p.walls) {
+      start.set(w.id, at(w.level, BUILD.walls));
+      for (const o of w.openings) start.set(o.id, at(w.level, BUILD.openings));
+    }
+    for (const e of p.elements) start.set(e.id, at(e.level, BUILD.elements));
+    for (const f of p.furniture) start.set(f.id, at(f.level, BUILD.furniture));
+    for (const r of roofs(p)) start.set(roofKey(r.space), at(p.spaces.find(s => s.id === r.space)?.level ?? '', BUILD.roof));
+    const end = Math.max(0, ...start.values()) + BUILD.duration;
+    // Everything waits hidden until the 3D view is on screen (startBuild): it may still be loading behind the plan
+    this.building = { at: null, start, end };
+  }
+
+  /** A build-up is waiting to start: entering 3D, the house doesn't rise out of the plan as a whole (the build-up does it) */
+  get buildPending() {
+    return !!this.building && this.building.at == null;
+  }
+
+  /** A build-up is waiting or playing */
+  get buildActive() {
+    return !!this.building;
+  }
+
+  /** The 3D view is on screen: the build-up's clock starts */
+  startBuild(now = performance.now()) {
+    if (this.building && this.building.at == null) this.building.at = now;
+  }
+
+  /** How far up an object is in the build-up right now: 0 not yet, 1 standing (also when nothing is playing) */
+  grow(key: string, now: number) {
+    const b = this.building;
+    if (!b) return 1;
+    if (b.at == null) return b.start.has(key) ? 0 : 1;
+    const t = (now - b.at) / 1000;
+    if (t > b.end) {
+      this.building = null;
+      return 1;
+    }
+    const s = b.start.get(key);
+    if (s == null) return 1;
+    const k = Math.min(1, Math.max(0, (t - s) / BUILD.duration));
+    // Ease out: quick to rise, settling gently
+    return 1 - (1 - k) ** 3;
   }
 
   stop() {

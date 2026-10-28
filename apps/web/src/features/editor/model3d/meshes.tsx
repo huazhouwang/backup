@@ -12,6 +12,7 @@ import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { materialStyle, type MaterialStyle } from '@/lib/materials';
 import { modelStyle } from '@/graphics/model-style';
 import { useEditor } from '../store';
+import { roofKey } from '@/canvas/hop';
 import { TintColors, useFeedback } from './feedback';
 import { useHovered } from '../hover';
 import { useFloorTexture } from '@/graphics/three/floor-textures';
@@ -88,7 +89,7 @@ export function Slab({
 /** A flat roof over a room with nothing above it (see roofs in @opensu/core), its top on the room's walls; picking it picks the room */
 export function RoofMesh({ r, base, color, ...o }: Outline & { r: Roof; base: number; color: string }) {
   const line = useLine(r.space, o.sel);
-  const ref = useFeedback<THREE.Mesh>(r.space, color, !!o.sel);
+  const ref = useFeedback<THREE.Mesh>(r.space, color, !!o.sel, roofKey(r.space));
   const geo = useDisposed(useMemo(() => slabGeometry(r.shape, SLAB_THICKNESS), [r.shape]));
   // Two millimetres up, like a floor: the walls end exactly at its top
   const y = (base + r.top + 2 - SLAB_THICKNESS) * M;

@@ -6,6 +6,7 @@ import { googleEnabled } from '../auth';
 import { mailEnabled } from '../mail';
 import { creditState, periodStart } from '../platform';
 import * as repo from '../repo';
+import { EVENTS } from '@/shared/events';
 import { requireUser, type AppEnv } from '../http';
 
 export const routes = new Hono<AppEnv>();
@@ -21,6 +22,16 @@ routes.get('/me/credits', async c => {
   const u = requireUser(c);
   const guest = !!u.isAnonymous;
   return c.json(creditState(guest, await repo.creditsSpent(u.id, periodStart(guest))));
+});
+
+/** A funnel event from the app (issue 188): known names only, the project only if the user may see it */
+routes.post('/events', async c => {
+  const u = requireUser(c);
+  const b = (await c.req.json().catch(() => null)) as { name?: string; projectId?: string; detail?: string } | null;
+  if (!b || !(EVENTS as readonly string[]).includes(b.name ?? '')) throw new HTTPException(400, { message: 'unknown event' });
+  const project = b.projectId && (await repo.getRole(b.projectId, u.id)) ? b.projectId : null;
+  await repo.recordEvent(b.name!, u.id, project, typeof b.detail === 'string' ? b.detail.slice(0, 200) : null);
+  return c.json({ ok: true });
 });
 
 routes.get('/account/export', async c => {

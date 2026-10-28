@@ -2,7 +2,7 @@
  * The interview (issue 186): the agent asks the owner one question at a time, with answers to tap, and waits. Runs only in the
  * browser, where the chat shows the question as a card; the owner taps an option, types an answer, or leaves it to the agent.
  */
-import { defineRead, type CapabilityContext } from '@opensu/core';
+import { defineRead, houseOptions, text, zProgram, type CapabilityContext, type HouseOption, type HouseProgram, type Project } from '@opensu/core';
 import { z } from 'zod';
 import { m } from '@/lib/i18n';
 
@@ -53,4 +53,46 @@ export const askUser = defineRead({
   },
 });
 
-export const INTERVIEW_CAPABILITIES = [askUser];
+/** An option as the cards show it: what house_options returns, plus the generated design to draw */
+export type ChoiceOption = Omit<HouseOption, never> & { project: Project };
+
+/** The owner picked an option (already built), or left it to the agent */
+export type Choice = { picked: string } | { deferred: true };
+
+export interface ChooseHost {
+  choose(options: ChoiceOption[]): Promise<Choice>;
+}
+
+const chooser = (ctx: CapabilityContext) => {
+  const h = ctx.host?.choose as ChooseHost | undefined;
+  if (!h) throw new Error(m.server_err_view_needs_browser());
+  return h;
+};
+
+export const houseChoose = defineRead({
+  name: 'house_choose',
+  title: 'Choose a house',
+  kind: 'view',
+  permission: 'read',
+  runtime: 'browser',
+  description: [
+    "Show the owner 2–3 generated houses for the brief's room program (or the program given) as cards: a plan and a 3D view of each, ",
+    'its footprint and area. The owner taps one and it is built at once (undoable), and the 3D view shows it going up. ',
+    'Returns the option built, with each room and its area; do not call house_build after it. Deferred: build the first option with house_build.',
+  ].join(''),
+  input: z.object({ program: zProgram.optional().describe("Default: the brief's program") }),
+  run: async (i, ctx) => {
+    const p = ctx.session.project;
+    const program = (i.program as HouseProgram | undefined) ?? p.brief.program;
+    if (!program) throw new Error(text('err_no_program', 'No room program: pass one, or record it in the brief first (brief_update)'));
+    const { options } = houseOptions(program, p.language);
+    if (!options.length) throw new Error(text('err_no_house', 'No house could be built from this program: check the rooms and storeys'));
+    const choice = await chooser(ctx).choose(options);
+    if ('deferred' in choice) return { deferred: true, options: options.map(({ project: _p, ...o }) => o) };
+    const o = options.find(x => x.id === choice.picked)!;
+    const { project: _p, ...built } = o;
+    return { built };
+  },
+});
+
+export const INTERVIEW_CAPABILITIES = [askUser, houseChoose];

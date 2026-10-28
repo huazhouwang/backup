@@ -139,8 +139,10 @@ export function CameraRig({
       camera.position.copy(from.pos);
       orbit.target.copy(from.target);
       orbit.update();
-      grow(hops.reduced ? 1 : 0);
-      run(to, 1600, [0, 1]);
+      // A house just built goes up part by part (hops.build) instead of rising out of the plan as a whole
+      const building = hops.buildPending;
+      grow(hops.reduced || building ? 1 : 0);
+      run(to, 1600, building ? undefined : [0, 1]);
       // Start once the floor drawings are on (they rasterize asynchronously), so the first frame looks like the plan
       if (anim.current) anim.current.hold = performance.now();
     }
@@ -218,6 +220,7 @@ export function CameraRig({
       a.hold = undefined;
       // This frame is the plan itself: the plan kept on screen while 3D got ready can go
       setPlanUntil3D(false);
+      hops.startBuild();
     }
     // The clock starts after two frames (the first frame in 3D can take a second, compiling shaders) so the animation plays from
     // its start; after that it follows real time, a slow frame advancing at most 200 ms, so slow devices still finish on time

@@ -29,6 +29,8 @@ export interface HouseOption {
   score: number;
   /** Rule warnings left (errors rule an option out) */
   warnings: number;
+  /** How far (m) it overruns the plot's buildable area, when no option fits inside it */
+  overPlot?: { width: number; depth: number };
 }
 
 export const optionId = (t: Typology, mirrored: boolean) => (mirrored ? `${t}-mirrored` : t);
@@ -94,7 +96,7 @@ export function houseOptions(input: HouseProgram, language: ProjectLanguage, cou
     for (const mirrored of [false, true]) {
       const l = layout(program, t, mirrored);
       if (!l) continue;
-      if (program.plot && (l.width > program.plot.width || l.depth > program.plot.depth)) continue;
+      const over = program.plot && { width: Math.max(0, l.width - program.plot.width) / 1000, depth: Math.max(0, l.depth - program.plot.depth) / 1000 };
       const p = blank(program, language);
       buildLayout(p, l);
       const s = score(p, l, program);
@@ -109,9 +111,15 @@ export function houseOptions(input: HouseProgram, language: ProjectLanguage, cou
         rooms: s.rooms,
         score: Math.round(s.value * 1000) / 1000,
         warnings: s.warnings,
+        ...(over && (over.width || over.depth) ? { overPlot: over } : {}),
         project: p,
       });
     }
+  // Houses that fit the plot; when none does, the ones that overrun it least, saying by how much (never nothing to choose from)
+  const fits = all.filter(o => !o.overPlot);
+  const overrun = (o: (typeof all)[number]) => (o.overPlot ? o.overPlot.width + o.overPlot.depth : 0);
+  if (fits.length) all.splice(0, all.length, ...fits);
+  else all.sort((a, b) => overrun(a) - overrun(b) || a.score - b.score).splice(count);
   all.sort((a, b) => a.score - b.score);
   const picked: typeof all = [];
   for (const o of all) if (picked.length < count && !picked.some(x => x.typology === o.typology)) picked.push(o);

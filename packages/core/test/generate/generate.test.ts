@@ -62,7 +62,7 @@ describe('house generation (issue 187)', () => {
         // Every room of the program exists, at a usable size
         for (const room of o.rooms) expect(room.area, `${o.id} ${room.name}`).toBeGreaterThan(Math.min(room.target * 0.6, 3));
         expect(o.rooms.length).toBe(program.rooms.length);
-        if (brief.plot) expect(o.width * 1000 <= brief.plot.width && o.depth * 1000 <= brief.plot.depth, `${o.id} fits the plot`).toBe(true);
+        if (brief.plot && !o.overPlot) expect(o.width * 1000 <= brief.plot.width && o.depth * 1000 <= brief.plot.depth, `${o.id} fits the plot`).toBe(true);
       }
       // Different typologies first
       if (options.length >= 2 && new Set(options.map(o => o.typology)).size < 2) expect(options[0].id).not.toBe(options[1].id);
@@ -88,6 +88,15 @@ describe('house generation (issue 187)', () => {
     const o = houseOptions(BRIEFS['three generations'], 'zh').options[0];
     expect(o.project.elements.filter(e => e.type === 'stair')).toHaveLength(1);
     expect(o.project.spaces.filter(s => s.kind === 'void')).toHaveLength(1);
+  });
+
+  it('still offers houses when none fits the plot, saying how far each overruns it', () => {
+    const { options } = houseOptions(
+      { floors: 2, plot: { width: 8000, depth: 7000 }, rooms: [r('living'), r('dining'), r('kitchen'), r('bedroom'), r('master'), r('kids')] },
+      'zh',
+    );
+    expect(options.length).toBeGreaterThanOrEqual(2);
+    for (const o of options) expect((o.overPlot?.width ?? 0) + (o.overPlot?.depth ?? 0)).toBeGreaterThan(0);
   });
 
   it('builds the picked option into an existing design, replacing its building, in the design language', () => {

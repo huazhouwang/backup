@@ -1,7 +1,7 @@
 /** The editor store's state and actions, and what a project page opens it with */
 import type { Actor, CallResult, OpeningKind, Point, Project, Session, TxResult } from '@opensu/core';
 import type { ViewHost, ViewState } from '../agent/view-capabilities';
-import type { Answer, AskHost, Question } from '../agent/interview-capabilities';
+import type { Answer, AskHost, ChoiceOption, ChooseHost, Question } from '../agent/interview-capabilities';
 import type { Role } from '@/shared/roles';
 
 export interface LastChange {
@@ -65,6 +65,10 @@ export interface EditorState {
   capture: (() => Promise<{ dataUrl: string; width: number; height: number }>) | null;
   /** The question the agent is waiting on (ask_user), shown as a card in the chat */
   question: Question | null;
+  /** The houses the agent offers (house_choose), shown as cards in the chat */
+  choice: ChoiceOption[] | null;
+  /** When the owner last built a house from the cards: the chat suggests next steps */
+  justBuilt: number | null;
   /** The design was just created to start with an interview: the chat opens it (issue 186) */
   interview: boolean;
   /** A message handed to the agent from elsewhere in the editor (e.g. a comment); the chat panel sends it */
@@ -134,6 +138,12 @@ export interface EditorActions {
   askHost: AskHost;
   /** Answer the pending question (a tapped option, typed text, or leaving it to the agent) */
   answerQuestion(answer: Answer): void;
+  /** What house_choose calls: shows the options and resolves with the owner's pick */
+  chooseHost: ChooseHost;
+  /** Build the picked option (or leave it to the agent with null) */
+  pickHouse(id: string | null): Promise<void>;
+  /** The owner moved on from the house just built: the next-step suggestions go */
+  clearJustBuilt(): void;
   /** The interview has been started (or isn't wanted any more) */
   interviewStarted(): void;
   canEdit(): boolean;

@@ -1,7 +1,7 @@
 /** Account: the user's own canvas modules, and exporting a user's data */
 import type { CanvasPage } from '@opensu/core';
 import { m } from '@/lib/i18n';
-import { db } from './db';
+import { db, now } from './db';
 import { listApiKeys, listModels } from './models';
 import { getLibrary } from './libraries';
 import { getMyWidgets, getWidgetLibrary } from './widget-libraries';
@@ -46,3 +46,7 @@ export async function exportUserData(userId: string) {
     myCanvas: await getMyCanvas(userId),
   };
 }
+
+/** A funnel event (issue 188) */
+export const recordEvent = (name: string, userId: string, projectId: string | null, detail: string | null) =>
+  db().prepare('insert into event (name, user_id, project_id, detail, created_at) values (?, ?, ?, ?, ?)').bind(name, userId, projectId, detail, now()).run();
