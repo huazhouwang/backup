@@ -28,7 +28,8 @@ export function batchCapability(registry: Registry) {
             'invalid-input',
             text('err_batch_not_edit', 'Step {step}: {name} is not an edit capability that can be batched', { step: k + 1, name: call.name }),
           );
-        const parsed = c.input.safeParse(call.input);
+        // A null field means "not given", as models send for optional fields (the chat does the same for top-level arguments)
+        const parsed = c.input.safeParse(Object.fromEntries(Object.entries(call.input).filter(([, v]) => v !== null)));
         if (!parsed.success)
           throw new TxError(
             'invalid-input',

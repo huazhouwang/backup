@@ -14,11 +14,14 @@ import { useEditor, useEditorStore } from '../store';
 
 type CallResult = Awaited<ReturnType<typeof registry.call>>;
 
-/** Strip large fields useless to the model (screenshots) */
+/**
+ * What the model gets back: large fields useless to it stripped (screenshots), and plain JSON whatever the capability returned,
+ * since the client refuses a result with undefined in it and sends the model "null" instead (issue 193)
+ */
 function forModel(r: CallResult) {
   const res = r.result as { image?: unknown } | undefined;
-  if (res && typeof res === 'object' && typeof res.image === 'string') return { ...r, result: { ...res, image: '(shown to the owner)' } };
-  return r;
+  const out = res && typeof res === 'object' && typeof res.image === 'string' ? { ...r, result: { ...res, image: '(shown to the owner)' } } : r;
+  return JSON.parse(JSON.stringify(out)) as CallResult;
 }
 
 /** Keep only the last few images of a thread when saving it (the server caps a thread's size); older ones become a note */

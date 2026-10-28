@@ -91,6 +91,17 @@ describe('building a house from scratch', () => {
     });
     expect(r.ok).toBe(false);
     expect(h.session.project).toBe(before);
+    // Plain JSON, so the agent's tool result carries the error (issue 193)
+    expect(JSON.parse(JSON.stringify(r))).toEqual(r);
+    expect(Object.values(r.error!).every(v => v !== undefined)).toBe(true);
+  });
+
+  it('reads a null field in a batch step as not given, as models send optional fields (issue 193)', async () => {
+    const r = await h.call('batch', {
+      label: '一间房',
+      calls: [{ name: 'room_add', input: { level: 'L1', name: 'A', rect: [0, 0, 3000, 3000], door: null } }],
+    });
+    expect(r.ok, r.error?.message).toBe(true);
   });
 
   it('gives a readable error for invalid input', async () => {

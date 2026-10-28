@@ -150,7 +150,8 @@ export class Registry {
       if (c.mode !== 'edit') return { ok: true, result: await c.run(parsed.data, ctx) };
       const input = (c.prepare && (await c.prepare(parsed.data, ctx))) || parsed.data;
       const tx = ctx.session.transact(c.label(input, ctx.session.project), ctx.actor, d => c.apply(d, input, ctx));
-      if (!tx.ok) return { ok: false, error: { code: tx.error!.code, message: tx.error!.message, details: tx.error!.issues } };
+      // Plain JSON only: a key holding undefined makes the agent's tool result unusable (issue 193)
+      if (!tx.ok) return { ok: false, error: { code: tx.error!.code, message: tx.error!.message, ...(tx.error!.issues ? { details: tx.error!.issues } : {}) } };
       return {
         ok: true,
         result: tx.result,
