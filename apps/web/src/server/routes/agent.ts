@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { handleChat } from '../chat';
+import { creditSettings, creditState, creditsFor, dayStart, periodStart, platformModel, PLATFORM_MODEL_ID } from '../platform';
 import { decryptSecret } from '../crypto';
 import { m } from '@/lib/i18n';
 import * as repo from '../repo';
@@ -18,16 +19,29 @@ projectRoutes.post('/chat', minRole('editor'), async c => {
   const p = await repo.getProject(id);
   if (!p) throw new HTTPException(404, { message: m.server_err_project_not_found() });
   return handleChat(c.req.raw, async requested => {
-    // The model picked in the chat, else the project's pinned model, else the owner's default; always one of the owner's
+    // The model picked in the chat, else the project's pinned model, else the owner's default; always one of the owner's.
+    // With none of those (or the platform's picked), the platform's own model, paid for with the user's free credits.
     const models = await repo.listModels(p.owner_id);
     const has = (x: string | null | undefined) => (x && models.some(o => o.id === x) ? x : null);
-    const modelId = has(requested) ?? has(p.model_config_id) ?? (await repo.defaultModelId(p.owner_id, models));
+    const modelId = requested === PLATFORM_MODEL_ID ? null : (has(requested) ?? has(p.model_config_id) ?? (await repo.defaultModelId(p.owner_id, models)));
     const config = modelId ? await repo.getModel(modelId) : null;
-    if (!config) throw new HTTPException(400, { message: m.server_err_no_model() });
+    if (config)
+      return {
+        config,
+        apiKey: await decryptSecret(config.key_ciphertext, config.key_iv, config.key_id),
+        onUsage: (input, output) => repo.recordUsage({ userId: user.id, projectId: id, modelConfigId: config.id, input, output }),
+      };
+    const platform = platformModel();
+    if (!platform) throw new HTTPException(400, { message: m.server_err_no_model() });
+    const guest = !!user.isAnonymous;
+    const settings = creditSettings();
+    const [spent, everyone] = await Promise.all([repo.creditsSpent(user.id, periodStart(guest)), repo.platformCreditsSpent(dayStart())]);
+    if (creditState(guest, spent).balance <= 0) throw new HTTPException(402, { message: guest ? m.server_err_no_credits_guest() : m.server_err_no_credits() });
+    if (everyone >= settings.dailyCap) throw new HTTPException(503, { message: m.server_err_platform_busy() });
     return {
-      config,
-      apiKey: await decryptSecret(config.key_ciphertext, config.key_iv, config.key_id),
-      onUsage: (input, output) => repo.recordUsage({ userId: user.id, projectId: id, modelConfigId: config.id, input, output }),
+      ...platform,
+      onUsage: (input, output) =>
+        repo.recordUsage({ userId: user.id, projectId: id, modelConfigId: null, input, output, credits: creditsFor(input, output, settings) }),
     };
   });
 });

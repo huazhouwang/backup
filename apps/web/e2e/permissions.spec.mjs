@@ -144,6 +144,7 @@ test('permissions', async () => {
     ['POST', `/widget-libraries/${wlib}/members`, 'owner', { email: 'not-an-email', role: 'viewer' }],
     ['DELETE', `/widget-libraries/${wlib}/members/${otherUser}`, 'owner'],
     ['GET', '/me/widgets', 'user'],
+    ['GET', '/me/credits', 'user'],
     ['PUT', '/me/widgets', 'user', { widgets: [] }],
   ];
   // Least privileged first, so the owner's destructive calls come last; a route allows its minimum and everyone after it

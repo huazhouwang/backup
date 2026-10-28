@@ -10,3 +10,16 @@ GOOGLE_CLIENT_SECRET=
 # OTP emails (Resend). When unset locally, OTPs are printed to the terminal
 RESEND_API_KEY=
 MAIL_FROM=OpenSU <noreply@example.com>
+# The platform's own model, paid for with free credits (optional; without it users bring their own keys). Provider: anthropic,
+# openai, gemini, openrouter or compatible (then also PLATFORM_MODEL_BASE_URL). Locally, the test bridge or fake model works:
+# PLATFORM_MODEL_PROVIDER=compatible PLATFORM_MODEL=fake PLATFORM_MODEL_KEY=sk-local PLATFORM_MODEL_BASE_URL=http://127.0.0.1:8787/v1
+PLATFORM_MODEL_PROVIDER=
+PLATFORM_MODEL=
+PLATFORM_MODEL_KEY=
+PLATFORM_MODEL_BASE_URL=
+# Credits (one credit = one US cent by default): a guest's one-off allowance, a user's monthly one, prices per million tokens, a daily cap
+PLATFORM_CREDITS_GUEST=100
+PLATFORM_CREDITS_USER=500
+PLATFORM_PRICE_INPUT=300
+PLATFORM_PRICE_OUTPUT=1500
+PLATFORM_DAILY_CAP=20000

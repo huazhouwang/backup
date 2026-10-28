@@ -93,11 +93,32 @@ export const setDefaultModel = (userId: string, modelId: string) =>
     .bind(userId, modelId)
     .run();
 
-export const recordUsage = (u: { userId: string; projectId: string; modelConfigId: string; input: number; output: number }) =>
+/** A model call's tokens; on the platform's own model (no model configuration of the user's), also what it cost in credits */
+export const recordUsage = (u: { userId: string; projectId: string; modelConfigId: string | null; input: number; output: number; credits?: number }) =>
   db()
-    .prepare('insert into usage (user_id, project_id, model_config_id, input_tokens, output_tokens, created_at) values (?, ?, ?, ?, ?, ?)')
-    .bind(u.userId, u.projectId, u.modelConfigId, u.input, u.output, now())
+    .prepare(
+      'insert into usage (user_id, project_id, model_config_id, input_tokens, output_tokens, platform, credits, created_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(u.userId, u.projectId, u.modelConfigId, u.input, u.output, u.modelConfigId ? 0 : 1, u.credits ?? 0, now())
     .run();
+
+/** Credits a user has spent on the platform's model since a time (ms) */
+export async function creditsSpent(userId: string, since: number) {
+  const r = await db()
+    .prepare('select coalesce(sum(credits), 0) as spent from usage where user_id = ? and platform = 1 and created_at >= ?')
+    .bind(userId, since)
+    .first<{ spent: number }>();
+  return r?.spent ?? 0;
+}
+
+/** Credits everyone has spent on the platform's model since a time (ms): for the daily cap */
+export async function platformCreditsSpent(since: number) {
+  const r = await db()
+    .prepare('select coalesce(sum(credits), 0) as spent from usage where platform = 1 and created_at >= ?')
+    .bind(since)
+    .first<{ spent: number }>();
+  return r?.spent ?? 0;
+}
 
 export async function projectUsage(projectId: string) {
   const { results } = await db()

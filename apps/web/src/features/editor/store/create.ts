@@ -8,8 +8,9 @@ import { createStore, type StoreApi } from 'zustand';
 import type { ViewState } from '../agent/view-capabilities';
 import { editsSlice } from './edits';
 import { persistenceSlice } from './persistence';
-import type { EditorActions, EditorState, InitialProject } from './types';
+import { m } from '@/lib/i18n';
 import { interviewSlice } from './interview';
+import { PLATFORM_MODEL_ID, type EditorActions, type EditorState, type InitialProject } from './types';
 import { uiSlice } from './ui';
 import { viewSlice } from './view';
 
@@ -63,7 +64,11 @@ export function createEditorStore(init: InitialProject, opts: { level?: string; 
       name: init.name,
       role: init.role,
       version: init.version,
-      models: init.models ?? [],
+      // The platform's model comes last: anyone can use it with their free credits; the owner's own models go first
+      models: [
+        ...(init.models ?? []),
+        ...(init.platformModel ? [{ id: PLATFORM_MODEL_ID, label: m.chat_platform_model(), provider: 'platform', model: '' }] : []),
+      ],
       projectModelId: init.projectModelId ?? null,
       defaultModelId: init.defaultModelId ?? null,
       session,

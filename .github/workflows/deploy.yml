@@ -161,9 +161,21 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           MAIL_FROM: ${{ vars.MAIL_FROM }}
           APP_URL: ${{ vars.APP_URL }}
+          # The platform's own model and free credits (issue 185); without them, users bring their own keys
+          PLATFORM_MODEL_KEY: ${{ secrets.PLATFORM_MODEL_KEY }}
+          PLATFORM_MODEL_PROVIDER: ${{ vars.PLATFORM_MODEL_PROVIDER }}
+          PLATFORM_MODEL: ${{ vars.PLATFORM_MODEL }}
+          PLATFORM_MODEL_BASE_URL: ${{ vars.PLATFORM_MODEL_BASE_URL }}
+          PLATFORM_CREDITS_GUEST: ${{ vars.PLATFORM_CREDITS_GUEST }}
+          PLATFORM_CREDITS_USER: ${{ vars.PLATFORM_CREDITS_USER }}
+          PLATFORM_PRICE_INPUT: ${{ vars.PLATFORM_PRICE_INPUT }}
+          PLATFORM_PRICE_OUTPUT: ${{ vars.PLATFORM_PRICE_OUTPUT }}
+          PLATFORM_DAILY_CAP: ${{ vars.PLATFORM_DAILY_CAP }}
         run: |
           node -e '
-            const names = ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET", "RESEND_API_KEY", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "MAIL_FROM", "APP_URL"];
+            const names = ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET", "RESEND_API_KEY", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "MAIL_FROM", "APP_URL",
+              "PLATFORM_MODEL_KEY", "PLATFORM_MODEL_PROVIDER", "PLATFORM_MODEL", "PLATFORM_MODEL_BASE_URL", "PLATFORM_CREDITS_GUEST", "PLATFORM_CREDITS_USER",
+              "PLATFORM_PRICE_INPUT", "PLATFORM_PRICE_OUTPUT", "PLATFORM_DAILY_CAP"];
             const out = Object.fromEntries(names.map(n => [n, (process.env[n] ?? "").trim()]).filter(([, v]) => v));
             for (const n of ["BETTER_AUTH_SECRET", "KEY_ENCRYPTION_SECRET"]) if (!out[n]) { console.error(`Missing ${n}`); process.exit(1); }
             require("fs").writeFileSync(process.env.RUNNER_TEMP + "/secrets.json", JSON.stringify(out));
