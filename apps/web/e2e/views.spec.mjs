@@ -26,6 +26,15 @@ test('views', async ({ browser: b }) => {
     return [iframe.x + q[0], iframe.y + q[1]];
   };
   const datums = () => frame.evaluate(() => [...document.querySelectorAll('div')].filter(d => /^[±+-]\d+\.\d{3} /.test(d.textContent ?? '')).length);
+  // The datums are placed frame by frame: wait for them to settle (software GL draws a few frames a second)
+  const datumsAfterward = async (ok = n => n >= 4) => {
+    let n = await datums();
+    for (let i = 0; i < 20 && !ok(n); i++) {
+      await page.waitForTimeout(500);
+      n = await datums();
+    }
+    return n;
+  };
   const drag = async (dx, dy) => {
     const cx = iframe.x + iframe.width / 2;
     const cy = iframe.y + iframe.height / 2;
@@ -49,15 +58,15 @@ test('views', async ({ browser: b }) => {
   await drag(-220, 60);
   await page.screenshot({ path: `${OUT}/views-section-orbit.png` });
   check(!facing.equals(await canvas.screenshot()), 'the sectioned model still orbits');
-  check((await datums()) >= 4, 'and stays cut');
+  check((await datumsAfterward()) >= 4, 'and stays cut');
   const before = await canvas.screenshot();
   await page.getByRole('button', { name: '反方向看' }).click();
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${OUT}/views-section-flip.png` });
-  check(!before.equals(await canvas.screenshot()) && (await datums()) >= 4, 'the section bar flips the section');
+  check(!before.equals(await canvas.screenshot()) && (await datumsAfterward()) >= 4, 'the section bar flips the section');
   await page.getByRole('button', { name: '取消剖切' }).click();
   await page.waitForTimeout(800);
-  check((await datums()) === 0 && !(await page.getByText('剖切中').count()), 'the section bar clears the section');
+  check((await datumsAfterward(n => n === 0)) === 0 && !(await page.getByText('剖切中').count()), 'the section bar clears the section');
   check(!(await page.getByRole('button', { name: '相机' }).count()), 'there is no camera menu');
 
   // Back to the plan: it appears at its final framing, not at some other scale for a frame first
