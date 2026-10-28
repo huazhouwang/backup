@@ -4,3 +4,4 @@ dist/
 # E2E test screenshots (written here when no output directory is given)
 /apps/web/*.png
 test-results/
+.tanstack
