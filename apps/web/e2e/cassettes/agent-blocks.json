@@ -182,6 +182,376 @@
         "text": "秋天落叶效果已加上：两处庭院（透水砖和碎石）上空会有落叶缓缓飘落，天色调成了黄昏。\n\n切到 3D 视图就能看到；落叶多少、下落快慢、风向和天色都可以在效果设置里调。",
         "tool_calls": []
       }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "605a0d8342baffab",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "look_preview",
+            "arguments": {
+              "recipe": {
+                "params": {
+                  "mat": {
+                    "type": "string",
+                    "format": "material",
+                    "default": "stone",
+                    "enum": [
+                      "stone",
+                      "stoneDark",
+                      "marble",
+                      "slate",
+                      "cement"
+                    ],
+                    "enumTitles": [
+                      {
+                        "zh": "青石",
+                        "en": "Stone"
+                      },
+                      {
+                        "zh": "深色石",
+                        "en": "Dark stone"
+                      },
+                      {
+                        "zh": "大理石",
+                        "en": "Marble"
+                      },
+                      {
+                        "zh": "板岩",
+                        "en": "Slate"
+                      },
+                      {
+                        "zh": "水泥",
+                        "en": "Cement"
+                      }
+                    ],
+                    "title": {
+                      "zh": "石材",
+                      "en": "Stone"
+                    },
+                    "description": "Material of the whole table"
+                  },
+                  "thick": {
+                    "type": "number",
+                    "default": 80,
+                    "minimum": 40,
+                    "maximum": 150,
+                    "title": {
+                      "zh": "桌面厚度",
+                      "en": "Top thickness"
+                    },
+                    "description": "Tabletop thickness in mm"
+                  }
+                },
+                "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+              },
+              "size": {
+                "w": 900,
+                "d": 900,
+                "h": 750
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "7992d9afd2dd0279",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "batch",
+            "arguments": {
+              "label": "新增圆形石桌并放在庭院里",
+              "calls": [
+                {
+                  "name": "furniture_type_add",
+                  "input": {
+                    "type": "round-stone-table",
+                    "name": "圆形石桌",
+                    "group": "户外",
+                    "size": {
+                      "w": 900,
+                      "d": 900,
+                      "h": 750
+                    },
+                    "recipe": {
+                      "params": {
+                        "mat": {
+                          "type": "string",
+                          "format": "material",
+                          "default": "stone",
+                          "enum": [
+                            "stone",
+                            "stoneDark",
+                            "marble",
+                            "slate",
+                            "cement"
+                          ],
+                          "enumTitles": [
+                            {
+                              "zh": "青石",
+                              "en": "Stone"
+                            },
+                            {
+                              "zh": "深色石",
+                              "en": "Dark stone"
+                            },
+                            {
+                              "zh": "大理石",
+                              "en": "Marble"
+                            },
+                            {
+                              "zh": "板岩",
+                              "en": "Slate"
+                            },
+                            {
+                              "zh": "水泥",
+                              "en": "Cement"
+                            }
+                          ],
+                          "title": {
+                            "zh": "石材",
+                            "en": "Stone"
+                          },
+                          "description": "Material of the whole table"
+                        },
+                        "thick": {
+                          "type": "number",
+                          "default": 80,
+                          "minimum": 40,
+                          "maximum": 150,
+                          "title": {
+                            "zh": "桌面厚度",
+                            "en": "Top thickness"
+                          },
+                          "description": "Tabletop thickness in mm"
+                        }
+                      },
+                      "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+                    }
+                  }
+                },
+                {
+                  "name": "furniture_add",
+                  "input": {
+                    "level": "一层",
+                    "type": "round-stone-table",
+                    "position": null,
+                    "space": "庭院·透水砖",
+                    "rotation": 0,
+                    "size": null,
+                    "elevation": null,
+                    "label": null
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "c85cf3e8c7407ab9",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "一层·庭院·透水砖",
+              "id": null
+            }
+          },
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "一层·庭院·碎石",
+              "id": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "f0f4bceeff2a1e39",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "L1-f09",
+              "id": null
+            }
+          },
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "L1-f27",
+              "id": null
+            }
+          },
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "L1-f28",
+              "id": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "7e67a962e3683e02",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "batch",
+            "arguments": {
+              "label": "新增圆形石桌并放在庭院里",
+              "calls": [
+                {
+                  "name": "furniture_type_add",
+                  "input": {
+                    "type": "round-stone-table",
+                    "name": "圆形石桌",
+                    "group": "户外",
+                    "size": {
+                      "w": 900,
+                      "d": 900,
+                      "h": 750
+                    },
+                    "recipe": {
+                      "params": {
+                        "mat": {
+                          "type": "string",
+                          "format": "material",
+                          "default": "stone",
+                          "enum": [
+                            "stone",
+                            "stoneDark",
+                            "marble",
+                            "slate",
+                            "cement"
+                          ],
+                          "enumTitles": [
+                            {
+                              "zh": "青石",
+                              "en": "Stone"
+                            },
+                            {
+                              "zh": "深色石",
+                              "en": "Dark stone"
+                            },
+                            {
+                              "zh": "大理石",
+                              "en": "Marble"
+                            },
+                            {
+                              "zh": "板岩",
+                              "en": "Slate"
+                            },
+                            {
+                              "zh": "水泥",
+                              "en": "Cement"
+                            }
+                          ],
+                          "title": {
+                            "zh": "石材",
+                            "en": "Stone"
+                          },
+                          "description": "Material of the whole table"
+                        },
+                        "thick": {
+                          "type": "number",
+                          "default": 80,
+                          "minimum": 40,
+                          "maximum": 150,
+                          "title": {
+                            "zh": "桌面厚度",
+                            "en": "Top thickness"
+                          },
+                          "description": "Tabletop thickness in mm"
+                        }
+                      },
+                      "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+                    }
+                  }
+                },
+                {
+                  "name": "furniture_add",
+                  "input": {
+                    "level": "一层",
+                    "type": "round-stone-table",
+                    "position": [
+                      13000,
+                      11450
+                    ],
+                    "space": "庭院·透水砖",
+                    "rotation": 0,
+                    "size": null,
+                    "elevation": null,
+                    "label": null
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "74e633ef49ff2d1f",
+      "answer": {
+        "text": "圆形石桌做好了，已放在庭院·透水砖东侧那段空地上（直径 90 厘米、高 75 厘米，青石材质）。\n\n- 庭院西边原来已有一张方形石桌和四个石凳，新桌子放在东侧，没有挤在一起；\n- 石材（青石、深色石、大理石、板岩、水泥）和桌面厚度都可以在属性里换；位置不合适可以直接在平面上拖动。",
+        "tool_calls": []
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "5424846113c53393",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_save",
+            "arguments": {
+              "widget": "room-areas",
+              "library": null,
+              "forMe": null
+            }
+          },
+          {
+            "name": "widget_save",
+            "arguments": {
+              "widget": "autumn-leaves",
+              "library": null,
+              "forMe": true
+            }
+          },
+          {
+            "name": "library_list",
+            "arguments": {}
+          }
+        ]
+      }
     }
   ]
 }
