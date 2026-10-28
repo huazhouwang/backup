@@ -15,6 +15,7 @@ export interface Env
         | 'VOICE_RATE_LIMIT'
         | 'SPEECH_RATE_LIMIT'
         | 'AI'
+        | 'ASSETS'
       >
     > {
   /** Public origin of the app, e.g. https://lullabo.example.workers.dev */
