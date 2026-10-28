@@ -1,0 +1,54 @@
+{
+  "exchanges": [
+    {
+      "user": "做一个工具：在每个房间中间标出它的面积",
+      "tools": 71,
+      "hash": "332e310328ae1bd7",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_create",
+            "arguments": {
+              "id": "room-areas",
+              "name": "房间面积标注",
+              "description": "Labels every room (space) on each level with its area in m² at the room's centroid (polygon area of its outline minus holes). Params: showName (prefix the room name), decimals (digits after the point).",
+              "params": {
+                "showName": {
+                  "type": "boolean",
+                  "default": true,
+                  "title": {
+                    "zh": "显示房间名",
+                    "en": "Show room name"
+                  },
+                  "description": "Prefix the label with the room name"
+                },
+                "decimals": {
+                  "type": "integer",
+                  "default": 1,
+                  "minimum": 0,
+                  "maximum": 2,
+                  "title": {
+                    "zh": "小数位数",
+                    "en": "Decimals"
+                  },
+                  "description": "Digits after the decimal point"
+                }
+              },
+              "script": "function ring(pts) {\n  var a = 0, cx = 0, cy = 0;\n  for (var i = 0; i < pts.length; i++) {\n    var p = pts[i], q = pts[(i + 1) % pts.length];\n    var c = p[0] * q[1] - q[0] * p[1];\n    a += c; cx += (p[0] + q[0]) * c; cy += (p[1] + q[1]) * c;\n  }\n  return { a: a / 2, cx: cx, cy: cy };\n}\nfunction widget(project, params, ctx) {\n  var items = [];\n  var zh = ctx.language !== 'en';\n  for (var s of project.spaces) {\n    if (!s.shape || !s.shape.length) continue;\n    var area = 0, best = null;\n    for (var part of s.shape) {\n      var r = ring(part.outer);\n      var pa = Math.abs(r.a);\n      for (var h of part.holes || []) pa -= Math.abs(ring(h).a);\n      area += pa;\n      if (!best || Math.abs(r.a) > Math.abs(best.a)) best = r;\n    }\n    if (!best || best.a === 0) continue;\n    var at = [best.cx / (6 * best.a), best.cy / (6 * best.a)];\n    var m2 = (area / 1e6).toFixed(params.decimals);\n    var text = params.showName ? s.name + ' ' + m2 + ' m²' : m2 + ' m²';\n    items.push({ type: 'label', at: at, text: text, level: s.level });\n  }\n  return items;\n}\n"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "做一个工具：在每个房间中间标出它的面积",
+      "tools": 71,
+      "hash": "8d35d51bcb140cd1",
+      "answer": {
+        "text": "已做好「房间面积标注」工具并装到画布上：每个房间中间会显示房间名和面积（m²，保留一位小数），各层都有。\n\n如果只想看面积数字、或改小数位数，可以在工具设置里调整。",
+        "tool_calls": []
+      }
+    }
+  ]
+}
