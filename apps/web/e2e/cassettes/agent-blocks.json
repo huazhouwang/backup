@@ -552,6 +552,123 @@
           }
         ]
       }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "63189e59c883c4f0",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "library_save",
+            "arguments": {
+              "look": "look-1",
+              "library": "lib9464fc5d03d349e0bb54"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "a7883685c38810e7",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "look_import",
+            "arguments": {
+              "name": "圆形石桌",
+              "for": [
+                "furniture:round-stone-table"
+              ],
+              "recipe": {
+                "params": {
+                  "mat": {
+                    "type": "string",
+                    "format": "material",
+                    "default": "stone",
+                    "enum": [
+                      "stone",
+                      "stoneDark",
+                      "marble",
+                      "slate",
+                      "cement"
+                    ],
+                    "enumTitles": [
+                      {
+                        "zh": "青石",
+                        "en": "Stone"
+                      },
+                      {
+                        "zh": "深色石",
+                        "en": "Dark stone"
+                      },
+                      {
+                        "zh": "大理石",
+                        "en": "Marble"
+                      },
+                      {
+                        "zh": "板岩",
+                        "en": "Slate"
+                      },
+                      {
+                        "zh": "水泥",
+                        "en": "Cement"
+                      }
+                    ],
+                    "title": {
+                      "zh": "石材",
+                      "en": "Stone"
+                    },
+                    "description": "Material of the whole table"
+                  },
+                  "thick": {
+                    "type": "number",
+                    "default": 80,
+                    "minimum": 40,
+                    "maximum": 150,
+                    "title": {
+                      "zh": "桌面厚度",
+                      "en": "Top thickness"
+                    },
+                    "description": "Tabletop thickness in mm"
+                  }
+                },
+                "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+              },
+              "types": {
+                "round-stone-table": {
+                  "name": "圆形石桌",
+                  "group": "户外",
+                  "size": {
+                    "w": 900,
+                    "d": 900,
+                    "h": 750
+                  }
+                }
+              },
+              "source": {
+                "library": "lib9464fc5d03d349e0bb54",
+                "look": "lkb7771a35e93c41c5b6de",
+                "version": "1.0.0"
+              },
+              "replace": "look-1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "2292109e5230f3e3",
+      "answer": {
+        "text": "三样都保存好了，以后在别的方案里也能直接用。\n\n- 「房间面积标注」工具：存进了你的组件库「我的组件」，在其他方案里从 ⋯ 菜单的「小组件」添加即可；\n- 「秋天落叶」效果：同样存进「我的组件」，并设为你自己的效果，以后打开任何方案都会自动出现（落在名字带“庭院”的空间上）；\n- 「圆形石桌」：存进了你的家具库「我的家具」，这个方案里的石桌也已和库里那份关联起来。",
+        "tool_calls": []
+      }
     }
   ]
 }
