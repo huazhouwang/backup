@@ -22,8 +22,12 @@ test('rain over the courtyard, by asking', async ({ browser: b }) => {
     page.on('request', r => /\/projects\/[^/]+\/chat$/.test(r.url()) && started++);
     page.on('requestfinished', r => /\/projects\/[^/]+\/chat$/.test(r.url()) && finished++);
     page.on('requestfailed', r => /\/projects\/[^/]+\/chat$/.test(r.url()) && finished++);
+    // The agent is done when no model turn is in flight and the chat is no longer running (a tool may run for a while between turns)
     const settled = async () => {
-      for (let quiet = 0; quiet < 6; await page.waitForTimeout(500)) quiet = started > 0 && started === finished ? quiet + 1 : 0;
+      for (let quiet = 0; quiet < 6; await page.waitForTimeout(500)) {
+        const running = await page.locator('[aria-label="停止"]').count();
+        quiet = started > 0 && started === finished && !running ? quiet + 1 : 0;
+      }
     };
 
     await page.goto(BASE, { waitUntil: 'networkidle' });
@@ -42,6 +46,7 @@ test('rain over the courtyard, by asking', async ({ browser: b }) => {
     await page.goto(page.url().split('?')[0] + '?mode=3d');
     await page.waitForFunction(() => window.artifact?.ready);
 
+    await page.getByText('模型：bridge').waitFor({ timeout: 30_000 });
     const t0 = Date.now();
     const box = page.getByPlaceholder('说说想怎么改…');
     await box.fill('在庭院里加上下雨的效果');

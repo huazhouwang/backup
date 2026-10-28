@@ -102,7 +102,8 @@ export const widgetConfigure = defineEdit({
         i.name,
         p.language,
       );
-    return { id: w.id, name: w.name };
+    // The parameters as they now stand, so the agent can say what it set
+    return { id: w.id, name: w.name, params: w.params, visible: w.visible };
   },
 });
 
