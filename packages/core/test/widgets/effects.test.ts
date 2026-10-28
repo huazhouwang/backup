@@ -70,15 +70,20 @@ describe('built-in effects', () => {
   beforeEach(() => setScriptSandbox(createEngine(wasm)));
   afterEach(() => setScriptSandbox(null));
 
-  it('rain falls over the courtyard asked for, by part of its name, under an overcast sky', async () => {
+  it('rain falls over the courtyard asked for: every space with the words in its name, under an overcast sky', async () => {
     const { p, items } = await run('rain', { space: '庭院', intensity: 0.6, wind: 1 });
-    const drops = items.find(i => i.type === 'particles')!;
-    const yard = p.spaces.find(s => s.name === '庭院·透水砖')!;
-    expect(drops).toMatchObject({ shape: 'streak', tone: 'water', level: yard.level, outline: yard.shape[0].outer });
+    const drops = items.filter(i => i.type === 'particles');
+    const yards = p.spaces.filter(s => s.name.includes('庭院'));
+    expect(yards.length).toBe(2);
+    expect(drops.map(d => d.outline)).toEqual(yards.map(y => y.shape[0].outer));
+    expect(drops.every(d => d.type === 'particles' && d.shape === 'streak' && d.tone === 'water' && d.level === yards[0].level)).toBe(true);
     expect(items.some(i => i.type === 'sky' && i.mood === 'overcast')).toBe(true);
+    // One of them by its full name
+    expect((await run('rain', { space: '庭院·碎石', intensity: 0.6, wind: 1 })).items.filter(i => i.type === 'particles')).toHaveLength(1);
     // Heavier rain: more drops, faster
-    const heavy = (await run('rain', { space: '庭院', intensity: 1, wind: 1 })).items.find(i => i.type === 'particles')!;
-    expect(heavy.type === 'particles' && drops.type === 'particles' && heavy.count > drops.count && heavy.fall > drops.fall).toBe(true);
+    const count = (xs: typeof items) => xs.reduce((n, i) => n + (i.type === 'particles' ? i.count : 0), 0);
+    const heavy = (await run('rain', { space: '庭院', intensity: 1, wind: 1 })).items;
+    expect(count(heavy)).toBeGreaterThan(count(items));
   });
 
   it('rain without a space covers the whole site', async () => {

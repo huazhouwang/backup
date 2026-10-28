@@ -1,0 +1,641 @@
+{
+  "exchanges": [
+    {
+      "user": "做一个工具：在每个房间中间标出它的面积",
+      "tools": 71,
+      "hash": "332e310328ae1bd7",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_create",
+            "arguments": {
+              "id": "room-areas",
+              "name": "房间面积标注",
+              "description": "Labels every room (space) on each level with its area in m² at the room's centroid (polygon area of its outline minus holes). Params: showName (prefix the room name), decimals (digits after the point).",
+              "params": {
+                "showName": {
+                  "type": "boolean",
+                  "default": true,
+                  "title": {
+                    "zh": "显示房间名",
+                    "en": "Show room name"
+                  },
+                  "description": "Prefix the label with the room name"
+                },
+                "decimals": {
+                  "type": "integer",
+                  "default": 1,
+                  "minimum": 0,
+                  "maximum": 2,
+                  "title": {
+                    "zh": "小数位数",
+                    "en": "Decimals"
+                  },
+                  "description": "Digits after the decimal point"
+                }
+              },
+              "script": "function ring(pts) {\n  var a = 0, cx = 0, cy = 0;\n  for (var i = 0; i < pts.length; i++) {\n    var p = pts[i], q = pts[(i + 1) % pts.length];\n    var c = p[0] * q[1] - q[0] * p[1];\n    a += c; cx += (p[0] + q[0]) * c; cy += (p[1] + q[1]) * c;\n  }\n  return { a: a / 2, cx: cx, cy: cy };\n}\nfunction widget(project, params, ctx) {\n  var items = [];\n  var zh = ctx.language !== 'en';\n  for (var s of project.spaces) {\n    if (!s.shape || !s.shape.length) continue;\n    var area = 0, best = null;\n    for (var part of s.shape) {\n      var r = ring(part.outer);\n      var pa = Math.abs(r.a);\n      for (var h of part.holes || []) pa -= Math.abs(ring(h).a);\n      area += pa;\n      if (!best || Math.abs(r.a) > Math.abs(best.a)) best = r;\n    }\n    if (!best || best.a === 0) continue;\n    var at = [best.cx / (6 * best.a), best.cy / (6 * best.a)];\n    var m2 = (area / 1e6).toFixed(params.decimals);\n    var text = params.showName ? s.name + ' ' + m2 + ' m²' : m2 + ' m²';\n    items.push({ type: 'label', at: at, text: text, level: s.level });\n  }\n  return items;\n}\n"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "做一个工具：在每个房间中间标出它的面积",
+      "tools": 71,
+      "hash": "8d35d51bcb140cd1",
+      "answer": {
+        "text": "已做好「房间面积标注」工具并装到画布上：每个房间中间会显示房间名和面积（m²，保留一位小数），各层都有。\n\n如果只想看面积数字、或改小数位数，可以在工具设置里调整。",
+        "tool_calls": []
+      }
+    },
+    {
+      "user": "再做一个秋天落叶的效果，落在庭院里",
+      "tools": 71,
+      "hash": "ce2bb92b44f0ec30",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_create",
+            "arguments": {
+              "id": "autumn-leaves",
+              "name": "秋天落叶",
+              "description": "3D effect: autumn leaves (flake particles, tone leaf) falling gently over every space whose name contains `match` (default 庭院), from `height` mm down to the floor, with drift and a light wind; optional sky mood (dusk/overcast/none). Tune density (leaves per m²), fall (m/s), drift, wind (m/s east), size (mm).",
+              "params": {
+                "match": {
+                  "type": "string",
+                  "default": "庭院",
+                  "title": {
+                    "zh": "空间名包含",
+                    "en": "Space name contains"
+                  },
+                  "description": "Leaves fall over spaces whose name contains this text"
+                },
+                "density": {
+                  "type": "number",
+                  "default": 6,
+                  "minimum": 1,
+                  "maximum": 40,
+                  "title": {
+                    "zh": "落叶密度（片/㎡）",
+                    "en": "Leaves per m²"
+                  },
+                  "description": "Leaves per square metre"
+                },
+                "fall": {
+                  "type": "number",
+                  "default": 1,
+                  "minimum": 0.2,
+                  "maximum": 3,
+                  "title": {
+                    "zh": "下落速度（m/s）",
+                    "en": "Fall speed (m/s)"
+                  },
+                  "description": "Fall speed in m/s"
+                },
+                "drift": {
+                  "type": "number",
+                  "default": 0.6,
+                  "minimum": 0,
+                  "maximum": 2,
+                  "title": {
+                    "zh": "飘荡（m/s）",
+                    "en": "Drift (m/s)"
+                  },
+                  "description": "Random sideways drift in m/s"
+                },
+                "wind": {
+                  "type": "number",
+                  "default": 0.4,
+                  "minimum": -3,
+                  "maximum": 3,
+                  "title": {
+                    "zh": "风（向东 m/s）",
+                    "en": "Wind east (m/s)"
+                  },
+                  "description": "Steady wind towards the east in m/s"
+                },
+                "size": {
+                  "type": "number",
+                  "default": 60,
+                  "minimum": 20,
+                  "maximum": 150,
+                  "title": {
+                    "zh": "叶片大小（mm）",
+                    "en": "Leaf size (mm)"
+                  },
+                  "description": "Leaf size in mm"
+                },
+                "height": {
+                  "type": "number",
+                  "default": 6000,
+                  "minimum": 2000,
+                  "maximum": 15000,
+                  "title": {
+                    "zh": "起落高度（mm）",
+                    "en": "Start height (mm)"
+                  },
+                  "description": "Height above the level the leaves start from, mm"
+                },
+                "sky": {
+                  "type": "string",
+                  "default": "dusk",
+                  "enum": ["dusk", "overcast", "none"],
+                  "enumTitles": [
+                    {
+                      "zh": "黄昏",
+                      "en": "Dusk"
+                    },
+                    {
+                      "zh": "阴天",
+                      "en": "Overcast"
+                    },
+                    {
+                      "zh": "不变",
+                      "en": "Unchanged"
+                    }
+                  ],
+                  "title": {
+                    "zh": "天色",
+                    "en": "Sky"
+                  },
+                  "description": "Sky mood with the leaves"
+                }
+              },
+              "script": "function widget(project, params, ctx) {\n  var items = [];\n  var key = params.match || '庭院';\n  for (var s of project.spaces) {\n    if (s.name.indexOf(key) < 0 || !s.shape) continue;\n    for (var part of s.shape) {\n      var o = part.outer;\n      if (!o || o.length < 3 || o.length > 500) continue;\n      var a = 0;\n      for (var i = 0; i < o.length; i++) {\n        var p = o[i], q = o[(i + 1) % o.length];\n        a += p[0] * q[1] - q[0] * p[1];\n      }\n      var m2 = Math.abs(a) / 2 / 1e6;\n      var count = Math.max(20, Math.min(4000, Math.round(m2 * params.density)));\n      items.push({\n        type: 'particles', outline: o, level: s.level,\n        from: 0, to: params.height,\n        count: count, fall: params.fall, drift: params.drift,\n        wind: [params.wind, 0.2], size: params.size,\n        shape: 'flake', tone: 'leaf'\n      });\n    }\n  }\n  if (params.sky !== 'none') items.push({ type: 'sky', mood: params.sky });\n  return items;\n}\n"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个秋天落叶的效果，落在庭院里",
+      "tools": 71,
+      "hash": "5281db8359cd0821",
+      "answer": {
+        "text": "秋天落叶效果已加上：两处庭院（透水砖和碎石）上空会有落叶缓缓飘落，天色调成了黄昏。\n\n切到 3D 视图就能看到；落叶多少、下落快慢、风向和天色都可以在效果设置里调。",
+        "tool_calls": []
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "605a0d8342baffab",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "look_preview",
+            "arguments": {
+              "recipe": {
+                "params": {
+                  "mat": {
+                    "type": "string",
+                    "format": "material",
+                    "default": "stone",
+                    "enum": ["stone", "stoneDark", "marble", "slate", "cement"],
+                    "enumTitles": [
+                      {
+                        "zh": "青石",
+                        "en": "Stone"
+                      },
+                      {
+                        "zh": "深色石",
+                        "en": "Dark stone"
+                      },
+                      {
+                        "zh": "大理石",
+                        "en": "Marble"
+                      },
+                      {
+                        "zh": "板岩",
+                        "en": "Slate"
+                      },
+                      {
+                        "zh": "水泥",
+                        "en": "Cement"
+                      }
+                    ],
+                    "title": {
+                      "zh": "石材",
+                      "en": "Stone"
+                    },
+                    "description": "Material of the whole table"
+                  },
+                  "thick": {
+                    "type": "number",
+                    "default": 80,
+                    "minimum": 40,
+                    "maximum": 150,
+                    "title": {
+                      "zh": "桌面厚度",
+                      "en": "Top thickness"
+                    },
+                    "description": "Tabletop thickness in mm"
+                  }
+                },
+                "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+              },
+              "size": {
+                "w": 900,
+                "d": 900,
+                "h": 750
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "7992d9afd2dd0279",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "batch",
+            "arguments": {
+              "label": "新增圆形石桌并放在庭院里",
+              "calls": [
+                {
+                  "name": "furniture_type_add",
+                  "input": {
+                    "type": "round-stone-table",
+                    "name": "圆形石桌",
+                    "group": "户外",
+                    "size": {
+                      "w": 900,
+                      "d": 900,
+                      "h": 750
+                    },
+                    "recipe": {
+                      "params": {
+                        "mat": {
+                          "type": "string",
+                          "format": "material",
+                          "default": "stone",
+                          "enum": ["stone", "stoneDark", "marble", "slate", "cement"],
+                          "enumTitles": [
+                            {
+                              "zh": "青石",
+                              "en": "Stone"
+                            },
+                            {
+                              "zh": "深色石",
+                              "en": "Dark stone"
+                            },
+                            {
+                              "zh": "大理石",
+                              "en": "Marble"
+                            },
+                            {
+                              "zh": "板岩",
+                              "en": "Slate"
+                            },
+                            {
+                              "zh": "水泥",
+                              "en": "Cement"
+                            }
+                          ],
+                          "title": {
+                            "zh": "石材",
+                            "en": "Stone"
+                          },
+                          "description": "Material of the whole table"
+                        },
+                        "thick": {
+                          "type": "number",
+                          "default": 80,
+                          "minimum": 40,
+                          "maximum": 150,
+                          "title": {
+                            "zh": "桌面厚度",
+                            "en": "Top thickness"
+                          },
+                          "description": "Tabletop thickness in mm"
+                        }
+                      },
+                      "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+                    }
+                  }
+                },
+                {
+                  "name": "furniture_add",
+                  "input": {
+                    "level": "一层",
+                    "type": "round-stone-table",
+                    "position": null,
+                    "space": "庭院·透水砖",
+                    "rotation": 0,
+                    "size": null,
+                    "elevation": null,
+                    "label": null
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "c85cf3e8c7407ab9",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "一层·庭院·透水砖",
+              "id": null
+            }
+          },
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "一层·庭院·碎石",
+              "id": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "f0f4bceeff2a1e39",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "L1-f09",
+              "id": null
+            }
+          },
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "L1-f27",
+              "id": null
+            }
+          },
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "L1-f28",
+              "id": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "7e67a962e3683e02",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "batch",
+            "arguments": {
+              "label": "新增圆形石桌并放在庭院里",
+              "calls": [
+                {
+                  "name": "furniture_type_add",
+                  "input": {
+                    "type": "round-stone-table",
+                    "name": "圆形石桌",
+                    "group": "户外",
+                    "size": {
+                      "w": 900,
+                      "d": 900,
+                      "h": 750
+                    },
+                    "recipe": {
+                      "params": {
+                        "mat": {
+                          "type": "string",
+                          "format": "material",
+                          "default": "stone",
+                          "enum": ["stone", "stoneDark", "marble", "slate", "cement"],
+                          "enumTitles": [
+                            {
+                              "zh": "青石",
+                              "en": "Stone"
+                            },
+                            {
+                              "zh": "深色石",
+                              "en": "Dark stone"
+                            },
+                            {
+                              "zh": "大理石",
+                              "en": "Marble"
+                            },
+                            {
+                              "zh": "板岩",
+                              "en": "Slate"
+                            },
+                            {
+                              "zh": "水泥",
+                              "en": "Cement"
+                            }
+                          ],
+                          "title": {
+                            "zh": "石材",
+                            "en": "Stone"
+                          },
+                          "description": "Material of the whole table"
+                        },
+                        "thick": {
+                          "type": "number",
+                          "default": 80,
+                          "minimum": 40,
+                          "maximum": 150,
+                          "title": {
+                            "zh": "桌面厚度",
+                            "en": "Top thickness"
+                          },
+                          "description": "Tabletop thickness in mm"
+                        }
+                      },
+                      "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+                    }
+                  }
+                },
+                {
+                  "name": "furniture_add",
+                  "input": {
+                    "level": "一层",
+                    "type": "round-stone-table",
+                    "position": [13000, 11450],
+                    "space": "庭院·透水砖",
+                    "rotation": 0,
+                    "size": null,
+                    "elevation": null,
+                    "label": null
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个圆形石桌，放在庭院里",
+      "tools": 71,
+      "hash": "74e633ef49ff2d1f",
+      "answer": {
+        "text": "圆形石桌做好了，已放在庭院·透水砖东侧那段空地上（直径 90 厘米、高 75 厘米，青石材质）。\n\n- 庭院西边原来已有一张方形石桌和四个石凳，新桌子放在东侧，没有挤在一起；\n- 石材（青石、深色石、大理石、板岩、水泥）和桌面厚度都可以在属性里换；位置不合适可以直接在平面上拖动。",
+        "tool_calls": []
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "5424846113c53393",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_save",
+            "arguments": {
+              "widget": "room-areas",
+              "library": null,
+              "forMe": null
+            }
+          },
+          {
+            "name": "widget_save",
+            "arguments": {
+              "widget": "autumn-leaves",
+              "library": null,
+              "forMe": true
+            }
+          },
+          {
+            "name": "library_list",
+            "arguments": {}
+          }
+        ]
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "63189e59c883c4f0",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "library_save",
+            "arguments": {
+              "look": "look-1",
+              "library": "我的家具"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "a7883685c38810e7",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "look_import",
+            "arguments": {
+              "name": "圆形石桌",
+              "for": ["furniture:round-stone-table"],
+              "recipe": {
+                "params": {
+                  "mat": {
+                    "type": "string",
+                    "format": "material",
+                    "default": "stone",
+                    "enum": ["stone", "stoneDark", "marble", "slate", "cement"],
+                    "enumTitles": [
+                      {
+                        "zh": "青石",
+                        "en": "Stone"
+                      },
+                      {
+                        "zh": "深色石",
+                        "en": "Dark stone"
+                      },
+                      {
+                        "zh": "大理石",
+                        "en": "Marble"
+                      },
+                      {
+                        "zh": "板岩",
+                        "en": "Slate"
+                      },
+                      {
+                        "zh": "水泥",
+                        "en": "Cement"
+                      }
+                    ],
+                    "title": {
+                      "zh": "石材",
+                      "en": "Stone"
+                    },
+                    "description": "Material of the whole table"
+                  },
+                  "thick": {
+                    "type": "number",
+                    "default": 80,
+                    "minimum": 40,
+                    "maximum": 150,
+                    "title": {
+                      "zh": "桌面厚度",
+                      "en": "Top thickness"
+                    },
+                    "description": "Tabletop thickness in mm"
+                  }
+                },
+                "script": "(\n  $r := $min([$w, $d]) / 2;\n  $t := $thick;\n  $stem := $h - $t - 80;\n  [\n    $cylinder($r * 0.5, 80, [0, 40, 0], $mat),\n    $cylinder($r * 0.26, $stem, [0, 80 + $stem / 2, 0], $mat, {\"r2\": $r * 0.2}),\n    $cylinder($r, $t, [0, $h - $t / 2, 0], $mat)\n  ]\n)"
+              },
+              "types": {
+                "round-stone-table": {
+                  "name": "圆形石桌",
+                  "group": "户外",
+                  "size": {
+                    "w": 900,
+                    "d": 900,
+                    "h": 750
+                  }
+                }
+              },
+              "source": {
+                "library": "lib9464fc5d03d349e0bb54",
+                "look": "lkb7771a35e93c41c5b6de",
+                "version": "1.0.0"
+              },
+              "replace": "look-1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "把这三个都保存起来，以后别的方案也要用；落叶效果我每个方案都要",
+      "tools": 71,
+      "hash": "2292109e5230f3e3",
+      "answer": {
+        "text": "三样都保存好了，以后在别的方案里也能直接用。\n\n- 「房间面积标注」工具：存进了你的组件库「我的组件」，在其他方案里从 ⋯ 菜单的「小组件」添加即可；\n- 「秋天落叶」效果：同样存进「我的组件」，并设为你自己的效果，以后打开任何方案都会自动出现（落在名字带“庭院”的空间上）；\n- 「圆形石桌」：存进了你的家具库「我的家具」，这个方案里的石桌也已和库里那份关联起来。",
+        "tool_calls": []
+      }
+    }
+  ]
+}

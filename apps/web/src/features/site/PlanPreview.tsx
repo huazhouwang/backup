@@ -1,11 +1,11 @@
-/** Read-only plan thumbnail (landing page, plan list) */
+/** Read-only plan thumbnail (landing page, plan list); `children` draw over it in plan millimetres (a widget's items on a library page) */
 import type { Project } from '@opensu/core';
 import { useMemo } from 'react';
 import { levelShapes } from '@/graphics/plan/plan-geometry';
 import { m } from '@/lib/i18n';
 import { useBuildsVersion } from '@/lib/builds';
 
-export function PlanPreview({ project, level, className }: { project: Project; level?: string; className?: string }) {
+export function PlanPreview({ project, level, className, children }: { project: Project; level?: string; className?: string; children?: React.ReactNode }) {
   const lv = level ?? project.levels.find(l => !l.roof)?.id ?? 'L1';
   const builds = useBuildsVersion();
   const s = useMemo(() => levelShapes(project, lv), [project, lv, builds]);
@@ -40,6 +40,7 @@ export function PlanPreview({ project, level, className }: { project: Project; l
             </text>
           </g>
         ))}
+      {children}
     </svg>
   );
 }

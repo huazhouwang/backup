@@ -1,11 +1,13 @@
 /**
- * A widget library's page, the same for every library: what its file says about it, then a card per widget with its description,
- * version, what it may do and its parameters. Export downloads the file; the owner and editors manage it from the sheet.
+ * A widget library's page, the same for every library: what its file says about it, then a card per widget with a preview of it
+ * at work on the sample house, its description, version, what it may do and its parameters. Export downloads the file; the owner and editors manage it from the sheet.
  */
-import type { WidgetDef } from '@opensu/core';
+import type { LibraryOrigin, WidgetDef } from '@opensu/core';
 import { useQuery } from '@tanstack/react-query';
 import { getRouteApi, Link } from '@tanstack/react-router';
-import { ArrowLeftIcon, DownloadIcon, SettingsIcon } from 'lucide-react';
+import { ArrowLeftIcon, CopyIcon, DownloadIcon, SettingsIcon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { LibraryBadge } from '@/features/looks/LibraryBadge';
 import { LibraryAdmin } from '@/features/looks/LibraryManage';
 import { SiteFooter, SiteHeader } from '@/features/site/SiteHeader';
@@ -17,9 +19,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { m, uiName } from '@/lib/i18n';
-import { downloadWidgetLibrary, getWidgetLibrary } from '@/lib/widget-libraries';
+import { useMe } from '@/lib/query';
+import { createWidgetLibrary, downloadWidgetLibrary, getWidgetLibrary, listWidgetLibraries, saveWidget } from '@/lib/widget-libraries';
 import type { WidgetLibraryDetail } from '@/shared/widgets';
 import { permissionLabel } from './labels';
+import { WidgetPreview } from './WidgetPreview';
 
 const route = getRouteApi('/widgets/$libraryId');
 
@@ -54,6 +58,9 @@ function WidgetLibrary({ detail }: { detail: WidgetLibraryDetail }) {
   const lib = detail.library;
   const widgets = Object.entries(lib.widgets);
   const modules = Object.entries(lib.canvasModules ?? {});
+  // Who wrote it decides its realm in the sandbox, for the previews
+  const owner = detail.members.find(x => x.role === 'owner')?.user_id ?? lib.id;
+  const origin: LibraryOrigin = detail.builtin ? { origin: 'builtin', id: lib.id } : { origin: 'team', owner, id: lib.id };
   const facts = [
     `v${lib.version}`,
     lib.author && m.libraries_by({ author: lib.author }),
@@ -107,7 +114,7 @@ function WidgetLibrary({ detail }: { detail: WidgetLibraryDetail }) {
         <ul className="grid gap-4 md:grid-cols-2">
           {widgets.map(([id, w]) => (
             <li key={id}>
-              <WidgetCard id={id} def={w} />
+              <WidgetCard id={id} def={w} origin={origin} remix={detail.role !== 'owner'} />
             </li>
           ))}
         </ul>
@@ -136,18 +143,44 @@ function WidgetLibrary({ detail }: { detail: WidgetLibraryDetail }) {
   );
 }
 
-function WidgetCard({ id, def }: { id: string; def: WidgetDef }) {
+/** Copy a widget into the user's own widget library (one made when they have none), to change it there or install it anywhere */
+async function remixWidget(id: string, def: WidgetDef) {
+  const own = (await listWidgetLibraries()).find(l => l.role === 'owner' && !l.builtin);
+  const lib = own ?? { id: (await createWidgetLibrary(m.widgets_default_library())).id, name: m.widgets_default_library() };
+  const r = await saveWidget(lib.id, id, def);
+  toast.success(m.widgets_saved({ library: lib.name, version: r.version }));
+}
+
+function WidgetCard({ id, def, origin, remix }: { id: string; def: WidgetDef; origin: LibraryOrigin; remix: boolean }) {
+  const me = useMe();
+  const [busy, setBusy] = useState(false);
   const params = Object.entries(def.params ?? {});
   return (
     <Card size="sm" data-widget-card={id}>
       <CardHeader>
         <CardTitle>{uiName(def.name)}</CardTitle>
-        <CardAction>
+        <CardAction className="flex items-center gap-2">
           <Badge variant="secondary">v{def.version}</Badge>
+          {remix && me.data?.user && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                remixWidget(id, def)
+                  .catch(e => toast.error((e as Error).message))
+                  .finally(() => setBusy(false));
+              }}
+            >
+              <CopyIcon /> {m.widget_remix()}
+            </Button>
+          )}
         </CardAction>
         <CardDescription className="whitespace-pre-line">{def.description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
+        <WidgetPreview origin={origin} id={id} def={def} />
         <p className="text-xs text-muted-foreground">
           {m.widget_libraries_permissions({ list: def.permissions.map(permissionLabel).join(m.panels_list_separator()) })}
         </p>

@@ -8,10 +8,10 @@
     "en": "Basic widgets"
   },
   "description": {
-    "zh": "画布上常用的辅助工具：轴网和坐标系",
-    "en": "Common helpers for the canvas: a structural grid and a coordinate system"
+    "zh": "常用的画布工具和 3D 效果：轴网、坐标系，下雨、下雪、雾、萤火虫和夜景",
+    "en": "Common canvas tools and 3D effects: a structural grid, a coordinate system, rain, snow, fog, fireflies and night"
   },
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "OpenSU",
   "license": "CC-BY-4.0",
   "widgets": {
@@ -147,7 +147,7 @@
         "zh": "下雨",
         "en": "Rain"
       },
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Rain falling over a space (or the whole site) in the 3D view, under an overcast sky with a little mist. Tune with intensity (light drizzle to downpour) and wind.",
       "permissions": [
         "draw"
@@ -160,7 +160,7 @@
             "zh": "范围",
             "en": "Where"
           },
-          "description": "A space by name or id (e.g. the courtyard); empty for the whole site"
+          "description": "Spaces by id or name, or words in their names (庭院 covers every space whose name has it); empty for the whole site"
         },
         "intensity": {
           "type": "number",
@@ -185,14 +185,14 @@
           "description": "Wind from west to east, m/s (negative blows west)"
         }
       },
-      "script": "// Where an effect goes: a space by name or id (its level and outline), else the whole site\nfunction place(project, which) {\n  const levels = project.levels.slice().sort((a, b) => a.elevation - b.elevation);\n  const ground = levels[0];\n  const top = Math.max(...levels.map(l => l.elevation + (l.height || 3000)));\n  const s = !which ? null : project.spaces.find(x => x.name === which || x.id === which) || project.spaces.filter(x => x.name.includes(which)).sort((a, b) => areaOf(b.shape[0].outer) - areaOf(a.shape[0].outer))[0];\n  if (s) {\n    const outer = s.shape.reduce((a, b) => (b.outer.length > a.outer.length ? b : a)).outer;\n    const lv = project.levels.find(l => l.id === s.level);\n    return { outline: outer, level: s.level, top: top - lv.elevation + 3000, area: areaOf(outer) };\n  }\n  const outer = project.site.boundary;\n  return { outline: outer, level: ground.id, top: top - ground.elevation + 3000, area: areaOf(outer) };\n}\nfunction areaOf(r) {\n  let a = 0;\n  for (let i = 0; i < r.length; i++) { const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length]; a += x0 * y1 - x1 * y0; }\n  return Math.abs(a) / 2 / 1e6;\n}\n\nfunction widget(project, params, ctx) {\n  const p = place(project, params.space);\n  const count = Math.min(20000, Math.max(50, Math.round(p.area * 80 * params.intensity)));\n  return [\n    { type: 'particles', outline: p.outline, level: p.level, from: 0, to: p.top, count, fall: 7 + 3 * params.intensity, drift: 0.1, wind: [params.wind, 0], size: 400, shape: 'streak', tone: 'water' },\n    { type: 'sky', mood: 'overcast' },\n    { type: 'fog', density: 0.1 + 0.25 * params.intensity, tone: 'mist' },\n  ];\n}\n"
+      "script": "// Where an effect goes: the spaces asked for (by id, by name, else every space whose name has the words), each with its level\n// and outline; else the whole site\nfunction places(project, which) {\n  const levels = project.levels.slice().sort((a, b) => a.elevation - b.elevation);\n  const top = Math.max(...levels.map(l => l.elevation + (l.height || 3000)));\n  const exact = which ? project.spaces.filter(x => x.id === which || x.name === which) : [];\n  const found = exact.length ? exact : which ? project.spaces.filter(x => x.name.includes(which)) : [];\n  if (found.length)\n    return found.map(s => {\n      const outer = s.shape.reduce((a, b) => (areaOf(b.outer) > areaOf(a.outer) ? b : a)).outer;\n      const lv = project.levels.find(l => l.id === s.level);\n      return { outline: outer, level: s.level, top: top - lv.elevation + 3000, area: areaOf(outer) };\n    });\n  const ground = levels[0];\n  const outer = project.site.boundary;\n  return [{ outline: outer, level: ground.id, top: top - ground.elevation + 3000, area: areaOf(outer) }];\n}\nfunction areaOf(r) {\n  let a = 0;\n  for (let i = 0; i < r.length; i++) { const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length]; a += x0 * y1 - x1 * y0; }\n  return Math.abs(a) / 2 / 1e6;\n}\nfunction widget(project, params, ctx) {\n  const ps = places(project, params.space);\n  const total = ps.reduce((n, p) => n + p.area, 0);\n  const budget = Math.min(20000, Math.max(50, Math.round(total * 80 * params.intensity)));\n  return [\n    ...ps.map(p => ({ type: 'particles', outline: p.outline, level: p.level, from: 0, to: p.top, count: Math.max(10, Math.round((budget * p.area) / total)), fall: 7 + 3 * params.intensity, drift: 0.1, wind: [params.wind, 0], size: 400, shape: 'streak', tone: 'water' })),\n    { type: 'sky', mood: 'overcast' },\n    { type: 'fog', density: 0.1 + 0.25 * params.intensity, tone: 'mist' },\n  ];\n}\n"
     },
     "snow": {
       "name": {
         "zh": "下雪",
         "en": "Snow"
       },
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Snow drifting down over a space (or the whole site) in the 3D view, under an overcast sky. Tune with intensity and wind.",
       "permissions": [
         "draw"
@@ -205,7 +205,7 @@
             "zh": "范围",
             "en": "Where"
           },
-          "description": "A space by name or id (e.g. the courtyard); empty for the whole site"
+          "description": "Spaces by id or name, or words in their names (庭院 covers every space whose name has it); empty for the whole site"
         },
         "intensity": {
           "type": "number",
@@ -230,7 +230,7 @@
           "description": "Wind from west to east, m/s (negative blows west)"
         }
       },
-      "script": "// Where an effect goes: a space by name or id (its level and outline), else the whole site\nfunction place(project, which) {\n  const levels = project.levels.slice().sort((a, b) => a.elevation - b.elevation);\n  const ground = levels[0];\n  const top = Math.max(...levels.map(l => l.elevation + (l.height || 3000)));\n  const s = !which ? null : project.spaces.find(x => x.name === which || x.id === which) || project.spaces.filter(x => x.name.includes(which)).sort((a, b) => areaOf(b.shape[0].outer) - areaOf(a.shape[0].outer))[0];\n  if (s) {\n    const outer = s.shape.reduce((a, b) => (b.outer.length > a.outer.length ? b : a)).outer;\n    const lv = project.levels.find(l => l.id === s.level);\n    return { outline: outer, level: s.level, top: top - lv.elevation + 3000, area: areaOf(outer) };\n  }\n  const outer = project.site.boundary;\n  return { outline: outer, level: ground.id, top: top - ground.elevation + 3000, area: areaOf(outer) };\n}\nfunction areaOf(r) {\n  let a = 0;\n  for (let i = 0; i < r.length; i++) { const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length]; a += x0 * y1 - x1 * y0; }\n  return Math.abs(a) / 2 / 1e6;\n}\n\nfunction widget(project, params, ctx) {\n  const p = place(project, params.space);\n  const count = Math.min(20000, Math.max(50, Math.round(p.area * 40 * params.intensity)));\n  return [\n    { type: 'particles', outline: p.outline, level: p.level, from: 0, to: p.top, count, fall: 0.8, drift: 0.35, wind: [params.wind, 0], size: 70, shape: 'flake', tone: 'snow' },\n    { type: 'sky', mood: 'overcast' },\n    { type: 'fog', density: 0.15 + 0.2 * params.intensity, tone: 'mist' },\n  ];\n}\n"
+      "script": "// Where an effect goes: the spaces asked for (by id, by name, else every space whose name has the words), each with its level\n// and outline; else the whole site\nfunction places(project, which) {\n  const levels = project.levels.slice().sort((a, b) => a.elevation - b.elevation);\n  const top = Math.max(...levels.map(l => l.elevation + (l.height || 3000)));\n  const exact = which ? project.spaces.filter(x => x.id === which || x.name === which) : [];\n  const found = exact.length ? exact : which ? project.spaces.filter(x => x.name.includes(which)) : [];\n  if (found.length)\n    return found.map(s => {\n      const outer = s.shape.reduce((a, b) => (areaOf(b.outer) > areaOf(a.outer) ? b : a)).outer;\n      const lv = project.levels.find(l => l.id === s.level);\n      return { outline: outer, level: s.level, top: top - lv.elevation + 3000, area: areaOf(outer) };\n    });\n  const ground = levels[0];\n  const outer = project.site.boundary;\n  return [{ outline: outer, level: ground.id, top: top - ground.elevation + 3000, area: areaOf(outer) }];\n}\nfunction areaOf(r) {\n  let a = 0;\n  for (let i = 0; i < r.length; i++) { const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length]; a += x0 * y1 - x1 * y0; }\n  return Math.abs(a) / 2 / 1e6;\n}\nfunction widget(project, params, ctx) {\n  const ps = places(project, params.space);\n  const total = ps.reduce((n, p) => n + p.area, 0);\n  const budget = Math.min(20000, Math.max(50, Math.round(total * 40 * params.intensity)));\n  return [\n    ...ps.map(p => ({ type: 'particles', outline: p.outline, level: p.level, from: 0, to: p.top, count: Math.max(10, Math.round((budget * p.area) / total)), fall: 0.8, drift: 0.35, wind: [params.wind, 0], size: 70, shape: 'flake', tone: 'snow' })),\n    { type: 'sky', mood: 'overcast' },\n    { type: 'fog', density: 0.15 + 0.2 * params.intensity, tone: 'mist' },\n  ];\n}\n"
     },
     "fog": {
       "name": {
@@ -262,7 +262,7 @@
         "zh": "萤火虫",
         "en": "Fireflies"
       },
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Fireflies drifting low over a space (best a yard or garden) at dusk in the 3D view. Tune with intensity.",
       "permissions": [
         "draw"
@@ -275,7 +275,7 @@
             "zh": "范围",
             "en": "Where"
           },
-          "description": "A space by name or id (e.g. the courtyard); empty for the whole site"
+          "description": "Spaces by id or name, or words in their names (庭院 covers every space whose name has it); empty for the whole site"
         },
         "intensity": {
           "type": "number",
@@ -289,7 +289,7 @@
           "description": "0.05 (light) to 1 (heavy)"
         }
       },
-      "script": "// Where an effect goes: a space by name or id (its level and outline), else the whole site\nfunction place(project, which) {\n  const levels = project.levels.slice().sort((a, b) => a.elevation - b.elevation);\n  const ground = levels[0];\n  const top = Math.max(...levels.map(l => l.elevation + (l.height || 3000)));\n  const s = !which ? null : project.spaces.find(x => x.name === which || x.id === which) || project.spaces.filter(x => x.name.includes(which)).sort((a, b) => areaOf(b.shape[0].outer) - areaOf(a.shape[0].outer))[0];\n  if (s) {\n    const outer = s.shape.reduce((a, b) => (b.outer.length > a.outer.length ? b : a)).outer;\n    const lv = project.levels.find(l => l.id === s.level);\n    return { outline: outer, level: s.level, top: top - lv.elevation + 3000, area: areaOf(outer) };\n  }\n  const outer = project.site.boundary;\n  return { outline: outer, level: ground.id, top: top - ground.elevation + 3000, area: areaOf(outer) };\n}\nfunction areaOf(r) {\n  let a = 0;\n  for (let i = 0; i < r.length; i++) { const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length]; a += x0 * y1 - x1 * y0; }\n  return Math.abs(a) / 2 / 1e6;\n}\n\nfunction widget(project, params, ctx) {\n  const p = place(project, params.space);\n  const count = Math.min(2000, Math.max(20, Math.round(p.area * 3 * params.intensity)));\n  return [\n    { type: 'particles', outline: p.outline, level: p.level, from: 200, to: 2200, count, fall: 0, drift: 0.25, size: 140, shape: 'glow', tone: 'glow' },\n    { type: 'sky', mood: 'dusk' },\n  ];\n}\n"
+      "script": "// Where an effect goes: the spaces asked for (by id, by name, else every space whose name has the words), each with its level\n// and outline; else the whole site\nfunction places(project, which) {\n  const levels = project.levels.slice().sort((a, b) => a.elevation - b.elevation);\n  const top = Math.max(...levels.map(l => l.elevation + (l.height || 3000)));\n  const exact = which ? project.spaces.filter(x => x.id === which || x.name === which) : [];\n  const found = exact.length ? exact : which ? project.spaces.filter(x => x.name.includes(which)) : [];\n  if (found.length)\n    return found.map(s => {\n      const outer = s.shape.reduce((a, b) => (areaOf(b.outer) > areaOf(a.outer) ? b : a)).outer;\n      const lv = project.levels.find(l => l.id === s.level);\n      return { outline: outer, level: s.level, top: top - lv.elevation + 3000, area: areaOf(outer) };\n    });\n  const ground = levels[0];\n  const outer = project.site.boundary;\n  return [{ outline: outer, level: ground.id, top: top - ground.elevation + 3000, area: areaOf(outer) }];\n}\nfunction areaOf(r) {\n  let a = 0;\n  for (let i = 0; i < r.length; i++) { const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length]; a += x0 * y1 - x1 * y0; }\n  return Math.abs(a) / 2 / 1e6;\n}\nfunction widget(project, params, ctx) {\n  const ps = places(project, params.space);\n  const total = ps.reduce((n, p) => n + p.area, 0);\n  const budget = Math.min(2000, Math.max(20, Math.round(total * 3 * params.intensity)));\n  return [\n    ...ps.map(p => ({ type: 'particles', outline: p.outline, level: p.level, from: 200, to: 2200, count: Math.max(5, Math.round((budget * p.area) / total)), fall: 0, drift: 0.25, size: 140, shape: 'glow', tone: 'glow' })),\n    { type: 'sky', mood: 'dusk' },\n  ];\n}\n"
     },
     "night": {
       "name": {
