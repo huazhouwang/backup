@@ -1,0 +1,117 @@
+{
+  "exchanges": [
+    {
+      "user": "老人房一扩到 12.5 平",
+      "tools": 67,
+      "hash": "69db2e824407047a",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "batch",
+            "arguments": {
+              "label": "老人房一扩到 12.5 m²",
+              "calls": [
+                {
+                  "name": "space_set_area",
+                  "input": {
+                    "space": "一层·老人房一",
+                    "area": 12.5,
+                    "wall": null
+                  }
+                },
+                {
+                  "name": "constraint_add",
+                  "input": {
+                    "type": "size-target",
+                    "targets": ["一层·老人房一"],
+                    "params": {
+                      "area": 12.5
+                    },
+                    "hard": false,
+                    "source": "user",
+                    "note": "老人房一扩到 12.5 平"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "老人房一扩到 12.5 平",
+      "tools": 67,
+      "hash": "233087d58cf23a78",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "get_object",
+            "arguments": {
+              "ref": "一层·老人房一",
+              "id": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "老人房一扩到 12.5 平",
+      "tools": 67,
+      "hash": "b1c7d6ef51613835",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "space_set_area",
+            "arguments": {
+              "space": "L1-s15",
+              "area": 12.5,
+              "wall": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "老人房一扩到 12.5 平",
+      "tools": 67,
+      "hash": "d8dd6a2b07ab5d7e",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "constraint_add",
+            "arguments": {
+              "type": "size-target",
+              "targets": ["L1-s15"],
+              "params": {
+                "area": 12.5
+              },
+              "hard": false,
+              "source": "user",
+              "note": "老人房一扩到 12.5 平"
+            }
+          },
+          {
+            "name": "view_focus",
+            "arguments": {
+              "ids": ["L1-s15", "L1-s14", "L1-w24"],
+              "highlight": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "老人房一扩到 12.5 平",
+      "tools": 67,
+      "hash": "5497987a650859b8",
+      "answer": {
+        "text": "老人房一现在是 12.5 平方米，比原来大了 0.5 平方米；隔壁的老人房二相应从 16.95 缩小到 16.44 平方米。\n\n- 做法：把两间房之间的隔墙「老人房二东墙」向西挪了 13 厘米，衣柜跟着墙一起移动。\n- 我把“老人房一约 12.5 平”记成了一条要求，之后再改其他地方时会尽量保持这个面积。",
+        "tool_calls": []
+      }
+    }
+  ]
+}

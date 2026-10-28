@@ -17,7 +17,8 @@ export default defineConfig({
     launchOptions: { executablePath: process.env.CHROMIUM ?? '/opt/pw-browsers/chromium', args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] },
   },
   webServer: [
-    { command: 'npm run fake-llm', port: 8787, reuseExistingServer: true },
+    // E2E_MODEL=bridge: a Claude subagent answers as the model (issue 184); otherwise the scripted fake model
+    { command: process.env.E2E_MODEL === 'bridge' ? 'node e2e/model-bridge.mjs serve' : 'npm run fake-llm', port: 8787, reuseExistingServer: true },
     { command: 'npm run dev > dev.log 2>&1', url: 'http://localhost:3000/api/me', reuseExistingServer: true, timeout: 120_000 },
   ],
 });

@@ -46,6 +46,20 @@ npm run e2e                            # end to end (Playwright Test, e2e/*.spec
 npx playwright test permissions        # one file; the servers above are reused, or started by the config when not running
 ```
 
+### Agent tests with a real model, no API key
+
+The agent's model can be played by a Claude subagent through the test model bridge (`e2e/model-bridge.mjs`, issue 184), an OpenAI-compatible server that queues each request for whoever answers it:
+
+```sh
+cd apps/web
+E2E_MODEL=bridge npx playwright test agent-bridge   # live: requests wait in e2e/.bridge/ and the exchange is recorded to e2e/cassettes/
+node e2e/model-bridge.mjs next                      # (the subagent) wait for a request and print it, with the path of its full JSON
+echo '{"text":"…","tool_calls":[{"name":"…","arguments":{}}]}' | node e2e/model-bridge.mjs reply <id> -
+npx playwright test agent-bridge                    # replay: answers come from the cassette; a different conversation fails loudly
+```
+
+A test that uses the bridge starts its own server (`serve(port, { mode, cassette })`), live when `E2E_MODEL=bridge` and replaying otherwise, so CI needs neither a key nor a subagent. Re-record a cassette when the prompt or the tools change enough for the conversation to differ.
+
 ## Deployment (Cloudflare Workers free plan, via GitHub Actions)
 
 `.github/workflows/deploy.yml`:
