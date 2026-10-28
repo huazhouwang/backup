@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import type { CreditState } from '@/shared/credits';
 import { useNavigate } from '@tanstack/react-router';
 import { DownloadIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -41,6 +42,7 @@ export function SettingsPage() {
     if (me.isSuccess && !user) void navigate({ to: '/login', search: { redirect: '/settings' } });
   }, [me.isSuccess, user]);
   const models = useQuery({ queryKey: ['models'], queryFn: () => api<Models>('/models'), enabled: !!user });
+  const credits = useQuery({ queryKey: ['credits'], queryFn: () => api<CreditState>('/me/credits'), enabled: !!user });
 
   const deleteAccount = async () => {
     const r = await authClient.deleteUser();
@@ -66,13 +68,30 @@ export function SettingsPage() {
         <section className="space-y-4">
           <div>
             <h2 className="font-medium">{m.settings_models_title()}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{m.settings_models_description()}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {credits.data?.available ? m.settings_models_description_platform() : m.settings_models_description()}
+            </p>
           </div>
           {models.data?.keys.map(k => (
             <KeyCard key={k.id} k={k} data={models.data} />
           ))}
           {models.data && <AddKey providers={models.data.providers} />}
         </section>
+
+        {credits.data?.available && (
+          <>
+            <Separator />
+            <section className="space-y-2" aria-label={m.settings_credits_title()}>
+              <h2 className="font-medium">{m.settings_credits_title()}</h2>
+              <p className="text-sm tabular-nums">{m.settings_credits_balance({ balance: credits.data.balance, allowance: credits.data.allowance })}</p>
+              <p className="text-sm text-muted-foreground">
+                {credits.data.resetsAt
+                  ? m.settings_credits_monthly({ date: new Date(credits.data.resetsAt).toLocaleDateString(getLocale()) })
+                  : m.settings_credits_guest()}
+              </p>
+            </section>
+          </>
+        )}
 
         <Separator />
         <section className="space-y-3">
