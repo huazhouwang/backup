@@ -1,5 +1,5 @@
 /** What the capabilities reach outside the project through the editor: look libraries, look previews and comments, via the API */
-import type { LibrariesHost } from '../agent/library-capabilities';
+import type { LibrariesHost, WidgetsHost } from '../agent/library-capabilities';
 import type { LooksHost } from '../agent/look-capabilities';
 import type { RendersHost } from '../agent/render-capabilities';
 import type { CommentsHost } from '../agent/view-capabilities';
@@ -7,6 +7,8 @@ import { api } from '@/lib/api';
 import { m } from '@/lib/i18n';
 import { getLibrary, listLibraries, saveToLibrary } from '@/lib/libraries';
 import { queryClient } from '@/lib/query';
+import { createWidgetLibrary, listWidgetLibraries, saveWidget } from '@/lib/widget-libraries';
+import { installMyWidget, type MyWidgets } from '@opensu/core';
 
 /** Capabilities that add or change a look: the chat shows it with a preview */
 export const LOOK_EDITS = new Set(['look_add', 'look_update', 'furniture_type_add']);
@@ -43,3 +45,23 @@ export function rendersHost(projectId: string): RendersHost {
     },
   };
 }
+
+/** Saving the design's own widgets for reuse (issue 204): into the user's widget library (one made when they have none), and for them */
+export const widgetsHost: WidgetsHost = {
+  async save(id, def, library) {
+    const libs = (await listWidgetLibraries()).filter(l => !l.builtin && l.role !== 'viewer');
+    const target = library ? libs.find(l => l.id === library) : libs[0];
+    if (library && !target) throw new Error(m.agent_err_widget_library({ library }));
+    const lib = target ?? { id: (await createWidgetLibrary(m.widgets_default_library())).id, name: m.widgets_default_library() };
+    const r = await saveWidget(lib.id, id, def);
+    // The library's new version, registered so it can be installed at once
+    await queryClient.refetchQueries({ queryKey: ['widget-library-files'] });
+    return { library: lib.id, libraryName: lib.name, widget: r.widget, version: r.version };
+  },
+  async installForMe(library, widget, params, language) {
+    const set = await api<MyWidgets>('/me/widgets');
+    const next = installMyWidget(set, library, widget, language, params);
+    await api('/me/widgets', { method: 'PUT', json: next });
+    queryClient.setQueriesData({ queryKey: ['my-widgets'] }, next);
+  },
+};
