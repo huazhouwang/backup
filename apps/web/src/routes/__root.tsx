@@ -17,6 +17,7 @@ import { type ReactNode, Suspense, useEffect, useRef } from 'react'
 import { MovedNotice } from '../app/MovedNotice'
 import { TabBar } from '../app/TabBar'
 import { UpdatePrompt } from '../app/UpdatePrompt'
+import { SoundKeeper } from '../features/sounds/SoundKeeper'
 import { getLocale } from '../lib/i18n'
 import { animatePageChanges } from '../lib/page-change'
 import { splashLinks } from '../lib/splash'
@@ -127,6 +128,7 @@ function RootLayout() {
         <Toaster />
         {hydrated && <UpdatePrompt />}
         {hydrated && <MovedNotice />}
+        {hydrated && <SoundKeeper />}
         {hydrated && (
           <Suspense>
             <SyncRunner />

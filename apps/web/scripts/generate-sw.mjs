@@ -28,6 +28,16 @@ const { count, size, warnings } = await generateSW({
   sourcemap: false,
   // Push notifications for reminders (#41).
   importScripts: ['push-sw.js'],
+  // Soothing sounds aren't precached (megabytes few people play); the player keeps the ones
+  // played in this cache (features/sounds/player.ts), served from it with the ranges an
+  // audio element asks for, so they play at night without a connection.
+  runtimeCaching: [
+    {
+      urlPattern: /\/sounds\/[\w-]+\.m4a$/,
+      handler: 'CacheFirst',
+      options: { cacheName: 'sounds', rangeRequests: true, cacheableResponse: { statuses: [200] } },
+    },
+  ],
 })
 
 for (const warning of warnings) console.warn(warning)
