@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RenderGallery } from '@/features/renders/RenderGallery';
+import { ShareControls, useShowcase } from '@/features/showcase/ShareControls';
 import { listRenders, renderConfig, renderStyle, shotsFor, useRenderJob } from '@/features/renders/renders';
 import { m, uiName } from '@/lib/i18n';
 import { can } from '@/shared/roles';
@@ -37,6 +38,7 @@ export function StylesPanel() {
   const config = useQuery({ queryKey: ['render-config'], queryFn: renderConfig });
   const renders = useQuery({ queryKey: ['renders', projectId], queryFn: () => listRenders(projectId) });
   const job = useRenderJob();
+  const showcase = useShowcase(projectId);
   const [picked, setPicked] = useState(STYLE_PRESETS[0].id);
   const [words, setWords] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +101,13 @@ export function StylesPanel() {
           )}
         </section>
       )}
-      <RenderGallery projectId={projectId} renders={renders.data ?? []} editable={editable} />
+      <ShareControls projectId={projectId} owner={role === 'owner' && !readOnly} count={renders.data?.length ?? 0} />
+      <RenderGallery
+        projectId={projectId}
+        renders={renders.data ?? []}
+        editable={editable}
+        share={showcase.data ? { hero: showcase.data.hero, owner: role === 'owner' && !readOnly } : null}
+      />
     </div>
   );
 }

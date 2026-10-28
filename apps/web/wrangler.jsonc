@@ -6,8 +6,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "upload_source_maps": false,
-  // Pages are served directly by the static assets layer (SPA shell); only /api/* hits the Worker, saving CPU
-  "assets": { "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
+  // Pages are served directly by the static assets layer (SPA shell); only /api/* hits the Worker, saving CPU, and share pages
+  // (/h/*), whose link previews (Open Graph) the Worker writes into the shell
+  "assets": { "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": ["/api/*", "/h/*"] },
   "d1_databases": [{ "binding": "DB", "database_name": "plinth", "database_id": "026f7b9e-dea9-49d1-b023-f2082b51e44d", "migrations_dir": "migrations" }],
   "ratelimits": [
     { "name": "RL_AUTH", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },

@@ -6,6 +6,7 @@ interface __BaseEnv_Env {
 	RL_AUTH: RateLimit;
 	RL_CHAT: RateLimit;
 	RL_API: RateLimit;
+	ASSETS: Fetcher;
 	APP_URL?: string;
 	BETTER_AUTH_SECRET: string;
 	KEY_ENCRYPTION_SECRET: string;

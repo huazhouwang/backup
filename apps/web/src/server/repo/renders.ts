@@ -6,13 +6,13 @@ export type RenderRow = RenderInfo;
 
 const COLUMNS = 'id, project_id, user_id, style, style_name, shot, shot_name, provider, public, created_at';
 
-export async function addRender(r: Omit<RenderRow, 'id' | 'created_at' | 'public'> & { image: string; source: string }) {
+export async function addRender(r: Omit<RenderRow, 'id' | 'created_at'> & { image: string; source: string }) {
   const id = newId('r');
   await db()
     .prepare(
-      'insert into render (id, project_id, user_id, style, style_name, shot, shot_name, provider, image, source, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'insert into render (id, project_id, user_id, style, style_name, shot, shot_name, provider, image, source, public, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     )
-    .bind(id, r.project_id, r.user_id, r.style, r.style_name, r.shot, r.shot_name, r.provider, r.image, r.source, now())
+    .bind(id, r.project_id, r.user_id, r.style, r.style_name, r.shot, r.shot_name, r.provider, r.image, r.source, r.public, now())
     .run();
   return (await getRender(id))!;
 }

@@ -55,7 +55,9 @@ projectRoutes.post('/renders', minRole('editor'), async c => {
   if (everyone >= creditSettings().dailyCap) throw new HTTPException(503, { message: m.server_err_platform_busy() });
   const image = await provider.render({ ...b, passes: b.passes as Record<string, string> });
   await repo.recordUsage({ userId: user.id, projectId: id, modelConfigId: null, input: 0, output: 0, credits: provider.credits });
+  // A published design's new images join its share page
   const row = await repo.addRender({
+    public: (await repo.showcaseOf(id)) ? 1 : 0,
     project_id: id,
     user_id: user.id,
     style: b.style,
@@ -80,16 +82,19 @@ projectRoutes.delete('/renders/:rid', minRole('editor'), async c => {
   return c.json({ ok: true });
 });
 
-/** An image (or the pass it started from): for the design's members, or anyone once it is public */
+/** An image (or the pass it started from): for the design's members, or anyone while it is on the design's share page */
 routes.get('/renders/:rid/:which{image|source}', async c => {
   const r = await repo.getRender(c.req.param('rid'));
   const role = r && (await repo.getRole(r.project_id, c.get('user')?.id ?? null));
-  if (!r || (!r.public && !can(role ?? null, 'viewer'))) throw new HTTPException(404, { message: m.server_err_render_not_found() });
+  const shown = !!r?.public && !!(await repo.showcaseOf(r.project_id));
+  if (!r || (!shown && !can(role ?? null, 'viewer'))) throw new HTTPException(404, { message: m.server_err_render_not_found() });
   const img = await repo.renderImage(r.id, c.req.param('which') as 'image' | 'source');
   if (!img) throw new HTTPException(404, { message: m.server_err_render_not_found() });
   const comma = img.url.indexOf(',');
   const type = img.url.slice(5, img.url.indexOf(';'));
   const bytes = Uint8Array.from(atob(img.url.slice(comma + 1)), ch => ch.charCodeAt(0));
-  // An image never changes once made (a new render is a new id)
-  return c.body(bytes, 200, { 'Content-Type': type, 'Cache-Control': `${r.public ? 'public' : 'private'}, max-age=31536000, immutable` });
+  return c.body(bytes, 200, {
+    'Content-Type': type, // Never changes once made (a new render is a new id); on a share page, cached briefly so unpublishing takes effect
+    'Cache-Control': shown ? 'public, max-age=3600' : 'private, max-age=31536000, immutable',
+  });
 });

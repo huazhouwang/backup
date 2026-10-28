@@ -1,5 +1,6 @@
 /** Account: who is signed in (accepting their pending invites), their own canvas modules, and exporting their data */
 import { canvasPageSchema } from '@opensu/core';
+import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { googleEnabled } from '../auth';
@@ -7,7 +8,8 @@ import { mailEnabled } from '../mail';
 import { creditState, periodStart } from '../platform';
 import * as repo from '../repo';
 import { EVENTS } from '@/shared/events';
-import { requireUser, type AppEnv } from '../http';
+import { m } from '@/lib/i18n';
+import { ip, limit, requireUser, type AppEnv } from '../http';
 
 export const routes = new Hono<AppEnv>();
 
@@ -24,13 +26,16 @@ routes.get('/me/credits', async c => {
   return c.json(creditState(guest, await repo.creditsSpent(u.id, periodStart(guest))));
 });
 
-/** A funnel event from the app (issue 188): known names only, the project only if the user may see it */
+/** A funnel event from the app (issues 188, 196): known names only, the project only if the user may see it or it is published */
 routes.post('/events', async c => {
-  const u = requireUser(c);
-  const b = (await c.req.json().catch(() => null)) as { name?: string; projectId?: string; detail?: string } | null;
-  if (!b || !(EVENTS as readonly string[]).includes(b.name ?? '')) throw new HTTPException(400, { message: 'unknown event' });
-  const project = b.projectId && (await repo.getRole(b.projectId, u.id)) ? b.projectId : null;
-  await repo.recordEvent(b.name!, u.id, project, typeof b.detail === 'string' ? b.detail.slice(0, 200) : null);
+  // Visitors to a share page count too, signed in or not (the funnel from a shared house, issue 196)
+  const u = c.get('user');
+  await limit(env.RL_API, u?.id ?? ip(c));
+  const b = (await c.req.json().catch(() => null)) as { name?: string; projectId?: string; showcase?: string; detail?: string } | null;
+  if (!b || !(EVENTS as readonly string[]).includes(b.name ?? '')) throw new HTTPException(400, { message: m.server_err_bad_request() });
+  const member = b.projectId && u && (await repo.getRole(b.projectId, u.id)) ? b.projectId : null;
+  const shown = !member && b.showcase ? ((await repo.getShowcase(b.showcase))?.project_id ?? null) : null;
+  await repo.recordEvent(b.name!, u?.id ?? null, member ?? shown, typeof b.detail === 'string' ? b.detail.slice(0, 200) : null);
   return c.json({ ok: true });
 });
 

@@ -9,3 +9,4 @@ export * from './account';
 export * from './libraries';
 export * from './widget-libraries';
 export * from './renders';
+export * from './showcase';
