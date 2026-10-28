@@ -29,13 +29,16 @@ export type ShadowQuality = 'high' | 'low';
  */
 export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQuality = 'high', toward: THREE.Vector3 = DEFAULT_SUN) {
   const mapSize = quality === 'high' ? 2048 : 1024;
+  // Seen from the sun every caster lies within the house's bounding radius, and so does every shadow it casts (a shadow lies
+  // on the caster's ray): the map covers just that, with a little margin (issue 208)
+  const half = radius * 1.05;
   return {
     position: center.clone().addScaledVector(toward, radius * 2.5),
     mapSize,
     shadowRadius: quality === 'high' ? 6 : 3,
     bias: -0.0004,
-    normalBias: ((radius * 2.8) / mapSize) * 2,
-    camera: { left: -radius * 1.4, right: radius * 1.4, top: radius * 1.4, bottom: -radius * 1.4, near: 0.5, far: radius * 10 },
+    normalBias: ((half * 2) / mapSize) * 2,
+    camera: { left: -half, right: half, top: half, bottom: -half, near: 0.5, far: radius * 10 },
   };
 }
 
