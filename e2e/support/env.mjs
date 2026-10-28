@@ -101,6 +101,13 @@ export const SESSIONS = [
     email: 'mic-retake@example.com',
   },
   {
+    key: 'chatHistory',
+    token: 'e2e-chat-history',
+    userId: 'e2e-chat-history',
+    name: '测试家长',
+    email: 'chat-history@example.com',
+  },
+  {
     key: 'elsewhere',
     token: 'e2e-elsewhere',
     userId: 'e2e-elsewhere',

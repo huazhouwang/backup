@@ -82,6 +82,7 @@ export function ChatPage({
     loadingEarlier,
     top,
     list,
+    follow,
   } = useChatHistory(true)
   useBounce(scroller, { axes: ['y'], content: list })
   const [text, setText] = useState('')
@@ -138,6 +139,7 @@ export function ChatPage({
   })
   const say = (said: string, spoken = false) => {
     if (!said || send.isPending) return
+    follow()
     if (!spoken) setText('')
     setAsked(true)
     setUnheard(false)
@@ -158,6 +160,7 @@ export function ChatPage({
   const talking = useRef(false)
   const voice = {
     onBegin: () => {
+      follow()
       talking.current = true
       setUnheard(false)
       setLive({ phase: 'preparing', text: '' })
@@ -230,10 +233,12 @@ export function ChatPage({
         </button>
         <h1 className="m-0 text-title font-extrabold">{m.voiceChatTitle()}</h1>
       </header>
+      {/* The list keeps its place itself (use-chat-history.ts), as Safari has no scroll
+          anchoring; Chrome's own would move it when the latest page is fetched again. */}
       <div
         ref={scroller}
         data-chat-scroll
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-safe-4 pl-safe-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-safe-4 pl-safe-4 [overflow-anchor:none]"
       >
         {/* New messages are read out as they arrive. */}
         <div
@@ -241,7 +246,7 @@ export function ChatPage({
           role="log"
           aria-live="polite"
           aria-label={m.voiceChatTitle()}
-          className="flex min-h-full flex-col justify-end gap-2 py-3"
+          className="flex min-h-full flex-col justify-end gap-2 pt-3 pb-5"
         >
           {hasEarlier ? (
             <div ref={top} className="text-center text-caption text-muted-foreground">
@@ -278,11 +283,6 @@ export function ChatPage({
             />
           )}
           {send.isPending && !answering && <Waiting label={m.voiceThinking()} />}
-          {/* Remounts when a message is added at the end, keeping it in view. */}
-          <div
-            key={`${messages.at(-1)?.id}-${messages.at(-1)?.text.length}-${busy}-${live?.text}`}
-            ref={(node) => node?.scrollIntoView({ block: 'end' })}
-          />
         </div>
       </div>
       {/* Clear of the home indicator, which the keyboard covers when it's up. Typing means

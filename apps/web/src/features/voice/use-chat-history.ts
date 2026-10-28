@@ -1,17 +1,23 @@
 import { type InfiniteData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 
 import { type ChatMessage, type ChatPage } from './api'
-import { voiceKeys, voiceQueries } from './queries'
+import { keepLatestChatPage, voiceKeys, voiceQueries } from './queries'
+
+/** How near the end (px) still counts as at it. */
+const END_SLACK = 48
 
 /**
- * The chat's saved messages, oldest first, paged back in time. `top` goes on an element at
- * the top of the list: reaching it loads the page before, keeping what is on screen where
- * it was. `list` goes on the list itself.
+ * The chat's saved messages, oldest first, paged back in time. `list` goes on the list, in
+ * its `[data-chat-scroll]` scroller: it opens at its end and follows what is added there,
+ * unless scrolled up from it (`follow` brings it back). `top` goes on an element at the top
+ * of the list: reaching it loads the page before, keeping what is on screen where it was.
  */
 export function useChatHistory(open: boolean) {
   const queryClient = useQueryClient()
   const history = useInfiniteQuery({ ...voiceQueries.chat(), enabled: open })
+  // Closed, the chat keeps only its latest page for next time (keepLatestChatPage).
+  useEffect(() => () => keepLatestChatPage(queryClient), [queryClient])
 
   // Pages go back in time; the list reads oldest first.
   const pages = history.data?.pages ?? []
@@ -23,7 +29,6 @@ export function useChatHistory(open: boolean) {
   // The latest conversation is over: the next message starts afresh.
   const ended = lastThreadId !== null && lastThreadId !== activeThreadId
 
-  /** Shows a message before the server has it, at the end of the latest page. */
   /** Shows a message before the server has it; returns its id, for `update`. */
   const append = (message: Omit<ChatMessage, 'id' | 'threadId'>) => {
     const id = crypto.randomUUID()
@@ -76,6 +81,45 @@ export function useChatHistory(open: boolean) {
     // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [pages.length])
 
+  // Following the end: from opening until scrolled up, and again once back at it.
+  const pinned = useRef(true)
+  useLayoutEffect(() => {
+    const content = list.current
+    const root = content?.closest('[data-chat-scroll]')
+    if (!content || !root) return undefined
+    const toEnd = () => {
+      root.scrollTop = root.scrollHeight
+    }
+    toEnd()
+    let height = root.scrollHeight
+    const scrolled = () => {
+      // Moved by the list changing size (a shorter one clamps it), not by the user.
+      if (root.scrollHeight !== height) {
+        height = root.scrollHeight
+        return
+      }
+      pinned.current = root.scrollHeight - root.clientHeight - root.scrollTop < END_SLACK
+    }
+    // New messages, a reply growing, the page or the keyboard changing size: still at the end.
+    const resized = new ResizeObserver(() => {
+      height = root.scrollHeight
+      if (pinned.current) toEnd()
+    })
+    resized.observe(content)
+    resized.observe(root)
+    root.addEventListener('scroll', scrolled, { passive: true })
+    return () => {
+      resized.disconnect()
+      root.removeEventListener('scroll', scrolled)
+    }
+  }, [])
+  /** Back to the end, following it again: something is being said. */
+  const follow = () => {
+    pinned.current = true
+    const root = list.current?.closest('[data-chat-scroll]')
+    if (root) root.scrollTop = root.scrollHeight
+  }
+
   return {
     messages,
     threads,
@@ -87,5 +131,6 @@ export function useChatHistory(open: boolean) {
     loadingEarlier: isFetchingNextPage,
     top,
     list,
+    follow,
   }
 }
