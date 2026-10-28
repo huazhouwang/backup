@@ -1,14 +1,13 @@
 /**
  * How the house is lit and finished on screen (issue 208), shared by the editor's 3D view and the stills: the sky as image-based
  * light, the sun, Khronos PBR Neutral tone mapping, ambient occlusion (N8AO, which ignores glass rather than darkening behind
- * it) and anti-aliasing. One set of values (LOOK) for all of them, so a still looks like the view it shows.
+ * it) and multisampling. One set of values (LOOK) for all of them, so a still looks like the view it shows.
  */
 import { N8AOPass } from 'n8ao';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { ENVIRONMENT_INTENSITY, SKYLIGHT_INTENSITY, SUN_INTENSITY, TONE_EXPOSURE } from './scene/lighting';
 
 export interface Look {
@@ -47,13 +46,20 @@ export function aoPass(scene: THREE.Scene, camera: THREE.Camera, width: number, 
     gammaCorrection: false,
     screenSpaceRadius: false,
   });
+  // The scene drawn multisampled (three resolves colour and depth), so edges are smooth without a screen-space filter that would
+  // also blur the selection's one-pixel stipple
+  const beauty = ao.beautyRenderTarget;
+  ao.beautyRenderTarget = new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType, samples: 4 });
+  ao.beautyRenderTarget.texture.minFilter = THREE.LinearFilter;
+  ao.beautyRenderTarget.texture.magFilter = THREE.NearestFilter;
+  ao.beautyRenderTarget.depthTexture = new THREE.DepthTexture(width, height, THREE.UnsignedIntType);
+  beauty.dispose();
   return ao;
 }
 
 /**
- * The chain a frame goes through: the scene with ambient occlusion (or plainly, multisampled, on the light setup), whatever
- * passes the caller adds (`extra`), the output conversion with tone mapping, then SMAA for the edges ambient occlusion can't
- * multisample.
+ * The chain a frame goes through: the scene, multisampled, with ambient occlusion (or plainly on the light setup), whatever
+ * passes the caller adds (`extra`), then the output conversion with tone mapping.
  */
 export function beautyComposer(
   renderer: THREE.WebGLRenderer,
@@ -68,7 +74,6 @@ export function beautyComposer(
   composer.addPass(ao ? aoPass(scene, camera, width, height, opts.look) : new RenderPass(scene, camera));
   opts.extra?.addPass(composer);
   composer.addPass(new OutputPass());
-  if (ao) composer.addPass(new SMAAPass());
   // The passes go with the composer
   const dispose = composer.dispose.bind(composer);
   composer.dispose = () => {

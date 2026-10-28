@@ -1,7 +1,7 @@
 /**
- * Draws the 3D view through the shared chain (graphics/three/beauty.ts, issue 208): ambient occlusion on capable devices (plainly
- * multisampled on the light setup), SketchUp-style edges when the model style has them (see EdgePass), then the output conversion
- * with tone mapping and SMAA.
+ * Draws the 3D view through the shared chain (graphics/three/beauty.ts, issue 208): the scene multisampled, with ambient occlusion
+ * on capable devices, SketchUp-style edges when the model style has them (see EdgePass), then the output conversion with tone
+ * mapping.
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
