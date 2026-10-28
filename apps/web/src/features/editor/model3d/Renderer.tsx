@@ -14,20 +14,25 @@ export type Quality = 'high' | 'low';
 /** Older mobile GPUs: Mali-400/450 and the Mali-T series, Adreno 500 and below, PowerVR SGX */
 const WEAK_GPU = /Mali-(4\d\d|T\d+)|Adreno \(TM\) [1-5]\d\d\b|PowerVR SGX/i;
 
-/** Touch-first devices; only these are ever downgraded */
+/** Touch-first devices: the only ones with a GPU that are downgraded */
 export const isTouchDevice = (win: Window) => win.matchMedia('(pointer: coarse)').matches;
 
+/** WebGL drawn on the CPU (no GPU, a virtual machine, a blocklisted driver): ambient occlusion would take seconds a frame */
+const SOFTWARE_GL = /SwiftShader|llvmpipe|softpipe|Software Rasterizer|Microsoft Basic Render/i;
+
 /**
- * Low-end phones get the light setup (lower resolution, smaller shadow and floor-drawing textures): a touch device with 2 GB of
- * memory or less, an Android device with 4 cores or fewer, or an older mobile GPU. Everything else, recent iPhones included, gets
- * the full look; a phone missed here still drops to the light setup if it can't keep up (see Model3D).
+ * Low-end devices get the light setup (no ambient occlusion, lower resolution, smaller shadow and floor-drawing textures): WebGL
+ * drawn in software, a touch device with 2 GB of memory or less, an Android device with 4 cores or fewer, or an older mobile GPU.
+ * Everything else, recent iPhones included, gets the full look; a phone missed here still drops to the light setup if it can't
+ * keep up (see Model3D).
  */
 export function detectQuality(win: Window, gl: WebGLRenderingContext | WebGL2RenderingContext): Quality {
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  const gpu = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+  if (SOFTWARE_GL.test(gpu)) return 'low';
   if (!isTouchDevice(win)) return 'high';
   const nav = win.navigator as Navigator & { deviceMemory?: number };
   const android = /Android/i.test(nav.userAgent);
-  const info = gl.getExtension('WEBGL_debug_renderer_info');
-  const gpu = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
   const weak = (nav.deviceMemory !== undefined && nav.deviceMemory < 4) || (android && nav.hardwareConcurrency <= 4) || WEAK_GPU.test(gpu);
   return weak ? 'low' : 'high';
 }
