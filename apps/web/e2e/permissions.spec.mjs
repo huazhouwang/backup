@@ -126,6 +126,10 @@ test('permissions', async () => {
     ['POST', `/projects/${id}/renders`, 'editor', {}],
     ['PATCH', `/projects/${id}/renders/nope`, 'editor', { public: true }],
     ['DELETE', `/projects/${id}/renders/nope`, 'editor'],
+    ['GET', `/projects/${id}/showcase`, 'viewer'],
+    ['POST', `/projects/${id}/showcase`, 'owner'],
+    ['PATCH', `/projects/${id}/showcase`, 'owner', { hero: null }],
+    ['DELETE', `/projects/${id}/showcase`, 'owner'],
     ['GET', '/libraries', 'user'],
     ['POST', '/libraries', 'user', { name: 'Scratch' }],
     ['POST', '/libraries/versions', 'user', { refs: [] }],
@@ -150,7 +154,7 @@ test('permissions', async () => {
     ['DELETE', `/widget-libraries/${wlib}/members/${otherUser}`, 'owner'],
     ['GET', '/me/widgets', 'user'],
     ['GET', '/me/credits', 'user'],
-    ['POST', '/events', 'user', { name: 'nope' }],
+    ['POST', '/events', 'public', { name: 'nope' }],
     ['PUT', '/me/widgets', 'user', { widgets: [] }],
   ];
   // Least privileged first, so the owner's destructive calls come last; a route allows its minimum and everyone after it

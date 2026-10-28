@@ -48,5 +48,5 @@ export async function exportUserData(userId: string) {
 }
 
 /** A funnel event (issue 188) */
-export const recordEvent = (name: string, userId: string, projectId: string | null, detail: string | null) =>
+export const recordEvent = (name: string, userId: string | null, projectId: string | null, detail: string | null) =>
   db().prepare('insert into event (name, user_id, project_id, detail, created_at) values (?, ?, ?, ?, ?)').bind(name, userId, projectId, detail, now()).run();

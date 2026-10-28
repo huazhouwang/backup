@@ -16,6 +16,7 @@ import * as libraries from './routes/libraries';
 import * as models from './routes/models';
 import * as projects from './routes/projects';
 import * as renders from './routes/renders';
+import * as showcase from './routes/showcase';
 import * as sharing from './routes/sharing';
 import * as widgetLibraries from './routes/widget-libraries';
 
@@ -35,8 +36,17 @@ api.on(['GET', 'POST'], '/auth/*', async c => {
 
 api.use('/*', session);
 
-for (const r of [account.routes, projects.routes, sharing.routes, models.routes, libraries.routes, widgetLibraries.routes, renders.routes]) api.route('/', r);
-for (const r of [projects.projectRoutes, sharing.projectRoutes, comments.projectRoutes, models.projectRoutes, agent.projectRoutes, renders.projectRoutes])
+for (const r of [account.routes, projects.routes, sharing.routes, models.routes, libraries.routes, widgetLibraries.routes, renders.routes, showcase.routes])
+  api.route('/', r);
+for (const r of [
+  projects.projectRoutes,
+  sharing.projectRoutes,
+  comments.projectRoutes,
+  models.projectRoutes,
+  agent.projectRoutes,
+  renders.projectRoutes,
+  showcase.projectRoutes,
+])
   api.route('/projects/:id', r);
 
 api.notFound(c => c.json({ error: m.server_err_api_not_found() }, 404));
