@@ -12,7 +12,7 @@ import type { ParamValue } from '../looks/script.js';
 import { resolve } from '../model/refs.js';
 import type { WidgetInstance } from '../model/schema.js';
 import type { Project } from '../model/schema.js';
-import { WIDGET_LIMITS, widgetDefSchema, type WidgetDef, type WidgetItem } from '../widgets/format.js';
+import { EFFECT_LIMITS, EFFECT_TONES, PARTICLE_SHAPES, SKY_MOODS, WIDGET_LIMITS, widgetDefSchema, type WidgetDef, type WidgetItem } from '../widgets/format.js';
 import { copyKey, DESIGN_WIDGETS, findWidget, isBuiltinWidgetLibrary, resolveWidget, widgetLibraries, widgetUpdate } from '../widgets/libraries.js';
 import { runWidget, widgetParams } from '../widgets/run.js';
 import { zRef } from './inputs.js';
@@ -55,7 +55,7 @@ export const widgetInstall = defineEdit({
   name: 'widget_install',
   title: 'Install widget',
   description:
-    "Install a widget from a widget library on the design's canvas (a structural grid, a coordinate system…). params sets some of its parameters; the rest take their defaults. The installed version is pinned.",
+    "Install a widget from a widget library on the design's canvas: a tool drawn on the plan (a structural grid, a coordinate system…) or an effect in the 3D view (rain or snow over a space, fog, fireflies, night with the lights on). params sets some of its parameters; the rest take their defaults; tune it later with widget_configure. The installed version is pinned.",
   input: z.object({
     library: z.string().describe(`Widget library id, e.g. builtin-widgets; ${DESIGN_WIDGETS} for the design's own widgets (widget_create)`),
     widget: z.string().describe('Widget id in that library, e.g. grid'),
@@ -217,7 +217,7 @@ export const widgetCatalog = defineRead({
   },
 });
 
-const SCRIPT_HELP = `JavaScript (ES2023, no modules) defining function widget(project, params, ctx) that returns an array of items to draw. It runs in a sandbox: no DOM, network, timers, Promise, typed arrays or host functions; ${WIDGET_LIMITS.items} items at most, about 200 ms per run. project is the design (read-only): levels [{id, name, elevation, height}], walls [{id, name, level, start: [x,y], end, thickness, kind, openings}], spaces (rooms) [{id, name, level, kind, shape: [{outer: [[x,y],…], holes?}]}], furniture [{id, name, type, level, position: [x,y], rotation, size: {w,d,h}}], elements, site {boundary}. Millimetres; x points east, y points south. params holds every declared parameter (given or default). ctx is {level: the current level id, view: 'plan'|'3d', language: 'zh'|'en'} — write label text in ctx.language. Items (an item may add level: <level id>, else it shows on the current level): {type:'line', from:[x,y], to:[x,y], dash?: [mm,…]}, {type:'label', at, text} (≤${WIDGET_LIMITS.text} characters), {type:'point', at}, {type:'area', outline: [[x,y],…]} (3–${WIDGET_LIMITS.outline} points), {type:'handle', at, x:'<number param>', y:'<number param>'} (dragging it writes its position into those two parameters), {type:'snap', at} (placing and dragging snap to it). Colours are the canvas's; a widget can't choose any.`;
+const SCRIPT_HELP = `JavaScript (ES2023, no modules) defining function widget(project, params, ctx) that returns an array of items to draw. It runs in a sandbox: no DOM, network, timers, Promise, typed arrays or host functions; ${WIDGET_LIMITS.items} items at most, about 200 ms per run. project is the design (read-only): levels [{id, name, elevation, height}], walls [{id, name, level, start: [x,y], end, thickness, kind, openings}], spaces (rooms) [{id, name, level, kind, shape: [{outer: [[x,y],…], holes?}]}], furniture [{id, name, type, level, position: [x,y], rotation, size: {w,d,h}}], elements, site {boundary}. Millimetres; x points east, y points south. params holds every declared parameter (given or default). ctx is {level: the current level id, view: 'plan'|'3d', language: 'zh'|'en'} — write label text in ctx.language. Items (an item may add level: <level id>, else it shows on the current level): {type:'line', from:[x,y], to:[x,y], dash?: [mm,…]}, {type:'label', at, text} (≤${WIDGET_LIMITS.text} characters), {type:'point', at}, {type:'area', outline: [[x,y],…]} (3–${WIDGET_LIMITS.outline} points), {type:'handle', at, x:'<number param>', y:'<number param>'} (dragging it writes its position into those two parameters), {type:'snap', at} (placing and dragging snap to it). Effects in the 3D view (rain, snow, fireflies, fog, lamps, night; animated by the host, budgeted): {type:'particles', outline, from: mm, to: mm (heights above the level), count (≤${EFFECT_LIMITS.particles}), fall: m/s (negative rises, 0 hovers), drift?: m/s, wind?: [m/s east, m/s south], size: mm, shape: ${PARTICLE_SHAPES.map(s => `'${s}'`).join('|')}, tone}, {type:'fog', density: 0–1, tone}, {type:'light', at, z: mm, intensity: 0–1, range: mm, tone} (≤${EFFECT_LIMITS.lights}), {type:'sky', mood: ${SKY_MOODS.map(s => `'${s}'`).join('|')}}; tone is one of ${EFFECT_TONES.map(s => `'${s}'`).join(', ')}. Colours are the canvas's (tones for effects); a widget can't choose any.`;
 
 export const widgetCreate = defineEdit({
   name: 'widget_create',

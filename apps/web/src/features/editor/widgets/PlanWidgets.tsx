@@ -85,6 +85,22 @@ export function PlanWidgets({
               );
             case 'point':
               return <circle key={key} cx={item.at[0]} cy={item.at[1]} r={2.5 * pxMm} fill={color} data-widget={widget} data-widget-item="point" />;
+            // Where an effect's particles fall (rain over the courtyard…), so the plan shows it too (issue 203)
+            case 'particles':
+              return (
+                <path
+                  key={key}
+                  d={`M${item.outline.map(p => p.join(',')).join('L')}Z`}
+                  fill={color}
+                  fillOpacity={0.05}
+                  stroke={color}
+                  strokeWidth={1}
+                  strokeDasharray="4 3"
+                  vectorEffect="non-scaling-stroke"
+                  data-widget={widget}
+                  data-widget-item="particles"
+                />
+              );
             case 'area':
               return (
                 <path

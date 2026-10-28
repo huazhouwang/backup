@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { hops } from '@/canvas/hop';
+import { useSkyMood } from './Effects3D';
 import { M, shadowGround, siteBounds, SKYLIGHT_INTENSITY, SUN_INTENSITY, sunLight, sunSetup, type ShadowQuality } from '@/graphics/three/scene';
 
 export function HouseStage({
@@ -39,13 +40,14 @@ export function HouseStage({
       again();
     }
   });
-  // The sun moves with the chosen day and time
+  // The sun moves with the chosen day and time; an effect's sky (overcast, dusk, night: issue 203) dims it and the sky light
   const invalidate = useThree(s => s.invalidate);
+  const mood = useSkyMood();
   useEffect(() => {
     sun.position.copy(sunSetup(center, radius, quality, toward).position);
-    sun.intensity = SUN_INTENSITY * strength;
+    sun.intensity = SUN_INTENSITY * strength * mood.sun;
     invalidate();
-  }, [sun, toward?.x, toward?.y, toward?.z, strength]);
+  }, [sun, toward?.x, toward?.y, toward?.z, strength, mood.sun]);
   const [cx, cz] = useMemo(() => {
     const [x0, y0, x1, y1] = siteBounds(project);
     return [((x0 + x1) / 2) * M, ((y0 + y1) / 2) * M];
@@ -63,7 +65,7 @@ export function HouseStage({
   return (
     <>
       {/* A warm white sun and sky: lit faces are white, shadows a soft warm gray */}
-      <hemisphereLight args={[colors.skylight, colors.wall, SKYLIGHT_INTENSITY]} />
+      <hemisphereLight args={[colors.skylight, colors.wall, SKYLIGHT_INTENSITY * mood.sky]} />
       <primitive object={sun} />
       <primitive object={sun.target} />
       <primitive object={ground} position={[cx, groundY, cz]} />
