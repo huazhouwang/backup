@@ -49,6 +49,139 @@
         "text": "已做好「房间面积标注」工具并装到画布上：每个房间中间会显示房间名和面积（m²，保留一位小数），各层都有。\n\n如果只想看面积数字、或改小数位数，可以在工具设置里调整。",
         "tool_calls": []
       }
+    },
+    {
+      "user": "再做一个秋天落叶的效果，落在庭院里",
+      "tools": 71,
+      "hash": "ce2bb92b44f0ec30",
+      "answer": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "widget_create",
+            "arguments": {
+              "id": "autumn-leaves",
+              "name": "秋天落叶",
+              "description": "3D effect: autumn leaves (flake particles, tone leaf) falling gently over every space whose name contains `match` (default 庭院), from `height` mm down to the floor, with drift and a light wind; optional sky mood (dusk/overcast/none). Tune density (leaves per m²), fall (m/s), drift, wind (m/s east), size (mm).",
+              "params": {
+                "match": {
+                  "type": "string",
+                  "default": "庭院",
+                  "title": {
+                    "zh": "空间名包含",
+                    "en": "Space name contains"
+                  },
+                  "description": "Leaves fall over spaces whose name contains this text"
+                },
+                "density": {
+                  "type": "number",
+                  "default": 6,
+                  "minimum": 1,
+                  "maximum": 40,
+                  "title": {
+                    "zh": "落叶密度（片/㎡）",
+                    "en": "Leaves per m²"
+                  },
+                  "description": "Leaves per square metre"
+                },
+                "fall": {
+                  "type": "number",
+                  "default": 1,
+                  "minimum": 0.2,
+                  "maximum": 3,
+                  "title": {
+                    "zh": "下落速度（m/s）",
+                    "en": "Fall speed (m/s)"
+                  },
+                  "description": "Fall speed in m/s"
+                },
+                "drift": {
+                  "type": "number",
+                  "default": 0.6,
+                  "minimum": 0,
+                  "maximum": 2,
+                  "title": {
+                    "zh": "飘荡（m/s）",
+                    "en": "Drift (m/s)"
+                  },
+                  "description": "Random sideways drift in m/s"
+                },
+                "wind": {
+                  "type": "number",
+                  "default": 0.4,
+                  "minimum": -3,
+                  "maximum": 3,
+                  "title": {
+                    "zh": "风（向东 m/s）",
+                    "en": "Wind east (m/s)"
+                  },
+                  "description": "Steady wind towards the east in m/s"
+                },
+                "size": {
+                  "type": "number",
+                  "default": 60,
+                  "minimum": 20,
+                  "maximum": 150,
+                  "title": {
+                    "zh": "叶片大小（mm）",
+                    "en": "Leaf size (mm)"
+                  },
+                  "description": "Leaf size in mm"
+                },
+                "height": {
+                  "type": "number",
+                  "default": 6000,
+                  "minimum": 2000,
+                  "maximum": 15000,
+                  "title": {
+                    "zh": "起落高度（mm）",
+                    "en": "Start height (mm)"
+                  },
+                  "description": "Height above the level the leaves start from, mm"
+                },
+                "sky": {
+                  "type": "string",
+                  "default": "dusk",
+                  "enum": [
+                    "dusk",
+                    "overcast",
+                    "none"
+                  ],
+                  "enumTitles": [
+                    {
+                      "zh": "黄昏",
+                      "en": "Dusk"
+                    },
+                    {
+                      "zh": "阴天",
+                      "en": "Overcast"
+                    },
+                    {
+                      "zh": "不变",
+                      "en": "Unchanged"
+                    }
+                  ],
+                  "title": {
+                    "zh": "天色",
+                    "en": "Sky"
+                  },
+                  "description": "Sky mood with the leaves"
+                }
+              },
+              "script": "function widget(project, params, ctx) {\n  var items = [];\n  var key = params.match || '庭院';\n  for (var s of project.spaces) {\n    if (s.name.indexOf(key) < 0 || !s.shape) continue;\n    for (var part of s.shape) {\n      var o = part.outer;\n      if (!o || o.length < 3 || o.length > 500) continue;\n      var a = 0;\n      for (var i = 0; i < o.length; i++) {\n        var p = o[i], q = o[(i + 1) % o.length];\n        a += p[0] * q[1] - q[0] * p[1];\n      }\n      var m2 = Math.abs(a) / 2 / 1e6;\n      var count = Math.max(20, Math.min(4000, Math.round(m2 * params.density)));\n      items.push({\n        type: 'particles', outline: o, level: s.level,\n        from: 0, to: params.height,\n        count: count, fall: params.fall, drift: params.drift,\n        wind: [params.wind, 0.2], size: params.size,\n        shape: 'flake', tone: 'leaf'\n      });\n    }\n  }\n  if (params.sky !== 'none') items.push({ type: 'sky', mood: params.sky });\n  return items;\n}\n"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user": "再做一个秋天落叶的效果，落在庭院里",
+      "tools": 71,
+      "hash": "5281db8359cd0821",
+      "answer": {
+        "text": "秋天落叶效果已加上：两处庭院（透水砖和碎石）上空会有落叶缓缓飘落，天色调成了黄昏。\n\n切到 3D 视图就能看到；落叶多少、下落快慢、风向和天色都可以在效果设置里调。",
+        "tool_calls": []
+      }
     }
   ]
 }
