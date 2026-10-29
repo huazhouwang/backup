@@ -1,10 +1,11 @@
-import { Drawer } from '@base-ui/react/drawer'
 import {
   type PointerEvent,
   type ReactNode,
   type RefObject,
-  useCallback,
+  createContext,
+  useContext,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react'
@@ -37,8 +38,8 @@ const SLIDE_TIMING: KeyframeAnimationOptions = {
  * halfway. Played forwards it settles back open; reversed it carries on down and away.
  */
 const DRAG_SLIDE_MS = 400
-function slideThrough(popup: HTMLElement, dy: number) {
-  const animation = popup.animate(
+function slideThrough(dialog: HTMLDialogElement, dy: number) {
+  const animation = dialog.animate(
     [
       { translate: '0 100%', easing: 'ease-in' },
       { translate: `0 ${dy}px`, easing: 'ease-out' },
@@ -60,26 +61,38 @@ function useLastOpen<T>(open: boolean, value: T): T {
   return open ? value : last.current
 }
 
+const SheetContext = createContext<RefObject<HTMLDialogElement | null> | null>(null)
+
 /**
- * Bottom sheet on Base UI's Drawer, which provides the portal, focus trapping, Escape and a
- * tap outside to close, and an inert background. The motion is the sheet's own: it slides
- * in with a little bounce, follows a drag on its header, and every way of closing plays the
- * slide backwards; Base UI keeps it open until that has finished. Used instead of centered
- * modals for forms.
+ * The sheet a component sits in, if any. The sheet is a modal dialog, above the rest of the
+ * page and the only part of it that reacts, so a popup opened from it (a menu) is put in it.
  */
+export function useSheetContainer(): RefObject<HTMLDialogElement | null> | undefined {
+  return useContext(SheetContext) ?? undefined
+}
+
 // Touches that are someone else's: the header's drag, or a control marked data-sheet-still
 // (a button held to talk), which the sheet's content must not bounce under.
 const onHandle = (target: Element) =>
   target.closest('[data-sheet-handle], [data-sheet-still]') !== null
 
+/**
+ * Bottom sheet on the native <dialog> element, which provides focus trapping, Escape to
+ * close and an inert page. iOS also keeps a field typed in on a dialog where the sheet puts
+ * it, where it pans the page under a sheet drawn above it some other way. The motion is the
+ * sheet's own: it slides in with a little bounce, follows a drag on its header, and every way
+ * of closing plays the slide backwards. Used instead of centered modals for forms.
+ */
 export function Sheet({ open, onClose, title, children }: SheetProps) {
-  // The popup, once Base UI has mounted it in its portal.
-  const [popup, setPopup] = useState<HTMLDivElement | null>(null)
-  const ref = useRef<HTMLDivElement | null>(null)
-  // Focused before the sheet opened: focus goes back there when it closes, if it is still on
-  // the page (a sheet that opened this one has gone) and no other sheet holds it, as a
-  // dialog's close() did.
-  const returnFocus = useRef<HTMLElement | null>(null)
+  const ref = useRef<HTMLDialogElement>(null)
+  const body = useRef<HTMLDivElement>(null)
+  // The content bounces at its ends; the header's own drag (closing the sheet) is left alone.
+  useBounce(ref, { axes: ['y'], content: body, ignore: onHandle })
+  const titleId = useId()
+  // Mirrors `open` so the native close event can tell a user dismissal (Escape) from the
+  // parent closing the sheet, which must not call onClose again (e.g. when one sheet
+  // hands over to another).
+  const openRef = useRef(open)
   const drag = useRef<{ startY: number; startTime: number; dy: number } | null>(null)
   // The current slide; reversing it closes the sheet (or reopens it mid-close).
   const slide = useRef<Animation | null>(null)
@@ -87,65 +100,62 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
   // there until the slide away has finished, so the sheet leaves whole instead of
   // collapsing first. Once closed, the content unmounts.
   const shown = useLastOpen(open, { title, children })
-  // True from opening until the closing slide has finished: Base UI keeps the sheet up
-  // that long. Set as soon as `open` is, during the same render.
+  // True from opening until the closing slide has finished. Set as soon as `open` is,
+  // during the same render, so the content never drops out for a frame.
   const [shownInDialog, setShownInDialog] = useState(false)
   if (open && !shownInDialog) setShownInDialog(true)
-  // Sliding away: the backdrop fades with it, and nothing in it reacts any more.
+  // Sliding away: nothing in it reacts any more, and the backdrop fades with it.
   const closing = !open && shownInDialog
 
-  // Mounted: the slide in starts before the first paint, so the sheet never shows in place
-  // first.
-  const attach = useCallback((node: HTMLDivElement | null) => {
-    if (node) {
-      const active = document.activeElement
-      returnFocus.current = active instanceof HTMLElement ? active : null
-    }
-    ref.current = node
-    setPopup(node)
-    if (node && !slide.current && !prefersReducedMotion()) {
-      slide.current = node.animate(SLIDE, SLIDE_TIMING)
-    }
-    if (!node) slide.current = null
-  }, [])
-
   useEffect(() => {
-    if (!popup) return undefined
+    openRef.current = open
+    const dialog = ref.current
+    if (!dialog) return undefined
     if (open) {
-      if (
-        slide.current &&
-        slide.current.playState !== 'finished' &&
-        slide.current.playbackRate < 0
-      ) {
+      if (dialog.open) {
         // Reopened while sliding away: play the slide forwards again.
-        slide.current.reverse()
+        if (slide.current && slide.current.playbackRate < 0) slide.current.reverse()
         return undefined
       }
+      dialog.showModal()
+      // A reused sheet starts at the top, not where its previous content was scrolled to.
+      dialog.scrollTop = 0
+      // showModal() focuses the first input, which would pop the keyboard on phones.
+      dialog.focus()
+      slide.current?.cancel()
+      slide.current = prefersReducedMotion() ? null : dialog.animate(SLIDE, SLIDE_TIMING)
       return undefined
     }
+    if (!dialog.open) return undefined
     const current = slide.current
     if (!current) {
-      // No slide (reduced motion): closed at once, as the dialog's close() was.
+      dialog.close()
       setShownInDialog(false)
       return undefined
     }
     // Every way of closing (backdrop, Escape, a drag, the parent) plays the slide backwards,
-    // then closes; the backdrop fades with it.
+    // then closes.
     if (current.playbackRate > 0) current.reverse()
     let cancelled = false
     current.finished
       .then(() => {
         if (cancelled) return
+        dialog.close()
         setShownInDialog(false)
       })
       .catch(() => undefined)
     return () => {
       cancelled = true
     }
-  }, [open, popup])
+  }, [open])
 
   // The page behind stays put while the sheet is up, even on a sheet too short to scroll.
   useEffect(() => (shownInDialog ? lockScroll() : undefined), [shownInDialog])
+
+  // The sheet rests on the iOS keyboard instead of sitting behind it, and fits above it.
+  useVisibleArea(ref, shownInDialog)
+  // And the field being typed in stays in sight above the keyboard's toolbar.
+  useFieldAboveKeyboard(ref, shownInDialog)
 
   // Dragging the header pulls the sheet down; far or fast enough, it closes.
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
@@ -155,95 +165,70 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
     event.currentTarget.setPointerCapture(event.pointerId)
   }
   const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
-    const sheet = ref.current
-    if (!drag.current || !sheet) return
+    const dialog = ref.current
+    if (!drag.current || !dialog) return
     drag.current.dy = Math.max(0, event.clientY - drag.current.startY)
-    sheet.style.translate = `0 ${drag.current.dy}px`
+    dialog.style.translate = `0 ${drag.current.dy}px`
   }
   const endDrag = (event: PointerEvent<HTMLDivElement>) => {
-    const sheet = ref.current
+    const dialog = ref.current
     const state = drag.current
     drag.current = null
-    if (!sheet || !state) return
-    sheet.style.translate = ''
-    slide.current = slideThrough(sheet, state.dy)
+    if (!dialog || !state) return
+    dialog.style.translate = ''
+    slide.current = slideThrough(dialog, state.dy)
     const velocity = state.dy / Math.max(1, event.timeStamp - state.startTime)
     // Far or fast enough: closing reverses the slide, carrying on down from the finger.
     if (state.dy > CLOSE_DISTANCE || (state.dy > 24 && velocity > CLOSE_VELOCITY)) onClose()
   }
 
   return (
-    <Drawer.Root
-      open={open || shownInDialog}
-      onOpenChange={(next) => {
-        // Escape or a tap outside: slide away like any other close.
-        if (!next && open) onClose()
+    // Backdrop click is a pointer-only convenience; keyboard users close with Escape,
+    // which the native dialog handles.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+    <dialog
+      ref={ref}
+      // Only an open sheet is one: closed, the dialog waits on the page, unseen.
+      data-slot={shownInDialog ? 'sheet' : undefined}
+      data-closing={closing ? '' : undefined}
+      tabIndex={-1}
+      aria-labelledby={titleId}
+      onCancel={(event) => {
+        // Escape: let the sheet slide away like any other close.
+        event.preventDefault()
+        onClose()
       }}
+      onClose={() => {
+        if (openRef.current) onClose()
+      }}
+      onClick={(event) => {
+        // Clicks on the backdrop target the dialog element itself.
+        if (event.target === event.currentTarget) onClose()
+      }}
+      className={cn(
+        'fixed inset-x-0 top-auto bottom-[var(--keyboard,0px)] m-0 mx-auto w-full max-w-app overflow-x-hidden overscroll-contain',
+        'max-h-[min(85dvh,calc(var(--visible,100dvh)-1rem))]',
+        'sheet rounded-t-xl border-2 border-b-0 border-border bg-card p-0 text-card-foreground focus:outline-none',
+      )}
     >
-      <Drawer.Portal>
-        <Drawer.Backdrop
-          data-closing={closing ? '' : undefined}
-          className="sheet-backdrop fixed inset-0 z-(--layer-sheet)"
-        />
-        <Drawer.Popup
-          ref={attach}
-          data-slot="sheet"
-          data-closing={closing ? '' : undefined}
-          // No Base UI swipe: the sheet's header drag and content bounce handle touches.
-          data-base-ui-swipe-ignore=""
-          initialFocus={ref}
-          finalFocus={() => {
-            // Handed over to another sheet: focus stays in that one, the page being inert.
-            const others = [...document.querySelectorAll('[data-slot=sheet]')].some(
-              (sheet) => sheet !== ref.current,
-            )
-            return !others && returnFocus.current?.isConnected ? returnFocus.current : false
-          }}
-          className={cn(
-            'fixed inset-x-0 top-auto bottom-[var(--keyboard,0px)] z-(--layer-sheet) m-0 mx-auto w-full max-w-app overflow-x-hidden overscroll-contain',
-            'max-h-[min(85dvh,calc(var(--visible,100dvh)-1rem))]',
-            'sheet rounded-t-xl border-2 border-b-0 border-border bg-card p-0 text-card-foreground focus:outline-none',
-          )}
-        >
-          <SheetBody sheet={ref}>
-            <div
-              data-sheet-handle
-              className="-mx-4 -mt-3 flex touch-none flex-col gap-4 px-4 pt-3"
-              onPointerDown={startDrag}
-              onPointerMove={moveDrag}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-            >
-              <div aria-hidden className="mx-auto h-1.5 w-10 rounded-full bg-border" />
-              <Drawer.Title className="text-title font-extrabold">{shown.title}</Drawer.Title>
-            </div>
-            {open || shownInDialog ? shown.children : null}
-          </SheetBody>
-        </Drawer.Popup>
-      </Drawer.Portal>
-    </Drawer.Root>
-  )
-}
-
-/**
- * The sheet's content. Mounted with the popup, so its effects find the popup in place:
- * the content bounces at its ends (the header's own drag is left alone), and the sheet
- * rests on the iOS keyboard, fits above it and keeps the field typed in above its toolbar.
- */
-function SheetBody({
-  sheet,
-  children,
-}: {
-  sheet: RefObject<HTMLElement | null>
-  children: ReactNode
-}) {
-  const body = useRef<HTMLDivElement>(null)
-  useBounce(sheet, { axes: ['y'], content: body, ignore: onHandle })
-  useVisibleArea(sheet, true)
-  useFieldAboveKeyboard(sheet, true)
-  return (
-    <div ref={body} className="flex flex-col gap-4 px-4 pt-3 pb-safe-4">
-      {children}
-    </div>
+      <SheetContext value={ref}>
+        <div ref={body} className="flex flex-col gap-4 px-4 pt-3 pb-safe-4">
+          <div
+            data-sheet-handle
+            className="-mx-4 -mt-3 flex touch-none flex-col gap-4 px-4 pt-3"
+            onPointerDown={startDrag}
+            onPointerMove={moveDrag}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+          >
+            <div aria-hidden className="mx-auto h-1.5 w-10 rounded-full bg-border" />
+            <h2 id={titleId} className="text-title font-extrabold">
+              {shown.title}
+            </h2>
+          </div>
+          {open || shownInDialog ? shown.children : null}
+        </div>
+      </SheetContext>
+    </dialog>
   )
 }

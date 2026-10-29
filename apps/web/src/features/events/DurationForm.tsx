@@ -12,6 +12,7 @@ import { Button, type ButtonTone } from '@lullabo/ui/button'
 import { FormError } from '@lullabo/ui/form-error'
 import { Input } from '@lullabo/ui/input'
 import { SegmentedControl } from '@lullabo/ui/segmented-control'
+import { useSheetContainer } from '@lullabo/ui/sheet'
 import { cn } from '@lullabo/ui/utils'
 import { type FormEvent, type ReactNode, useReducer, useState } from 'react'
 
@@ -282,6 +283,8 @@ const lastStartedAgo = createStoredValue<StartedAgo>(
 function StartButton({ kind, onStart }: { kind: DurationKind; onStart: (ago?: number) => void }) {
   const tone = durationTone(kind)
   const recent = useStore(lastStartedAgo)
+  // In a sheet, the menu opens in it: the page outside a sheet is out of reach.
+  const sheet = useSheetContainer()
   return (
     <fieldset aria-label={m.durationStartTimer()} className="m-0 flex min-w-0 border-0 p-0">
       <Button
@@ -308,7 +311,7 @@ function StartButton({ kind, onStart }: { kind: DurationKind; onStart: (ago?: nu
           </span>
           <Chevron direction="down" className="size-3.5" />
         </Menu.Trigger>
-        <Menu.Portal>
+        <Menu.Portal container={sheet}>
           <Menu.Positioner side="bottom" align="end" sideOffset={6} className="z-(--layer-popover)">
             <Menu.Popup className="flex min-w-36 flex-col rounded-lg border-2 border-b-4 border-border bg-background p-1.5 outline-none">
               {STARTED_AGO.map((ago) => (
