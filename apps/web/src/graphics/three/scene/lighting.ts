@@ -8,6 +8,8 @@ import * as THREE from 'three';
 
 /** The hemisphere's share of the sky light: most of it now comes from the sky environment (environment.ts, issue 208) */
 export const SKYLIGHT_INTENSITY = 0.15;
+/** The whole sky light where the environment is left out (the 3D view's light setup) */
+export const SKYLIGHT_WITHOUT_ENVIRONMENT = 1.6;
 export const SUN_INTENSITY = 2.8;
 /** The sky environment's strength: the ambient light and reflections of the scene */
 export const ENVIRONMENT_INTENSITY = 0.6;

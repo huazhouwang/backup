@@ -29,7 +29,7 @@ const walk = async (page, frame, metres) => {
   let gone = 0;
   let still = 0;
   await page.keyboard.down('w');
-  for (const end = Date.now() + 60_000; gone < metres && still < 6 && Date.now() < end; ) {
+  for (const end = Date.now() + 60_000; gone < metres && still < 6 && Date.now() < end;) {
     await page.waitForTimeout(250);
     const p = await probe(frame);
     const step = Math.hypot(p.x - at.x, p.z - at.z, p.foot - at.foot);

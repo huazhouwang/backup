@@ -12,6 +12,7 @@ import {
   shadowGround,
   siteBounds,
   SKYLIGHT_INTENSITY,
+  SKYLIGHT_WITHOUT_ENVIRONMENT,
   skyEnvironment,
   SUN_INTENSITY,
   sunLight,
@@ -60,18 +61,20 @@ export function HouseStage({
     sun.intensity = SUN_INTENSITY * strength * mood.sun;
     invalidate();
   }, [sun, toward?.x, toward?.y, toward?.z, strength, mood.sun]);
-  // The sky as image-based light (issue 208): soft shading by the sky's direction, and reflections in glass and glossy finishes
+  // The sky as image-based light (issue 208): soft shading by the sky's direction, and reflections in glass and glossy finishes.
+  // Sampling it costs every pixel, so the light setup goes without and takes more from the sky light instead
   const { gl, scene } = useThree();
+  const lit = quality === 'high';
   const env = useMemo(
-    () => skyEnvironment(gl, { sky: colors.sky, horizon: colors.backdrop, ground: colors.ground, sun: colors.sun }, toward ?? DEFAULT_SUN),
-    [gl, colors.sky, colors.backdrop, colors.ground, colors.sun, toward?.x, toward?.y, toward?.z],
+    () => (lit ? skyEnvironment(gl, { sky: colors.sky, horizon: colors.backdrop, ground: colors.ground, sun: colors.sun }, toward ?? DEFAULT_SUN) : null),
+    [lit, gl, colors.sky, colors.backdrop, colors.ground, colors.sun, toward?.x, toward?.y, toward?.z],
   );
   useEffect(() => {
     scene.environment = env;
     invalidate();
     return () => {
       if (scene.environment === env) scene.environment = null;
-      env.dispose();
+      env?.dispose();
     };
   }, [env]);
   useEffect(() => {
@@ -95,7 +98,7 @@ export function HouseStage({
   return (
     <>
       {/* A warm white sun and sky: lit faces are white, shadows a soft warm gray */}
-      <hemisphereLight args={[colors.skylight, colors.wall, SKYLIGHT_INTENSITY * mood.sky]} />
+      <hemisphereLight args={[colors.skylight, colors.wall, (lit ? SKYLIGHT_INTENSITY : SKYLIGHT_WITHOUT_ENVIRONMENT) * mood.sky]} />
       <primitive object={sun} />
       <primitive object={sun.target} />
       <primitive object={ground} position={[cx, groundY, cz]} />
