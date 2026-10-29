@@ -33,6 +33,11 @@
       "pbrMetallicRoughness": {"baseColorFactor": [0.6816, 0.6288, 0.563, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
       "extras": {"texture": "velvet"}
     },
+    "oatmeal": {
+      "name": {"zh": "燕麦色亚麻", "en": "Oatmeal linen"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7605, 0.6724, 0.5333, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
+      "extras": {"texture": "linen"}
+    },
     "linen": {
       "name": {"zh": "白色亚麻", "en": "White linen"},
       "pbrMetallicRoughness": {"baseColorFactor": [0.9235, 0.9119, 0.8884, 1], "metallicFactor": 0, "roughnessFactor": 0.9},
@@ -224,7 +229,7 @@
     },
     "teak": {
       "name": {"zh": "柚木地板", "en": "Teak flooring"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.4404, 0.216, 0.1038, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2542, 0.1441, 0.0802, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
       "extras": {"pattern": "planks", "size": [150, 1200], "color2": [0.2293, 0.0958, 0.0484, 1], "texture": "laminate"}
     },
     "tile": {
@@ -239,7 +244,7 @@
     },
     "redtile": {
       "name": {"zh": "红阶砖", "en": "Red clay tile"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.5831, 0.1645, 0.0839, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4342, 0.1946, 0.1221, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
       "extras": {"pattern": "tiles", "size": 300, "color2": [0.6537, 0.5274, 0.4407, 1], "texture": "terracotta"}
     },
     "paver": {
@@ -338,6 +343,41 @@
       "name": {"zh": "清水混凝土", "en": "Fair-faced concrete"},
       "pbrMetallicRoughness": {"baseColorFactor": [0.4535, 0.4535, 0.4205, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
       "extras": {"pattern": "tiles", "size": 1200, "color2": [0.3587, 0.3587, 0.3297, 1], "texture": "concrete"}
+    },
+    "limewash": {
+      "name": {"zh": "暖白石灰墙", "en": "Warm white limewash"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.8632, 0.8148, 0.7379, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
+      "extras": {"texture": "stucco"}
+    },
+    "greystone": {
+      "name": {"zh": "米灰石材大板", "en": "Honed stone slabs"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6445, 0.5711, 0.4452, 1], "metallicFactor": 0, "roughnessFactor": 0.6},
+      "extras": {"pattern": "tiles", "size": 900, "color2": [0.5029, 0.4233, 0.3005, 1], "texture": "marble"}
+    },
+    "slab": {
+      "name": {"zh": "砂岩石板", "en": "Sandstone slabs"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.6105, 0.4851, 0.314, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
+      "extras": {"pattern": "tiles", "size": 600, "color2": [0.4508, 0.3515, 0.2159, 1], "texture": "paving"}
+    },
+    "ochreplaster": {
+      "name": {"zh": "赭红灰泥", "en": "Terracotta lime plaster"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5271, 0.117, 0.0423, 1], "metallicFactor": 0, "roughnessFactor": 0.9},
+      "extras": {"texture": "stucco"}
+    },
+    "deck": {
+      "name": {"zh": "户外木平台", "en": "Timber decking"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2623, 0.1683, 0.0999, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "extras": {"pattern": "planks", "size": [140, 2400], "color2": [0.1119, 0.0685, 0.0395, 1], "texture": "planks"}
+    },
+    "palegravel": {
+      "name": {"zh": "浅色碎石", "en": "Pale gravel"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.624, 0.5841, 0.5089, 1], "metallicFactor": 0, "roughnessFactor": 1.0},
+      "extras": {"pattern": "speckled", "size": 600, "color2": [0.3763, 0.3467, 0.2918, 1], "color3": [0.7758, 0.7379, 0.6654, 1], "count": 260, "radius": [10, 24], "seed": 11, "texture": "gravel"}
+    },
+    "naturaloak": {
+      "name": {"zh": "原木色橡木地板", "en": "Natural oak flooring"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4851, 0.3763, 0.2582, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
+      "extras": {"pattern": "planks", "size": [180, 1800], "color2": [0.2747, 0.2016, 0.1274, 1], "texture": "laminate"}
     }
   },
   "looks": {
@@ -351,7 +391,7 @@
           "type": "string",
           "format": "material",
           "default": "fabric",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "布面", "en": "Fabric"},
           "description": "Material of the frame, arms and back"
         },
@@ -359,7 +399,7 @@
           "type": "string",
           "format": "material",
           "default": "cushion",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "坐垫", "en": "Cushions"},
           "description": "Material of the seat and back cushions"
         },
@@ -392,7 +432,7 @@
           "type": "string",
           "format": "material",
           "default": "cushion",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "坐垫", "en": "Cushions"},
           "description": "Material of the seat and back cushions"
         }
@@ -755,7 +795,7 @@
           "type": "string",
           "format": "material",
           "default": "linen",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "床单", "en": "Sheets"},
           "description": "Material of the mattress cover and pillows"
         },
@@ -763,7 +803,7 @@
           "type": "string",
           "format": "material",
           "default": "bedding",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "盖毯", "en": "Blanket"},
           "description": "Material of the blanket"
         }
@@ -1092,7 +1132,7 @@
           "type": "string",
           "format": "material",
           "default": "canvas",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "布面", "en": "Fabric"},
           "description": "Material of the frame, arms and back"
         },
@@ -1117,7 +1157,7 @@
           "type": "string",
           "format": "material",
           "default": "fabric",
-          "enum": ["fabric", "cushion", "linen", "bedding", "canvas", "canvas2"],
+          "enum": ["fabric", "cushion", "linen", "oatmeal", "bedding", "canvas", "canvas2"],
           "title": {"zh": "布面", "en": "Fabric"},
           "description": "Material of the frame, arms and back"
         }

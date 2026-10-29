@@ -4,6 +4,50 @@
   "formatVersion": 1,
   "styles": [
     {
+      "id": "warm-courtyard",
+      "name": {
+        "zh": "暖白合院",
+        "en": "Warm courtyard"
+      },
+      "aliases": [
+        "courtyard",
+        "warm-minimal"
+      ],
+      "exterior": "warm minimal courtyard house, warm white limewash walls, thin dark window frames, a slatted dark grey metal fence and screens, light grey large-format stone paving with fine joints, pale gravel strips, a timber deck, a multi-stem maple and clipped box balls with ferns and grasses, soft overcast daylight with dappled leaf shadows",
+      "interior": "warm minimal interior, warm white limewash walls, grey stone floor in large slabs, natural oak joinery, a rust-red microcement stair as the one accent, linen upholstery in warm greys, a jute rug, potted plants, soft warm daylight from a courtyard",
+      "palette": [
+        "#efe9df",
+        "#cdb998",
+        "#d2c7b2",
+        "#c0603a",
+        "#3d3b38"
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "ochreplaster",
+        "floors": {
+          "living": "greystone",
+          "dining": "greystone",
+          "kitchen": "greystone",
+          "bedroom": "naturaloak",
+          "study": "naturaloak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "greystone",
+          "stair": "ochreplaster",
+          "shrine": "greystone",
+          "tea": "naturaloak",
+          "garage": "cement",
+          "porch": "deck",
+          "balcony": "slab",
+          "terrace": "slab",
+          "courtyard": "slab",
+          "garden": "palegravel"
+        }
+      }
+    },
+    {
       "id": "modern-minimal",
       "name": {
         "zh": "现代简约",
@@ -21,7 +65,31 @@
         "#d9d6d0",
         "#a9a39a",
         "#3b3a38"
-      ]
+      ],
+      "finishes": {
+        "walls": "paint",
+        "accent": "concrete",
+        "floors": {
+          "living": "cement",
+          "dining": "cement",
+          "kitchen": "cement",
+          "bedroom": "oak",
+          "study": "oak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "cement",
+          "stair": "oak",
+          "shrine": "oak",
+          "tea": "oak",
+          "garage": "cement",
+          "porch": "slab",
+          "balcony": "slab",
+          "terrace": "slab",
+          "courtyard": "slab",
+          "garden": "palegravel"
+        }
+      }
     },
     {
       "id": "new-chinese",
@@ -40,7 +108,31 @@
         "#8a6a4f",
         "#4a3b30",
         "#6b7a6a"
-      ]
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "woodDark",
+        "floors": {
+          "living": "slate",
+          "dining": "slate",
+          "kitchen": "tile",
+          "bedroom": "teak",
+          "study": "teak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "slate",
+          "stair": "teak",
+          "shrine": "teak",
+          "tea": "teak",
+          "garage": "cement",
+          "porch": "slate",
+          "balcony": "slate",
+          "terrace": "slate",
+          "courtyard": "slate",
+          "garden": "gravel"
+        }
+      }
     },
     {
       "id": "ancient-chinese",
@@ -59,7 +151,31 @@
         "#3d3a36",
         "#e9dfcf",
         "#7a5a3a"
-      ]
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "woodDark",
+        "floors": {
+          "living": "slate",
+          "dining": "slate",
+          "kitchen": "tile",
+          "bedroom": "teak",
+          "study": "teak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "slate",
+          "stair": "teak",
+          "shrine": "teak",
+          "tea": "teak",
+          "garage": "cement",
+          "porch": "greybrick",
+          "balcony": "greybrick",
+          "terrace": "greybrick",
+          "courtyard": "greybrick",
+          "garden": "gravel"
+        }
+      }
     },
     {
       "id": "japanese",
@@ -78,7 +194,31 @@
         "#b89a74",
         "#2f2e2c",
         "#7d8b6a"
-      ]
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "woodDark",
+        "floors": {
+          "living": "naturaloak",
+          "dining": "naturaloak",
+          "kitchen": "naturaloak",
+          "bedroom": "naturaloak",
+          "study": "naturaloak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "naturaloak",
+          "stair": "naturaloak",
+          "shrine": "naturaloak",
+          "tea": "naturaloak",
+          "garage": "cement",
+          "porch": "deck",
+          "balcony": "deck",
+          "terrace": "deck",
+          "courtyard": "slab",
+          "garden": "palegravel"
+        }
+      }
     },
     {
       "id": "scandinavian",
@@ -96,7 +236,31 @@
         "#dcd3c3",
         "#9fb1b8",
         "#2e3133"
-      ]
+      ],
+      "finishes": {
+        "walls": "paint",
+        "accent": "birch",
+        "floors": {
+          "living": "oak",
+          "dining": "oak",
+          "kitchen": "tile",
+          "bedroom": "oak",
+          "study": "oak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "oak",
+          "stair": "oak",
+          "shrine": "oak",
+          "tea": "oak",
+          "garage": "cement",
+          "porch": "deck",
+          "balcony": "deck",
+          "terrace": "deck",
+          "courtyard": "slab",
+          "garden": "grass"
+        }
+      }
     },
     {
       "id": "french",
@@ -114,7 +278,31 @@
         "#c9b48f",
         "#6f7c8a",
         "#a88a5a"
-      ]
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "oak",
+        "floors": {
+          "living": "marble",
+          "dining": "marble",
+          "kitchen": "marble",
+          "bedroom": "oak",
+          "study": "oak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "marble",
+          "stair": "oak",
+          "shrine": "marble",
+          "tea": "oak",
+          "garage": "cement",
+          "porch": "slab",
+          "balcony": "slab",
+          "terrace": "slab",
+          "courtyard": "paver",
+          "garden": "grass"
+        }
+      }
     },
     {
       "id": "american",
@@ -132,7 +320,31 @@
         "#8b6b4e",
         "#3f4a52",
         "#9a7b5c"
-      ]
+      ],
+      "finishes": {
+        "walls": "paint",
+        "accent": "redbrick",
+        "floors": {
+          "living": "teak",
+          "dining": "teak",
+          "kitchen": "tile",
+          "bedroom": "teak",
+          "study": "teak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "teak",
+          "stair": "teak",
+          "shrine": "teak",
+          "tea": "teak",
+          "garage": "cement",
+          "porch": "deck",
+          "balcony": "deck",
+          "terrace": "deck",
+          "courtyard": "paver",
+          "garden": "grass"
+        }
+      }
     },
     {
       "id": "mediterranean",
@@ -147,7 +359,31 @@
         "#2f5f8a",
         "#c66b3d",
         "#8a9a5b"
-      ]
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "redtile",
+        "floors": {
+          "living": "redtile",
+          "dining": "redtile",
+          "kitchen": "tile",
+          "bedroom": "teak",
+          "study": "teak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "redtile",
+          "stair": "redtile",
+          "shrine": "redtile",
+          "tea": "teak",
+          "garage": "cement",
+          "porch": "redtile",
+          "balcony": "redtile",
+          "terrace": "redtile",
+          "courtyard": "redtile",
+          "garden": "gravel"
+        }
+      }
     },
     {
       "id": "industrial",
@@ -165,7 +401,31 @@
         "#3a3a3a",
         "#9c9c97",
         "#c9b79c"
-      ]
+      ],
+      "finishes": {
+        "walls": "concrete",
+        "accent": "redbrick",
+        "floors": {
+          "living": "cement",
+          "dining": "cement",
+          "kitchen": "cement",
+          "bedroom": "oak",
+          "study": "oak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "cement",
+          "stair": "cement",
+          "shrine": "cement",
+          "tea": "oak",
+          "garage": "cement",
+          "porch": "slab",
+          "balcony": "cement",
+          "terrace": "cement",
+          "courtyard": "slab",
+          "garden": "gravel"
+        }
+      }
     },
     {
       "id": "wabi-sabi",
@@ -183,7 +443,31 @@
         "#a8957c",
         "#6b5d4f",
         "#4a453f"
-      ]
+      ],
+      "finishes": {
+        "walls": "limewash",
+        "accent": "woodDark",
+        "floors": {
+          "living": "cement",
+          "dining": "cement",
+          "kitchen": "cement",
+          "bedroom": "naturaloak",
+          "study": "naturaloak",
+          "bath": "antislip",
+          "laundry": "antislip",
+          "storage": "cement",
+          "hall": "cement",
+          "stair": "cement",
+          "shrine": "naturaloak",
+          "tea": "naturaloak",
+          "garage": "cement",
+          "porch": "deck",
+          "balcony": "slab",
+          "terrace": "slab",
+          "courtyard": "slab",
+          "garden": "palegravel"
+        }
+      }
     }
   ]
 }

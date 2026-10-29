@@ -1,6 +1,6 @@
 import { sampleFile } from '../support.js';
 import { describe, expect, it } from 'vitest';
-import { areaReport, fromLegacy, migrate, SCHEMA_VERSION, validate } from '../../src/index.js';
+import { areaReport, createRegistry, fromLegacy, migrate, SCHEMA_VERSION, Session, validate } from '../../src/index.js';
 
 const read = sampleFile;
 const legacy = read('legacy.json');
@@ -11,8 +11,11 @@ const expected = read('expected-areas.json') as {
 describe('乌石合院 scheme 10', () => {
   const project = migrate(read('project.json'));
 
-  it('committed project.json matches the conversion output (conversion is rerunnable)', () => {
-    expect(project).toEqual(fromLegacy(legacy));
+  it("committed project.json matches the conversion output after the designer's pass (conversion is rerunnable)", async () => {
+    const session = new Session(fromLegacy(legacy));
+    const registry = createRegistry();
+    for (const c of read('redecorate.json').calls) expect((await registry.call(c.name, c.input, { session, actor: { kind: 'agent' } })).ok, c.name).toBe(true);
+    expect(project).toEqual(session.project);
   });
 
   it('passes structural validation', () => {

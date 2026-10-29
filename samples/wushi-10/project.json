@@ -1,6 +1,6 @@
 {
  "schema": "opensu/project",
- "version": 3,
+ "version": 21,
  "id": "wushi-courtyard-10",
  "name": "乌石合院 · 方案十",
  "language": "zh",
@@ -149,7 +149,8 @@
      "sill": 2490,
      "glazing": "glass-block"
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w02",
@@ -184,7 +185,8 @@
      "height": 900,
      "sill": 1200
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w03",
@@ -219,7 +221,8 @@
      "height": 2400,
      "sill": 0
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w04",
@@ -235,7 +238,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L1-w05",
@@ -251,7 +255,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L1-w06",
@@ -287,7 +292,8 @@
      "height": 2100,
      "sill": 0
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w07",
@@ -314,7 +320,8 @@
      "height": 2400,
      "sill": 0
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w08",
@@ -331,7 +338,8 @@
    "thickness": 180,
    "kind": "fence",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "ochreplaster"
   },
   {
    "id": "L1-w09",
@@ -348,7 +356,8 @@
    "thickness": 180,
    "kind": "fence",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "ochreplaster"
   },
   {
    "id": "L1-w10",
@@ -365,7 +374,8 @@
    "thickness": 240,
    "kind": "fence",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L1-w11",
@@ -381,7 +391,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L1-w12",
@@ -411,7 +422,8 @@
       "side": "left"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w13",
@@ -454,7 +466,8 @@
       "side": "right"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w14",
@@ -480,7 +493,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w15",
@@ -515,7 +529,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w16",
@@ -542,7 +557,8 @@
      "sill": 1500,
      "glazing": "glass-block"
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w17",
@@ -598,7 +614,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w18",
@@ -615,7 +632,8 @@
    "thickness": 240,
    "kind": "fence",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L1-w19",
@@ -632,7 +650,8 @@
    "thickness": 240,
    "kind": "fence",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L1-w20",
@@ -662,7 +681,8 @@
       "side": "right"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w21",
@@ -697,7 +717,8 @@
      "height": 700,
      "sill": 2300
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w22",
@@ -724,7 +745,8 @@
      "sill": 1000,
      "glazing": "glass-block"
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w23",
@@ -754,7 +776,8 @@
       "side": "right"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L1-w24",
@@ -770,7 +793,8 @@
    ],
    "thickness": 120,
    "kind": "partition",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L2-w01",
@@ -825,7 +849,8 @@
      "sill": 0,
      "glazing": "glass-block"
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w02",
@@ -880,7 +905,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w03",
@@ -915,7 +941,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w04",
@@ -931,7 +958,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L2-w05",
@@ -947,7 +975,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L2-w06",
@@ -977,7 +1006,8 @@
       "side": "left"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w07",
@@ -1007,7 +1037,8 @@
       "side": "left"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w08",
@@ -1023,7 +1054,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L2-w09",
@@ -1049,7 +1081,8 @@
      "height": 2400,
      "sill": 0
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w10",
@@ -1075,7 +1108,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w11",
@@ -1118,7 +1152,8 @@
       "side": "right"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L2-w12",
@@ -1135,7 +1170,8 @@
    "thickness": 200,
    "kind": "partition",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L2-w13",
@@ -1152,7 +1188,8 @@
    "thickness": 200,
    "kind": "partition",
    "height": 1970,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L2-w14",
@@ -1184,7 +1221,8 @@
    ],
    "thickness": 120,
    "kind": "partition",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L3-w01",
@@ -1239,7 +1277,8 @@
      "sill": 0,
      "glazing": "glass-block"
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w02",
@@ -1294,7 +1333,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w03",
@@ -1329,7 +1369,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w04",
@@ -1345,7 +1386,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L3-w05",
@@ -1361,7 +1403,8 @@
    ],
    "thickness": 180,
    "kind": "bearing",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "L3-w06",
@@ -1391,7 +1434,8 @@
       "side": "left"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w07",
@@ -1417,7 +1461,8 @@
      "height": 2400,
      "sill": 0
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w08",
@@ -1452,7 +1497,8 @@
      "height": 1500,
      "sill": 900
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w09",
@@ -1543,7 +1589,8 @@
       "side": "right"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "L3-w13",
@@ -1559,7 +1606,8 @@
    ],
    "thickness": 120,
    "kind": "partition",
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w01",
@@ -1576,7 +1624,8 @@
    "thickness": 200,
    "kind": "parapet",
    "height": 1100,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w02",
@@ -1593,7 +1642,8 @@
    "thickness": 200,
    "kind": "parapet",
    "height": 1100,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w03",
@@ -1610,7 +1660,8 @@
    "thickness": 200,
    "kind": "parapet",
    "height": 1100,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w04",
@@ -1627,7 +1678,8 @@
    "thickness": 200,
    "kind": "parapet",
    "height": 1100,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w05",
@@ -1644,7 +1696,8 @@
    "thickness": 180,
    "kind": "bearing",
    "height": 2800,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w06",
@@ -1675,7 +1728,8 @@
       "side": "left"
      }
     }
-   ]
+   ],
+   "finish": "limewash"
   },
   {
    "id": "RF-w07",
@@ -1692,7 +1746,8 @@
    "thickness": 180,
    "kind": "bearing",
    "height": 2800,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   },
   {
    "id": "RF-w08",
@@ -1709,7 +1764,8 @@
    "thickness": 180,
    "kind": "bearing",
    "height": 2800,
-   "openings": []
+   "openings": [],
+   "finish": "limewash"
   }
  ],
  "spaces": [
@@ -1740,7 +1796,7 @@
      ]
     }
    ],
-   "floor": "tile"
+   "floor": "greystone"
   },
   {
    "id": "L1-s02",
@@ -1769,7 +1825,7 @@
      ]
     }
    ],
-   "floor": "wood"
+   "floor": "greystone"
   },
   {
    "id": "L1-s03",
@@ -1806,7 +1862,7 @@
      ]
     }
    ],
-   "floor": "wood"
+   "floor": "greystone"
   },
   {
    "id": "L1-s04",
@@ -1950,7 +2006,7 @@
      ]
     }
    ],
-   "floor": "terrazzo",
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
@@ -1990,7 +2046,7 @@
      ]
     }
    ],
-   "floor": "terrazzo"
+   "floor": "greystone"
   },
   {
    "id": "L1-s09",
@@ -2019,7 +2075,7 @@
      ]
     }
    ],
-   "floor": "redtile"
+   "floor": "deck"
   },
   {
    "id": "L1-s10",
@@ -2072,7 +2128,7 @@
      ]
     }
    ],
-   "floor": "paver"
+   "floor": "slab"
   },
   {
    "id": "L1-s11",
@@ -2101,7 +2157,7 @@
      ]
     }
    ],
-   "floor": "paver"
+   "floor": "slab"
   },
   {
    "id": "L1-s12",
@@ -2130,7 +2186,7 @@
      ]
     }
    ],
-   "floor": "gravel"
+   "floor": "palegravel"
   },
   {
    "id": "L1-s13",
@@ -2159,7 +2215,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "greystone"
   },
   {
    "id": "L1-s14",
@@ -2188,7 +2244,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L1-s15",
@@ -2217,7 +2273,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L1-s16",
@@ -2275,7 +2331,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L2-s02",
@@ -2333,8 +2389,7 @@
      ]
     }
    ],
-   "floor": "terrazzo",
-   "slabOpening": true,
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
@@ -2374,7 +2429,7 @@
      ]
     }
    ],
-   "floor": "terrazzo"
+   "floor": "slab"
   },
   {
    "id": "L2-s05",
@@ -2403,7 +2458,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L2-s06",
@@ -2432,7 +2487,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L2-s07",
@@ -2461,7 +2516,7 @@
      ]
     }
    ],
-   "floor": "redtile"
+   "floor": "slab"
   },
   {
    "id": "L3-s01",
@@ -2490,7 +2545,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "greystone"
   },
   {
    "id": "L3-s02",
@@ -2548,8 +2603,7 @@
      ]
     }
    ],
-   "floor": "terrazzo",
-   "slabOpening": true,
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
@@ -2589,7 +2643,7 @@
      ]
     }
    ],
-   "floor": "terrazzo"
+   "floor": "greystone"
   },
   {
    "id": "L3-s05",
@@ -2618,7 +2672,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L3-s06",
@@ -2647,7 +2701,7 @@
      ]
     }
    ],
-   "floor": "oak"
+   "floor": "naturaloak"
   },
   {
    "id": "L3-s07",
@@ -2676,7 +2730,7 @@
      ]
     }
    ],
-   "floor": "cement"
+   "floor": "slab"
   },
   {
    "id": "RF-s01",
@@ -2713,7 +2767,7 @@
      ]
     }
    ],
-   "floor": "redtile"
+   "floor": "slab"
   },
   {
    "id": "RF-s02",
@@ -2742,11 +2796,97 @@
      ]
     }
    ],
-   "floor": "terrazzo",
-   "slabOpening": true,
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
+  },
+  {
+   "id": "L2-s03-void",
+   "name": "楼梯洞口",
+   "level": "L2",
+   "kind": "void",
+   "shape": [
+    {
+     "outer": [
+      [
+       15030,
+       3700
+      ],
+      [
+       15030,
+       120
+      ],
+      [
+       17250,
+       120
+      ],
+      [
+       17250,
+       3700
+      ]
+     ]
+    }
+   ],
+   "floor": "terrazzo"
+  },
+  {
+   "id": "L3-s03-void",
+   "name": "楼梯洞口",
+   "level": "L3",
+   "kind": "void",
+   "shape": [
+    {
+     "outer": [
+      [
+       15030,
+       3420
+      ],
+      [
+       15030,
+       120
+      ],
+      [
+       17250,
+       120
+      ],
+      [
+       17250,
+       3420
+      ]
+     ]
+    }
+   ],
+   "floor": "terrazzo"
+  },
+  {
+   "id": "RF-s02-void",
+   "name": "楼梯洞口",
+   "level": "RF",
+   "kind": "void",
+   "shape": [
+    {
+     "outer": [
+      [
+       15030,
+       3420
+      ],
+      [
+       15030,
+       120
+      ],
+      [
+       17250,
+       120
+      ],
+      [
+       17250,
+       3420
+      ]
+     ]
+    }
+   ],
+   "floor": "terrazzo"
   }
  ],
  "elements": [
@@ -2990,6 +3130,9 @@
     "w": 900,
     "d": 900,
     "h": 750
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
@@ -3006,6 +3149,9 @@
     "w": 400,
     "d": 400,
     "h": 450
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
@@ -3022,6 +3168,9 @@
     "w": 400,
     "d": 400,
     "h": 450
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
@@ -3038,6 +3187,9 @@
     "w": 400,
     "d": 400,
     "h": 450
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
@@ -3054,6 +3206,9 @@
     "w": 400,
     "d": 400,
     "h": 450
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
@@ -3215,6 +3370,10 @@
     "w": 1800,
     "d": 400,
     "h": 500
+   },
+   "lookParams": {
+    "body": "wood",
+    "legs": "dark"
    }
   },
   {
@@ -3231,12 +3390,16 @@
     "w": 1200,
     "d": 600,
     "h": 420
+   },
+   "lookParams": {
+    "top": "wood",
+    "legs": "wood"
    }
   },
   {
    "id": "L1-f25",
    "name": "客厅·三人沙发",
-   "type": "sofa3",
+   "type": "sofa",
    "level": "L1",
    "position": [
     6500,
@@ -3247,6 +3410,11 @@
     "w": 2100,
     "d": 900,
     "h": 800
+   },
+   "lookParams": {
+    "fabric": "oatmeal",
+    "legs": "wood",
+    "cushion": "oatmeal"
    }
   },
   {
@@ -3268,7 +3436,7 @@
   {
    "id": "L1-f27",
    "name": "庭院·透水砖·种植带",
-   "type": "bed",
+   "type": "planter",
    "level": "L1",
    "position": [
     12795,
@@ -3279,12 +3447,15 @@
     "w": 8930,
     "d": 600,
     "h": 500
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
    "id": "L1-f28",
    "name": "庭院·透水砖·种植带（2）",
-   "type": "bed",
+   "type": "planter",
    "level": "L1",
    "position": [
     16960,
@@ -3295,12 +3466,15 @@
     "w": 2160,
     "d": 600,
     "h": 500
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
    "id": "L1-f29",
    "name": "庭院·碎石·种植带",
-   "type": "bed",
+   "type": "planter",
    "level": "L1",
    "position": [
     2540,
@@ -3311,12 +3485,15 @@
     "w": 4540,
     "d": 600,
     "h": 500
+   },
+   "lookParams": {
+    "wood": "wood"
    }
   },
   {
    "id": "L1-f30",
    "name": "浴室·钻石型淋浴房",
-   "type": "shower5",
+   "type": "shower",
    "level": "L1",
    "position": [
     13490,
@@ -3327,6 +3504,9 @@
     "w": 1000,
     "d": 1000,
     "h": 2000
+   },
+   "lookParams": {
+    "shape": "diamond"
    }
   },
   {
@@ -3447,7 +3627,7 @@
   {
    "id": "L1-f38",
    "name": "老人房二·双人床1.5",
-   "type": "bed15",
+   "type": "bed",
    "level": "L1",
    "position": [
     11865,
@@ -3511,7 +3691,7 @@
   {
    "id": "L1-f42",
    "name": "老人房一·双人床1.5",
-   "type": "bed15",
+   "type": "bed",
    "level": "L1",
    "position": [
     15735,
@@ -3575,7 +3755,7 @@
   {
    "id": "L2-f01",
    "name": "次卧一·双人床1.5",
-   "type": "bed15",
+   "type": "bed",
    "level": "L2",
    "position": [
     11530,
@@ -3815,7 +3995,7 @@
   {
    "id": "L2-f16",
    "name": "主卧·双人床1.8",
-   "type": "bed18",
+   "type": "bed",
    "level": "L2",
    "position": [
     11865,
@@ -3879,7 +4059,7 @@
   {
    "id": "L2-f20",
    "name": "次卧五·双人床1.5",
-   "type": "bed15",
+   "type": "bed",
    "level": "L2",
    "position": [
     15735,
@@ -4131,12 +4311,16 @@
     "w": 2200,
     "d": 400,
     "h": 500
+   },
+   "lookParams": {
+    "body": "wood",
+    "legs": "dark"
    }
   },
   {
    "id": "L3-f11",
    "name": "娱乐厅·三人沙发",
-   "type": "sofa3",
+   "type": "sofa",
    "level": "L3",
    "position": [
     10150,
@@ -4147,6 +4331,11 @@
     "w": 2200,
     "d": 900,
     "h": 800
+   },
+   "lookParams": {
+    "fabric": "oatmeal",
+    "legs": "wood",
+    "cushion": "oatmeal"
    }
   },
   {
@@ -4163,6 +4352,10 @@
     "w": 1200,
     "d": 600,
     "h": 420
+   },
+   "lookParams": {
+    "top": "wood",
+    "legs": "wood"
    }
   },
   {
@@ -4200,7 +4393,7 @@
   {
    "id": "L3-f15",
    "name": "次卧三·双人床1.5",
-   "type": "bed15",
+   "type": "bed",
    "level": "L3",
    "position": [
     11865,
@@ -4264,7 +4457,7 @@
   {
    "id": "L3-f19",
    "name": "次卧四·双人床1.5",
-   "type": "bed15",
+   "type": "bed",
    "level": "L3",
    "position": [
     15735,
@@ -4323,54 +4516,6 @@
     "w": 1400,
     "d": 600,
     "h": 2200
-   }
-  },
-  {
-   "id": "RF-f01",
-   "name": "屋顶平台·太阳能热水器",
-   "type": "solar",
-   "level": "RF",
-   "position": [
-    12500,
-    8000
-   ],
-   "rotation": 0,
-   "size": {
-    "w": 2000,
-    "d": 1500,
-    "h": 1300
-   }
-  },
-  {
-   "id": "RF-f02",
-   "name": "屋顶平台·水塔",
-   "type": "watertank",
-   "level": "RF",
-   "position": [
-    11200,
-    1200
-   ],
-   "rotation": 0,
-   "size": {
-    "w": 1000,
-    "d": 1000,
-    "h": 1400
-   }
-  },
-  {
-   "id": "RF-f03",
-   "name": "屋顶平台·晾衣架",
-   "type": "dryrack",
-   "level": "RF",
-   "position": [
-    16000,
-    7600
-   ],
-   "rotation": 0,
-   "size": {
-    "w": 2400,
-    "d": 600,
-    "h": 1700
    }
   },
   {
@@ -4486,26 +4631,17 @@
      "h": 850
     }
    },
-   "bed": {
-    "name": "种植带",
+   "planter": {
+    "name": "种植池",
     "group": "庭院",
     "size": {
-     "w": 3000,
-     "d": 600,
-     "h": 500
-    }
-   },
-   "bed15": {
-    "name": "双人床1.5",
-    "group": "卧室",
-    "size": {
-     "w": 1500,
-     "d": 2000,
+     "w": 1000,
+     "d": 1000,
      "h": 450
     }
    },
-   "bed18": {
-    "name": "双人床1.8",
+   "bed": {
+    "name": "床",
     "group": "卧室",
     "size": {
      "w": 1800,
@@ -4621,15 +4757,6 @@
      "h": 2000
     }
    },
-   "shower5": {
-    "name": "钻石型淋浴房",
-    "group": "卫浴",
-    "size": {
-     "w": 1000,
-     "d": 1000,
-     "h": 2000
-    }
-   },
    "shrine": {
     "name": "神位",
     "group": "客厅",
@@ -4657,8 +4784,8 @@
      "h": 800
     }
    },
-   "sofa3": {
-    "name": "三人沙发",
+   "sofa": {
+    "name": "沙发",
     "group": "客厅",
     "size": {
      "w": 2100,
@@ -4757,44 +4884,7 @@
     }
    }
   },
-  "materials": {
-   "antislip": {
-    "name": "防滑砖",
-    "tileSize": 1200
-   },
-   "cement": {
-    "name": "微水泥",
-    "tileSize": 2000
-   },
-   "gravel": {
-    "name": "碎石",
-    "tileSize": 800
-   },
-   "oak": {
-    "name": "浅橡木地板",
-    "tileSize": 1200
-   },
-   "paver": {
-    "name": "透水砖",
-    "tileSize": 600
-   },
-   "redtile": {
-    "name": "红阶砖",
-    "tileSize": 1200
-   },
-   "terrazzo": {
-    "name": "水磨石",
-    "tileSize": 800
-   },
-   "tile": {
-    "name": "米白瓷砖",
-    "tileSize": 1600
-   },
-   "wood": {
-    "name": "柚木地板",
-    "tileSize": 1200
-   }
-  },
+  "materials": {},
   "elements": {
    "pond": {
     "name": "鱼池",
@@ -4858,6 +4948,8 @@
      3.141592653589793
     ]
    ]
-  }
- }
+  },
+  "style": "warm-courtyard"
+ },
+ "widgets": []
 }

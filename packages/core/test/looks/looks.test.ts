@@ -1,5 +1,5 @@
 /** Looks in a design: adding, using, per-object looks, new furniture types, all through capabilities */
-import { sampleFile } from '../support.js';
+import { sampleFile, v3Sample } from '../support.js';
 import { describe, expect, it } from 'vitest';
 import {
   buildRecipe,
@@ -107,7 +107,8 @@ describe('looks', () => {
   });
 
   it('params_set customises one object without changing its look; unknown names and values that do not build are refused', async () => {
-    const h = harness(sample());
+    // The sample before the designer's pass (issue 217), whose sofas still have their look's defaults
+    const h = harness(migrate(v3Sample()));
     const sofa = h.session.project.furniture.find(f => f.type === 'sofa')!;
     const r = await h.call('params_set', { object: sofa.id, params: { fabric: 'linen', decor: false } });
     expect(r.ok).toBe(false);

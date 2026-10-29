@@ -8,6 +8,8 @@ import { elementGeometry } from '../geometry/elements.js';
 import { rect, wallLength } from '../geometry/geometry.js';
 import { nextId, uniqueName } from '../geometry/topology.js';
 import { NAME_SEPARATOR, names } from '../model/names.js';
+import { roomRole } from '../model/roles.js';
+import { DEFAULT_STYLE_ID, stylePreset } from '../render/styles.js';
 import type { Element, Furniture, Opening, Project, Space, Wall } from '../model/schema.js';
 import type { Box, Layout, Placed, PlacedKind, Side } from './layout.js';
 import { EXTRA_NAMES, ROOM_TYPES, roomTypeName, SLEEPING, type RoomType } from './program.js';
@@ -17,22 +19,12 @@ const MARGIN = { north: 3000, south: 6000, side: 3000 };
 const EXTERIOR = 240;
 const PARTITION = 120;
 
-const FLOOR: Partial<Record<PlacedKind, string>> = {
-  living: 'oak',
-  dining: 'oak',
-  kitchen: 'tile',
-  bath: 'antislip',
-  laundry: 'antislip',
-  storage: 'cement',
-  garage: 'cement',
-  corridor: 'tile',
-  stair: 'terrazzo',
-  veranda: 'paver',
-  terrace: 'paver',
-  courtyard: 'gravel',
-  shrine: 'terrazzo',
-  tea: 'teak',
-};
+/** The design language a house is finished in (issue 217): the first style the owner picked that is one, else the default */
+function finishesOf(p: Project) {
+  const style = p.brief.style?.map(stylePreset).find(Boolean) ?? stylePreset(DEFAULT_STYLE_ID)!;
+  p.extras = { ...p.extras, style: style.id };
+  return style.finishes;
+}
 
 const INDOOR = (k: PlacedKind) => k !== 'veranda' && k !== 'courtyard' && k !== 'terrace';
 
@@ -526,6 +518,7 @@ function furniture(c: Ctx) {
 
 /** Writes a layout into a project whose levels already stack (one per storey, then the roof) and that is otherwise empty */
 export function buildLayout(p: Project, layout: Layout) {
+  const finishes = finishesOf(p);
   const storeys = [...p.levels].filter(l => !l.roof).sort((a, b) => a.elevation - b.elevation);
   const c: Ctx = { p, layout, ox: MARGIN.side, oy: MARGIN.north, level: f => storeys[f].id, made: new Map() };
   const W = layout.width + 2 * MARGIN.side,
@@ -548,7 +541,10 @@ export function buildLayout(p: Project, layout: Layout) {
                 : extraName(p, s.kind));
     const kind: Space['kind'] = s.kind === 'courtyard' ? 'outdoor' : s.kind === 'veranda' ? 'semi-outdoor' : s.kind === 'terrace' ? 'roof-terrace' : 'indoor';
     const g = at(c, s.box);
-    const sp = addSpace(p, c.level(s.floor), name, [rect(g.x0, g.y0, g.x1, g.y1)], kind, FLOOR[s.kind] ?? 'oak');
+    const sp = addSpace(p, c.level(s.floor), name, [rect(g.x0, g.y0, g.x1, g.y1)], kind, finishes.floors.hall);
+    // What the room is for, recorded, and its floor in the design language
+    sp.extras = { ...sp.extras, room: s.kind };
+    sp.floor = finishes.floors[roomRole(sp)];
     c.made.set(s.key, sp);
   }
   const floors = Math.max(...layout.spaces.map(s => s.floor)) + 1;
@@ -563,6 +559,7 @@ export function buildLayout(p: Project, layout: Layout) {
   openings(c);
   stairs(c);
   furniture(c);
+  for (const w of p.walls) if (w.kind !== 'railing') w.finish = finishes.walls;
   for (let f = 0; f < floors; f++) renameWalls(p, c.level(f));
   return c.made;
 }

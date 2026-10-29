@@ -7,6 +7,8 @@ const json = (...path: string[]) => JSON.parse(readFileSync(join(ROOT, ...path),
 
 /** A file of the wushi-10 sample, as stored (not migrated) */
 export const sampleFile = (file = 'project.json') => json('samples/wushi-10', file);
+/** The sample as stored before it was redecorated (issue 217): a real version 3 file, for the migrations */
+export const v3Sample = () => JSON.parse(readFileSync(join(import.meta.dirname, 'fixtures/wushi-10-v3.json'), 'utf8'));
 /** A look library file in libraries/ */
 export const libraryFile = (name: string) => json('libraries', name);
 /** The web app's UI messages for a locale */

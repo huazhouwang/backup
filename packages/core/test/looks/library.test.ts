@@ -1,5 +1,5 @@
 /** Look library files (#93): the built-in files, parsing, groups and types, parameters as JSON Schema, materials, the v7 migration */
-import { sampleFile, libraryFile } from '../support.js';
+import { sampleFile, libraryFile, v3Sample } from '../support.js';
 import { describe, expect, it } from 'vitest';
 import {
   BUILTIN_LIBRARIES,
@@ -140,7 +140,7 @@ describe('parameters', () => {
 
 describe('v7 migration', () => {
   it('merges furniture types without changing how anything looks', () => {
-    const before = sample();
+    const before = v3Sample();
     const p = migrate(before);
     const types = new Set(p.furniture.map(f => f.type));
     for (const old of ['sofa3', 'sofa2', 'bed18', 'bed15', 'bed12', 'shower5']) expect(types.has(old), old).toBe(false);

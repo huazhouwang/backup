@@ -6,6 +6,17 @@
 import { z } from 'zod';
 import stylesFile from '../../../../libraries/styles.json' with { type: 'json' };
 import type { Names } from '../looks/material.js';
+import { ROOM_ROLES, type RoomRole } from '../model/roles.js';
+
+/**
+ * What a design language builds with (issue 217): a material for the walls, one for each room role's floor, and the accent it
+ * saves for one feature (a stair, a front door). Material ids of the default library.
+ */
+export interface Finishes {
+  walls: string;
+  accent: string;
+  floors: Record<RoomRole, string>;
+}
 
 export interface StylePreset {
   id: string;
@@ -20,6 +31,8 @@ export interface StylePreset {
   negative?: string;
   /** Its main colours, lightest first (#rrggbb) */
   palette: string[];
+  /** What a design in this style is finished with */
+  finishes: Finishes;
 }
 
 const zStyle = z
@@ -37,6 +50,13 @@ const zStyle = z
       .array(z.string().regex(/^#[0-9a-f]{6}$/))
       .min(2)
       .max(6),
+    finishes: z
+      .object({
+        walls: z.string(),
+        accent: z.string(),
+        floors: z.object(Object.fromEntries(ROOM_ROLES.map(r => [r, z.string()])) as Record<RoomRole, z.ZodString>).strict(),
+      })
+      .strict(),
   })
   .strict();
 
@@ -46,6 +66,9 @@ export const zStylesFile = z
   .refine(f => new Set(f.styles.map(s => s.id)).size === f.styles.length, 'style ids must be unique');
 
 export const STYLE_PRESETS: StylePreset[] = zStylesFile.parse(stylesFile).styles;
+
+/** The design language a new house is finished in (the first of the file) */
+export const DEFAULT_STYLE_ID = STYLE_PRESETS[0].id;
 
 /** A preset by its id or one of its aliases */
 export const stylePreset = (key: string) => STYLE_PRESETS.find(s => s.id === key) ?? STYLE_PRESETS.find(s => s.aliases?.includes(key));
@@ -57,6 +80,7 @@ export const customStyle = (words: string): StylePreset => ({
   exterior: words,
   interior: words,
   palette: ['#f2f1ee', '#3b3a38'],
+  finishes: STYLE_PRESETS[0].finishes,
 });
 
 /** What every render keeps: the building as modelled. Image models follow positive instructions better than lists of don'ts. */

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/styles.schema.json",
   "title": "OpenSU style presets",
-  "description": "Styles a design can be rendered in (issue 195): what the image model is asked for outside and inside, and a palette for swatches and previews. See packages/core/src/render/styles.ts.",
+  "description": "Styles a design can be rendered in (issue 195): what the image model is asked for outside and inside, a palette for swatches and previews, and the finishes a design in it is built with (issue 217). See packages/core/src/render/styles.ts.",
   "type": "object",
   "required": [
     "format",
@@ -30,7 +30,8 @@
           "name",
           "exterior",
           "interior",
-          "palette"
+          "palette",
+          "finishes"
         ],
         "additionalProperties": false,
         "properties": {
@@ -63,7 +64,7 @@
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9-]*$"
             },
-            "description": "Other keys the style is known by (as the brief records styles: modern, chinese, nordic\u2026)"
+            "description": "Other keys the style is known by (as the brief records styles: modern, chinese, nordic…)"
           },
           "exterior": {
             "type": "string",
@@ -88,6 +89,104 @@
               "pattern": "^#[0-9a-f]{6}$"
             },
             "description": "The style's main colours, lightest first"
+          },
+          "finishes": {
+            "type": "object",
+            "description": "What a design in this style is finished with (issue 217): material ids of the default library for the walls, each room role's floor, and the accent kept for one feature",
+            "required": [
+              "walls",
+              "accent",
+              "floors"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "walls": {
+                "type": "string"
+              },
+              "accent": {
+                "type": "string"
+              },
+              "floors": {
+                "type": "object",
+                "required": [
+                  "living",
+                  "dining",
+                  "kitchen",
+                  "bedroom",
+                  "study",
+                  "bath",
+                  "laundry",
+                  "storage",
+                  "hall",
+                  "stair",
+                  "shrine",
+                  "tea",
+                  "garage",
+                  "porch",
+                  "balcony",
+                  "terrace",
+                  "courtyard",
+                  "garden"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "living": {
+                    "type": "string"
+                  },
+                  "dining": {
+                    "type": "string"
+                  },
+                  "kitchen": {
+                    "type": "string"
+                  },
+                  "bedroom": {
+                    "type": "string"
+                  },
+                  "study": {
+                    "type": "string"
+                  },
+                  "bath": {
+                    "type": "string"
+                  },
+                  "laundry": {
+                    "type": "string"
+                  },
+                  "storage": {
+                    "type": "string"
+                  },
+                  "hall": {
+                    "type": "string"
+                  },
+                  "stair": {
+                    "type": "string"
+                  },
+                  "shrine": {
+                    "type": "string"
+                  },
+                  "tea": {
+                    "type": "string"
+                  },
+                  "garage": {
+                    "type": "string"
+                  },
+                  "porch": {
+                    "type": "string"
+                  },
+                  "balcony": {
+                    "type": "string"
+                  },
+                  "terrace": {
+                    "type": "string"
+                  },
+                  "courtyard": {
+                    "type": "string"
+                  },
+                  "garden": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

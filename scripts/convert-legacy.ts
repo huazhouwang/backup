@@ -1,12 +1,20 @@
-// Converts samples/wushi-<scheme>/legacy.json into a schema-conformant project.json and prints an area comparison.
+// Converts samples/wushi-<scheme>/legacy.json into a schema-conformant project.json, then replays the designer's pass in
+// redecorate.json when there is one (issue 217: finishes and furnishings, the layout untouched), and prints an area comparison.
 // Usage: npm run convert -- [scheme=10]
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { areaReport, fromLegacy, validate } from '@opensu/core';
+import { areaReport, createRegistry, fromLegacy, Session, validate } from '@opensu/core';
 
 const sch = Number(process.argv[2] ?? 10);
 const dir = join(import.meta.dirname, '..', `samples/wushi-${sch}`);
-const project = fromLegacy(JSON.parse(readFileSync(join(dir, 'legacy.json'), 'utf8')));
+const session = new Session(fromLegacy(JSON.parse(readFileSync(join(dir, 'legacy.json'), 'utf8'))));
+const pass = join(dir, 'redecorate.json');
+const registry = createRegistry();
+for (const c of existsSync(pass) ? JSON.parse(readFileSync(pass, 'utf8')).calls : []) {
+  const r = await registry.call(c.name, c.input, { session, actor: { kind: 'agent' } });
+  if (!r.ok) throw new Error(`${c.name}: ${JSON.stringify(r)}`);
+}
+const project = session.project;
 const issues = validate(project);
 if (issues.length) {
   for (const i of issues) console.error(`${i.path}: ${i.message}`);
