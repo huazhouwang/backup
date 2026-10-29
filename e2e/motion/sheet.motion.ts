@@ -169,7 +169,7 @@ test('closes when dragged far', async ({ page }) => {
 test('bounces at the ends of its content', async ({ page }) => {
   const r = await recorder(page, 'content-bounce')
   // A short sheet, pulled up past its end.
-  await page.locator('main').getByRole('button', { name: '更多记录' }).click()
+  await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
   await page.waitForTimeout(600)
   const short = await page.getByRole('dialog').locator('button').last().boundingBox()
   if (!short) throw new Error('no sheet content')
@@ -201,7 +201,7 @@ test('pins the page behind it', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 400 })
   await page.evaluate(() => window.scrollTo(0, 200))
   await r.capture('page-scrolled')
-  await page.locator('main').getByRole('button', { name: '更多记录' }).click()
+  await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
   await page.waitForTimeout(600)
   await r.capture('sheet-up')
   await page.keyboard.press('Escape')

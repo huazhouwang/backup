@@ -15,7 +15,7 @@ test('the page bounces past its top and springs back', async ({ page }) => {
 
 test('a short sheet bounces on its own, without moving the page', async ({ page }) => {
   await onboard(page)
-  await page.locator('main').getByRole('button', { name: '更多记录' }).click()
+  await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
   await expect(sheet(page)).toBeVisible()
   await page.waitForTimeout(500)
   const box = await sheet(page).locator('button').last().boundingBox()

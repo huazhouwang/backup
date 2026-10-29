@@ -53,7 +53,7 @@ test.describe('bottom sheet', () => {
     await page.evaluate(() => window.scrollTo(0, 200))
     const before = await page.evaluate(() => window.scrollY)
     expect(before).toBeGreaterThan(0)
-    await page.locator('main').getByRole('button', { name: '更多记录' }).click()
+    await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
     await expect(sheet(page)).toBeVisible()
     // The lock lands just after the sheet shows.
     await expect

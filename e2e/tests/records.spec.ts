@@ -5,7 +5,7 @@ import { onboard, openRow, sheet, sheetClosed, todayRows } from '../support/app'
 // Every kind of record, logged and then edited from the list.
 
 const more = async (page: Page, kind: string) => {
-  await page.locator('main').getByRole('button', { name: '更多记录' }).click()
+  await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
   await sheet(page).getByRole('button', { name: kind, exact: true }).click()
 }
 const record = (page: Page) => sheet(page).getByRole('button', { name: '记录' })

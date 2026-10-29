@@ -1,26 +1,32 @@
-import { eq } from '@tanstack/db'
+import { and, isNull } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { useLocalStore } from '../../db'
 import { stopSound, useSoundPlaying } from './player'
 
-/** Stops the sound when the sleep it plays for ends, however it ends (here, elsewhere). */
+/** Stops the sound when a baby wakes: a sleep that was running ends, here or elsewhere. */
 export function SoundKeeper() {
   const playing = useSoundPlaying()
-  return playing ? <StopWhenAwake sleepId={playing.sleepId} /> : null
+  return playing ? <StopWhenAwake /> : null
 }
 
-function StopWhenAwake({ sleepId }: { sleepId: string }) {
+function StopWhenAwake() {
   const { events } = useLocalStore()
   const { data } = useLiveQuery(
-    (q) => q.from({ event: events }).where(({ event }) => eq(event.id, sleepId)),
-    [events, sleepId],
+    (q) =>
+      q
+        .from({ event: events })
+        .where(({ event }) => and(isNull(event.endAt), isNull(event.deletedAt))),
+    [events],
   )
-  const sleep = data?.[0]
-  const awake = data !== undefined && (!sleep || sleep.endAt !== null || sleep.deletedAt !== null)
+  const sleeping = (data ?? []).filter((event) => event.type === 'sleep').map((event) => event.id)
+  const key = sleeping.join(',')
+  const before = useRef<string[] | null>(null)
   useEffect(() => {
-    if (awake) stopSound()
-  }, [awake])
+    const now = key === '' ? [] : key.split(',')
+    if (before.current?.some((id) => !now.includes(id))) stopSound()
+    before.current = now
+  }, [key])
   return null
 }

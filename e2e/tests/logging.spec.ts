@@ -32,7 +32,7 @@ test('starts and stops a sleep timer', async ({ page }) => {
 
 test('times pumping and asks for the amount when it stops', async ({ page }) => {
   await onboard(page)
-  await page.locator('main').getByRole('button', { name: '更多记录' }).click()
+  await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
   await sheet(page).getByRole('button', { name: '吸奶' }).click()
   await sheet(page).getByRole('button', { name: '开始计时' }).click()
   await sheetClosed(page)

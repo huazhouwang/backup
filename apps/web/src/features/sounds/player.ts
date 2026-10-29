@@ -6,8 +6,6 @@ export interface Playing {
   /** The timer chosen, and when it runs out (ms); null plays until stopped. */
   minutes: TimerMinutes
   endsAt: number | null
-  /** The sleep it was started for: it stops when that sleep ends (SoundKeeper). */
-  sleepId: string
   /** Paused from the lock screen or by a call, not stopped. */
   paused: boolean
   /** The timer has run out: the ending is fading away. */
@@ -96,15 +94,14 @@ function playMain(sound: SoundId) {
 }
 
 /**
- * Plays a sound for a sleep. Already playing for it, the sound changes and the timer runs on;
- * otherwise `minutes` starts the timer (null plays until stopped). Call from a tap.
+ * Plays a sound. Already playing, the sound changes and the timer runs on; otherwise
+ * `minutes` starts the timer (null plays until stopped). Call from a tap.
  */
-export function playSound(sound: SoundId, sleepId: string, minutes: TimerMinutes) {
+export function playSound(sound: SoundId, minutes: TimerMinutes) {
   const current = playing.get()
-  const carryOn = current?.sleepId === sleepId && !current.ending
+  const carryOn = current !== null && !current.ending
   playing.set({
     sound,
-    sleepId,
     minutes: carryOn ? current.minutes : minutes,
     endsAt: carryOn ? current.endsAt : endsAt(minutes),
     paused: false,

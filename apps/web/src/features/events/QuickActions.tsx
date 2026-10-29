@@ -4,10 +4,12 @@ import { RollingText } from '@lullabo/ui/rolling-text'
 import { Sheet } from '@lullabo/ui/sheet'
 import { useId, useState } from 'react'
 
+import { MusicIcon } from '../../components/icons/MusicIcon'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { useBabies } from '../babies/use-babies'
+import { SoundSheet } from '../sounds/SoundPlayer'
 import { type Category, OTHER_CATEGORIES, CATEGORY_LOOK, isInstantCategory } from './category'
 import { DiaperForm } from './DiaperForm'
 import { DurationForm } from './DurationForm'
@@ -49,9 +51,9 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
     ) : null
   const now = useNow(30_000)
   const sinceId = useId()
-  const [open, setOpen] = useState<Category | 'more' | null>(null)
+  const [open, setOpen] = useState<Category | 'more' | 'sound' | null>(null)
   const close = () => setOpen(null)
-  const logging = open === 'more' ? undefined : (open ?? undefined)
+  const logging = open === 'more' || open === 'sound' ? undefined : (open ?? undefined)
   const other = isInstantCategory(open) ? open : undefined
 
   return (
@@ -81,7 +83,7 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
           ))}
         </div>
         <Button variant="soft" tone="primary" block onClick={() => setOpen('more')}>
-          {m.eventMoreRecords()}
+          {m.eventMore()}
         </Button>
       </div>
       <Sheet open={logging !== undefined} onClose={close} title={sheetTitle(logging)}>
@@ -106,7 +108,7 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
           </div>
         )}
       </Sheet>
-      <Sheet open={open === 'more'} onClose={close} title={m.eventMoreRecords()}>
+      <Sheet open={open === 'more'} onClose={close} title={m.eventMore()}>
         <div className="grid grid-cols-2 gap-3">
           {OTHER_CATEGORIES.map((category) => (
             <Button
@@ -121,8 +123,20 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
               {CATEGORY_LOOK[category].title()}
             </Button>
           ))}
+          {/* Not a record: soothing sounds, played on this device (SoundPlayer). */}
+          <Button
+            variant="soft"
+            tone="sleep"
+            size="lg"
+            className="min-h-20 flex-col"
+            onClick={() => setOpen('sound')}
+          >
+            <MusicIcon className="size-9" />
+            {m.soundOpen()}
+          </Button>
         </div>
       </Sheet>
+      <SoundSheet open={open === 'sound'} onClose={close} />
     </>
   )
 }

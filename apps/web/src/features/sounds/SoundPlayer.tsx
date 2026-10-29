@@ -1,6 +1,7 @@
 import { Radio } from '@base-ui/react/radio'
 import { RadioGroup } from '@base-ui/react/radio-group'
 import { Button } from '@lullabo/ui/button'
+import { Card } from '@lullabo/ui/card'
 import { SegmentedControl } from '@lullabo/ui/segmented-control'
 import { Sheet } from '@lullabo/ui/sheet'
 import { cn } from '@lullabo/ui/utils'
@@ -8,6 +9,7 @@ import { useState } from 'react'
 
 import { MusicIcon } from '../../components/icons/MusicIcon'
 import { createStoredValue, jsonCodec, useStore } from '../../lib/store'
+import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { type Playing, playSound, setSoundTimer, stopSound, useSoundPlaying } from './player'
 import {
@@ -44,7 +46,9 @@ const timerLabel = (minutes: TimerMinutes) =>
   minutes === null ? m.soundNoTimer() : m.soundMinutes({ minutes })
 
 /** How the sound is getting on: paused, fading, or how long it has left. */
-function status(playing: Playing, now: number) {
+function Status({ playing }: { playing: Playing }) {
+  // Mounted anew with each timer (keyed by its end), so the clock starts fresh with it.
+  const now = useNow(30_000)
   if (playing.paused) return m.soundPaused()
   if (playing.ending) return m.soundEnding()
   if (playing.endsAt === null) return m.soundUntilStopped()
@@ -52,41 +56,38 @@ function status(playing: Playing, now: number) {
 }
 
 /**
- * Soothing sounds for a sleep, on its timer card: a button that opens the player, then what
- * plays and for how much longer, with stop. It stops when the sleep ends (SoundKeeper).
+ * What plays, on Today: the sound, how it is getting on, and stop; a tap opens the player.
+ * It plays on until its timer runs out, it is stopped, or a baby wakes (SoundKeeper).
  */
-export function SleepSound({ sleepId, now }: { sleepId: string; now: number }) {
+export function NowPlaying() {
   const playing = useSoundPlaying()
-  const [picking, setPicking] = useState(false)
-  const mine = playing?.sleepId === sleepId ? playing : null
-
+  const [open, setOpen] = useState(false)
   return (
     <>
-      {mine ? (
-        <div className="flex items-center gap-2 rounded-lg bg-background py-1 pr-1 pl-3">
+      {playing && (
+        <Card tone="sleep" className="flex items-center gap-2 py-2 pr-2 pl-4">
           <button
             type="button"
             aria-label={m.soundChange()}
-            onClick={() => setPicking(true)}
+            onClick={() => setOpen(true)}
             className="flex min-h-touch min-w-0 flex-1 items-center gap-3 text-left"
           >
-            <MusicIcon className="size-6 text-sleep-text" />
+            <MusicIcon className="size-8 text-sleep-text" />
             <span className="flex min-w-0 flex-col">
-              <span className="truncate font-bold">{soundById(mine.sound).title()}</span>
-              <span className="text-caption text-muted-foreground">{status(mine, now)}</span>
+              <span className="truncate font-extrabold text-sleep-text">
+                {soundById(playing.sound).title()}
+              </span>
+              <span className="text-caption text-muted-foreground">
+                <Status key={playing.endsAt} playing={playing} />
+              </span>
             </span>
           </button>
-          <Button variant="ghost" tone="sleep" onClick={stopSound}>
+          <Button variant="outline" tone="sleep" onClick={stopSound}>
             {m.soundStop()}
           </Button>
-        </div>
-      ) : (
-        <Button variant="soft" tone="sleep" onClick={() => setPicking(true)}>
-          <MusicIcon className="size-5" />
-          {m.soundOpen()}
-        </Button>
+        </Card>
       )}
-      <SoundSheet sleepId={sleepId} now={now} open={picking} onClose={() => setPicking(false)} />
+      <SoundSheet open={open} onClose={() => setOpen(false)} />
     </>
   )
 }
@@ -96,26 +97,15 @@ export function SleepSound({ sleepId, now }: { sleepId: string; now: number }) {
  * once, or switches to it while the timer runs on; the timer changes on its own. It stays open
  * to try one sound after another.
  */
-function SoundSheet({
-  sleepId,
-  now,
-  open,
-  onClose,
-}: {
-  sleepId: string
-  now: number
-  open: boolean
-  onClose: () => void
-}) {
-  const playing = useSoundPlaying()
-  const mine = playing?.sleepId === sleepId ? playing : null
+export function SoundSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const mine = useSoundPlaying()
   const choice = useStore(lastChoice)
   const minutes = mine?.minutes ?? choice.minutes
 
   // Within the tap: browsers only start sound a person asked for.
   function pick(sound: SoundId) {
     lastChoice.set({ ...choice, sound })
-    playSound(sound, sleepId, minutes)
+    playSound(sound, minutes)
   }
   function time(next: TimerMinutes) {
     lastChoice.set({ ...choice, minutes: next })
@@ -137,7 +127,8 @@ function SoundSheet({
       {/* Stop sits beside the status, so the sounds below stay put when one starts. */}
       <div className="flex min-h-touch items-center gap-2">
         <p className="m-0 flex-1 text-caption text-muted-foreground">
-          {`${mine ? status(mine, now) : m.soundPickHint()} · ${m.soundVolumeTip()}`}
+          {mine ? <Status key={mine.endsAt} playing={mine} /> : m.soundPickHint()}
+          {` · ${m.soundVolumeTip()}`}
         </p>
         {mine && (
           <Button variant="outline" tone="sleep" onClick={stopSound}>

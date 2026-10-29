@@ -40,9 +40,10 @@ async function startSleep(page: Page) {
   await sheetClosed(page)
 }
 
-/** Sets the timer, then taps a sound: it plays at once, and the sheet stays open. */
+/** From 更多: sets the timer, then taps a sound: it plays at once, and the sheet stays open. */
 async function pick(page: Page, sound: string, timer: string) {
-  await page.getByRole('button', { name: '哄睡声音' }).click()
+  await page.locator('main').getByRole('button', { name: '更多', exact: true }).click()
+  await sheet(page).getByRole('button', { name: '哄睡声音' }).click()
   await sheet(page).getByText(timer, { exact: true }).click()
   await sheet(page).getByRole('radio', { name: sound }).click()
   await expect(sheet(page).getByRole('button', { name: '停止' })).toBeVisible()
@@ -50,50 +51,53 @@ async function pick(page: Page, sound: string, timer: string) {
   await sheetClosed(page)
 }
 
-test('a noise plays for the sleep, fades out when the timer runs out, and stops', async ({
+test('a noise plays before any sleep, fades out when the timer runs out, and stops', async ({
   page,
 }) => {
   await page.clock.install({ time: new Date('2026-10-27T20:00:00+08:00') })
   const media = await watchMedia(page)
   await onboard(page)
-  await startSleep(page)
 
   await pick(page, '白噪音', '15 分钟')
   expect(await media.last()).toEqual({ src: '/sounds/white-noise.m4a', loop: true })
-  const card = page.locator('main')
-  await expect(card.getByText('白噪音')).toBeVisible()
-  await expect(card.getByText('还剩 15 分钟')).toBeVisible()
+  const playing = page.locator('main').getByRole('button', { name: '换个声音或定时' })
+  await expect(playing).toContainText('白噪音')
+  await expect(playing).toContainText('还剩 15 分钟')
 
   // 45 seconds before the end, the ending takes over and fades away.
   await page.clock.fastForward('14:00')
-  await expect(card.getByText('还剩 1 分钟')).toBeVisible()
+  await expect(playing).toContainText('还剩 1 分钟')
   await page.clock.fastForward('00:20')
-  await expect(card.getByText('渐渐变小声')).toBeVisible()
+  await expect(playing).toContainText('渐渐变小声')
   expect(await media.last()).toEqual({ src: '/sounds/white-noise-end.m4a', loop: false })
   await media.end()
-  await expect(page.getByRole('button', { name: '哄睡声音' })).toBeVisible()
+  await expect(playing).toHaveCount(0)
 })
 
-test('a lullaby plays again and again until the baby wakes', async ({ page }) => {
+test('a lullaby plays on into the sleep, and stops when the baby wakes', async ({ page }) => {
   const media = await watchMedia(page)
   await onboard(page)
-  await startSleep(page)
 
   await pick(page, '勃拉姆斯摇篮曲', '不定时')
   expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: false })
-  await expect(page.getByText('一直播放，宝宝醒了就停')).toBeVisible()
+  const playing = page.locator('main').getByRole('button', { name: '换个声音或定时' })
+  await expect(playing).toContainText('一直播放，宝宝醒了就停')
   // A pass ends: it starts again.
   await media.end()
   expect(await media.count()).toBe(2)
   expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: false })
 
+  // The baby falls asleep: the sound plays on.
+  await startSleep(page)
+  expect(await media.count()).toBe(2)
+  await expect(playing).toBeVisible()
+
   // The player shows what plays; another sound takes over at once, on the same timer.
-  await page.getByRole('button', { name: '换个声音或定时' }).click()
+  await playing.click()
   await expect(sheet(page).getByRole('radio', { name: '勃拉姆斯摇篮曲' })).toBeChecked()
   await expect(sheet(page).getByRole('radio', { name: '不定时' })).toBeChecked()
   await sheet(page).getByRole('radio', { name: '海浪' }).click()
   expect(await media.last()).toEqual({ src: '/sounds/waves.m4a', loop: true })
-  await expect(sheet(page).getByRole('radio', { name: '海浪' })).toBeChecked()
   await expect(sheet(page).getByRole('radio', { name: '不定时' })).toBeChecked()
   // The timer changes on its own, the sound playing on.
   const plays = await media.count()
@@ -102,10 +106,11 @@ test('a lullaby plays again and again until the baby wakes', async ({ page }) =>
   expect(await media.count()).toBe(plays)
   await page.keyboard.press('Escape')
   await sheetClosed(page)
-  await expect(page.locator('main').getByText('海浪')).toBeVisible()
+  await expect(playing).toContainText('海浪')
 
   // The baby wakes: the sound stops with the sleep.
   await page.getByRole('button', { name: '醒了' }).click()
   await expect(page.getByRole('timer')).toHaveCount(0)
   await expect.poll(() => page.evaluate(() => window.media.src)).toBe('')
+  await expect(playing).toHaveCount(0)
 })
