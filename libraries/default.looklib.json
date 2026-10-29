@@ -309,7 +309,7 @@
     "greybrick": {
       "name": {"zh": "清水青砖", "en": "Fair-faced grey brick"},
       "pbrMetallicRoughness": {"baseColorFactor": [0.2674, 0.2845, 0.3021, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
-      "extras": {"pattern": "bricks", "size": [240, 53], "color2": [0.5234, 0.5234, 0.4995, 1], "texture": "brick"}
+      "extras": {"pattern": "bricks", "size": [240, 53], "color2": [0.5234, 0.5234, 0.4995, 1], "texture": "brickgrey"}
     },
     "redbrick": {
       "name": {"zh": "红砖", "en": "Red brick"},

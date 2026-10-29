@@ -13,11 +13,14 @@ import sharp from 'sharp';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CATALOG = join(ROOT, 'libraries/textures.json');
 const DIR = join(ROOT, 'libraries/textures');
-/** Poly Haven's map names for ours, and the WebP quality of each (picked for size against visible loss at 1K) */
+/**
+ * Poly Haven's map names for ours, with the size and WebP quality of each (picked for download size against visible loss):
+ * AO and roughness vary more slowly than colour and relief, so the ARM map is half the size
+ */
 const MAPS = {
-  color: { key: 'Diffuse', quality: 82 },
-  normal: { key: 'nor_gl', quality: 80 },
-  arm: { key: 'arm', quality: 85 },
+  color: { key: 'Diffuse', size: 1024, quality: 82 },
+  normal: { key: 'nor_gl', size: 1024, quality: 80 },
+  arm: { key: 'arm', size: 512, quality: 85 },
 };
 
 const args = process.argv.slice(2);
@@ -60,10 +63,10 @@ for (const [id, set] of Object.entries(catalog.textures)) {
   if (!have || force) {
     const files = await json(`https://api.polyhaven.com/files/${ph}`);
     mkdirSync(dir, { recursive: true });
-    for (const [k, { key, quality }] of Object.entries(MAPS)) {
+    for (const [k, { key, size, quality }] of Object.entries(MAPS)) {
       const src = files[key]?.['1k']?.jpg?.url;
       if (!src) throw new Error(`${ph}: no 1K ${key} map`);
-      let img = sharp(await download(src)).resize(1024, 1024, { fit: 'fill' });
+      let img = sharp(await download(src)).resize(size, size, { fit: 'fill' });
       if (k === 'color' && set.neutral) img = img.greyscale().toColourspace('srgb');
       await img.webp({ quality }).toFile(join(DIR, maps[k]));
     }

@@ -176,7 +176,8 @@ export function Model3D() {
   return (
     <div className="relative size-full">
       <TintColors.Provider value={tints}>
-        <LiteSurfaces.Provider value={q === 'low'}>
+        {/* Texture sets bring every map only once the full setup is known to be affordable; the colour maps come first */}
+        <LiteSurfaces.Provider value={quality !== 'high'}>
           <Canvas
             shadows="percentage"
             frameloop="demand"

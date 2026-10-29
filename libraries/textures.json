@@ -124,6 +124,39 @@
         0.0832
       ]
     },
+    "brickgrey": {
+      "name": {
+        "zh": "青砖",
+        "en": "Grey brick"
+      },
+      "source": {
+        "polyhaven": "red_brick",
+        "url": "https://polyhaven.com/a/red_brick",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1400,
+        1400
+      ],
+      "unit": [
+        215,
+        87.5
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "brickgrey/color.webp",
+        "normal": "brickgrey/normal.webp",
+        "arm": "brickgrey/arm.webp"
+      },
+      "average": [
+        0.1629,
+        0.1629,
+        0.1629
+      ]
+    },
     "laminate": {
       "name": {
         "zh": "木地板",
@@ -264,15 +297,16 @@
         231,
         231
       ],
+      "neutral": true,
       "maps": {
         "color": "terracotta/color.webp",
         "normal": "terracotta/normal.webp",
         "arm": "terracotta/arm.webp"
       },
       "average": [
-        0.0752,
-        0.0201,
-        0.0104
+        0.0314,
+        0.0314,
+        0.0314
       ]
     },
     "paving": {
@@ -296,15 +330,16 @@
         200,
         400
       ],
+      "neutral": true,
       "maps": {
         "color": "paving/color.webp",
         "normal": "paving/normal.webp",
         "arm": "paving/arm.webp"
       },
       "average": [
-        0.2144,
-        0.1508,
-        0.094
+        0.1605,
+        0.1605,
+        0.1605
       ]
     },
     "granite": {
@@ -361,15 +396,16 @@
         250,
         250
       ],
+      "neutral": true,
       "maps": {
         "color": "terrazzo/color.webp",
         "normal": "terrazzo/normal.webp",
         "arm": "terrazzo/arm.webp"
       },
       "average": [
-        0.2518,
-        0.152,
-        0.0956
+        0.1693,
+        0.1693,
+        0.1693
       ]
     },
     "gravel": {
@@ -451,15 +487,16 @@
         500,
         500
       ],
+      "neutral": true,
       "maps": {
         "color": "marble/color.webp",
         "normal": "marble/normal.webp",
         "arm": "marble/arm.webp"
       },
       "average": [
-        0.4414,
-        0.3388,
-        0.1945
+        0.35,
+        0.35,
+        0.35
       ]
     },
     "rubble": {
