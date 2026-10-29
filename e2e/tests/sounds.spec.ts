@@ -40,11 +40,13 @@ async function startSleep(page: Page) {
   await sheetClosed(page)
 }
 
+/** Sets the timer, then taps a sound: it plays at once, and the sheet stays open. */
 async function pick(page: Page, sound: string, timer: string) {
   await page.getByRole('button', { name: '哄睡声音' }).click()
-  await sheet(page).getByRole('radio', { name: sound }).click()
   await sheet(page).getByText(timer, { exact: true }).click()
-  await sheet(page).getByRole('button', { name: '开始播放' }).click()
+  await sheet(page).getByRole('radio', { name: sound }).click()
+  await expect(sheet(page).getByRole('button', { name: '停止' })).toBeVisible()
+  await page.keyboard.press('Escape')
   await sheetClosed(page)
 }
 
@@ -85,12 +87,22 @@ test('a lullaby plays again and again until the baby wakes', async ({ page }) =>
   expect(await media.count()).toBe(2)
   expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: false })
 
-  // The choice is kept for next time.
+  // The player shows what plays; another sound takes over at once, on the same timer.
   await page.getByRole('button', { name: '换个声音或定时' }).click()
   await expect(sheet(page).getByRole('radio', { name: '勃拉姆斯摇篮曲' })).toBeChecked()
   await expect(sheet(page).getByRole('radio', { name: '不定时' })).toBeChecked()
+  await sheet(page).getByRole('radio', { name: '海浪' }).click()
+  expect(await media.last()).toEqual({ src: '/sounds/waves.m4a', loop: true })
+  await expect(sheet(page).getByRole('radio', { name: '海浪' })).toBeChecked()
+  await expect(sheet(page).getByRole('radio', { name: '不定时' })).toBeChecked()
+  // The timer changes on its own, the sound playing on.
+  const plays = await media.count()
+  await sheet(page).getByText('30 分钟', { exact: true }).click()
+  await expect(sheet(page).getByText(/还剩 30 分钟/)).toBeVisible()
+  expect(await media.count()).toBe(plays)
   await page.keyboard.press('Escape')
   await sheetClosed(page)
+  await expect(page.locator('main').getByText('海浪')).toBeVisible()
 
   // The baby wakes: the sound stops with the sleep.
   await page.getByRole('button', { name: '醒了' }).click()

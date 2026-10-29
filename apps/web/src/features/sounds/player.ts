@@ -1,9 +1,10 @@
 import { createStore, useStore } from '../../lib/store'
-import { ENDING_SECONDS, type SoundId, soundById, soundUrl } from './sounds'
+import { type SoundId, type TimerMinutes, soundById, soundUrl } from './sounds'
 
 export interface Playing {
   sound: SoundId
-  /** When the timer runs out (ms); null plays until stopped. */
+  /** The timer chosen, and when it runs out (ms); null plays until stopped. */
+  minutes: TimerMinutes
   endsAt: number | null
   /** The sleep it was started for: it stops when that sleep ends (SoundKeeper). */
   sleepId: string
@@ -56,8 +57,8 @@ function start(media: HTMLAudioElement) {
 function check() {
   const current = playing.get()
   if (!current || current.ending || current.endsAt === null || endAfterPass) return
-  if (current.endsAt - Date.now() > ENDING_SECONDS[current.sound] * 1000) return
-  if (soundById(current.sound).kind === 'noise') playEnding(current.sound)
+  if (current.endsAt - Date.now() > soundById(current.sound).endSeconds * 1000) return
+  if (soundById(current.sound).kind === 'loop') playEnding(current.sound)
   else endAfterPass = true
 }
 
@@ -81,28 +82,50 @@ function passEnded() {
   }
 }
 
-/** Starts a sound for a sleep; `minutes` null plays until stopped. Call from a tap. */
-export function playSound(sound: SoundId, minutes: number | null, sleepId: string) {
+const endsAt = (minutes: TimerMinutes) => (minutes === null ? null : Date.now() + minutes * 60_000)
+
+/** The sound itself from its start, not its ending. */
+function playMain(sound: SoundId) {
   const media = element()
   endAfterPass = false
-  media.loop = soundById(sound).kind === 'noise'
+  media.loop = soundById(sound).kind === 'loop'
   media.src = soundUrl(sound)
+  start(media)
+  showOnLockScreen(sound)
+  keepForOffline(sound)
+}
+
+/**
+ * Plays a sound for a sleep. Already playing for it, the sound changes and the timer runs on;
+ * otherwise `minutes` starts the timer (null plays until stopped). Call from a tap.
+ */
+export function playSound(sound: SoundId, sleepId: string, minutes: TimerMinutes) {
+  const current = playing.get()
+  const carryOn = current?.sleepId === sleepId && !current.ending
   playing.set({
     sound,
     sleepId,
-    endsAt: minutes === null ? null : Date.now() + minutes * 60_000,
+    minutes: carryOn ? current.minutes : minutes,
+    endsAt: carryOn ? current.endsAt : endsAt(minutes),
     paused: false,
     ending: false,
   })
   // Played as media, so the silent switch doesn't mute it (Safari 17+).
   const session: unknown = Reflect.get(navigator, 'audioSession')
   if (typeof session === 'object' && session !== null) Reflect.set(session, 'type', 'playback')
-  start(media)
-  showOnLockScreen(sound)
-  keepForOffline(sound)
+  playMain(sound)
   // timeupdate may pause with the screen locked; this checks the timer too.
   window.clearInterval(ticker)
   ticker = window.setInterval(check, 5000)
+}
+
+/** Sets the timer anew from now, without interrupting the sound; a fading one comes back. */
+export function setSoundTimer(minutes: TimerMinutes) {
+  const current = playing.get()
+  if (!current) return
+  playing.set({ ...current, minutes, endsAt: endsAt(minutes), ending: false })
+  if (current.ending) playMain(current.sound)
+  endAfterPass = false
 }
 
 export function stopSound() {
