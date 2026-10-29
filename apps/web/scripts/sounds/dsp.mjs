@@ -111,6 +111,7 @@ export function decode(path, { start = 0, seconds, filter } = {}) {
 export function seamless(x, seconds) {
   const fade = 2 * SR
   const length = Math.round(seconds * SR)
+  if (x.length < length + fade) throw new Error(`${x.length} samples are too few to loop`)
   const loop = x.slice(0, length)
   for (let i = 0; i < fade; i += 1) {
     const t = i / fade

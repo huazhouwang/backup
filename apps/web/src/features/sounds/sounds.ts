@@ -26,6 +26,7 @@ export const SOUND_GROUPS = [
       { id: 'waves', kind: 'loop', title: m.soundWaves, endSeconds: 45 },
       { id: 'brook', kind: 'loop', title: m.soundBrook, endSeconds: 45 },
       { id: 'birds', kind: 'loop', title: m.soundBirds, endSeconds: 45 },
+      { id: 'field', kind: 'loop', title: m.soundField, endSeconds: 45 },
       { id: 'summer-night', kind: 'loop', title: m.soundSummerNight, endSeconds: 45 },
     ],
   },

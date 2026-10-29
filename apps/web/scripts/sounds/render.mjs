@@ -2,9 +2,10 @@
 //
 // - Lullabies (tunes.mjs, all public domain) played on a real music box: one recorded note
 //   per tine, the A-flat major scale over two octaves, so every tune is played in A-flat.
-// - Nature: waves, birds at dawn, a brook and a summer night in a meadow, recorded in France
-//   by Joseph Sardin for BigSoundBank (https://bigsoundbank.com), released under CC0 1.0:
-//   free to use, change and share, attribution not required but given here with thanks.
+// - Nature: waves, birds at dawn, a brook, wind over a field and a summer night in a meadow,
+//   recorded in France by Joseph Sardin for BigSoundBank (https://bigsoundbank.com), released
+//   under CC0 1.0: free to use, change and share, attribution not required but given here
+//   with thanks.
 // - Synthesized here: the womb (a muffled whoosh with a heartbeat), white and brown noise,
 //   and a rhythmic shush.
 //
@@ -130,14 +131,15 @@ const END_SECONDS = 45
 
 /**
  * The nature recordings: the steadiest stretch of each (found by its loudness second by
- * second) loops, another stretch fades away as its ending. Birds and waves are evened out a
- * little so no call or wave stands out of the rest.
+ * second) loops, another stretch fades away as its ending. Birds, waves and wind are evened
+ * out a little so no call, wave or gust stands out of the rest.
  */
 const NATURE = {
   waves: { id: '1046', loop: 56, end: 5, level: 0.042, even: true }, // Houlgate, Normandy
   birds: { id: '1906', loop: 301, end: 250, level: 0.035, even: true }, // country dawn, May
   brook: { id: '0864', loop: 4, end: 30, level: 0.045 },
   'summer-night': { id: '1880', loop: 222, end: 150, level: 0.045 }, // crickets, a few frogs
+  field: { id: '1097', loop: 70, end: 150, level: 0.04, even: true }, // wind in a field of corn
 }
 const LOOP_NATURE = 70
 
@@ -148,7 +150,8 @@ function nature({ id, loop, end, level, even }) {
   ].join(',')
   const source = recording(id)
   const looped = seamless(
-    decode(source, { start: loop, seconds: LOOP_NATURE + 2, filter }),
+    // A second to spare: a decoder can come up a little short after seeking.
+    decode(source, { start: loop, seconds: LOOP_NATURE + 3, filter }),
     LOOP_NATURE,
   )
   const gain = level / rms(looped)
