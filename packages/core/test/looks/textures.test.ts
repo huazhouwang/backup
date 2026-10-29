@@ -45,6 +45,8 @@ describe('texture sets', () => {
     expect(textureSize(plain({ texture: 'brick' }), brick)).toEqual(brick.size);
     const [w] = textureSize(plain({ texture: 'brick', pattern: 'bricks', size: [240, 53] }), brick);
     expect(w).toBeCloseTo((brick.size[0] * 240) / brick.unit![0]);
+    // A speckled pattern's size is how often it repeats, not a tile: the set keeps its size
+    expect(textureSize(plain({ texture: 'terrazzo', pattern: 'speckled', size: 800 }), TEXTURES.terrazzo)).toEqual(TEXTURES.terrazzo.size);
     // A set without a unit keeps its size whatever the pattern
     const stucco = TEXTURES.stucco;
     expect(textureSize(plain({ texture: 'stucco', pattern: 'tiles', size: 300 }), stucco)).toEqual(stucco.size);

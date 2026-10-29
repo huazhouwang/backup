@@ -49,7 +49,9 @@ export const textureOf = (m: Material | undefined): TextureSet | undefined => (m
 export function textureSize(m: Material, set: TextureSet): [number, number] {
   const own = m.extras?.size;
   const first = Array.isArray(own) ? own[0] : own;
-  const k = set.unit && m.extras?.pattern && first ? first / set.unit[0] : 1;
+  // Only patterns made of cells have a tile, brick or board size; a speckled pattern's size is how often it repeats
+  const cells = m.extras?.pattern && m.extras.pattern !== 'speckled';
+  const k = set.unit && cells && first ? first / set.unit[0] : 1;
   return [set.size[0] * k, set.size[1] * k];
 }
 
