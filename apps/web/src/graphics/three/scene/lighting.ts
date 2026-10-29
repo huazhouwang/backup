@@ -24,6 +24,16 @@ export const DEFAULT_SUN = new THREE.Vector3(-1.2, 2, 0.9).normalize();
 /** The stills' sun (issue 220): low from the west, late afternoon, raking across the presentation view's side */
 export const LATE_SUN = new THREE.Vector3(-1, 0.38, 0.25).normalize();
 
+/**
+ * The sun's colour at its height: golden near the horizon (`low`), its usual warm white once it stands higher than about 40°, as
+ * the light reads in late-afternoon photographs and presentations
+ */
+export function sunColor(high: THREE.ColorRepresentation, low: THREE.ColorRepresentation, toward: THREE.Vector3) {
+  const el = Math.asin(THREE.MathUtils.clamp(toward.clone().normalize().y, -1, 1));
+  const t = THREE.MathUtils.smoothstep(el, THREE.MathUtils.degToRad(12), THREE.MathUtils.degToRad(40));
+  return new THREE.Color(low).lerp(new THREE.Color(high), t);
+}
+
 /** Shadow quality: the editor drops to 'low' on devices that can't keep up */
 export type ShadowQuality = 'high' | 'low';
 

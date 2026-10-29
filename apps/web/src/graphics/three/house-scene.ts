@@ -40,6 +40,7 @@ import { applyMaps, surfaceMaps } from './textures';
 import {
   backdrop,
   DEFAULT_SUN,
+  sunColor,
   SKYLIGHT_WITHOUT_ENVIRONMENT,
   skyEnvironment,
   castsShadow,
@@ -242,7 +243,7 @@ export async function houseScene(
   // The 3D view's light, with the sky environment where the renderer can afford it; elsewhere the sky light carries it all
   scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, lit ? light.sky : SKYLIGHT_WITHOUT_ENVIRONMENT));
   const toward = opts.sun ?? DEFAULT_SUN;
-  const sun = sunLight(color('--canvas-sun'), center, radius, undefined, toward);
+  const sun = sunLight(sunColor(color('--canvas-sun'), color('--canvas-sun-low'), toward), center, radius, undefined, toward);
   sun.intensity = light.sun;
   scene.add(sun, sun.target);
   // The sky as image-based light (issue 208)

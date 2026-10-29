@@ -12,6 +12,8 @@
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -51,9 +53,74 @@ async function model(ph) {
   return `/models/${ph}/${ph}.gltf`;
 }
 
+/** A model inside a zip (people: a CC0 character pack), downloaded and unpacked once into the cache; its URL for the page */
+async function zipped(url, file) {
+  const dir = join(CACHE, 'zip-' + createHash('sha1').update(url).digest('hex').slice(0, 12));
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url}: ${r.status}`);
+    writeFileSync(join(dir, 'pack.zip'), Buffer.from(await r.arrayBuffer()));
+    execFileSync('unzip', ['-o', '-q', join(dir, 'pack.zip'), '-d', dir]);
+  }
+  return `/models/${dir.slice(CACHE.length + 1)}/${file.split('/').map(encodeURIComponent).join('/')}`;
+}
+
+/**
+ * Transparent pixels take the colour of the nearest opaque ones (edge padding, as texture bakers do), so filtering and mipmaps
+ * blend leaves with leaves rather than with black: no dark fringe around a cut-out
+ */
+async function padEdges(png) {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width: w, height: h } = info;
+  let known = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) known[i] = data[i * 4 + 3] > 8 ? 1 : 0;
+  for (let pass = 0; pass < 16; pass++) {
+    const next = known.slice();
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        if (known[i]) continue;
+        let r = 0,
+          g = 0,
+          b = 0,
+          n = 0;
+        for (const [dx, dy] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ]) {
+          const xx = x + dx,
+            yy = y + dy;
+          if (xx < 0 || yy < 0 || xx >= w || yy >= h || !known[yy * w + xx]) continue;
+          const j = (yy * w + xx) * 4;
+          r += data[j];
+          g += data[j + 1];
+          b += data[j + 2];
+          n++;
+        }
+        if (!n) continue;
+        data[i * 4] = r / n;
+        data[i * 4 + 1] = g / n;
+        data[i * 4 + 2] = b / n;
+        next[i] = 1;
+      }
+    known = next;
+  }
+  return sharp(data, { raw: { width: w, height: h, channels: 4 } });
+}
+
 /** Serves three.js and the downloaded models to the page */
 function serve() {
-  const types = { '.js': 'text/javascript', '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream', '.jpg': 'image/jpeg', '.png': 'image/png' };
+  const types = {
+    '.js': 'text/javascript',
+    '.gltf': 'model/gltf+json',
+    '.bin': 'application/octet-stream',
+    '.jpg': 'image/jpeg',
+    '.png': 'image/png',
+    '.fbx': 'application/octet-stream',
+  };
   const server = createServer((req, res) => {
     const url = decodeURIComponent(req.url.split('?')[0]);
     const file = url.startsWith('/three/') ? join(THREE, url.slice(7)) : url.startsWith('/models/') ? join(CACHE, url.slice(8)) : null;
@@ -68,23 +135,39 @@ function serve() {
 }
 
 /** In the page: the model's top-level nodes with their sizes (mm), or one node rendered from the front, the side and above */
-async function inPage({ url, node, size, patch }) {
+async function inPage({ url, node, size, patch, pose }) {
   const THREE = await import('three');
   const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-  const gltf = await new GLTFLoader().loadAsync(url);
-  const root = gltf.scene;
+  let root;
+  if (pose) {
+    // A person: a character posed at a moment of one of its animations, in white (the presentation style's cut-out people)
+    const { FBXLoader } = await import('three/addons/loaders/FBXLoader.js');
+    root = await new FBXLoader().loadAsync(url);
+    const clip = root.animations.find(a => a.name.endsWith(pose.animation));
+    const mixer = new THREE.AnimationMixer(root);
+    mixer.clipAction(clip).play();
+    mixer.setTime(pose.time ?? 0);
+    root.rotation.y = ((pose.yaw ?? 0) * Math.PI) / 180;
+    const white = new THREE.MeshLambertMaterial({ color: 0xf4f3f0 });
+    root.traverse(o => o.isMesh && (o.material = white));
+    root.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(root, true);
+    root.scale.setScalar(pose.height / 1000 / (b.max.y - b.min.y));
+  } else root = (await new GLTFLoader().loadAsync(url)).scene;
   root.updateMatrixWorld(true);
   const nodes = root.children.length === 1 && root.children[0].children.length > 1 ? root.children[0].children : root.children;
-  const box = o => new THREE.Box3().setFromObject(o);
+  // Precise: a posed character's box follows its skin, not its rest pose
+  const box = o => new THREE.Box3().setFromObject(o, true);
   if (node === undefined)
     return nodes.map((o, i) => {
       const s = box(o).getSize(new THREE.Vector3());
       return { i, name: o.name, w: Math.round(s.x * 1000), h: Math.round(s.y * 1000), d: Math.round(s.z * 1000) };
     });
   // 'all': the whole model (a plant modelled as several parts: trunk, leaves, pot)
-  const picked = node === 'all' ? root : typeof node === 'number' ? nodes[node] : nodes.find(o => o.name === node);
+  const picked = node === 'all' || pose ? root : typeof node === 'number' ? nodes[node] : nodes.find(o => o.name === node);
   const scene = new THREE.Scene();
-  let plant = picked.clone();
+  // A skinned character is drawn as it is (a clone would lose its skeleton)
+  let plant = pose ? picked : picked.clone();
   // A patch: many small clumps (grasses, ground covers) scattered over a disc, as landscape libraries sell them
   if (patch) {
     let seed = 7;
@@ -157,18 +240,20 @@ try {
   } else {
     const catalog = JSON.parse(readFileSync(CATALOG, 'utf8'));
     for (const [id, plant] of Object.entries(catalog.plants)) {
-      const ph = plant.source?.polyhaven;
-      if (!ph || (only.length && !only.includes(id))) continue;
+      const ph = plant.source?.polyhaven,
+        zip = plant.source?.zip;
+      if ((!ph && !zip) || (only.length && !only.includes(id))) continue;
       const views = Object.fromEntries(['front', 'side', 'top'].map(v => [v, `${id}/${v}.webp`]));
       if (Object.values(views).every(f => existsSync(join(DIR, f))) && !force) continue;
-      const out = await page.evaluate(inPage, { url: base + (await model(ph)), node: plant.source.node ?? 0, size: SIZE, patch: plant.source.patch });
+      const url = base + (ph ? await model(ph) : await zipped(zip, plant.source.file));
+      const out = await page.evaluate(inPage, { url, node: plant.source.node ?? 0, size: SIZE, patch: plant.source.patch, pose: plant.source.pose });
       mkdirSync(join(DIR, id), { recursive: true });
       for (const v of ['front', 'side', 'top'])
-        await sharp(Buffer.from(out[v].split(',')[1], 'base64'))
-          .webp({ quality: 85, alphaQuality: 90 })
-          .toFile(join(DIR, views[v]));
-      const info = await json(`https://api.polyhaven.com/info/${ph}`);
-      plant.source = { ...plant.source, url: `https://polyhaven.com/a/${ph}`, authors: Object.keys(info.authors ?? {}), license: 'CC0-1.0' };
+        await (await padEdges(Buffer.from(out[v].split(',')[1], 'base64'))).webp({ quality: 85, alphaQuality: 90 }).toFile(join(DIR, views[v]));
+      if (ph) {
+        const info = await json(`https://api.polyhaven.com/info/${ph}`);
+        plant.source = { ...plant.source, url: `https://polyhaven.com/a/${ph}`, authors: Object.keys(info.authors ?? {}), license: 'CC0-1.0' };
+      }
       plant.size = { w: out.w, d: out.d, h: out.h };
       plant.views = views;
       console.log(`${id}: ${ph} ${out.w}×${out.d}×${out.h} mm`);

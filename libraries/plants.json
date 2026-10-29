@@ -192,8 +192,8 @@
         "license": "CC0-1.0"
       },
       "size": {
-        "w": 1196,
-        "d": 1119,
+        "w": 1037,
+        "d": 1060,
         "h": 248
       },
       "views": {
@@ -229,8 +229,8 @@
         "license": "CC0-1.0"
       },
       "size": {
-        "w": 1097,
-        "d": 954,
+        "w": 998,
+        "d": 867,
         "h": 214
       },
       "views": {
@@ -263,6 +263,166 @@
         "front": "potted/front.webp",
         "side": "potted/side.webp",
         "top": "potted/top.webp"
+      }
+    },
+    "person-standing": {
+      "name": {
+        "zh": "站立的人",
+        "en": "Person standing"
+      },
+      "kind": "person",
+      "source": {
+        "zip": "https://opengameart.org/sites/default/files/Animated%20Human%20by%20%40Quaternius_0.zip",
+        "file": "Animated Human by @Quaternius/FBX/Animated Human.fbx",
+        "pose": {
+          "animation": "Idle",
+          "time": 0,
+          "yaw": 20,
+          "height": 1720
+        },
+        "url": "https://opengameart.org/content/animated-human-low-poly",
+        "authors": [
+          "Quaternius"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 888,
+        "d": 710,
+        "h": 1720
+      },
+      "views": {
+        "front": "person-standing/front.webp",
+        "side": "person-standing/side.webp",
+        "top": "person-standing/top.webp"
+      }
+    },
+    "person-standing-side": {
+      "name": {
+        "zh": "侧身站立的人",
+        "en": "Person standing, side"
+      },
+      "kind": "person",
+      "source": {
+        "zip": "https://opengameart.org/sites/default/files/Animated%20Human%20by%20%40Quaternius_0.zip",
+        "file": "Animated Human by @Quaternius/FBX/Animated Human.fbx",
+        "pose": {
+          "animation": "Idle",
+          "time": 2,
+          "yaw": 95,
+          "height": 1680
+        },
+        "url": "https://opengameart.org/content/animated-human-low-poly",
+        "authors": [
+          "Quaternius"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 724,
+        "d": 775,
+        "h": 1680
+      },
+      "views": {
+        "front": "person-standing-side/front.webp",
+        "side": "person-standing-side/side.webp",
+        "top": "person-standing-side/top.webp"
+      }
+    },
+    "person-walking": {
+      "name": {
+        "zh": "行走的人",
+        "en": "Person walking"
+      },
+      "kind": "person",
+      "source": {
+        "zip": "https://opengameart.org/sites/default/files/Animated%20Human%20by%20%40Quaternius_0.zip",
+        "file": "Animated Human by @Quaternius/FBX/Animated Human.fbx",
+        "pose": {
+          "animation": "Walk",
+          "time": 0.25,
+          "yaw": 90,
+          "height": 1750
+        },
+        "url": "https://opengameart.org/content/animated-human-low-poly",
+        "authors": [
+          "Quaternius"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 1079,
+        "d": 670,
+        "h": 1750
+      },
+      "views": {
+        "front": "person-walking/front.webp",
+        "side": "person-walking/side.webp",
+        "top": "person-walking/top.webp"
+      }
+    },
+    "person-walking-away": {
+      "name": {
+        "zh": "走远的人",
+        "en": "Person walking away"
+      },
+      "kind": "person",
+      "source": {
+        "zip": "https://opengameart.org/sites/default/files/Animated%20Human%20by%20%40Quaternius_0.zip",
+        "file": "Animated Human by @Quaternius/FBX/Animated Human.fbx",
+        "pose": {
+          "animation": "Walk",
+          "time": 0.5,
+          "yaw": 200,
+          "height": 1700
+        },
+        "url": "https://opengameart.org/content/animated-human-low-poly",
+        "authors": [
+          "Quaternius"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 581,
+        "d": 505,
+        "h": 1700
+      },
+      "views": {
+        "front": "person-walking-away/front.webp",
+        "side": "person-walking-away/side.webp",
+        "top": "person-walking-away/top.webp"
+      }
+    },
+    "person-walking-toward": {
+      "name": {
+        "zh": "走来的人",
+        "en": "Person walking toward"
+      },
+      "kind": "person",
+      "source": {
+        "zip": "https://opengameart.org/sites/default/files/Animated%20Human%20by%20%40Quaternius_0.zip",
+        "file": "Animated Human by @Quaternius/FBX/Animated Human.fbx",
+        "pose": {
+          "animation": "Walk",
+          "time": 0.75,
+          "yaw": -25,
+          "height": 1650
+        },
+        "url": "https://opengameart.org/content/animated-human-low-poly",
+        "authors": [
+          "Quaternius"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 617,
+        "d": 884,
+        "h": 1650
+      },
+      "views": {
+        "front": "person-walking-toward/front.webp",
+        "side": "person-walking-toward/side.webp",
+        "top": "person-walking-toward/top.webp"
       }
     }
   }

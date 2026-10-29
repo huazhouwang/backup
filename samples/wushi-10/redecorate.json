@@ -283,6 +283,83 @@
    }
   },
   {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "person",
+    "label": "人物",
+    "position": [
+     8900,
+     13900
+    ],
+    "size": {
+     "w": 700,
+     "d": 600,
+     "h": 1700
+    }
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "人物",
+    "params": {
+     "species": "person-walking"
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "person",
+    "position": [
+     5600,
+     14300
+    ]
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "人物（2）",
+    "params": {
+     "species": "person-standing-side"
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "person",
+    "position": [
+     7300,
+     9600
+    ]
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "庭院·透水砖·人物",
+    "params": {
+     "species": "person-walking-away"
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L2",
+    "type": "person",
+    "position": [
+     6200,
+     6300
+    ]
+   }
+  },
+  {
    "name": "furniture_remove",
    "input": {
     "furniture": "RF-f01"

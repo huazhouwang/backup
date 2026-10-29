@@ -1047,6 +1047,23 @@
       },
       "script": "[$plant($species, [0, 0, 0], $h, 0, [$w, $d])]"
     },
+    "person": {
+      "name": {"zh": "人物", "en": "Person"},
+      "for": ["furniture:person"],
+      "newType": {"name": {"zh": "人物", "en": "Person"}, "group": "yard", "size": {"w": 700, "d": 600, "h": 1700}},
+      "version": "1.0.0",
+      "params": {
+        "species": {
+          "type": "string",
+          "default": "person-standing",
+          "enum": ["person-standing", "person-standing-side", "person-walking", "person-walking-away", "person-walking-toward"],
+          "enumTitles": [{"zh": "站立的人", "en": "Person standing"}, {"zh": "侧身站立的人", "en": "Person standing, side"}, {"zh": "行走的人", "en": "Person walking"}, {"zh": "走远的人", "en": "Person walking away"}, {"zh": "走来的人", "en": "Person walking toward"}],
+          "title": {"zh": "姿态", "en": "Pose"},
+          "description": "Which figure: a white cut-out person of the catalog, drawn facing the camera"
+        }
+      },
+      "script": "[$plant($species, [0, 0, 0], $h)]"
+    },
     "groundcover": {
       "name": {"zh": "地被", "en": "Ground cover"},
       "for": ["furniture:groundcover"],

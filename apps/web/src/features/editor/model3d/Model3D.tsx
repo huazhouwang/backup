@@ -74,6 +74,7 @@ const useColors = () =>
     {
       backdrop: '--canvas-backdrop',
       sun: '--canvas-sun',
+      sunLow: '--canvas-sun-low',
       skylight: '--canvas-skylight',
       wall: '--card',
       furn: '--muted',

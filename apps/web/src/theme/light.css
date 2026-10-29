@@ -63,6 +63,8 @@
   /* The sky as light and in reflections: bluer than the pale backdrop, so glass reads as glass and shade is a little cool */
   --canvas-sky-light: oklch(0.88 0.018 230);
   --canvas-sun: oklch(0.97 0.03 78);
+  /* The sun low over the horizon, late afternoon: golden (issue 220) */
+  --canvas-sun-low: oklch(0.94 0.05 72);
   /* The sun's disc in the sky */
   --canvas-sun-disc: oklch(0.97 0.09 95);
   --canvas-skylight: oklch(0.88 0.018 75);

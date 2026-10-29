@@ -22,11 +22,18 @@
       "additionalProperties": false,
       "properties": {
         "name": {"type": "object", "properties": {"zh": {"type": "string"}, "en": {"type": "string"}}},
-        "kind": {"enum": ["tree", "shrub", "ground", "potted"], "description": "What it is in a planting plan: a tree, a shrub, a ground cover or grass, a potted plant"},
+        "kind": {"enum": ["tree", "shrub", "ground", "potted", "person"], "description": "What it is: a tree, a shrub, a ground cover or grass, a potted plant; or a person (scale figures, drawn facing the camera)"},
         "source": {
           "type": "object",
           "properties": {
             "polyhaven": {"type": "string"},
+            "zip": {"description": "A zip of CC0 models to take it from (people)", "type": "string"},
+            "file": {"description": "The model's path inside the zip", "type": "string"},
+            "pose": {
+              "description": "A character posed at a moment of one of its animations, turned yaw degrees, scaled to height mm",
+              "type": "object",
+              "properties": {"animation": {"type": "string"}, "time": {"type": "number"}, "yaw": {"type": "number"}, "height": {"type": "number"}}
+            },
             "node": {"description": "The model's node: an index, a name, or \"all\" for a plant modelled in parts", "type": ["integer", "string"]},
             "patch": {
               "description": "Many small clumps scattered over a disc (grasses, ground covers)",

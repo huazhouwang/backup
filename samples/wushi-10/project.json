@@ -4688,6 +4688,79 @@
     "d": 1000,
     "h": 1400
    }
+  },
+  {
+   "id": "L1-f51",
+   "name": "人物",
+   "type": "person",
+   "level": "L1",
+   "position": [
+    8900,
+    13900
+   ],
+   "rotation": 0,
+   "size": {
+    "w": 700,
+    "d": 600,
+    "h": 1700
+   },
+   "lookParams": {
+    "species": "person-walking"
+   }
+  },
+  {
+   "id": "L1-f52",
+   "name": "人物（2）",
+   "type": "person",
+   "level": "L1",
+   "position": [
+    5600,
+    14300
+   ],
+   "rotation": 0,
+   "size": {
+    "w": 700,
+    "d": 600,
+    "h": 1700
+   },
+   "lookParams": {
+    "species": "person-standing-side"
+   }
+  },
+  {
+   "id": "L1-f53",
+   "name": "庭院·透水砖·人物",
+   "type": "person",
+   "level": "L1",
+   "position": [
+    7300,
+    9600
+   ],
+   "rotation": 0,
+   "size": {
+    "w": 700,
+    "d": 600,
+    "h": 1700
+   },
+   "lookParams": {
+    "species": "person-walking-away"
+   }
+  },
+  {
+   "id": "L2-f26",
+   "name": "露台·人物",
+   "type": "person",
+   "level": "L2",
+   "position": [
+    6200,
+    6300
+   ],
+   "rotation": 0,
+   "size": {
+    "w": 700,
+    "d": 600,
+    "h": 1700
+   }
   }
  ],
  "constraints": [],
@@ -4988,6 +5061,14 @@
      "w": 1100,
      "d": 1100,
      "h": 1500
+    }
+   },
+   "person": {
+    "name": "人物",
+    "size": {
+     "w": 700,
+     "d": 600,
+     "h": 1700
     }
    }
   },

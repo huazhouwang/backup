@@ -15,6 +15,7 @@ import {
   SKYLIGHT_WITHOUT_ENVIRONMENT,
   skyEnvironment,
   SUN_INTENSITY,
+  sunColor,
   sunLight,
   sunSetup,
   type ShadowQuality,
@@ -38,7 +39,7 @@ export function HouseStage({
   /** The site's larger side in metres: the ground reaches well beyond it and the house */
   span: number;
   quality: ShadowQuality;
-  colors: { skylight: string; wall: string; sun: string; shadow: string; sky: string; skyLight: string; ground: string; backdrop: string };
+  colors: { skylight: string; wall: string; sun: string; sunLow: string; shadow: string; sky: string; skyLight: string; ground: string; backdrop: string };
   /** Toward the sun (see lib/solar.ts), and how strong it shines (0–1, low near the horizon) */
   toward?: THREE.Vector3;
   strength?: number;
@@ -60,9 +61,10 @@ export function HouseStage({
   const mood = useSkyMood();
   useEffect(() => {
     sun.position.copy(sunSetup(center, radius, quality, toward).position);
+    sun.color.copy(sunColor(colors.sun, colors.sunLow, toward ?? DEFAULT_SUN));
     sun.intensity = SUN_INTENSITY * strength * mood.sun;
     invalidate();
-  }, [sun, toward?.x, toward?.y, toward?.z, strength, mood.sun]);
+  }, [sun, toward?.x, toward?.y, toward?.z, strength, mood.sun, colors.sunLow]);
   // The sky as image-based light (issue 208): soft shading by the sky's direction, and reflections in glass and glossy finishes.
   // Sampling it costs every pixel, so the light setup goes without and takes more from the sky light instead
   const { gl, scene } = useThree();

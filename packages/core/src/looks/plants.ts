@@ -8,7 +8,8 @@ import { z } from 'zod';
 import plantsFile from '../../../../libraries/plants.json' with { type: 'json' };
 import { namesSchema, type Names } from './material.js';
 
-export const PLANT_KINDS = ['tree', 'shrub', 'ground', 'potted'] as const;
+/** What a cut-out is: plants by their role in a planting plan, and people (scale figures, drawn facing the camera) */
+export const PLANT_KINDS = ['tree', 'shrub', 'ground', 'potted', 'person'] as const;
 export type PlantKind = (typeof PLANT_KINDS)[number];
 
 export interface Plant {
@@ -37,6 +38,9 @@ const plantSchema: z.ZodType<Plant> = z.object({
     polyhaven: z.string().optional(),
     node: z.union([z.number().int(), z.string()]).optional(),
     patch: z.object({ nodes: z.array(z.number().int()), count: z.number().int(), radius: positive }).optional(),
+    zip: z.string().optional(),
+    file: z.string().optional(),
+    pose: z.object({ animation: z.string(), time: z.number().optional(), yaw: z.number().optional(), height: positive }).optional(),
     url: z.string().optional(),
     authors: z.array(z.string()).optional(),
     license: z.string().optional(),

@@ -35,10 +35,32 @@ function cutout(tex: THREE.Texture) {
   let m = materials.get(tex);
   if (!m) {
     m = {
-      color: new THREE.MeshStandardMaterial({ map: tex, alphaTest: ALPHA_TEST, side: THREE.DoubleSide, roughness: 0.85, metalness: 0 }),
+      // The cut-outs carry their studio shading; lit again by the scene they would come out too dark, so the albedo is lifted
+      color: new THREE.MeshStandardMaterial({
+        map: tex,
+        color: new THREE.Color(1.35, 1.35, 1.3),
+        alphaTest: ALPHA_TEST,
+        side: THREE.DoubleSide,
+        roughness: 0.85,
+        metalness: 0,
+      }),
       depth: new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: ALPHA_TEST }),
     };
     materials.set(tex, m);
+  }
+  return m;
+}
+
+const figures = new Map<THREE.Texture, { color: THREE.Material; depth: THREE.MeshDepthMaterial }>();
+/** A person's materials: unlit, as presentations draw scale figures (white, with the shading baked into the cut-out) */
+function figure(tex: THREE.Texture) {
+  let m = figures.get(tex);
+  if (!m) {
+    m = {
+      color: new THREE.MeshBasicMaterial({ map: tex, alphaTest: ALPHA_TEST, side: THREE.DoubleSide }),
+      depth: new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: ALPHA_TEST }),
+    };
+    figures.set(tex, m);
   }
   return m;
 }
@@ -53,15 +75,26 @@ export async function plantGroup(parts: BuiltPart[]): Promise<THREE.Group | null
   for (const p of plants) {
     const plant = PLANTS[p.plant];
     const { w, d } = p;
-    const [front, side] = await Promise.all([image(plant.views.front), image(plant.views.side)]);
     const one = new THREE.Group();
+    if (plant.kind === 'person') {
+      one.add(faceMe(figure(await image(plant.views.front)), w, p.h));
+      one.position.set(p.at[0] * M, p.at[1] * M, p.at[2] * M);
+      g.add(one);
+      continue;
+    }
+    const [front, side] = await Promise.all([image(plant.views.front), image(plant.views.side)]);
     // The front view faces south (+z), across the plant's width; the side view faces east (+x), across its depth
     for (const [tex, width, turn] of [
       [front, w, 0],
       [side, d, Math.PI / 2],
     ] as const) {
       const m = cutout(tex);
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width * M, p.h * M).translate(0, (p.h * M) / 2, 0).rotateY(turn), m.color);
+      const geometry = new THREE.PlaneGeometry(width * M, p.h * M).translate(0, (p.h * M) / 2, 0).rotateY(turn);
+      // Foliage normals point up, as game and archviz engines light billboard plants: a crown lights like a crown, whichever
+      // way its card faces, instead of going dark when the card turns from the sun
+      const normals = geometry.getAttribute('normal');
+      for (let k = 0; k < normals.count; k++) normals.setXYZ(k, 0, 1, 0);
+      const mesh = new THREE.Mesh(geometry, m.color);
       mesh.customDepthMaterial = m.depth;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -75,6 +108,31 @@ export async function plantGroup(parts: BuiltPart[]): Promise<THREE.Group | null
     g.add(one);
   }
   return g;
+}
+
+const toCamera = new THREE.Vector3();
+/**
+ * A person as SketchUp's face-me components stand: one cut-out that turns about the vertical to face whoever looks (the camera,
+ * or the sun when it casts its shadow), so a scale figure reads from every side
+ */
+function faceMe(m: { color: THREE.Material; depth: THREE.MeshDepthMaterial }, w: number, h: number) {
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w * M, h * M).translate(0, (h * M) / 2, 0), m.color);
+  mesh.customDepthMaterial = m.depth;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData.noEdges = true;
+  mesh.userData.plant = true;
+  const turn = (camera: THREE.Camera) => {
+    const parent = mesh.parent!;
+    parent.updateMatrixWorld();
+    toCamera.setFromMatrixPosition(camera.matrixWorld).sub(new THREE.Vector3().setFromMatrixPosition(parent.matrixWorld));
+    const parentTurn = new THREE.Euler().setFromRotationMatrix(parent.matrixWorld, 'YXZ').y;
+    mesh.rotation.y = Math.atan2(toCamera.x, toCamera.z) - parentTurn;
+    mesh.updateMatrixWorld();
+  };
+  mesh.onBeforeRender = (_r, _s, camera) => turn(camera);
+  mesh.onBeforeShadow = (_r, _o, camera) => turn(camera);
+  return mesh;
 }
 
 /** Frees a plant group's geometry (images and materials stay shared) */
