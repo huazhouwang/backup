@@ -234,7 +234,7 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
     skyEnvironment(
       lit,
       {
-        sky: themeColor('--canvas-sky', doc),
+        sky: themeColor('--canvas-sky-light', doc),
         horizon: themeColor('--canvas-backdrop', doc),
         ground: themeColor('--canvas-ground', doc),
         sun: themeColor('--canvas-sun', doc),

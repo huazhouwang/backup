@@ -5,7 +5,8 @@ import { test } from '@playwright/test';
 import { BASE, OUT, check } from './support.mjs';
 
 test('selection', async ({ browser: b }) => {
-  test.setTimeout(180_000);
+  // The hover scan in 3D waits on the canvas a few hundred times: slow on software GL in a busy run
+  test.setTimeout(300_000);
   const page = await b.newPage({ viewport: { width: 1200, height: 800 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));

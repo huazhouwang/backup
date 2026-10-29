@@ -90,7 +90,7 @@ async function draw(renderer: THREE.WebGLRenderer, p: Project, items: WidgetItem
   toneMap(renderer);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
-  const composer = beautyComposer(renderer, scene, camera, W, H);
+  const composer = beautyComposer(renderer, scene, camera, W, H, { edges: themeColor('--canvas-edge', doc) });
   composer.render();
   const url = renderer.domElement.toDataURL('image/jpeg', 0.85);
   composer.dispose();

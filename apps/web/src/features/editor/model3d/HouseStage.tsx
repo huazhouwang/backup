@@ -36,7 +36,7 @@ export function HouseStage({
   /** The site's larger side in metres: the ground reaches well beyond it and the house */
   span: number;
   quality: ShadowQuality;
-  colors: { skylight: string; wall: string; sun: string; shadow: string; sky: string; ground: string; backdrop: string };
+  colors: { skylight: string; wall: string; sun: string; shadow: string; sky: string; skyLight: string; ground: string; backdrop: string };
   /** Toward the sun (see lib/solar.ts), and how strong it shines (0–1, low near the horizon) */
   toward?: THREE.Vector3;
   strength?: number;
@@ -66,8 +66,8 @@ export function HouseStage({
   const { gl, scene } = useThree();
   const lit = quality === 'high';
   const env = useMemo(
-    () => (lit ? skyEnvironment(gl, { sky: colors.sky, horizon: colors.backdrop, ground: colors.ground, sun: colors.sun }, toward ?? DEFAULT_SUN) : null),
-    [lit, gl, colors.sky, colors.backdrop, colors.ground, colors.sun, toward?.x, toward?.y, toward?.z],
+    () => (lit ? skyEnvironment(gl, { sky: colors.skyLight, horizon: colors.backdrop, ground: colors.ground, sun: colors.sun }, toward ?? DEFAULT_SUN) : null),
+    [lit, gl, colors.skyLight, colors.backdrop, colors.ground, colors.sun, toward?.x, toward?.y, toward?.z],
   );
   useEffect(() => {
     scene.environment = env;

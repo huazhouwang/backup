@@ -53,20 +53,24 @@
   --shadow-xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 8px 10px -1px hsl(0 0% 0% / 0.18);
   --shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
   --tracking-normal: 0em;
-  /* 3D canvas (the default model style): white walls shaded by a warm white sun and sky light, under a blue sky over the
-       ground (SketchUp's background: the horizon fades from the backdrop's haze up to the sky; the ground is SketchUp's
-       default ground color). The plan sits on the backdrop. */
+  /* 3D canvas (the default model style, issue 213: a designer's presentation): white walls shaded by a warm sun and a warm
+       sky light, under a pale grey sky over a light grey ground, quiet so planting and the building read (SketchUp's
+       background: the horizon fades from the backdrop's haze up to the sky). The plan sits on the backdrop. */
   /* Revit's selection and pre-selection colour (RGB 0, 59, 189) */
   --canvas-selection: oklch(0.423 0.209 262.8);
-  --canvas-backdrop: oklch(0.91 0.004 100);
-  --canvas-sky: oklch(0.87 0.035 235);
-  --canvas-sun: oklch(0.99 0.006 85);
+  --canvas-backdrop: oklch(0.93 0.003 220);
+  --canvas-sky: oklch(0.9 0.01 225);
+  /* The sky as light and in reflections: bluer than the pale backdrop, so glass reads as glass and shade is a little cool */
+  --canvas-sky-light: oklch(0.88 0.018 230);
+  --canvas-sun: oklch(0.97 0.03 78);
   /* The sun's disc in the sky */
   --canvas-sun-disc: oklch(0.97 0.09 95);
-  --canvas-skylight: oklch(0.84 0.008 85);
-  --canvas-ground: oklch(0.853 0.031 103);
+  --canvas-skylight: oklch(0.88 0.018 75);
+  --canvas-ground: oklch(0.88 0.005 100);
   /* What widgets draw (grids, axes…): green, like Revit's reference planes */
   --canvas-widget: oklch(0.58 0.14 150);
+  /* SketchUp's presentation profiles: dark grey, not black */
+  --canvas-edge: oklch(0.42 0.005 85);
   /* Shadows cast on the ground in 3D */
   --canvas-shadow: oklch(0.45 0.012 85);
   /* Effects (issue 203): what rain, snow, fireflies, mist and lamps are drawn in, and the sky under each mood */

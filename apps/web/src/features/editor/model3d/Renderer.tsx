@@ -7,7 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { beautyComposer, isSoftwareGL } from '@/graphics/three/beauty';
-import { EdgePass } from './EdgePass';
+import { EdgePass } from '@/graphics/three/edges';
 
 export type Quality = 'high' | 'low';
 
@@ -41,12 +41,15 @@ export function detectQuality(win: Window, gl: WebGLRenderingContext | WebGL2Ren
 export function Renderer({
   draw,
   edges: withEdges,
+  edgeStrength = 1,
   edgeColor,
   growth,
   quality,
 }: {
   draw: React.RefObject<(() => void) | null>;
   edges: boolean;
+  /** How strongly the edges are drawn (faint while walking through) */
+  edgeStrength?: number;
   edgeColor: string;
   growth: React.RefObject<{ g: number }>;
   quality: Quality;
@@ -66,9 +69,9 @@ export function Renderer({
 
   const render = () => {
     if (edges) {
-      edges.uniforms.strength.value = THREE.MathUtils.smoothstep(growth.current.g, 0.2, 0.7);
-      // About two CSS pixels wide, like SketchUp's default profiles
-      edges.uniforms.profile.value = 1.5 * gl.getPixelRatio();
+      edges.uniforms.strength.value = edgeStrength * THREE.MathUtils.smoothstep(growth.current.g, 0.2, 0.7);
+      // About a CSS pixel wide: the thin profiles of a presentation (issue 213)
+      edges.uniforms.profile.value = 1 * gl.getPixelRatio();
     }
     composer.render();
   };

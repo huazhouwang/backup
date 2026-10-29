@@ -10,13 +10,13 @@ import * as THREE from 'three';
 export const SKYLIGHT_INTENSITY = 0.15;
 /** The whole sky light where the environment is left out (the 3D view's light setup) */
 export const SKYLIGHT_WITHOUT_ENVIRONMENT = 1.6;
-export const SUN_INTENSITY = 2.8;
+export const SUN_INTENSITY = 3.2;
 /** The sky environment's strength: the ambient light and reflections of the scene */
-export const ENVIRONMENT_INTENSITY = 0.6;
+export const ENVIRONMENT_INTENSITY = 0.5;
 /** Exposure for the Neutral tone mapping: white walls in the sun stay white */
 export const TONE_EXPOSURE = 1.0;
 /** How dark the shadows are on the ground around the house */
-export const GROUND_SHADOW_OPACITY = 0.35;
+export const GROUND_SHADOW_OPACITY = 0.28;
 
 /** Toward the sun when no time is given: from the south-west, high */
 export const DEFAULT_SUN = new THREE.Vector3(-1.2, 2, 0.9).normalize();
