@@ -1,0 +1,23 @@
+{
+ "about": "A designer's pass over the converted sample (issue 217): capability calls replayed in order after the conversion. The layout stays as the old page drew it; finishes come from the default design language, the furniture is dressed to match, and the roof's utilities are left out of the presentation.",
+ "calls": [
+  {"name": "style_apply", "input": {"style": "warm-courtyard"}},
+  {"name": "params_set", "input": {"object": "L1-f25", "params": {"fabric": "linen", "legs": "wood"}}},
+  {"name": "params_set", "input": {"object": "L3-f11", "params": {"fabric": "linen", "legs": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f23", "params": {"body": "wood", "legs": "dark"}}},
+  {"name": "params_set", "input": {"object": "L3-f10", "params": {"body": "wood", "legs": "dark"}}},
+  {"name": "params_set", "input": {"object": "L1-f24", "params": {"top": "wood", "legs": "dark"}}},
+  {"name": "params_set", "input": {"object": "L3-f12", "params": {"top": "wood", "legs": "dark"}}},
+  {"name": "params_set", "input": {"object": "L1-f09", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f10", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f11", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f12", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f13", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f27", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f28", "params": {"wood": "wood"}}},
+  {"name": "params_set", "input": {"object": "L1-f29", "params": {"wood": "wood"}}},
+  {"name": "furniture_remove", "input": {"furniture": "RF-f01"}},
+  {"name": "furniture_remove", "input": {"furniture": "RF-f02"}},
+  {"name": "furniture_remove", "input": {"furniture": "RF-f03"}}
+ ]
+}

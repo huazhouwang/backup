@@ -346,8 +346,8 @@
     },
     "greystone": {
       "name": {"zh": "灰色石材大板", "en": "Grey stone slabs"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.2582, 0.2664, 0.2384, 1], "metallicFactor": 0, "roughnessFactor": 0.6},
-      "extras": {"pattern": "tiles", "size": 900, "color2": [0.159, 0.1651, 0.147, 1], "texture": "granite"}
+      "pbrMetallicRoughness": {"baseColorFactor": [0.402, 0.3813, 0.3325, 1], "metallicFactor": 0, "roughnessFactor": 0.5},
+      "extras": {"pattern": "tiles", "size": 900, "color2": [0.2918, 0.2747, 0.2346, 1], "texture": "marble"}
     },
     "slab": {
       "name": {"zh": "浅灰石板", "en": "Light stone slabs"},
