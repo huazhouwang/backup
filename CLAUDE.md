@@ -62,7 +62,9 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
     回退：`.github/workflows/rollback.yml`（旧代码 + 更高版本号重新发布）。发布要等模拟器演示通过。
   - **数据向后兼容**：SharedPreferences / config.json 只加字段、不改旧字段的含义；要换格式就用新 key（如 `dock_v2`），
     旧 key 保留读取，保证回退到旧版本时设置还能用。
-  - 签名密钥 `signing/q5home.keystore` 在仓库里（用户选择的），所有构建共用，不要改动或重新生成，否则车机无法覆盖安装。
+  - 签名：车主的私有密钥，不在仓库里。CI 从 Secrets `Q5HOME_KEYSTORE`（base64）/ `Q5HOME_KEYSTORE_PASSWORD` 解码，
+    本地读 `~/.gradle/gradle.properties` 的 `Q5HOME_KEYSTORE` / `Q5HOME_KEYSTORE_PASSWORD`；别名固定 `q5home`。
+    没有密钥只能得到调试签名。不要把任何密钥或密码提交进仓库，也不要改签名配置的读取方式，否则车机无法覆盖安装。
 - `ci/demo.py`：CI 模拟器演示脚本（中文步骤字幕 + 点击记录 + 截图标点击位置），`ci/render_video.py` 把字幕放进视频下方的字幕栏、
   在点击处画圆环。改了界面文字要同步改 demo.py 里按文字查找的步骤。录完要逐帧检查视频（见下）。
 

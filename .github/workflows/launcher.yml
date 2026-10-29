@@ -27,8 +27,44 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
 
+      # 签名密钥来自 GitHub Secrets（Q5HOME_KEYSTORE 是 base64 后的密钥文件）。main 上没有密钥就失败，
+      # 绝不用错误的签名发布；其它分支没有密钥时用临时调试签名，只能测试。
+      - name: Decode signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.Q5HOME_KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.Q5HOME_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              echo "::error::缺少签名密钥（Secrets: Q5HOME_KEYSTORE / Q5HOME_KEYSTORE_PASSWORD），main 上不能构建发布版"
+              exit 1
+            fi
+            echo "::warning::没有签名密钥，用临时调试签名（不能覆盖安装正式版本）"
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/q5home.keystore"
+          echo "Q5HOME_KEYSTORE_FILE=$RUNNER_TEMP/q5home.keystore" >> "$GITHUB_ENV"
+          echo "Q5HOME_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+
       - name: Build, lint, test
         run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease :app:testDebugUnitTest :fakeapps:assembleRelease
+
+      # 核对：APK 的签名证书必须和私有密钥一致（防止配置出错时悄悄用了别的签名）。
+      - name: Check APK signature
+        run: |
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          apk_fp=$("$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk \
+            | grep -m1 'SHA-256 digest' | awk '{print $NF}')
+          echo "APK 签名证书 SHA-256：$apk_fp"
+          if [ -n "${Q5HOME_KEYSTORE_FILE:-}" ]; then
+            key_fp=$(keytool -list -v -keystore "$Q5HOME_KEYSTORE_FILE" -storepass "$Q5HOME_KEYSTORE_PASSWORD" -alias q5home \
+              | grep -m1 'SHA256:' | sed 's/.*SHA256: //; s/://g' | tr 'A-F' 'a-f')
+            if [ "$apk_fp" != "$key_fp" ]; then
+              echo "::error::APK 的签名和私有密钥不一致（密钥别名必须是 q5home）"
+              exit 1
+            fi
+            echo "✅ 已用私有密钥签名"
+          fi
 
       - id: version
         run: echo "version=1.0.$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"

@@ -143,10 +143,15 @@ adb pull /sdcard/Android/data/com.x0finch.q5home/files/current.json   # 查看�
   ```bash
   adb shell appops set com.x0finch.q5home REQUEST_INSTALL_PACKAGES allow
   ```
-- **签名**：所有构建（本地、CI、Release）都用 `launcher/signing/q5home.keystore` 签名，所以新版本能直接覆盖旧版本、设置不丢。
-  按你的选择，这个密钥放在公开仓库里：别人也能用它签出"看起来是 Q5 Home"的安装包。
-  车机只会从你自己仓库的 Release 下载更新，所以风险很低；但不要从别处装来历不明的 Q5 Home 安装包。
-  以后想换成更安全的做法，可以把密钥移到 GitHub Secrets（换密钥需要卸载重装一次）。
+- **签名**：正式版本用车主自己的私有密钥签名，**密钥不在仓库里**：
+  - CI：GitHub 仓库 Settings → Secrets and variables → Actions 里的 `Q5HOME_KEYSTORE`（密钥文件的 base64）
+    和 `Q5HOME_KEYSTORE_PASSWORD`。构建后会核对 APK 的签名和密钥一致；main 上缺少密钥直接失败，不会发出错误签名的版本。
+  - 本地（Mac）：在 `~/.gradle/gradle.properties` 写
+    `Q5HOME_KEYSTORE=/Users/你/q5home-release.keystore` 和 `Q5HOME_KEYSTORE_PASSWORD=密码`（密钥别名必须是 `q5home`）。
+  - 没配置密钥时，本地构建用临时的调试签名，只能自己测试，装不到已经装了正式版的车机上。
+  - **密钥文件和密码务必备份**：丢了以后新版本无法覆盖安装，只能卸载重装（设置会丢）。
+  - 1.0.13 及更早的版本用的是以前放在仓库里的公开密钥，和现在的签名不同：装过它们的车机要先卸载再装新版本，
+    rollback 工作流也不能回退到这些版本。
 
 ## 更新后出问题怎么办（崩溃回退）
 

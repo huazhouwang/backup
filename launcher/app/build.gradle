@@ -27,26 +27,33 @@ android {
         versionName System.getenv('VERSION_NAME') ?: "1.0.$commitCount"
     }
 
-    // 所有构建（本地、CI、Release）用同一把签名，新版本才能覆盖安装旧版本。
-    // 密钥按你的选择放在仓库里（公开仓库：别人也能用它签名，见 README 说明）。
+    // 签名：用车主自己的私有密钥（不放在仓库里），新版本才能覆盖安装旧版本。
+    //  - 本地：~/.gradle/gradle.properties 里写 Q5HOME_KEYSTORE=<密钥路径>、Q5HOME_KEYSTORE_PASSWORD=<密码>
+    //  - CI：GitHub Secrets 解码出的文件，路径在环境变量 Q5HOME_KEYSTORE_FILE，密码在 Q5HOME_KEYSTORE_PASSWORD
+    // 都没有时用临时的调试签名，只能自己测试，不能覆盖安装正式版本（main 上的 CI 会拒绝构建）。
+    def keystorePath = System.getenv('Q5HOME_KEYSTORE_FILE') ?: findProperty('Q5HOME_KEYSTORE')
+    def keystorePassword = System.getenv('Q5HOME_KEYSTORE_PASSWORD') ?: findProperty('Q5HOME_KEYSTORE_PASSWORD')
+    def hasReleaseKey = keystorePath && keystorePassword && file(keystorePath).isFile()
     signingConfigs {
-        q5home {
-            storeFile file('../signing/q5home.keystore')
-            storePassword 'q5home-public'
-            keyAlias 'q5home'
-            keyPassword 'q5home-public'
+        if (hasReleaseKey) {
+            q5home {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias 'q5home'
+                keyPassword keystorePassword
+            }
         }
     }
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.q5home
+            signingConfig hasReleaseKey ? signingConfigs.q5home : signingConfigs.debug
         }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.q5home
+            signingConfig hasReleaseKey ? signingConfigs.q5home : signingConfigs.debug
         }
     }
 
