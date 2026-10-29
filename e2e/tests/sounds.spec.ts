@@ -114,3 +114,21 @@ test('a lullaby plays on into the sleep, and stops when the baby wakes', async (
   await expect.poll(() => page.evaluate(() => window.media.src)).toBe('')
   await expect(playing).toHaveCount(0)
 })
+
+test('a sound can start from the sleeping baby’s card too', async ({ page }) => {
+  const media = await watchMedia(page)
+  await onboard(page)
+  await startSleep(page)
+
+  await page.locator('main').getByRole('button', { name: '哄睡声音' }).click()
+  await sheet(page).getByRole('radio', { name: '羊水声' }).click()
+  expect(await media.last()).toEqual({ src: '/sounds/womb.m4a', loop: true })
+  // The sheet stays open to try another; behind it, Today shows what plays.
+  await expect(sheet(page).getByRole('radio', { name: '羊水声' })).toBeChecked()
+  await page.keyboard.press('Escape')
+  await sheetClosed(page)
+  await expect(page.locator('main').getByRole('button', { name: '换个声音或定时' })).toContainText(
+    '羊水声',
+  )
+  await expect(page.locator('main').getByRole('button', { name: '哄睡声音' })).toHaveCount(0)
+})

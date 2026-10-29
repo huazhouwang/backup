@@ -16,6 +16,7 @@ import { quantityInputProps, unitLabel } from '../../lib/units'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
+import { SleepSoundButton } from '../sounds/SoundPlayer'
 import { saveEvent } from './actions'
 import { EditEventSheet } from './EditEventSheet'
 import { EventIcon, eventIconProps } from './EventIcon'
@@ -182,6 +183,8 @@ function TimerCard({
           ))}
         </div>
       )}
+      {/* Sound plays on this device, so anyone watching the sleep can start it. */}
+      {kind === 'sleep' && <SleepSoundButton />}
       {canEdit && (
         <div className={cn('grid gap-3', breast ? 'grid-cols-2' : 'grid-cols-1')}>
           {breast && (

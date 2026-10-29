@@ -93,6 +93,26 @@ export function NowPlaying() {
 }
 
 /**
+ * The player's door on a sleeping baby's timer card, as well as in 更多. Once a sound plays,
+ * the card on Today (NowPlaying) shows it instead; the sheet stays open across the change.
+ */
+export function SleepSoundButton() {
+  const playing = useSoundPlaying()
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      {!playing && (
+        <Button variant="soft" tone="sleep" onClick={() => setOpen(true)}>
+          <MusicIcon className="size-5" />
+          {m.soundOpen()}
+        </Button>
+      )}
+      <SoundSheet open={open} onClose={() => setOpen(false)} />
+    </>
+  )
+}
+
+/**
  * The player: the timer first, always in reach, then the sounds. A tap on a sound plays it at
  * once, or switches to it while the timer runs on; the timer changes on its own. It stays open
  * to try one sound after another.
