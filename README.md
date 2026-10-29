@@ -35,6 +35,22 @@ adb connect <车机IP>:<调试端口>   # 无线调试页面上显示的端口
 
 连好后 `adb devices` 应能看到设备。
 
+### 连不上车机
+
+`adb connect` 提示 `Connection refused`：网络是通的，但那个端口上没有 adb。
+
+1. 先扫一遍，看车机上有没有开着的 adb 端口（只读，不改车机）：
+   ```bash
+   brew install nmap          # 可选，用来扫全部端口
+   tools/find-adb.sh 172.20.10.2
+   ```
+2. 一个都没有，说明车机的调试服务没在网络上监听，要先打开它。按顺序试：
+   - **设置里搜索**：设置页顶部的搜索框搜"无线调试"或"Wireless debugging"，有的固件只是没放在开发者选项里。
+   - **USB 一次**：开发者选项打开"USB 调试"，用数据线连 Mac，车机上点允许，然后 `adb tcpip 5555`，
+     拔线后 `adb connect 车机IP:5555` 就能用了（车机重启后要重新做一次）。
+     车机的 USB 口不一定能当调试口；有的车机在**工厂设置**里有"USB 模式（主机 / 从机 / OTG）"或"ADB 调试"开关。
+   - **打开隐藏页面**：在车机上装一个 Activity Launcher 类应用，找"设置 → 无线调试"页面直接打开。
+
 ### 3. 运行摸底
 
 在本仓库目录打开 Claude Code，把 [PROMPT.md](PROMPT.md) 里的内容粘贴进去即可。
