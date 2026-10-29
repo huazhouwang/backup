@@ -88,8 +88,12 @@ test('looks', async ({ browser: b }) => {
   p = await project();
   check(p.furniture.find(f => f.id === sofa.id).lookParams?.fabric === 'linen' && others(p) === before, 'a look option changes only that object');
   await page.screenshot({ path: `${OUT}/looks-3-params.png` });
-  await page.getByRole('button', { name: '恢复默认' }).click();
-  await page.waitForTimeout(500);
+  // Every customised option has its own reset (the sample's sofas are dressed by the designer's pass, issue 217)
+  const reset = page.getByRole('button', { name: '恢复默认' });
+  while (await reset.count()) {
+    await reset.first().click();
+    await page.waitForTimeout(500);
+  }
   p = await project();
   check(!p.furniture.find(f => f.id === sofa.id).lookParams, 'its default comes back');
 

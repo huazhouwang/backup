@@ -339,7 +339,7 @@
    "kind": "fence",
    "height": 1970,
    "openings": [],
-   "finish": "limewash"
+   "finish": "rustcement"
   },
   {
    "id": "L1-w09",
@@ -357,7 +357,7 @@
    "kind": "fence",
    "height": 1970,
    "openings": [],
-   "finish": "limewash"
+   "finish": "rustcement"
   },
   {
    "id": "L1-w10",
@@ -3393,7 +3393,7 @@
    },
    "lookParams": {
     "top": "wood",
-    "legs": "dark"
+    "legs": "wood"
    }
   },
   {
@@ -3412,8 +3412,9 @@
     "h": 800
    },
    "lookParams": {
-    "fabric": "linen",
-    "legs": "wood"
+    "fabric": "oatmeal",
+    "legs": "wood",
+    "cushion": "oatmeal"
    }
   },
   {
@@ -4332,8 +4333,9 @@
     "h": 800
    },
    "lookParams": {
-    "fabric": "linen",
-    "legs": "wood"
+    "fabric": "oatmeal",
+    "legs": "wood",
+    "cushion": "oatmeal"
    }
   },
   {
@@ -4353,7 +4355,7 @@
    },
    "lookParams": {
     "top": "wood",
-    "legs": "dark"
+    "legs": "wood"
    }
   },
   {
