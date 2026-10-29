@@ -157,6 +157,8 @@ jobs:
       - name: Name the APK, write release notes
         run: |
           mv apk/app-release.apk "apk/q5home-${{ needs.build.outputs.version }}.apk"
+          # 固定文件名的副本：README 的"下载最新版"链接 releases/latest/download/q5home.apk 一直指向它。
+          cp "apk/q5home-${{ needs.build.outputs.version }}.apk" apk/q5home.apk
           # 更新说明 = 提交信息（去掉署名行），车机"版本更新"页面会显示。
           git log -1 --format=%B | grep -v -E '^(Co-Authored-By|Claude-Session):' > notes.md
       - uses: softprops/action-gh-release@v2
@@ -165,5 +167,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: Q5 Home ${{ needs.build.outputs.version }}
           body_path: notes.md
-          files: apk/q5home-${{ needs.build.outputs.version }}.apk
+          files: |
+            apk/q5home-${{ needs.build.outputs.version }}.apk
+            apk/q5home.apk
           make_latest: true

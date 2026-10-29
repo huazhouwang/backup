@@ -1,5 +1,10 @@
 # audi-q5-launcher
 
+[![构建](https://github.com/x0finch/audi-q5-launcher/actions/workflows/launcher.yml/badge.svg?branch=main)](https://github.com/x0finch/audi-q5-launcher/actions/workflows/launcher.yml?query=branch%3Amain)
+[![最新版本](https://img.shields.io/github/v/release/x0finch/audi-q5-launcher?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC&color=8EF0B0)](https://github.com/x0finch/audi-q5-launcher/releases/latest)
+[![下载最新版](https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD%E6%9C%80%E6%96%B0%E7%89%88-APK-1E9E55?logo=android&logoColor=white)](https://github.com/x0finch/audi-q5-launcher/releases/latest/download/q5home.apk)
+
+
 2014 款奥迪 Q5（8R）安卓宽屏车机（WY 固件，Android 12）的简洁桌面和精简工具。
 
 目标：
@@ -136,6 +141,8 @@ adb pull /sdcard/Android/data/com.x0finch.q5home/files/current.json   # 查看�
 ## 版本与更新
 
 - **版本号**：`1.0.<提交数>`，每次提交自动加一（内部 versionCode = 提交数 × 10，回退发布用个位数）。
+- **下载**：README 顶部的"下载最新版"按钮直接下载最新 APK（`releases/latest/download/q5home.apk`），
+  "最新版本"按钮打开最新 Release 页面（带版本号的 APK 和更新说明）。
 - **发布**：每次推送到 `main`，CI 编译、测试、模拟器演示都通过后，自动发布 GitHub Release `v1.0.<提交数>`，附带 APK，
   更新说明取自提交信息。
 - **车机上更新**：设置 →"版本更新"→"下载并安装"。下载后会校验 sha256、包名和版本号，然后弹出安卓系统的安装确认。

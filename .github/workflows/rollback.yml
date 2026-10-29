@@ -78,6 +78,7 @@ jobs:
       - name: Name the APK, write release notes
         run: |
           mv launcher/app/build/outputs/apk/release/app-release.apk "q5home-${{ steps.v.outputs.name }}.apk"
+          cp "q5home-${{ steps.v.outputs.name }}.apk" q5home.apk
           printf '回退：内容与 %s 相同。\n\n' "${{ steps.v.outputs.tag }}" > notes.md
 
       - uses: softprops/action-gh-release@v2
@@ -86,5 +87,7 @@ jobs:
           target_commitish: ${{ steps.v.outputs.sha }}
           name: Q5 Home ${{ steps.v.outputs.name }}（回退到 ${{ steps.v.outputs.tag }}）
           body_path: notes.md
-          files: q5home-${{ steps.v.outputs.name }}.apk
+          files: |
+            q5home-${{ steps.v.outputs.name }}.apk
+            q5home.apk
           make_latest: true
