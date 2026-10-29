@@ -429,6 +429,18 @@ class SettingsActivity : Activity() {
             },
         )
 
+        subheader("调试与连接")
+        val ip = DebugAccess.ipAddress(this)
+        val usb = if (DebugAccess.usbDebuggingOn(this)) "开" else "关"
+        val wifi = if (DebugAccess.wirelessDebuggingOn(this)) "开" else "关"
+        group(
+            row(R.drawable.ui_wifi, "打开无线调试", "电脑通过 Wi-Fi 连车机用（adb）。打不开直达页面时，会打开开发者选项并高亮这一项",
+                Ui.pill(this, "打开") { overlay.snackbar(DebugAccess.openWirelessDebugging(this)) }),
+            info("本机 IP · USB 调试 · 无线调试", "${ip ?: "未联网"}  ·  $usb  ·  $wifi"),
+        )
+        hint("无线调试打开后，点进它的页面能看到 IP 和端口；第一次在电脑上用「使用配对码配对设备」配对：" +
+            "adb pair IP:配对端口，再 adb connect IP:端口。也可以在开发者选项 →「快捷设置开发者图块」里把「无线调试」加到下拉菜单。")
+
         subheader("配置文件")
         val dir = getExternalFilesDir(null)?.absolutePath ?: "(不可用)"
         group(
