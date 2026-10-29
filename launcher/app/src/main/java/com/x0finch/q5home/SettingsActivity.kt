@@ -305,6 +305,11 @@ class SettingsActivity : Activity() {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_HOME) {
+            render()
+            overlay.snackbar(if (HomeRole.isDefault(this)) "Q5 Home 已设为默认桌面" else "没有更改默认桌面")
+            return
+        }
         val spec = data?.getStringExtra(LibraryActivity.EXTRA_SPEC)
         if (resultCode != RESULT_OK || spec == null) return
         when (requestCode) {
@@ -368,6 +373,16 @@ class SettingsActivity : Activity() {
         hint("安装时安卓会弹出系统确认；第一次需要允许 Q5 Home「安装未知应用」。所有版本用同一签名，设置会保留。")
     }
 
+    private fun requestDefaultHome() {
+        runCatching { startActivityForResult(HomeRole.requestIntent(this), REQ_HOME) }
+            .onFailure { openHomeSettings() }
+    }
+
+    private fun openHomeSettings() {
+        runCatching { startActivity(HomeRole.homeSettingsIntent(this)) }
+            .onFailure { overlay.snackbar("车机不支持这个页面") }
+    }
+
     private fun checkNow() {
         checking = true
         Thread {
@@ -412,7 +427,7 @@ class SettingsActivity : Activity() {
     // ---- 高级 ----
 
     private fun renderAdvanced() {
-        header("高级", "系统设置、恢复默认、配置文件")
+        header("高级", "系统设置、默认桌面、无线调试、配置文件")
         group(
             row(R.drawable.glyph_settings, "系统设置", "打开安卓自带的设置", chevron()) {
                 runCatching { startActivity(Intent(Settings.ACTION_SETTINGS)) }
@@ -428,6 +443,19 @@ class SettingsActivity : Activity() {
                 }
             },
         )
+
+        subheader("默认桌面")
+        val isDefault = HomeRole.isDefault(this)
+        val current = HomeRole.currentHomeLabel(this) ?: "没有固定（按 HOME 时会问）"
+        group(
+            row(R.drawable.ui_home, "设为默认桌面",
+                if (isDefault) "Q5 Home 已经是默认桌面" else "当前：$current。系统会弹出确认框",
+                if (isDefault) Ui.pill(this, "已是默认") {}.apply { isEnabled = false; alpha = 0.5f }
+                else Ui.pill(this, "设为默认", Ui.PillStyle.PRIMARY) { requestDefaultHome() }),
+            row(R.drawable.ui_undo, "恢复原厂桌面", "打开系统的「主屏幕应用」设置，选回原厂桌面（原厂桌面一直保留着）",
+                Ui.pill(this, "去设置") { openHomeSettings() }),
+        )
+        hint("切换后请做一遍实车检查：倒车影像、原车画面切换、侧栏、CarPlay、熄火重启。")
 
         subheader("调试与连接")
         val ip = DebugAccess.ipAddress(this)
@@ -554,5 +582,6 @@ class SettingsActivity : Activity() {
         const val SECTION_UPDATE = "update"
         private const val REQ_CARPLAY = 1
         private const val REQ_OEM = 2
+        private const val REQ_HOME = 3
     }
 }
