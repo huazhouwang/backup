@@ -1,6 +1,6 @@
 import { sampleFile } from '../support.js';
 import { describe, expect, it } from 'vitest';
-import { areaReport, fromLegacy, migrate, SCHEMA_VERSION, validate } from '../../src/index.js';
+import { areaReport, createRegistry, DEFAULT_STYLE_ID, fromLegacy, migrate, SCHEMA_VERSION, Session, validate } from '../../src/index.js';
 
 const read = sampleFile;
 const legacy = read('legacy.json');
@@ -11,8 +11,10 @@ const expected = read('expected-areas.json') as {
 describe('乌石合院 scheme 10', () => {
   const project = migrate(read('project.json'));
 
-  it('committed project.json matches the conversion output (conversion is rerunnable)', () => {
-    expect(project).toEqual(fromLegacy(legacy));
+  it('committed project.json matches the conversion output, redecorated in the default style (conversion is rerunnable)', async () => {
+    const session = new Session(fromLegacy(legacy));
+    await createRegistry().call('style_apply', { style: DEFAULT_STYLE_ID }, { session, actor: { kind: 'agent' } });
+    expect(project).toEqual(session.project);
   });
 
   it('passes structural validation', () => {

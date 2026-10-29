@@ -4,6 +4,7 @@ import {
   createRegistry,
   DEFAULT_MATERIALS,
   DEFAULT_STYLE_ID,
+  fromLegacy,
   migrate,
   ROOM_ROLES,
   roomRole,
@@ -63,6 +64,13 @@ describe('room roles', () => {
 });
 
 describe('design languages', () => {
+  it('the sample ships redecorated in the default style', () => {
+    const p = sample();
+    expect(p.extras?.style).toBe(DEFAULT_STYLE_ID);
+    expect(p.spaces.find(s => s.name === '客厅')!.floor).toBe('greystone');
+    expect(p.library.materials).toEqual({});
+  });
+
   it('every style finishes every role with a default material, the default style first', () => {
     expect(DEFAULT_STYLE_ID).toBe('warm-courtyard');
     for (const s of STYLE_PRESETS) {
@@ -73,7 +81,8 @@ describe('design languages', () => {
   });
 
   it('style_apply redecorates by role and moves nothing; undo puts it back', async () => {
-    const p: Project = sample();
+    // The sample as the old page finished it: oak, red tile and terrazzo, the design's own copies of those materials
+    const p: Project = fromLegacy(sampleFile('legacy.json'));
     const session = new Session(p);
     const registry = createRegistry();
     const before = JSON.stringify({ walls: p.walls.map(w => [w.start, w.end, w.openings.length]), spaces: p.spaces.map(s => s.shape) });
