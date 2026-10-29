@@ -31,8 +31,12 @@ test('compass', async ({ browser: b }) => {
   }
   check(Math.abs(turned) > 10, `in 3D the needle turns with the view (${turned.toFixed(0)}°)`);
   await page.getByRole('button', { name: '朝北看' }).click();
-  await page.waitForTimeout(2000);
-  check(Math.abs(await needle()) < 2, `a tap turns the view to look north (${(await needle()).toFixed(1)}°)`);
+  // The view eases round frame by frame: wait until it has (software GL draws a few frames a second)
+  for (let i = 0; i < 40 && Math.abs(turned) >= 2; i++) {
+    await page.waitForTimeout(500);
+    turned = await needle();
+  }
+  check(Math.abs(turned) < 2, `a tap turns the view to look north (${turned.toFixed(1)}°)`);
 
   // The sun: a morning time moves it east and the shadows with it
   const canvas = page.locator('iframe').first();

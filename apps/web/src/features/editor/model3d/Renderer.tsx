@@ -1,13 +1,12 @@
 /**
- * Draws the 3D view through a post-processing chain: the scene, SketchUp-style edges when the model style has them (see
- * EdgePass), then the output conversion.
+ * Draws the 3D view through the shared chain (graphics/three/beauty.ts, issue 208): the scene multisampled, with ambient occlusion
+ * on capable devices, SketchUp-style edges when the model style has them (see EdgePass), then the output conversion with tone
+ * mapping.
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { beautyComposer, isSoftwareGL } from '@/graphics/three/beauty';
 import { EdgePass } from './EdgePass';
 
 export type Quality = 'high' | 'low';
@@ -15,15 +14,17 @@ export type Quality = 'high' | 'low';
 /** Older mobile GPUs: Mali-400/450 and the Mali-T series, Adreno 500 and below, PowerVR SGX */
 const WEAK_GPU = /Mali-(4\d\d|T\d+)|Adreno \(TM\) [1-5]\d\d\b|PowerVR SGX/i;
 
-/** Touch-first devices; only these are ever downgraded */
+/** Touch-first devices: the only ones with a GPU that are downgraded */
 export const isTouchDevice = (win: Window) => win.matchMedia('(pointer: coarse)').matches;
 
 /**
- * Low-end phones get the light setup (lower resolution, smaller shadow and floor-drawing textures): a touch device with 2 GB of
- * memory or less, an Android device with 4 cores or fewer, or an older mobile GPU. Everything else, recent iPhones included, gets
- * the full look; a phone missed here still drops to the light setup if it can't keep up (see Model3D).
+ * Low-end devices get the light setup (no ambient occlusion, lower resolution, smaller shadow and floor-drawing textures): WebGL
+ * drawn in software, a touch device with 2 GB of memory or less, an Android device with 4 cores or fewer, or an older mobile GPU.
+ * Everything else, recent iPhones included, gets the full look; a phone missed here still drops to the light setup if it can't
+ * keep up (see Model3D).
  */
 export function detectQuality(win: Window, gl: WebGLRenderingContext | WebGL2RenderingContext): Quality {
+  if (isSoftwareGL(gl)) return 'low';
   if (!isTouchDevice(win)) return 'high';
   const nav = win.navigator as Navigator & { deviceMemory?: number };
   const android = /Android/i.test(nav.userAgent);
@@ -42,21 +43,20 @@ export function Renderer({
   edges: withEdges,
   edgeColor,
   growth,
+  quality,
 }: {
   draw: React.RefObject<(() => void) | null>;
   edges: boolean;
   edgeColor: string;
   growth: React.RefObject<{ g: number }>;
+  quality: Quality;
 }) {
   const { gl, scene, camera, size } = useThree();
   const { composer, edges } = useMemo(() => {
-    const c = new EffectComposer(gl);
-    c.addPass(new RenderPass(scene, camera));
     const e = withEdges ? new EdgePass(scene, camera, size.width, size.height) : null;
-    if (e) c.addPass(e);
-    c.addPass(new OutputPass());
+    const c = beautyComposer(gl, scene, camera, size.width, size.height, { ao: quality === 'high', extra: { addPass: c => e && c.addPass(e) } });
     return { composer: c, edges: e };
-  }, [gl, scene, camera, withEdges]);
+  }, [gl, scene, camera, withEdges, quality]);
   useEffect(() => () => composer.dispose(), [composer]);
   useEffect(() => {
     composer.setPixelRatio(gl.getPixelRatio());

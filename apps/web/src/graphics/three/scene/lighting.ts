@@ -6,8 +6,15 @@
  */
 import * as THREE from 'three';
 
-export const SKYLIGHT_INTENSITY = 2.4;
-export const SUN_INTENSITY = 1.4;
+/** The hemisphere's share of the sky light: most of it now comes from the sky environment (environment.ts, issue 208) */
+export const SKYLIGHT_INTENSITY = 0.15;
+/** The whole sky light where the environment is left out (the 3D view's light setup) */
+export const SKYLIGHT_WITHOUT_ENVIRONMENT = 1.6;
+export const SUN_INTENSITY = 2.8;
+/** The sky environment's strength: the ambient light and reflections of the scene */
+export const ENVIRONMENT_INTENSITY = 0.6;
+/** Exposure for the Neutral tone mapping: white walls in the sun stay white */
+export const TONE_EXPOSURE = 1.0;
 /** How dark the shadows are on the ground around the house */
 export const GROUND_SHADOW_OPACITY = 0.35;
 
@@ -24,13 +31,16 @@ export type ShadowQuality = 'high' | 'low';
  */
 export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQuality = 'high', toward: THREE.Vector3 = DEFAULT_SUN) {
   const mapSize = quality === 'high' ? 2048 : 1024;
+  // Seen from the sun every caster lies within the house's bounding radius, and so does every shadow it casts (a shadow lies
+  // on the caster's ray): the map covers just that, with a little margin (issue 208)
+  const half = radius * 1.05;
   return {
     position: center.clone().addScaledVector(toward, radius * 2.5),
     mapSize,
     shadowRadius: quality === 'high' ? 6 : 3,
     bias: -0.0004,
-    normalBias: ((radius * 2.8) / mapSize) * 2,
-    camera: { left: -radius * 1.4, right: radius * 1.4, top: radius * 1.4, bottom: -radius * 1.4, near: 0.5, far: radius * 10 },
+    normalBias: ((half * 2) / mapSize) * 2,
+    camera: { left: -half, right: half, top: half, bottom: -half, near: 0.5, far: radius * 10 },
   };
 }
 

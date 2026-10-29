@@ -20,8 +20,28 @@ const levelOn = page =>
     .filter({ hasText: /^(一层|二层|三层|屋顶)$/ })
     .textContent();
 
+/**
+ * Holds W until the walker has gone `metres` (1.4 m a second, so what a hold of that long covers at a steady frame rate) or is
+ * stopped: it moves a step a frame, and software GL draws a few frames a second
+ */
+const walk = async (page, frame, metres) => {
+  let at = await probe(frame);
+  let gone = 0;
+  let still = 0;
+  await page.keyboard.down('w');
+  for (const end = Date.now() + 60_000; gone < metres && still < 6 && Date.now() < end;) {
+    await page.waitForTimeout(250);
+    const p = await probe(frame);
+    const step = Math.hypot(p.x - at.x, p.z - at.z, p.foot - at.foot);
+    gone += step;
+    still = step < 0.005 ? still + 1 : 0;
+    at = p;
+  }
+  await page.keyboard.up('w');
+};
+
 test('walk', async ({ browser: b }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(480_000);
   const page = await b.newPage({ viewport: { width: 1400, height: 900 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -84,9 +104,7 @@ test('walk', async ({ browser: b }) => {
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${OUT}/walk-door-open.png` });
   // And you walk out
-  await page.keyboard.down('w');
-  await page.waitForTimeout(4500);
-  await page.keyboard.up('w');
+  await walk(page, frame, 6.3);
   const out = await probe(frame);
   check(out.z * 1000 > dy + 300, `the glass sliding door opens as you come near and you walk out (${Math.round(out.z * 1000 - dy)} mm past it)`);
 
@@ -110,9 +128,7 @@ test('walk', async ({ browser: b }) => {
     await place(frame, { x: from[0] / 1000, z: from[1] / 1000, yaw: Math.atan2(n[0], n[1]), pitch: -0.1 });
     await page.waitForTimeout(1800);
     await page.screenshot({ path: `${OUT}/walk-hinged-door.png` });
-    await page.keyboard.down('w');
-    await page.waitForTimeout(5000);
-    await page.keyboard.up('w');
+    await walk(page, frame, 7);
     const p = await probe(frame);
     const across = (p.x * 1000 - hinged.center[0]) * n[0] + (p.z * 1000 - hinged.center[1]) * n[1];
     check(across < -300, `a hinged door swings open as you come near and you walk through (${Math.round(-across)} mm past it)`);
@@ -120,15 +136,13 @@ test('walk', async ({ browser: b }) => {
 
   // Up the stairs: north up the west flight, east across the landing, south down the east one to the first floor
   await place(frame, { x: 15.55, z: 5.2, yaw: 0, pitch: 0 });
-  const walkFor = async (yaw, ms) => {
+  const walkFor = async (yaw, metres) => {
     await place(frame, { yaw });
-    await page.keyboard.down('w');
-    await page.waitForTimeout(ms);
-    await page.keyboard.up('w');
+    await walk(page, frame, metres);
   };
-  await walkFor(0, 9000);
-  await walkFor(-Math.PI / 2, 1500);
-  await walkFor(Math.PI, 9000);
+  await walkFor(0, 12.6);
+  await walkFor(-Math.PI / 2, 2.1);
+  await walkFor(Math.PI, 12.6);
   const up = await probe(frame);
   await page.screenshot({ path: `${OUT}/walk-upstairs.png` });
   check(up.foot > 3.5 && up.level === 'L2', `the stairs lead up to the first floor (${up.foot.toFixed(2)} m, ${up.level})`);
