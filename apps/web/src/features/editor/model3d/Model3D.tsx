@@ -332,11 +332,11 @@ export function Model3D() {
             {current && !camera3d.walking && <Widgets3D project={project} current={current.id} editable={canEdit} />}
             {current && <Effects3D project={project} current={current.id} />}
             <Reveal ownerOf={ownerOf} />
-            {/* Sections read as drawings: with edges */}
+            {/* Profiles draw the scene a second time: the light setup goes without them, except sections, which read as drawings */}
             {quality && (
               <Renderer
                 draw={draw}
-                edges={style.edges || !!camera3d.section}
+                edges={(style.edges && q === 'high') || !!camera3d.section}
                 edgeStrength={camera3d.walking ? 0.3 : 1}
                 edgeColor={c.edge}
                 growth={growth}
