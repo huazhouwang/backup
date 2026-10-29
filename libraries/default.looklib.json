@@ -224,7 +224,7 @@
     },
     "teak": {
       "name": {"zh": "柚木地板", "en": "Teak flooring"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.4404, 0.216, 0.1038, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2542, 0.1441, 0.0802, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
       "extras": {"pattern": "planks", "size": [150, 1200], "color2": [0.2293, 0.0958, 0.0484, 1], "texture": "laminate"}
     },
     "tile": {
@@ -239,7 +239,7 @@
     },
     "redtile": {
       "name": {"zh": "红阶砖", "en": "Red clay tile"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.5831, 0.1645, 0.0839, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4342, 0.1946, 0.1221, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
       "extras": {"pattern": "tiles", "size": 300, "color2": [0.6537, 0.5274, 0.4407, 1], "texture": "terracotta"}
     },
     "paver": {
@@ -338,6 +338,41 @@
       "name": {"zh": "清水混凝土", "en": "Fair-faced concrete"},
       "pbrMetallicRoughness": {"baseColorFactor": [0.4535, 0.4535, 0.4205, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
       "extras": {"pattern": "tiles", "size": 1200, "color2": [0.3587, 0.3587, 0.3297, 1], "texture": "concrete"}
+    },
+    "limewash": {
+      "name": {"zh": "暖白石灰墙", "en": "Warm white limewash"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.8632, 0.8148, 0.7379, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
+      "extras": {"texture": "stucco"}
+    },
+    "greystone": {
+      "name": {"zh": "灰色石材大板", "en": "Grey stone slabs"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2582, 0.2664, 0.2384, 1], "metallicFactor": 0, "roughnessFactor": 0.6},
+      "extras": {"pattern": "tiles", "size": 900, "color2": [0.159, 0.1651, 0.147, 1], "texture": "granite"}
+    },
+    "slab": {
+      "name": {"zh": "浅灰石板", "en": "Light stone slabs"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5776, 0.5583, 0.5089, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
+      "extras": {"pattern": "tiles", "size": 600, "color2": [0.3968, 0.3813, 0.3419, 1], "texture": "granite"}
+    },
+    "rustcement": {
+      "name": {"zh": "锈红微水泥", "en": "Rust microcement"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.3763, 0.1022, 0.0437, 1], "metallicFactor": 0, "roughnessFactor": 0.55},
+      "extras": {"texture": "cement"}
+    },
+    "deck": {
+      "name": {"zh": "户外木平台", "en": "Timber decking"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.2623, 0.1683, 0.0999, 1], "metallicFactor": 0, "roughnessFactor": 0.8},
+      "extras": {"pattern": "planks", "size": [140, 2400], "color2": [0.1119, 0.0685, 0.0395, 1], "texture": "planks"}
+    },
+    "palegravel": {
+      "name": {"zh": "浅色碎石", "en": "Pale gravel"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.624, 0.5841, 0.5089, 1], "metallicFactor": 0, "roughnessFactor": 1.0},
+      "extras": {"pattern": "speckled", "size": 600, "color2": [0.3763, 0.3467, 0.2918, 1], "color3": [0.7758, 0.7379, 0.6654, 1], "count": 260, "radius": [10, 24], "seed": 11, "texture": "gravel"}
+    },
+    "naturaloak": {
+      "name": {"zh": "原木色橡木地板", "en": "Natural oak flooring"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.4851, 0.3763, 0.2582, 1], "metallicFactor": 0, "roughnessFactor": 0.65},
+      "extras": {"pattern": "planks", "size": [180, 1800], "color2": [0.2747, 0.2016, 0.1274, 1], "texture": "laminate"}
     }
   },
   "looks": {

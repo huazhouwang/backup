@@ -110,4 +110,20 @@ describe('house generation (issue 187)', () => {
     expect(checkRules(p).filter(i => i.severity === 'error')).toEqual([]);
     expect(() => buildHouse(p, BRIEFS['young family'], 'pagoda')).toThrow();
   });
+
+  it("finishes the house in the owner's design language, or the default one, recording what each room is for (issue 217)", () => {
+    const p = createProject({ id: 'x', name: 'My house', language: 'en' });
+    buildHouse(p, BRIEFS['young family'], 'bar');
+    const living = p.spaces.find(s => s.name === 'Living room')!;
+    expect(living.extras?.room).toBe('living');
+    expect(living.floor).toBe('greystone');
+    expect(p.spaces.find(s => s.name === 'Main bedroom')!.floor).toBe('naturaloak');
+    expect(p.walls.filter(w => w.kind !== 'railing').every(w => w.finish === 'limewash')).toBe(true);
+    expect(p.extras?.style).toBe('warm-courtyard');
+    const q = createProject({ id: 'y', name: 'My house', language: 'en' });
+    q.brief.style = ['japanese'];
+    buildHouse(q, BRIEFS['young family'], 'bar');
+    expect(q.spaces.find(s => s.name === 'Living room')!.floor).toBe('naturaloak');
+    expect(q.extras?.style).toBe('japanese');
+  });
 });

@@ -13,6 +13,7 @@ import { canvasDataSet, canvasModulePut, canvasModuleRemove, canvasModules } fro
 import { widgetCatalog, widgetConfigure, widgetCreate, widgetInstall, widgetRemove, widgetUpdateCap } from './widget.js';
 import { houseBuild, houseOptionsCap } from './house.js';
 import { materialDefine } from './material.js';
+import { styleApply } from './style.js';
 import { furnitureTypeAdd, lookAdd, lookGet, lookImport, lookRemove, lookSet, lookUpdate, lookUse, paramsSet } from './look.js';
 
 export * from './query.js';
@@ -26,6 +27,7 @@ export * from './history.js';
 export * from './meta.js';
 export * from './look.js';
 export * from './material.js';
+export * from './style.js';
 export * from './widget.js';
 export * from './canvas.js';
 export * from './house.js';
@@ -76,6 +78,7 @@ export const BUILTIN: Capability[] = [
   lookSet,
   lookImport,
   materialDefine,
+  styleApply,
   paramsSet,
   furnitureTypeAdd,
   canvasModules,
