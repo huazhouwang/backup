@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { defineEdit, defineRead } from './capability.js';
 import { text } from '../i18n.js';
 import { DEFAULT_MATERIALS, materialOf } from '../looks/builtin.js';
+import { TEXTURES, unknownTextures } from '../looks/textures.js';
 import { DEFAULT_LOOKS, type LookTarget } from '../looks/defaults.js';
 import { elementTarget, furnitureTarget, lookOf, lookRecipe, openingTarget, targetSize, wallTarget } from '../looks/resolve.js';
 import { normalizeRecipe } from '../looks/recipe-convert.js';
@@ -51,7 +52,7 @@ async function checkedRecipe(
   for (const t of targets) {
     const [kind, type] = t.split(':');
     const size = kind === 'furniture' && types[type] ? types[type].size : targetSize(p, t);
-    const problems = await checkRecipe(recipe, size);
+    const problems = [...(await checkRecipe(recipe, size)), ...unknownTextures((recipe as Recipe).materials, 'materials.')];
     if (!problems.length) problems.push(...unknownMaterials(p, recipe as Recipe, await buildRecipe(recipe as Recipe, size)));
     if (problems.length) throw new TxError('invalid-input', text('err_recipe', 'The recipe has problems: {problems}', { problems: problems.join('; ') }));
   }
@@ -114,7 +115,7 @@ export const lookAdd = defineEdit({
     'JSONata basics: ( $a := 1; $b := $a * 2; [ ... ] ) for local variables; [0..$n - 1].( $i := $; ... ) to repeat; cond ? a : b; = != < <= > >= and or $not(); + - * / %;',
     '$min([a, b]) $max([...]) $abs $floor $ceil $sqrt $power $round (half up) and our $sin $cos $tan $atan2 (degrees) $hypot $clamp(x, lo, hi) $lerp(a, b, t) $rnd(k) (pseudo-random 0..1, fixed per seed) $pi; $f := function($x) { ... } for helpers of your own.',
     'Always use $w, $d, $h and $variables: inside [list].( ... ) a bare name refers to the current item.',
-    `Parts; mat is a material: one of the default library's (${Object.keys(DEFAULT_MATERIALS).join(' ')}) or one the recipe defines in materials: {id: glTF 2.0 material {name: {zh?, en?}, pbrMetallicRoughness: {baseColorFactor: [r, g, b, a] linear 0..1, metallicFactor, roughnessFactor}, alphaMode?: OPAQUE | BLEND}}:`,
+    `Parts; mat is a material: one of the default library's (${Object.keys(DEFAULT_MATERIALS).join(' ')}) or one the recipe defines in materials: {id: glTF 2.0 material {name: {zh?, en?}, pbrMetallicRoughness: {baseColorFactor: [r, g, b, a] linear 0..1, metallicFactor, roughnessFactor}, alphaMode?: OPAQUE | BLEND, extras?: {texture?: a photographed texture set laid at its real size and tinted to the colour (${Object.keys(TEXTURES).join(' ')})}}}:`,
     '$box([w, h, d], [x, y, z] centre, mat, r? edge radius, [rx, ry, rz]?); $block([w, h, d], x, y0 bottom, z, mat, r?); $cylinder(r, h, [x, y, z] centre, mat, {r2? top radius, axis? x|y|z, seg?, scale?}?);',
     '$sphere(r, at, mat, scale?); $lathe([[r, y]...] from the axis out and back, [x, y, z] base, mat, {scale?, seg?}?); $rod(from, to, r, mat); $ring(R, r, at, mat, axis? y|z); $tube([[x, y, z]...], r, mat);',
     '$panel([x, z], [x, z], y, h, t, mat); $extrude(plane side (profile x,y across z) | plan (profile x,z upwards), [[x, y] | {"arc": [cx, cy, r, a0, a1, clockwise]} | {"curve": [cx, cy, x, y]}], depth, mat, bevel?, at?);',

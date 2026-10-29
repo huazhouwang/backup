@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import { interactionSchema, paramDeclSchema, type Interaction, type ParamDecl, type Recipe } from './script.js';
 import { materialSchema, namesSchema, type Material, type Names } from './material.js';
+import { unknownTextures } from './textures.js';
 
 /** A furniture type a look brings: its name, group and default size */
 export interface LookType {
@@ -108,6 +109,8 @@ export function parseLibrary(input: unknown, fallback?: LookLibrary): LookLibrar
         .join('; '),
     );
   const lib = parsed.data;
+  const textures = unknownTextures(lib.materials, 'materials.');
+  if (textures.length) throw new LibraryError(textures.slice(0, 8).join('; '));
   for (const [k, look] of Object.entries(lib.looks)) {
     const group = look.newType?.group ?? look.group;
     if (group && !lib.groups?.[group] && !fallback?.groups?.[group]) throw new LibraryError(`looks.${k}: unknown group ${group}`);

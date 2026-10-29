@@ -1,0 +1,702 @@
+{
+  "$schema": "./textures.schema.json",
+  "format": "opensu-textures",
+  "formatVersion": 1,
+  "textures": {
+    "stucco": {
+      "name": {
+        "zh": "白色拉毛灰泥",
+        "en": "White stucco"
+      },
+      "source": {
+        "polyhaven": "white_stucco",
+        "url": "https://polyhaven.com/a/white_stucco",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1998,
+        1998
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "stucco/color.webp",
+        "normal": "stucco/normal.webp",
+        "arm": "stucco/arm.webp"
+      },
+      "average": [
+        0.6583,
+        0.6583,
+        0.6583
+      ]
+    },
+    "cement": {
+      "name": {
+        "zh": "微水泥",
+        "en": "Smooth cement"
+      },
+      "source": {
+        "polyhaven": "scuffed_cement",
+        "url": "https://polyhaven.com/a/scuffed_cement",
+        "authors": [
+          "Dario Barresi",
+          "Dimitrios Savva"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1620,
+        1620
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "cement/color.webp",
+        "normal": "cement/normal.webp",
+        "arm": "cement/arm.webp"
+      },
+      "average": [
+        0.1492,
+        0.1492,
+        0.1492
+      ]
+    },
+    "concrete": {
+      "name": {
+        "zh": "清水混凝土",
+        "en": "Brushed concrete"
+      },
+      "source": {
+        "polyhaven": "brushed_concrete",
+        "url": "https://polyhaven.com/a/brushed_concrete",
+        "authors": [
+          "Dario Barresi",
+          "Dimitrios Savva"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2500,
+        2500
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "concrete/color.webp",
+        "normal": "concrete/normal.webp",
+        "arm": "concrete/arm.webp"
+      },
+      "average": [
+        0.1276,
+        0.1276,
+        0.1276
+      ]
+    },
+    "brick": {
+      "name": {
+        "zh": "红砖",
+        "en": "Red brick"
+      },
+      "source": {
+        "polyhaven": "red_brick",
+        "url": "https://polyhaven.com/a/red_brick",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1400,
+        1400
+      ],
+      "unit": [
+        215,
+        87.5
+      ],
+      "maps": {
+        "color": "brick/color.webp",
+        "normal": "brick/normal.webp",
+        "arm": "brick/arm.webp"
+      },
+      "average": [
+        0.275,
+        0.1366,
+        0.0832
+      ]
+    },
+    "laminate": {
+      "name": {
+        "zh": "木地板",
+        "en": "Wood flooring"
+      },
+      "source": {
+        "polyhaven": "laminate_floor_02",
+        "url": "https://polyhaven.com/a/laminate_floor_02",
+        "authors": [
+          "Dario Barresi",
+          "Charlotte Baglioni"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1700,
+        1700
+      ],
+      "unit": [
+        212,
+        1200
+      ],
+      "maps": {
+        "color": "laminate/color.webp",
+        "normal": "laminate/normal.webp",
+        "arm": "laminate/arm.webp"
+      },
+      "average": [
+        0.331,
+        0.218,
+        0.1263
+      ]
+    },
+    "oak": {
+      "name": {
+        "zh": "橡木",
+        "en": "Oak"
+      },
+      "source": {
+        "polyhaven": "oak_veneer_01",
+        "url": "https://polyhaven.com/a/oak_veneer_01",
+        "authors": [
+          "Jenelle van Heerden"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1830,
+        1830
+      ],
+      "maps": {
+        "color": "oak/color.webp",
+        "normal": "oak/normal.webp",
+        "arm": "oak/arm.webp"
+      },
+      "average": [
+        0.359,
+        0.21,
+        0.0971
+      ]
+    },
+    "walnut": {
+      "name": {
+        "zh": "深色木",
+        "en": "Dark wood"
+      },
+      "source": {
+        "polyhaven": "dark_wood",
+        "url": "https://polyhaven.com/a/dark_wood",
+        "authors": [
+          "Dario Barresi",
+          "Dimitrios Savva",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "maps": {
+        "color": "walnut/color.webp",
+        "normal": "walnut/normal.webp",
+        "arm": "walnut/arm.webp"
+      },
+      "average": [
+        0.1119,
+        0.0243,
+        0.009
+      ]
+    },
+    "plywood": {
+      "name": {
+        "zh": "桦木胶合板",
+        "en": "Birch plywood"
+      },
+      "source": {
+        "polyhaven": "plywood",
+        "url": "https://polyhaven.com/a/plywood",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        500,
+        500
+      ],
+      "maps": {
+        "color": "plywood/color.webp",
+        "normal": "plywood/normal.webp",
+        "arm": "plywood/arm.webp"
+      },
+      "average": [
+        0.2106,
+        0.1199,
+        0.0526
+      ]
+    },
+    "terracotta": {
+      "name": {
+        "zh": "陶土砖",
+        "en": "Terracotta tiles"
+      },
+      "source": {
+        "polyhaven": "terracotta_floor_tiles",
+        "url": "https://polyhaven.com/a/terracotta_floor_tiles",
+        "authors": [
+          "Dimitrios Savva"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2080,
+        2080
+      ],
+      "unit": [
+        231,
+        231
+      ],
+      "maps": {
+        "color": "terracotta/color.webp",
+        "normal": "terracotta/normal.webp",
+        "arm": "terracotta/arm.webp"
+      },
+      "average": [
+        0.0752,
+        0.0201,
+        0.0104
+      ]
+    },
+    "paving": {
+      "name": {
+        "zh": "透水砖",
+        "en": "Paving blocks"
+      },
+      "source": {
+        "polyhaven": "rectangular_paving",
+        "url": "https://polyhaven.com/a/rectangular_paving",
+        "authors": [
+          "Dimitrios Savva"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "unit": [
+        200,
+        400
+      ],
+      "maps": {
+        "color": "paving/color.webp",
+        "normal": "paving/normal.webp",
+        "arm": "paving/arm.webp"
+      },
+      "average": [
+        0.2144,
+        0.1508,
+        0.094
+      ]
+    },
+    "granite": {
+      "name": {
+        "zh": "青石板",
+        "en": "Stone slabs"
+      },
+      "source": {
+        "polyhaven": "granite_tile",
+        "url": "https://polyhaven.com/a/granite_tile",
+        "authors": [
+          "Charlotte Baglioni"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2300,
+        2300
+      ],
+      "unit": [
+        460,
+        460
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "granite/color.webp",
+        "normal": "granite/normal.webp",
+        "arm": "granite/arm.webp"
+      },
+      "average": [
+        0.0769,
+        0.0767,
+        0.0769
+      ]
+    },
+    "terrazzo": {
+      "name": {
+        "zh": "水磨石",
+        "en": "Terrazzo"
+      },
+      "source": {
+        "polyhaven": "terrazzo_tiles",
+        "url": "https://polyhaven.com/a/terrazzo_tiles",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "unit": [
+        250,
+        250
+      ],
+      "maps": {
+        "color": "terrazzo/color.webp",
+        "normal": "terrazzo/normal.webp",
+        "arm": "terrazzo/arm.webp"
+      },
+      "average": [
+        0.2518,
+        0.152,
+        0.0956
+      ]
+    },
+    "gravel": {
+      "name": {
+        "zh": "碎石",
+        "en": "Gravel"
+      },
+      "source": {
+        "polyhaven": "gravel_floor_02",
+        "url": "https://polyhaven.com/a/gravel_floor_02",
+        "authors": [
+          "Jenelle van Heerden",
+          "Dimitrios Savva"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "gravel/color.webp",
+        "normal": "gravel/normal.webp",
+        "arm": "gravel/arm.webp"
+      },
+      "average": [
+        0.3849,
+        0.3844,
+        0.3849
+      ]
+    },
+    "grass": {
+      "name": {
+        "zh": "草地",
+        "en": "Grass"
+      },
+      "source": {
+        "polyhaven": "leafy_grass",
+        "url": "https://polyhaven.com/a/leafy_grass",
+        "authors": [
+          "Charlotte Baglioni"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "maps": {
+        "color": "grass/color.webp",
+        "normal": "grass/normal.webp",
+        "arm": "grass/arm.webp"
+      },
+      "average": [
+        0.3113,
+        0.23,
+        0.1009
+      ]
+    },
+    "marble": {
+      "name": {
+        "zh": "大理石",
+        "en": "Marble"
+      },
+      "source": {
+        "polyhaven": "marble_01",
+        "url": "https://polyhaven.com/a/marble_01",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1500,
+        1500
+      ],
+      "unit": [
+        500,
+        500
+      ],
+      "maps": {
+        "color": "marble/color.webp",
+        "normal": "marble/normal.webp",
+        "arm": "marble/arm.webp"
+      },
+      "average": [
+        0.4414,
+        0.3388,
+        0.1945
+      ]
+    },
+    "rubble": {
+      "name": {
+        "zh": "毛石",
+        "en": "Rubble stone"
+      },
+      "source": {
+        "polyhaven": "stone_wall",
+        "url": "https://polyhaven.com/a/stone_wall",
+        "authors": [
+          "Dario Barresi",
+          "Charlotte Baglioni"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "maps": {
+        "color": "rubble/color.webp",
+        "normal": "rubble/normal.webp",
+        "arm": "rubble/arm.webp"
+      },
+      "average": [
+        0.3689,
+        0.292,
+        0.2004
+      ]
+    },
+    "planks": {
+      "name": {
+        "zh": "木板",
+        "en": "Wood planks"
+      },
+      "source": {
+        "polyhaven": "wood_planks",
+        "url": "https://polyhaven.com/a/wood_planks",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1500,
+        1500
+      ],
+      "unit": [
+        187,
+        1500
+      ],
+      "maps": {
+        "color": "planks/color.webp",
+        "normal": "planks/normal.webp",
+        "arm": "planks/arm.webp"
+      },
+      "average": [
+        0.191,
+        0.0991,
+        0.0415
+      ]
+    },
+    "soil": {
+      "name": {
+        "zh": "泥土",
+        "en": "Soil"
+      },
+      "source": {
+        "polyhaven": "farm_soil",
+        "url": "https://polyhaven.com/a/farm_soil",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "maps": {
+        "color": "soil/color.webp",
+        "normal": "soil/normal.webp",
+        "arm": "soil/arm.webp"
+      },
+      "average": [
+        0.0978,
+        0.0506,
+        0.021
+      ]
+    },
+    "bark": {
+      "name": {
+        "zh": "树皮",
+        "en": "Bark"
+      },
+      "source": {
+        "polyhaven": "bark_brown_02",
+        "url": "https://polyhaven.com/a/bark_brown_02",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        1000,
+        1000
+      ],
+      "maps": {
+        "color": "bark/color.webp",
+        "normal": "bark/normal.webp",
+        "arm": "bark/arm.webp"
+      },
+      "average": [
+        0.1198,
+        0.0975,
+        0.0576
+      ]
+    },
+    "jersey": {
+      "name": {
+        "zh": "棉布",
+        "en": "Cotton"
+      },
+      "source": {
+        "polyhaven": "cotton_jersey",
+        "url": "https://polyhaven.com/a/cotton_jersey",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        264,
+        264
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "jersey/color.webp",
+        "normal": "jersey/normal.webp",
+        "arm": "jersey/arm.webp"
+      },
+      "average": [
+        0.4305,
+        0.4305,
+        0.4305
+      ]
+    },
+    "linen": {
+      "name": {
+        "zh": "亚麻布",
+        "en": "Linen"
+      },
+      "source": {
+        "polyhaven": "rough_linen",
+        "url": "https://polyhaven.com/a/rough_linen",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        271,
+        271
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "linen/color.webp",
+        "normal": "linen/normal.webp",
+        "arm": "linen/arm.webp"
+      },
+      "average": [
+        0.3975,
+        0.3975,
+        0.3975
+      ]
+    },
+    "velvet": {
+      "name": {
+        "zh": "丝绒",
+        "en": "Velvet"
+      },
+      "source": {
+        "polyhaven": "velour_velvet",
+        "url": "https://polyhaven.com/a/velour_velvet",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        284,
+        273
+      ],
+      "neutral": true,
+      "maps": {
+        "color": "velvet/color.webp",
+        "normal": "velvet/normal.webp",
+        "arm": "velvet/arm.webp"
+      },
+      "average": [
+        0.1126,
+        0.1126,
+        0.1126
+      ]
+    },
+    "clay": {
+      "name": {
+        "zh": "陶土",
+        "en": "Clay"
+      },
+      "source": {
+        "polyhaven": "clay_floor_001",
+        "url": "https://polyhaven.com/a/clay_floor_001",
+        "authors": [
+          "Dimitrios Savva",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": [
+        2000,
+        2000
+      ],
+      "maps": {
+        "color": "clay/color.webp",
+        "normal": "clay/normal.webp",
+        "arm": "clay/arm.webp"
+      },
+      "average": [
+        0.1955,
+        0.1159,
+        0.0484
+      ]
+    }
+  }
+}
