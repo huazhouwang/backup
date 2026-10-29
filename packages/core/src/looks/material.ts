@@ -1,7 +1,8 @@
 /**
  * Materials, as glTF 2.0 materials (https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials) with our procedural
- * texture in `extras`, and the multilingual names libraries use. Material properties are fixed by the renderer, the way CSS
- * properties are fixed by the browser: a new one is added to the renderer first, then here as an optional field.
+ * texture and a built-in texture set (textures.ts) in `extras`, and the multilingual names libraries use. Material properties
+ * are fixed by the renderer, the way CSS properties are fixed by the browser: a new one is added to the renderer first, then
+ * here as an optional field.
  */
 import { z } from 'zod';
 import type { ProjectLanguage } from '../model/schema.js';
@@ -22,7 +23,7 @@ export type RGBA = [number, number, number, number];
 export const MATERIAL_PATTERNS = ['planks', 'tiles', 'bricks', 'speckled', 'marble'] as const;
 export type MaterialPattern = (typeof MATERIAL_PATTERNS)[number];
 
-/** A glTF 2.0 material with our procedural texture in `extras` */
+/** A glTF 2.0 material with our procedural texture and texture set in `extras` */
 export interface Material {
   name: Names;
   pbrMetallicRoughness: { baseColorFactor: RGBA; metallicFactor?: number; roughnessFactor?: number };
@@ -41,6 +42,8 @@ export interface Material {
     count?: number;
     radius?: [number, number];
     seed?: number;
+    /** A built-in texture set (textures.ts), laid at its real size and tinted to this material's colour */
+    texture?: string;
   };
 }
 
@@ -62,6 +65,11 @@ export const materialSchema: z.ZodType<Material> = z.object({
       count: z.number().int().min(0).max(1000).optional(),
       radius: z.tuple([z.number().positive(), z.number().positive()]).optional(),
       seed: z.number().int().optional(),
+      texture: z
+        .string()
+        .regex(/^[a-z][a-z0-9_-]*$/)
+        .max(64)
+        .optional(),
     })
     .optional(),
 });

@@ -4,7 +4,7 @@
  * phones' browsers don't put a page element in full screen; Esc or the button again brings it back). It redraws as its
  * parameters and size change. Drawn in the canvas's light theme whatever the website's theme, like the stills.
  */
-import type { Recipe } from '@opensu/core';
+import { materialOf, type Material, type Recipe } from '@opensu/core';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Maximize2Icon, Minimize2Icon, RotateCcwIcon } from 'lucide-react';
@@ -14,9 +14,11 @@ import { lightDocument } from '@/canvas/CanvasFrame';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cameraPosition, fitDistance, FOV, lookBounds, stageGround, stageSun } from '@/graphics/three/look-stage';
-import { lookMaterial, partsGeometry, useBuild } from '@/graphics/three/looks';
+import { partsGeometry, useBuild } from '@/graphics/three/looks';
+import { mapProps, useSurfaceMaps } from '@/graphics/three/textures';
 import { castsShadow, standardMaterialProps } from '@/graphics/three/scene';
 import { m } from '@/lib/i18n';
+import { materialStyle } from '@/lib/materials';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/lib/theme';
 
@@ -140,14 +142,9 @@ function Stage({ doc, recipe, parts, size, view }: { doc: Document; recipe: Reci
       <primitive object={sun} />
       <primitive object={sun.target} />
       <primitive object={ground} />
-      {geometry.map(([mat, g]) => {
-        const style = lookMaterial(mat, recipe);
-        return (
-          <mesh key={mat} geometry={g} castShadow={castsShadow(style)}>
-            <meshStandardMaterial {...standardMaterialProps(style)} />
-          </mesh>
-        );
-      })}
+      {geometry.map(([mat, g]) => (
+        <ViewerPart key={mat} g={g} material={materialOf(mat, recipe)} />
+      ))}
       <OrbitControls
         key={key}
         makeDefault
@@ -159,5 +156,16 @@ function Stage({ doc, recipe, parts, size, view }: { doc: Document; recipe: Reci
         maxPolarAngle={Math.PI / 2 - 0.02}
       />
     </>
+  );
+}
+
+/** One material of the look, with its texture set once loaded (see graphics/three/textures.ts) */
+function ViewerPart({ g, material }: { g: THREE.BufferGeometry; material: Material | undefined }) {
+  const style = materialStyle(material);
+  const maps = useSurfaceMaps(material);
+  return (
+    <mesh geometry={g} castShadow={castsShadow(style)}>
+      <meshStandardMaterial key={maps ? 'maps' : 'plain'} {...standardMaterialProps(style)} {...(maps && { color: maps.tint, ...mapProps(maps) })} />
+    </mesh>
   );
 }

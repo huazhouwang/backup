@@ -21,10 +21,10 @@ export const TintColors = createContext<{ sel: THREE.Color; selCss: string; chan
  * one-time hop.
  * userData.restY and userData.baseColor record the resting state; screenshots put objects back to it first.
  */
-export function useFeedback<T extends THREE.Object3D>(id: string, color: string | null, selected: boolean, buildKey = id) {
+export function useFeedback<T extends THREE.Object3D>(id: string, color: string | THREE.Color | null, selected: boolean, buildKey = id) {
   const ref = useRef<T>(null);
   const tints = useContext(TintColors);
-  const base = useMemo(() => color && new THREE.Color(color), [color]);
+  const base = useMemo(() => (color instanceof THREE.Color ? color : color && new THREE.Color(color)), [color]);
   useFrame(({ camera, size, invalidate }) => {
     const o = ref.current;
     if (!o) return;

@@ -326,3 +326,30 @@ describe('deleting objects removes the constraints that target them', () => {
     expect(h.session.project.constraints).toHaveLength(1);
   });
 });
+
+describe('materials of the design (issue 210)', () => {
+  it('material_define makes a version of a material with another colour and texture set, used by a wall finish', async () => {
+    const h = harness(sample());
+    const wall = h.session.project.walls.find(w => w.kind !== 'railing')!;
+    await h.ok('material_define', { id: 'greystone', from: 'stonewall', name: '青灰毛石', color: '#7d8186', texture: 'rubble' });
+    const m = h.session.project.library.materials.greystone;
+    expect(m.name.zh).toBe('青灰毛石');
+    expect(m.extras).toMatchObject({ pattern: 'speckled', texture: 'rubble' });
+    expect(m.pbrMetallicRoughness.baseColorFactor[0]).toBeCloseTo(0.2051, 3);
+    await h.ok('wall_update', { wall: wall.id, finish: 'greystone' });
+    // Changing it changes it where it is used; texture null takes the set away
+    await h.ok('material_define', { id: 'greystone', texture: null, roughness: 0.4 });
+    expect(h.session.project.library.materials.greystone.extras?.texture).toBeUndefined();
+    expect(h.session.project.library.materials.greystone.pbrMetallicRoughness.roughnessFactor).toBe(0.4);
+  });
+
+  it('refuses a texture set that does not exist, and a new material without a name', async () => {
+    const h = harness(sample());
+    expect((await h.call('material_define', { id: 'x', from: 'paint', texture: 'nowhere' })).error?.message).toMatch(/nowhere/);
+    expect((await h.call('material_define', { id: 'fresh', color: '#ffffff' })).ok).toBe(false);
+    expect((await h.call('material_define', { id: 'x', from: 'nothing' })).ok).toBe(false);
+    // A default material's id makes a version of it for this design only
+    await h.ok('material_define', { id: 'paint', color: '#f2ead8' });
+    expect(h.session.project.library.materials.paint.extras?.texture).toBe('stucco');
+  });
+});

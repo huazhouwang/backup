@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/textures.schema.json",
+  "title": "OpenSU texture sets",
+  "description": "Built-in photographed PBR texture sets with a real-world size, named by materials (extras.texture). Images in textures/<id>/, made by scripts/textures.mjs. See packages/core/src/looks/textures.ts.",
+  "type": "object",
+  "required": ["format", "formatVersion", "textures"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "format": { "const": "opensu-textures" },
+    "formatVersion": { "const": 1 },
+    "textures": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_-]*$" },
+      "additionalProperties": { "$ref": "#/$defs/set" }
+    }
+  },
+  "$defs": {
+    "size": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 },
+    "set": {
+      "type": "object",
+      "required": ["name", "source", "size"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "object", "properties": { "zh": { "type": "string" }, "en": { "type": "string" } } },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Where the photographs come from; only CC0 sets are accepted",
+          "properties": {
+            "polyhaven": { "type": "string", "description": "A Poly Haven texture id: scripts/textures.mjs downloads it" },
+            "url": { "type": "string" },
+            "authors": { "type": "array", "items": { "type": "string" } },
+            "license": { "const": "CC0-1.0" }
+          }
+        },
+        "size": { "$ref": "#/$defs/size", "description": "What one image covers, mm [w, h]" },
+        "unit": { "$ref": "#/$defs/size", "description": "One tile, brick or board of the photo with its joint, mm: a material with a pattern scales the set so its own unit fits" },
+        "neutral": { "type": "boolean", "description": "The colour map is stored in greys; all colour comes from the material" },
+        "maps": {
+          "type": "object",
+          "required": ["color"],
+          "additionalProperties": false,
+          "description": "Written by scripts/textures.mjs: paths under textures/",
+          "properties": {
+            "color": { "type": "string" },
+            "normal": { "type": "string", "description": "OpenGL convention (+Y up)" },
+            "arm": { "type": "string", "description": "Ambient occlusion, roughness, metalness in R, G, B (glTF)" }
+          }
+        },
+        "average": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 3, "maxItems": 3, "description": "Written by scripts/textures.mjs: the colour map's average linear colour" }
+      }
+    }
+  }
+}

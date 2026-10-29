@@ -6,8 +6,11 @@ import { DEFAULT_FINISH, elementTarget, lookRecipe, materialOf, type Built, type
 import { materialStyle } from '@/lib/materials';
 import { ELEMENT_SIZE } from './units';
 
-/** A wall's faces in its finish (white paint unless it has one) */
-export const wallFinish = (project: Project, w: Wall) => materialStyle(materialOf(w.finish ?? DEFAULT_FINISH, null, project.library.materials));
+/** A wall's finish material (white paint unless it has one) */
+export const wallMaterial = (project: Project, w: Wall) => materialOf(w.finish ?? DEFAULT_FINISH, null, project.library.materials);
+
+/** A wall's faces in its finish */
+export const wallFinish = (project: Project, w: Wall) => materialStyle(wallMaterial(project, w));
 
 /** A floor's material (its pattern or colour), if it has one */
 export const floorMaterial = (project: Project, floor: string) => materialOf(floor, null, project.library.materials);

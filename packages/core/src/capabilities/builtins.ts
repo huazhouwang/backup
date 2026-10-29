@@ -12,6 +12,7 @@ import { batchCapability, searchCapabilitiesFor } from './meta.js';
 import { canvasDataSet, canvasModulePut, canvasModuleRemove, canvasModules } from './canvas.js';
 import { widgetCatalog, widgetConfigure, widgetCreate, widgetInstall, widgetRemove, widgetUpdateCap } from './widget.js';
 import { houseBuild, houseOptionsCap } from './house.js';
+import { materialDefine } from './material.js';
 import { furnitureTypeAdd, lookAdd, lookGet, lookImport, lookRemove, lookSet, lookUpdate, lookUse, paramsSet } from './look.js';
 
 export * from './query.js';
@@ -24,6 +25,7 @@ export * from './relation.js';
 export * from './history.js';
 export * from './meta.js';
 export * from './look.js';
+export * from './material.js';
 export * from './widget.js';
 export * from './canvas.js';
 export * from './house.js';
@@ -73,6 +75,7 @@ export const BUILTIN: Capability[] = [
   lookUse,
   lookSet,
   lookImport,
+  materialDefine,
   paramsSet,
   furnitureTypeAdd,
   canvasModules,

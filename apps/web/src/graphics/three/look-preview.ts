@@ -4,13 +4,16 @@
  * fitted to the frame, in the canvas's light theme and the default model style's light. One offscreen renderer draws every still
  * in turn (a page of looks would otherwise run out of WebGL contexts), and recent stills are kept.
  */
-import { buildRecipe, type Material, type Recipe } from '@opensu/core';
+import { buildRecipe, materialOf, type Material, type Recipe } from '@opensu/core';
 import * as THREE from 'three';
 import { lightDocument } from '@/canvas/CanvasFrame';
+import { materialStyle } from '@/lib/materials';
 import { themeColor } from '@/lib/theme';
+import { isSoftwareGL } from './beauty';
 import { cameraPosition, FOV, lookBounds, stageGround, stageSun } from './look-stage';
 import { castsShadow, M, standardMaterial } from './scene';
-import { lookMaterial, partsGeometry } from './looks';
+import { partsGeometry } from './looks';
+import { applyMaps, surfaceMaps } from './textures';
 
 type Opts = { width?: number; height?: number; single?: boolean; params?: Record<string, unknown>; materials?: Record<string, Material> };
 
@@ -62,8 +65,12 @@ async function draw(renderer: THREE.WebGLRenderer, recipe: Recipe, size: { w: nu
   const parts = partsGeometry((await buildRecipe(recipe, size, opts.params).catch(() => ({ parts: [] }))).parts);
   const materials: THREE.Material[] = [];
   for (const [mat, g] of parts) {
-    const style = lookMaterial(mat, recipe, opts.materials);
+    const m = materialOf(mat, recipe, opts.materials);
+    const style = materialStyle(m);
     const material = standardMaterial(style);
+    // Its texture set (see textures.ts): every map where the renderer can afford them, else the colour map
+    const maps = surfaceMaps(m, isSoftwareGL(renderer.getContext()));
+    if (maps) applyMaps(material, await maps);
     materials.push(material);
     const mesh = new THREE.Mesh(g, material);
     mesh.castShadow = castsShadow(style);

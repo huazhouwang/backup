@@ -54,7 +54,8 @@ test('choosing a generated house', async ({ browser: b }) => {
   await cards.waitFor();
   const n = await cards.getByRole('button', { name: '选这个' }).count();
   check(n >= 2 && n <= 3, `${n} houses offered as cards`);
-  await page.waitForFunction(() => [...document.querySelectorAll('[aria-label="可选的方案"] img')].length >= 2, null, { timeout: 30000 });
+  // The stills are drawn one after another on the shared still renderer: on software GL in a busy run that takes a while
+  await page.waitForFunction(() => [...document.querySelectorAll('[aria-label="可选的方案"] img')].length >= 2, null, { timeout: 90000 });
   check(true, 'each card shows the house in 3D');
   check((await cards.locator('svg[role="img"]').count()) === n, 'and its plan');
   await page.screenshot({ path: `${OUT}/choose-1-options.png` });

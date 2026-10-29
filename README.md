@@ -13,7 +13,7 @@ The UI is available in Chinese (default) and English, chosen in Settings → Lan
 | `packages/core` | Pure TypeScript core, no browser dependencies: data schema, operation layer (transactions, undo), capability registry, rule checks, constraint solver, areas, 3D wall segmentation |
 | `packages/sandbox` | Runs untrusted JavaScript (widget and, later, look scripts): QuickJS compiled to WebAssembly, isolated by realm and script, with in-place, Workers and browser hosts; see its README |
 | `apps/web` | Website: TanStack Router SPA + Cloudflare Worker (Hono), D1 storage, Better Auth sign-in, TanStack AI chat |
-| `libraries` | Look libraries as files (`*.looklib.json`, format in `looklib.schema.json`): the default library (furniture, doors and windows, railings, elements, and every material) and the Chinese pieces. Widget libraries (`*.widgetlib.json`, format in `widgetlib.schema.json`): the built-in widgets (a structural grid so far) |
+| `libraries` | Look libraries as files (`*.looklib.json`, format in `looklib.schema.json`): the default library (furniture, doors and windows, railings, elements, and every material) and the Chinese pieces. Widget libraries (`*.widgetlib.json`, format in `widgetlib.schema.json`): the built-in widgets (a structural grid so far). Texture sets (`textures.json`, format in `textures.schema.json`; images in `textures/`, built by `node scripts/textures.mjs` from Poly Haven, CC0) |
 | `samples/wushi-10` | Test sample: Wushi courtyard, scheme 10 |
 
 Key conventions:

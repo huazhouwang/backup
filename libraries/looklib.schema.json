@@ -80,7 +80,8 @@
             "color3": { "$ref": "#/$defs/rgba" },
             "count": { "type": "integer", "minimum": 0, "maximum": 1000 },
             "radius": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 },
-            "seed": { "type": "integer" }
+            "seed": { "type": "integer" },
+            "texture": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$", "description": "A built-in texture set (textures.json), laid at its real size and tinted to the material's colour" }
           }
         }
       }

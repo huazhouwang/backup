@@ -7,6 +7,7 @@ export * from './recipe.js';
 export * from './script.js';
 export * from './recipe-convert.js';
 export * from './material.js';
+export * from './textures.js';
 export * from './library.js';
 export * from './defaults.js';
 export * from './builtin.js';
