@@ -1,0 +1,11 @@
+{
+  "comment": "车机连 Wi-Fi 时从这里下载新壁纸（每天最多 2 张，越靠后越优先）。加图：在 photos 末尾追加 Unsplash 的 photo id（images.unsplash.com/photo-<id> 里的那段）。",
+  "photos": [
+    { "id": "1464822759023-fed622ff2c3b", "author": "", "link": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b" },
+    { "id": "1493246507139-91e8fad9978e", "author": "", "link": "https://images.unsplash.com/photo-1493246507139-91e8fad9978e" },
+    { "id": "1501785888041-af3ef285b470", "author": "", "link": "https://images.unsplash.com/photo-1501785888041-af3ef285b470" },
+    { "id": "1514565131-fce0801e5785", "author": "", "link": "https://images.unsplash.com/photo-1514565131-fce0801e5785" },
+    { "id": "1470071459604-3b5ec3a7fe05", "author": "", "link": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05" },
+    { "id": "1419242902214-272b3f66ee7a", "author": "", "link": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a" }
+  ]
+}

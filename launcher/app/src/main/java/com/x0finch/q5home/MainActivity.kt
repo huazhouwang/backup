@@ -52,6 +52,7 @@ class MainActivity : Activity() {
     private lateinit var root: View
     private lateinit var wallpaperView: ImageView
     private lateinit var scrim: View
+    private lateinit var credit: TextView
     private lateinit var ambient: View
     private lateinit var tiles: LinearLayout
     private lateinit var tileScroll: HorizontalScrollView
@@ -86,6 +87,7 @@ class MainActivity : Activity() {
         root = findViewById(R.id.root)
         wallpaperView = findViewById(R.id.wallpaper)
         scrim = findViewById(R.id.scrim)
+        credit = findViewById(R.id.credit)
         ambient = findViewById(R.id.ambient)
         tiles = findViewById(R.id.tiles)
         tileScroll = findViewById(R.id.tileScroll)
@@ -125,6 +127,8 @@ class MainActivity : Activity() {
             addAction(Intent.ACTION_TIME_CHANGED)
             addAction(Intent.ACTION_TIMEZONE_CHANGED)
         })
+
+        if (config.onlineWallpapers) WallpaperJob.schedule(this)
 
         maybeAutoStartCarPlay()
     }
@@ -177,18 +181,17 @@ class MainActivity : Activity() {
         date.text = SimpleDateFormat("M月d日 EEEE", Locale.CHINA).format(Date())
     }
 
-    /** 壁纸只在变化时重新解码（每日轮换在跨天后的下一分钟切换）。 */
+    /** 壁纸只在变化时重新解码（每日轮换在跨天后的下一分钟切换；新下载的在线壁纸也会进轮换）。 */
     private fun updateWallpaper() {
-        val wallpaper = Wallpapers.current(config.wallpaper)
+        val wallpaper = Wallpapers.current(this, config.wallpaper)
         if (wallpaper?.key == shownWallpaper && (wallpaper != null || wallpaperView.drawable == null)) return
         shownWallpaper = wallpaper?.key
-        if (wallpaper == null) {
-            wallpaperView.setImageDrawable(null)
-            scrim.visibility = View.GONE
-        } else {
-            wallpaperView.setImageBitmap(Wallpapers.decode(resources, wallpaper, resources.displayMetrics.widthPixels))
-            scrim.visibility = View.VISIBLE
-        }
+        val bitmap = wallpaper?.let { Wallpapers.decode(this, it, resources.displayMetrics.widthPixels) }
+        wallpaperView.setImageBitmap(bitmap)
+        scrim.visibility = if (bitmap != null) View.VISIBLE else View.GONE
+        val author = wallpaper?.author
+        credit.text = if (author.isNullOrBlank()) "" else "Photo · $author / Unsplash"
+        credit.visibility = if (bitmap != null && !author.isNullOrBlank()) View.VISIBLE else View.GONE
     }
 
     // ---- 磁贴 ----
@@ -421,7 +424,15 @@ class MainActivity : Activity() {
 
     private fun showSettings() {
         val actions = listOf<Pair<String, () -> Unit>>(
-            "壁纸：${Wallpapers.label(config.wallpaper)}" to { pickWallpaper() },
+            "壁纸：${Wallpapers.label(this, config.wallpaper)}" to { pickWallpaper() },
+            "在线壁纸：${if (config.onlineWallpapers) "开（仅 Wi-Fi，每天一次）" else "关"}" to { toggleOnline() },
+            "立即更新在线壁纸" to {
+                if (!config.onlineWallpapers) config.setOnlineWallpapers(true)
+                WallpaperJob.schedule(this)
+                WallpaperJob.runSoon(this)
+                toast("连上 Wi-Fi 后会在后台下载，完成后回到桌面即可看到")
+            },
+            "清除在线壁纸（占用 ${onlineUsage()}）" to { confirmClearOnline() },
             "开机自动进入 CarPlay：${if (config.autoCarplay) "开" else "关"}" to {
                 config.setAutoCarplay(!config.autoCarplay)
                 toast("开机自动进入 CarPlay 已${if (config.autoCarplay) "打开" else "关闭"}")
@@ -437,10 +448,12 @@ class MainActivity : Activity() {
     }
 
     private fun pickWallpaper() {
-        val keys = listOf(Wallpapers.DAILY) + Wallpapers.ALL.map { it.key } + Wallpapers.NONE
+        val all = Wallpapers.available(this)
+        val keys = listOf(Wallpapers.DAILY) + all.map { it.key } + Wallpapers.NONE
+        val labels = listOf("每日轮换") + all.map { it.name } + "纯黑"
         dialog = AlertDialog.Builder(this)
             .setTitle("壁纸")
-            .setSingleChoiceItems(keys.map { Wallpapers.label(it) }.toTypedArray(), keys.indexOf(config.wallpaper)) { d, which ->
+            .setSingleChoiceItems(labels.toTypedArray(), keys.indexOf(config.wallpaper)) { d, which ->
                 config.setWallpaper(keys[which])
                 updateWallpaper()
                 d.dismiss()
@@ -448,10 +461,34 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private fun toggleOnline() {
+        val on = !config.onlineWallpapers
+        config.setOnlineWallpapers(on)
+        if (on) WallpaperJob.schedule(this) else WallpaperJob.cancel(this)
+        toast(if (on) "已打开：连上 Wi-Fi 时每天最多下载 ${OnlineWallpapers.PER_RUN} 张" else "已关闭在线壁纸更新")
+    }
+
+    private fun onlineUsage(): String {
+        val bytes = OnlineWallpapers(this).dir.listFiles()?.sumOf { it.length() } ?: 0L
+        return String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
+    }
+
+    private fun confirmClearOnline() {
+        dialog = AlertDialog.Builder(this)
+            .setMessage("删除已下载的在线壁纸？内置壁纸不受影响。")
+            .setPositiveButton("删除") { _, _ ->
+                OnlineWallpapers(this).clear()
+                shownWallpaper = null
+                updateWallpaper()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
     private fun confirmReset() {
         dialog = AlertDialog.Builder(this)
             .setMessage("清空手动设置的 CarPlay、原车入口、常用应用和壁纸？")
-            .setPositiveButton("恢复") { _, _ -> config.reset(); updateWallpaper(); rebuild() }
+            .setPositiveButton("恢复") { _, _ -> config.reset(); shownWallpaper = null; updateWallpaper(); rebuild() }
             .setNegativeButton("取消", null)
             .show()
     }

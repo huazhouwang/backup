@@ -50,6 +50,8 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
   - 摸底查到原车切换组件后，写进 config.json 的 `oem` 字段，不要硬编码进代码。
   - 首页图标在 `Icons.kt`（Material Symbols 矢量图），磁贴 = 图标 key + 目标；换应用只改目标。
   - 壁纸在 `res/drawable-nodpi/wall_*.webp`，来源记在 `CREDITS.md`，新增壁纸要同步更新。
+  - 在线壁纸：`OnlineWallpapers.kt` + `WallpaperJob.kt`（仅 Wi-Fi、每天一次）；存储上限 8 张 / 6 MB，
+    剩余空间 < 300 MB 不下载。改动时不要放宽这些上限，除非用户同意。清单在仓库根目录 `wallpapers/feed.json`。
   - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。
   - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。
 - `ci/demo.py`：CI 模拟器演示脚本（截图 + 录屏），由 `.github/workflows/launcher.yml` 调用。

@@ -15,6 +15,8 @@
 | wall_lake.webp | 湖畔黄昏 | https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8 |
 | wall_forest.webp | 雾林 | https://images.unsplash.com/photo-1511884642898-4c92249e20b6 |
 
+在线壁纸（连 Wi-Fi 自动下载）的清单在 `wallpapers/feed.json`；用 Unsplash API 时摄影师署名显示在桌面右下角。
+
 ## 图标
 
 首页图标的图形来自 Google [Material Symbols](https://fonts.google.com/icons)（Rounded，填充），

@@ -63,6 +63,7 @@ tools/recon.sh 192.168.x.x:端口  # 顺便连接
 - **统一图标**：首页图标是重绘的一套（CarPlay、原车、文件、设置、导航、电话等），
   每个磁贴记"图标 + 目标应用"，以后换应用只改目标（app id），图标不变。
 - **壁纸**：内置 6 张 Unsplash 壁纸，默认每天轮换，可指定或纯黑（来源见 [CREDITS.md](CREDITS.md)）。
+- **在线壁纸自动更新**：连上 Wi-Fi 时每天最多下载 2 张新壁纸，加入轮换（见下文"在线壁纸"）。
 - 右上角"应用"是全部应用列表；"设置"里有壁纸、开机自动进入 CarPlay、系统设置、恢复默认布局。
 - 支持触摸，也支持旋钮/方向键选中（白色描边）。
 
@@ -105,3 +106,15 @@ adb pull /sdcard/Android/data/com.x0finch.q5home/files/current.json   # 查看�
 - `dock` 每项可以是 `{"icon": "files", "target": "包名"}`，也可以只写目标（图标自动猜）。
   图标可选：`carplay` `oem` `files` `settings` `nav` `phone` `radio` `video` `music` `bluetooth` `browser` `photos` `apps`。
 - `wallpaper`：`daily`（每日轮换）、`none`（纯黑），或 `stars` `city` `road` `clouds` `lake` `forest`。
+
+### 在线壁纸
+
+连上 **Wi-Fi（不计流量的网络）** 时，后台每天最多下载 2 张新壁纸，加入每日轮换。
+
+- **来源**：默认读仓库里的精选清单 [wallpapers/feed.json](wallpapers/feed.json)，往清单末尾加 Unsplash 的 photo id，
+  车机下次连 Wi-Fi 就会下载，不用重装 APK。（读的是仓库默认分支，合并后生效。）
+  想要每天都是全新的图：去 [unsplash.com/developers](https://unsplash.com/developers) 免费申请一个 Access Key，
+  写进 config.json 的 `unsplashKey`，会按 `wallpaperQuery` 随机取图，右下角显示摄影师署名。
+- **存储上限**：最多存 8 张、合计不超过 6 MB，超出删最旧的；每张由 Unsplash 服务器按屏幕裁好再下载（约 300–400 KB），
+  单张超过 1.5 MB 放弃；车机剩余空间低于 300 MB 时不下载，并只留最新 2 张。
+- **设置里**：在线壁纸开/关、立即更新、清除在线壁纸（显示当前占用）。内置壁纸不受影响。

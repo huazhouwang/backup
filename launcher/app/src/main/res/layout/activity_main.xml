@@ -27,6 +27,20 @@
         android:layout_height="match_parent"
         android:importantForAccessibility="no" />
 
+    <!-- 在线壁纸的摄影师署名（Unsplash 要求）。 -->
+    <TextView
+        android:id="@+id/credit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="6dp"
+        android:singleLine="true"
+        android:textColor="#80FFFFFF"
+        android:textSize="11sp"
+        android:fontFamily="@font/outfit_regular"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -38,6 +38,12 @@ class Config(private val context: Context) {
     var dock: List<DockItem> = emptyList(); private set
     var autoCarplay = false; private set
     var wallpaper = Wallpapers.DAILY; private set
+    /** 连 Wi-Fi 时自动下载新壁纸。 */
+    var onlineWallpapers = true; private set
+    /** 填了就用 Unsplash API 随机取图；不填用仓库里的精选清单。只能通过 config.json 设置。 */
+    var unsplashKey: String? = null; private set
+    var wallpaperQuery = OnlineWallpapers.DEFAULT_QUERY; private set
+    var wallpaperFeed = OnlineWallpapers.DEFAULT_FEED; private set
     var title = DEFAULT_TITLE; private set
 
     /** 读取配置。返回 config.json 的错误信息，没有错误返回 null。 */
@@ -49,6 +55,10 @@ class Config(private val context: Context) {
         dock = prefs.getString(KEY_DOCK, null)?.let(::parseDock) ?: defaultDock()
         autoCarplay = prefs.getBoolean(KEY_AUTO_CARPLAY, false)
         wallpaper = prefs.getString(KEY_WALLPAPER, Wallpapers.DAILY)!!
+        onlineWallpapers = prefs.getBoolean(KEY_ONLINE, true)
+        unsplashKey = prefs.getString(KEY_UNSPLASH_KEY, null)?.ifBlank { null }
+        wallpaperQuery = prefs.getString(KEY_QUERY, null)?.ifBlank { null } ?: OnlineWallpapers.DEFAULT_QUERY
+        wallpaperFeed = prefs.getString(KEY_FEED, null)?.ifBlank { null } ?: OnlineWallpapers.DEFAULT_FEED
         title = prefs.getString(KEY_TITLE, DEFAULT_TITLE)!!
         writeCurrent()
         return error
@@ -64,6 +74,7 @@ class Config(private val context: Context) {
     fun setOem(spec: String) = edit { putString(KEY_OEM, spec) }
     fun setAutoCarplay(on: Boolean) = edit { putBoolean(KEY_AUTO_CARPLAY, on) }
     fun setWallpaper(key: String) = edit { putString(KEY_WALLPAPER, key) }
+    fun setOnlineWallpapers(on: Boolean) = edit { putBoolean(KEY_ONLINE, on) }
 
     fun setDock(items: List<DockItem>) =
         edit { putString(KEY_DOCK, JSONArray(items.map { it.toJson() }).toString()) }
@@ -81,10 +92,10 @@ class Config(private val context: Context) {
     fun moveInDock(index: Int, delta: Int) =
         setDock(dock.toMutableList().also { it.add(index + delta, it.removeAt(index)) })
 
-    /** 恢复默认：清空所有手动设置（不影响 config.json 文件本身）。 */
+    /** 恢复默认：清空车上的手动设置，回到 config.json（如果有）和自动检测的结果。 */
     fun reset() {
-        val imported = prefs.getLong(KEY_IMPORTED, 0)
-        prefs.edit().clear().putLong(KEY_IMPORTED, imported).apply()
+        // 连导入记录一起清掉：config.json 还在的话会重新导入（Unsplash key 等不会丢）。
+        prefs.edit().clear().apply()
         reload()
     }
 
@@ -109,6 +120,10 @@ class Config(private val context: Context) {
             if (json.has("oem")) e.putString(KEY_OEM, json.getString("oem"))
             if (json.has("title")) e.putString(KEY_TITLE, json.getString("title"))
             if (json.has("wallpaper")) e.putString(KEY_WALLPAPER, json.getString("wallpaper"))
+            if (json.has("onlineWallpapers")) e.putBoolean(KEY_ONLINE, json.getBoolean("onlineWallpapers"))
+            if (json.has("unsplashKey")) e.putString(KEY_UNSPLASH_KEY, json.getString("unsplashKey"))
+            if (json.has("wallpaperQuery")) e.putString(KEY_QUERY, json.getString("wallpaperQuery"))
+            if (json.has("wallpaperFeed")) e.putString(KEY_FEED, json.getString("wallpaperFeed"))
             if (json.has("autoCarplay")) e.putBoolean(KEY_AUTO_CARPLAY, json.getBoolean("autoCarplay"))
             if (json.has("dock")) {
                 // 先完整解析一遍，格式不对就整体不导入。
@@ -132,6 +147,11 @@ class Config(private val context: Context) {
             .put("dock", JSONArray(dock.map { it.toJson() }))
             .put("autoCarplay", autoCarplay)
             .put("wallpaper", wallpaper)
+            .put("onlineWallpapers", onlineWallpapers)
+            // 不把 key 原文写出来，只说明有没有配置。
+            .put("unsplashKey", if (unsplashKey != null) "(已配置)" else JSONObject.NULL)
+            .put("wallpaperQuery", wallpaperQuery)
+            .put("wallpaperFeed", wallpaperFeed)
             .put("title", title)
         runCatching { File(dir, CURRENT_FILE).writeText(json.toString(2)) }
     }
@@ -146,6 +166,10 @@ class Config(private val context: Context) {
         private const val KEY_AUTO_CARPLAY = "auto_carplay"
         private const val KEY_WALLPAPER = "wallpaper"
         private const val KEY_TITLE = "title"
+        private const val KEY_ONLINE = "online_wallpapers"
+        private const val KEY_UNSPLASH_KEY = "unsplash_key"
+        private const val KEY_QUERY = "wallpaper_query"
+        private const val KEY_FEED = "wallpaper_feed"
         private const val KEY_IMPORTED = "imported_mtime"
     }
 }
