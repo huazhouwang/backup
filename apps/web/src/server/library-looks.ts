@@ -54,7 +54,9 @@ export async function checkLibraryLook(l: LibraryLookInput, libraryMaterials: Re
     const problems = await checkRecipe(recipe, size);
     if (problems.length) throw new HTTPException(400, { message: problems.join('; ') });
     const built = await buildRecipe(recipe, size);
-    const missing = [...new Set(built.parts.flatMap(p => (p.kind === 'base' ? Object.values(p.mats) : [p.mat])))].filter(id => !materialOf(id, recipe));
+    const missing = [...new Set(built.parts.flatMap(p => (p.kind === 'base' ? Object.values(p.mats) : p.kind === 'plant' ? [] : [p.mat])))].filter(
+      id => !materialOf(id, recipe),
+    );
     if (missing.length) throw new HTTPException(400, { message: `unknown material ${missing.join(', ')}` });
   }
 }

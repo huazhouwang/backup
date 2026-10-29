@@ -45,7 +45,8 @@ describe('library files', () => {
         const recipe = libraryRecipe(lib, look);
         const built = await buildRecipe(recipe, lookSizeOf(look));
         for (const p of built.parts)
-          for (const m of p.kind === 'base' ? Object.values(p.mats) : [p.mat]) expect(materialOf(m, recipe), `${lib.id}/${id} ${m}`).toBeTruthy();
+          for (const m of p.kind === 'base' ? Object.values(p.mats) : p.kind === 'plant' ? [] : [p.mat])
+            expect(materialOf(m, recipe), `${lib.id}/${id} ${m}`).toBeTruthy();
         for (const d of Object.values(look.params ?? {}))
           for (const v of [d.default, ...(d.enum ?? [])]) {
             if (d.format === 'material') expect(materialOf(String(v), recipe), `${lib.id}/${id} param ${v}`).toBeTruthy();

@@ -21,6 +21,9 @@ export const GROUND_SHADOW_OPACITY = 0.28;
 /** Toward the sun when no time is given: from the south-west, high */
 export const DEFAULT_SUN = new THREE.Vector3(-1.2, 2, 0.9).normalize();
 
+/** The stills' sun (issue 220): low from the west, late afternoon, raking across the presentation view's side */
+export const LATE_SUN = new THREE.Vector3(-1, 0.38, 0.25).normalize();
+
 /** Shadow quality: the editor drops to 'low' on devices that can't keep up */
 export type ShadowQuality = 'high' | 'low';
 
@@ -45,8 +48,8 @@ export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQ
 }
 
 /** The sun as a light aimed at the house's centre (its target must be added to the scene too) */
-export function sunLight(color: THREE.ColorRepresentation, center: THREE.Vector3, radius: number, quality?: ShadowQuality) {
-  const s = sunSetup(center, radius, quality);
+export function sunLight(color: THREE.ColorRepresentation, center: THREE.Vector3, radius: number, quality?: ShadowQuality, toward?: THREE.Vector3) {
+  const s = sunSetup(center, radius, quality, toward);
   const sun = new THREE.DirectionalLight(color, SUN_INTENSITY);
   sun.position.copy(s.position);
   sun.target.position.copy(center);

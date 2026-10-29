@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { hops } from '@/canvas/hop';
 import { planFrame } from '@/graphics/plan/plan-geometry';
 import { useEditor } from '../store';
-import { BIRD, FOV, framed, nearPlane, type Pose } from '@/graphics/three/framing';
+import { BIRD, EYE, EYE_DIRECTION, eyeLevel, eyeOrbitPose, FOV, framed, nearPlane, twoPoint, type Pose } from '@/graphics/three/framing';
 import { M } from '@/graphics/three/scene';
 import { northOnPlan } from '@/lib/solar';
 import { publishHeading } from '../compass/heading';
@@ -22,7 +22,7 @@ export function OrbitRig({ radius }: { radius: number }) {
       makeDefault
       enableDamping
       dampingFactor={0.09}
-      // Down to the horizon, not below the ground
+      // Down to eye height above the ground (CameraRig keeps the limit as the camera moves)
       maxPolarAngle={Math.PI / 2}
       minDistance={Math.max(1.5, radius * 0.15)}
       maxDistance={radius * 6}
@@ -126,7 +126,8 @@ export function CameraRig({
   // Entering 3D: from the plan's framing to the last 3D view (or the default one), growing the house
   useEffect(() => {
     if (!orbit) return;
-    const to = lastPose.get(projectId) ?? framed(box, size.width / size.height, BIRD);
+    // The first view is a presentation's: from across the street at eye height, in two-point perspective (issue 220)
+    const to = lastPose.get(projectId) ?? eyeOrbitPose(eyeLevel(box, size.width / size.height, EYE_DIRECTION, FOV), FOV);
     if (resumeOrbit.delete(projectId)) {
       camera.position.copy(to.pos);
       orbit.target.copy(to.target);
@@ -199,7 +200,8 @@ export function CameraRig({
     turnTo({ target, pos: target.clone().addScaledVector(toward, camera.position.distanceTo(target)) }, 700);
   }, [northRequest]);
 
-  // The near plane follows the distance, so depth stays precise however far the camera zooms out; the compass follows the view
+  // The near plane follows the distance, so depth stays precise however far the camera zooms out; the compass follows the view.
+  // Near level the view keeps verticals vertical (automatic two-point perspective, framing.ts)
   useFrame(() => {
     publishHeading(camera, project.site.northAngle);
     if (!orbit || !(camera instanceof THREE.PerspectiveCamera)) return;
@@ -208,6 +210,11 @@ export function CameraRig({
       camera.near = near;
       camera.updateProjectionMatrix();
     }
+    twoPoint(camera, orbit.target, size.width, size.height);
+    // Down to a person's eye height above the ground, not below it (the target stands higher than the eye in an eye-level view)
+    const controls = orbit as unknown as { maxPolarAngle: number };
+    const dist = camera.position.distanceTo(orbit.target);
+    controls.maxPolarAngle = Math.acos(THREE.MathUtils.clamp((box.min.y + EYE - orbit.target.y) / dist, -1, 1));
   });
 
   useFrame(({ invalidate }, dt) => {

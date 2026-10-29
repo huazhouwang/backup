@@ -5,7 +5,8 @@
  * floor-materials.tsx), furniture and fittings white with thin black edges. Coordinates in millimetres. Interaction (picking)
  * is optional.
  */
-import type { Project } from '@opensu/core';
+import { PLANTS, type Project } from '@opensu/core';
+import { plantImageUrl } from '../three/plants';
 import { floorFill, FloorPatternDefs } from './floor-materials';
 import { modelStyle } from '../model-style';
 import { isGroundLevel, labelSize, type LevelShapes } from './plan-geometry';
@@ -85,6 +86,20 @@ export function PlanInk({ shapes, furniture, line, pick }: { shapes: LevelShapes
                 <path key={i} d={it.d} fill={it.fill ? 'var(--card)' : 'none'} stroke="var(--foreground)" {...line(0.5)} />
               ))}
               {symbol.lines && <path d={symbol.lines} fill="none" stroke="var(--foreground)" {...line(0.5)} />}
+              {symbol.plants?.map((q, i) => (
+                // An image plant seen from above (issue 214), as landscape plans draw planting
+                <image
+                  key={`plant${i}`}
+                  href={plantImageUrl(PLANTS[q.plant].views.top)}
+                  x={q.at[0] - q.w / 2}
+                  y={q.at[1] - q.d / 2}
+                  width={q.w}
+                  height={q.d}
+                  transform={q.rot ? `rotate(${q.rot} ${q.at[0]} ${q.at[1]})` : undefined}
+                  preserveAspectRatio="none"
+                  pointerEvents="none"
+                />
+              ))}
               <path d={d} fill="transparent" {...hit(pick, f.id)} />
             </g>
           ) : (

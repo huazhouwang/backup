@@ -188,6 +188,9 @@ function helpers(seed: number) {
       clean({ kind: 'extrude', mat, plane, profile, depth, bevel: opt(bevel), at: opt(at) }),
     /** An element's own geometry (stairs, ponds, drains) in these materials */
     base: (mats: Record<string, string>) => ({ kind: 'base', mats }) as RecipePart,
+    /** An image plant of the catalog standing at `at`, h tall, turned rot degrees; spread [w, d] stretches it, else it keeps its proportions */
+    plant: (id: string, at: V3, h: number, rot?: number, spread?: [number, number]) =>
+      clean({ kind: 'plant', plant: id, at, h, rot: opt(rot), spread: opt(spread) }),
     /** Leave parts out of the plan symbol */
     noplan: (p: RecipePart | RecipePart[]) => (Array.isArray(p) ? p.map(x => ({ ...x, plan: false })) : { ...p, plan: false }),
     /** Four legs set in from the corners of w × d, h tall; round legs (radius r) taper slightly to the floor, square ones are 2r wide */

@@ -156,6 +156,133 @@
    }
   },
   {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "tree",
+    "label": "庭院树",
+    "position": [
+     5200,
+     9800
+    ],
+    "size": {
+     "w": 4400,
+     "d": 3800,
+     "h": 4300
+    }
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "庭院·透水砖·庭院树",
+    "params": {
+     "species": "tree-island"
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "tree",
+    "position": [
+     11000,
+     11520
+    ],
+    "size": {
+     "w": 2000,
+     "d": 2000,
+     "h": 5200
+    }
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "庭院·透水砖·庭院树（2）",
+    "params": {
+     "species": "tree-small"
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "tree",
+    "position": [
+     15600,
+     11520
+    ],
+    "size": {
+     "w": 2000,
+     "d": 2000,
+     "h": 3200
+    }
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "庭院·透水砖·庭院树（3）",
+    "params": {
+     "species": "tree-searsia"
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "shrub",
+    "label": "灌木",
+    "position": [
+     3600,
+     7950
+    ],
+    "size": {
+     "w": 1100,
+     "d": 1100,
+     "h": 1500
+    }
+   }
+  },
+  {
+   "name": "furniture_add",
+   "input": {
+    "level": "L1",
+    "type": "shrub",
+    "position": [
+     8900,
+     7950
+    ],
+    "size": {
+     "w": 1000,
+     "d": 1000,
+     "h": 1400
+    }
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "L1-f29",
+    "params": {
+     "species": "shrub-searsia"
+    }
+   }
+  },
+  {
+   "name": "params_set",
+   "input": {
+    "object": "L1-f28",
+    "params": {
+     "species": "celandine"
+    }
+   }
+  },
+  {
    "name": "furniture_remove",
    "input": {
     "furniture": "RF-f01"

@@ -62,7 +62,8 @@ export const uiSlice = ({ set }: StoreContext): Ui => ({
   sectioning: false,
   camera3d: { walking: false, section: null },
   // Today at three in the afternoon
-  sun: { day: dayOfYear(new Date()), minutes: 15 * 60 },
+  // Late afternoon: a low warm sun and long shadows, as presentations are shot (issue 220)
+  sun: { day: dayOfYear(new Date()), minutes: 17 * 60 },
   sunOpen: false,
   widgetsOpen: false,
   sandboxCanvas: readSandboxCanvas(),

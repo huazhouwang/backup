@@ -559,7 +559,7 @@
       "name": {"zh": "盆栽", "en": "Potted plant"},
       "for": ["furniture:plant"],
       "newType": {"name": {"zh": "盆栽", "en": "Potted plant"}, "group": "living", "size": {"w": 500, "d": 500, "h": 1200}},
-      "version": "1.0.0",
+      "version": "2.0.0",
       "params": {
         "pot": {
           "type": "string",
@@ -568,9 +568,17 @@
           "enum": ["ceramic", "ceramicShade", "terracotta", "white", "dark"],
           "title": {"zh": "花盆", "en": "Pot"},
           "description": "Material of the pot"
+        },
+        "species": {
+          "type": "string",
+          "default": "shrub-searsia",
+          "enum": ["shrub-searsia", "tree-searsia", "fern", "grass-tall"],
+          "enumTitles": [{"zh": "小灌木", "en": "Small shrub"}, {"zh": "细叶灌木树", "en": "Fine-leaved small tree"}, {"zh": "蕨类", "en": "Fern"}, {"zh": "观赏草丛", "en": "Ornamental grass clump"}],
+          "title": {"zh": "植物", "en": "Plant"},
+          "description": "Which plant grows in the pot: an image plant of the catalog"
         }
       },
-      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $ph := $min([340, $h * 0.3]);\n    [\n      $lathe([[0, 0], [$r * 0.66, 0], [$r * 0.72, $ph * 0.08], [$r * 0.76, $ph], [$r * 0.7, $ph], [0, $ph - 20]], [0, 0, 0], $pot),\n      $cylinder($r * 0.7, 10, [0, $ph - 25, 0], 'soil'),\n      $rod([0, $ph - 30, 0], [$cos(0) * 120, $h * 0.72, $sin(0) * 120], 12, 'bark', 6),\n      $rod([0, $ph - 30, 0], [$cos(120) * 200, $h * 0.72, $sin(120) * 200], 12, 'bark', 6),\n      $rod([0, $ph - 30, 0], [$cos(240) * 160, $h * 0.72, $sin(240) * 160], 12, 'bark', 6),\n      $sphere($r * 0.5 * 1.9, [0 * $r * 2.4, $min([$h - $r * 0.5, 0.78 * $h]), 0 * $r * 2.2], 'leaf', [1, 0.85, 1]),\n      $sphere($r * 0.4 * 1.9, [0.16 * $r * 2.4, $min([$h - $r * 0.4, 0.66 * $h]), 0.08 * $r * 2.2], 'leaf2', [1, 0.85, 1]),\n      $sphere($r * 0.38 * 1.9, [-0.14 * $r * 2.4, $min([$h - $r * 0.38, 0.7 * $h]), 0.1 * $r * 2.2], 'leaf', [1, 0.85, 1]),\n      $sphere($r * 0.4 * 1.9, [0.05 * $r * 2.4, $min([$h - $r * 0.4, 0.62 * $h]), -0.16 * $r * 2.2], 'leaf2', [1, 0.85, 1]),\n      $sphere($r * 0.36 * 1.9, [-0.08 * $r * 2.4, $min([$h - $r * 0.36, 0.88 * $h]), -0.06 * $r * 2.2], 'leaf', [1, 0.85, 1]),\n      $sphere($r * 0.3 * 1.9, [0.1 * $r * 2.4, $min([$h - $r * 0.3, 0.9 * $h]), 0.1 * $r * 2.2], 'leaf2', [1, 0.85, 1])\n    ]\n  )"
+      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $ph := $min([340, $h * 0.3]);\n    [\n      $lathe([[0, 0], [$r * 0.66, 0], [$r * 0.72, $ph * 0.08], [$r * 0.76, $ph], [$r * 0.7, $ph], [0, $ph - 20]], [0, 0, 0], $pot),\n      $cylinder($r * 0.7, 10, [0, $ph - 25, 0], 'soil'),\n      $plant($species, [0, $ph - 25, 0], $h - $ph + 25)\n    ]\n  )"
     },
     "shrine": {
       "name": {"zh": "神位", "en": "Ancestral shrine"},
@@ -1009,9 +1017,52 @@
       "name": {"zh": "庭院树", "en": "Courtyard tree"},
       "for": ["furniture:tree"],
       "newType": {"name": {"zh": "庭院树", "en": "Courtyard tree"}, "group": "yard", "size": {"w": 3000, "d": 3000, "h": 4500}},
+      "version": "2.0.0",
+      "params": {
+        "species": {
+          "type": "string",
+          "default": "tree-island",
+          "enum": ["tree-island", "tree-small", "tree-searsia"],
+          "enumTitles": [{"zh": "多干景观树", "en": "Multi-stem tree"}, {"zh": "小乔木", "en": "Small tree"}, {"zh": "细叶灌木树", "en": "Fine-leaved small tree"}],
+          "title": {"zh": "树种", "en": "Species"},
+          "description": "Which tree: an image plant of the catalog"
+        }
+      },
+      "script": "[$plant($species, [0, 0, 0], $h, 0, [$w, $d])]"
+    },
+    "shrub": {
+      "name": {"zh": "灌木", "en": "Shrub"},
+      "for": ["furniture:shrub"],
+      "newType": {"name": {"zh": "灌木", "en": "Shrub"}, "group": "yard", "size": {"w": 1200, "d": 1200, "h": 1500}},
       "version": "1.0.0",
-      "seed": 5,
-      "script": "(\n    $r := $min([$w, $d]) / 2;\n    $trunkH := $h * 0.42;\n    $tr := $max([90, $r * 0.06]);\n    $cy := $h * 0.68;\n    $ry := $min([$h * 0.22, $h - $cy - $r * 0.25]);\n    [\n      $cylinder($tr * 1.1, $trunkH, [0, $trunkH / 2, 0], 'white', {\"r2\": $tr * 0.8, \"seg\": 12}),\n      [0..5].(\n        $i := $;\n        [\n          $noplan($cylinder($tr * 1.06, 25, [0, $trunkH * (0.15 + $i * 0.13), 0], 'dark', {\"seg\": 12, \"scale\": [1, 1, 0.98]}))\n        ]\n      ),\n      $rod([0, $trunkH * 0.95, 0], [-$h * 0.34 * $sin(18) * $cos(30), $trunkH * 0.95 + $h * 0.34 * $cos(18), $h * 0.34 * $sin(18) * $sin(30)], $tr * 0.55, 'white', 8),\n      $rod([0, $trunkH * 0.95, 0], [-$h * 0.32 * $sin(22) * $cos(200), $trunkH * 0.95 + $h * 0.32 * $cos(22), $h * 0.32 * $sin(22) * $sin(200)], $tr * 0.55, 'white', 8),\n      [0..21].(\n        $i := $;\n        $t := ($i + 0.5) / 22;\n        $yy := 1 - 2 * $t;\n        $ring_ := $sqrt(1 - $yy * $yy);\n        $a := $i * 137.508;\n        $rr := $r * (0.27 + 0.08 * $rnd($i));\n        [\n          $i % 3 ? [\n              $sphere($rr, [$cos($a) * $ring_ * $r * 0.72, $cy + $yy * $ry, $sin($a) * $ring_ * $r * 0.72], 'leaf2', [1, 0.85, 1])\n            ] : [\n              $sphere($rr, [$cos($a) * $ring_ * $r * 0.72, $cy + $yy * $ry, $sin($a) * $ring_ * $r * 0.72], 'leaf', [1, 0.85, 1])\n            ]\n        ]\n      )\n    ]\n  )"
+      "params": {
+        "species": {
+          "type": "string",
+          "default": "shrub-round",
+          "enum": ["shrub-round", "shrub-searsia", "tree-searsia"],
+          "enumTitles": [{"zh": "灌木丛", "en": "Shrub"}, {"zh": "小灌木", "en": "Small shrub"}, {"zh": "细叶灌木树", "en": "Fine-leaved small tree"}],
+          "title": {"zh": "植物", "en": "Plant"},
+          "description": "Which shrub: an image plant of the catalog, stretched to the footprint"
+        }
+      },
+      "script": "[$plant($species, [0, 0, 0], $h, 0, [$w, $d])]"
+    },
+    "groundcover": {
+      "name": {"zh": "地被", "en": "Ground cover"},
+      "for": ["furniture:groundcover"],
+      "newType": {"name": {"zh": "地被", "en": "Ground cover"}, "group": "yard", "size": {"w": 1000, "d": 1000, "h": 250}},
+      "version": "1.0.0",
+      "params": {
+        "species": {
+          "type": "string",
+          "default": "grass-tall",
+          "enum": ["grass-tall", "celandine", "fern"],
+          "enumTitles": [{"zh": "观赏草丛", "en": "Ornamental grass clump"}, {"zh": "地被花", "en": "Flowering ground cover"}, {"zh": "蕨类", "en": "Fern"}],
+          "title": {"zh": "植物", "en": "Plant"},
+          "description": "Which grass or ground cover: an image plant of the catalog, stretched to the footprint"
+        }
+      },
+      "script": "[$plant($species, [0, 0, 0], $h, 0, [$w, $d])]"
     },
     "car": {
       "name": {"zh": "汽车", "en": "Car"},
@@ -1168,7 +1219,7 @@
       "name": {"zh": "种植池", "en": "Planter"},
       "for": ["furniture:planter"],
       "newType": {"name": {"zh": "种植池", "en": "Planter"}, "group": "yard", "size": {"w": 1000, "d": 1000, "h": 450}},
-      "version": "1.0.0",
+      "version": "2.0.0",
       "params": {
         "wood": {
           "type": "string",
@@ -1177,10 +1228,18 @@
           "enum": ["birch", "wood", "woodDark", "white", "dark"],
           "title": {"zh": "木材", "en": "Wood"},
           "description": "Material of the wooden parts"
+        },
+        "species": {
+          "type": "string",
+          "default": "grass-tall",
+          "enum": ["grass-tall", "celandine", "fern", "shrub-searsia"],
+          "enumTitles": [{"zh": "观赏草丛", "en": "Ornamental grass clump"}, {"zh": "地被花", "en": "Flowering ground cover"}, {"zh": "蕨类", "en": "Fern"}, {"zh": "小灌木", "en": "Small shrub"}],
+          "title": {"zh": "植物", "en": "Planting"},
+          "description": "What grows in it: an image plant of the catalog, repeated along it"
         }
       },
       "seed": 7,
-      "script": "(\n    $t := 40;\n    $n := $max([1, $round(($w - 2 * $t) * ($d - 2 * $t) / 120000)]);\n    [\n      [0..1].(\n        $i := $;\n        $s := $i * 2 - 1;\n        [\n          $box([$w, $h, $t], [0, 0 + $h / 2, $s * ($d / 2 - $t / 2)], $wood, 4),\n          $box([$t, $h, $d], [$s * ($w / 2 - $t / 2), 0 + $h / 2, 0], $wood, 4)\n        ]\n      ),\n      [0..$floor($max([1, $floor($h / 120)])) - 1].(\n        $i := $;\n        [\n          [0..1].(\n            $i := $;\n            $s := $i * 2 - 1;\n            [\n              $noplan($box([$w + 2, 6, $t + 2], [0, ($i + 1) * $h / ($floor($h / 120) + 1) + 6 / 2, $s * ($d / 2 - $t / 2)], 'dark', 2))\n            ]\n          )\n        ]\n      ),\n      $box([$w - 2 * $t, $h - 60, $d - 2 * $t], [0, 0 + ($h - 60) / 2, 0], 'soil', 5),\n      [0..$floor($n) - 1].(\n        $i := $;\n        $r := $min([120 + $rnd($i + 0.6) * 100, ($min([$w, $d]) - 2 * $t) / 2]);\n        $x := ($rnd($i) - 0.5) * $max([0, $w - 2 * $t - 2.8 * $r]);\n        $z := ($rnd($i + 0.3) - 0.5) * $max([0, $d - 2 * $t - 2.8 * $r]);\n        [\n          $rnd($i + 0.1) < 0.5 ? [\n              $sphere($r, [$x, $h - 60 + $r * 0.6, $z], 'leaf', [1, 0.85, 1])\n            ] : [\n              $sphere($r, [$x, $h - 60 + $r * 0.6, $z], 'leaf2', [1, 0.85, 1])\n            ],\n          $rnd($i + 0.8) < 0.5 ? [\n              $sphere(35, [$x + $r * 0.4, $h - 60 + $r * 1.2, $z + $r * 0.3], 'flower')\n            ] : []\n        ]\n      )\n    ]\n  )"
+      "script": "(\n    $t := 40;\n    $top := $h - 60;\n    $s := $min([$w, $d]) - 2 * $t;\n    $n := $max([1, $round(($w - 2 * $t) / $s)]);\n    [\n      [0..1].(\n        $i := $;\n        $k := $i * 2 - 1;\n        [\n          $box([$w, $h, $t], [0, $h / 2, $k * ($d / 2 - $t / 2)], $wood, 4),\n          $box([$t, $h, $d], [$k * ($w / 2 - $t / 2), $h / 2, 0], $wood, 4)\n        ]\n      ),\n      $box([$w - 2 * $t, $top, $d - 2 * $t], [0, $top / 2, 0], 'soil', 5),\n      [0..$n - 1].(\n        $i := $;\n        $x := -($w - 2 * $t) / 2 + ($i + 0.5) * ($w - 2 * $t) / $n;\n        [$plant($species, [$x, $top, 0], $s * 1.15 * $lookup({\"grass-tall\": 0.207, \"celandine\": 0.195, \"fern\": 0.432, \"shrub-searsia\": 1.3}, $species), $rnd($i) * 360)]\n      )\n    ]\n  )"
     },
     "window": {
       "name": {"zh": "窗", "en": "Window"},

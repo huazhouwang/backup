@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/x0finch/Plinth/blob/main/libraries/plants.schema.json",
+  "title": "OpenSU plants",
+  "description": "Built-in image plants (cut-outs with alpha, as SketchUp's face-me plants and Enscape's billboards), drawn by looks with $plant. Images in plants/<id>/, rendered from CC0 models by scripts/plants.mjs. See packages/core/src/looks/plants.ts.",
+  "type": "object",
+  "required": ["format", "formatVersion", "plants"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "format": {"const": "opensu-plants"},
+    "formatVersion": {"const": 1},
+    "plants": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"},
+      "additionalProperties": {"$ref": "#/$defs/plant"}
+    }
+  },
+  "$defs": {
+    "plant": {
+      "type": "object",
+      "required": ["name", "kind", "source", "size", "views"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "object", "properties": {"zh": {"type": "string"}, "en": {"type": "string"}}},
+        "kind": {"enum": ["tree", "shrub", "ground", "potted"], "description": "What it is in a planting plan: a tree, a shrub, a ground cover or grass, a potted plant"},
+        "source": {
+          "type": "object",
+          "properties": {
+            "polyhaven": {"type": "string"},
+            "node": {"description": "The model's node: an index, a name, or \"all\" for a plant modelled in parts", "type": ["integer", "string"]},
+            "patch": {
+              "description": "Many small clumps scattered over a disc (grasses, ground covers)",
+              "type": "object",
+              "properties": {"nodes": {"type": "array", "items": {"type": "integer"}}, "count": {"type": "integer"}, "radius": {"type": "number"}}
+            },
+            "url": {"type": "string"},
+            "authors": {"type": "array", "items": {"type": "string"}},
+            "license": {"type": "string"}
+          }
+        },
+        "size": {
+          "description": "The plant's real size, mm",
+          "type": "object",
+          "required": ["w", "d", "h"],
+          "properties": {"w": {"type": "number"}, "d": {"type": "number"}, "h": {"type": "number"}}
+        },
+        "views": {
+          "description": "Cut-outs with alpha under plants/: from the front (looking north), the side (looking west) and above",
+          "type": "object",
+          "required": ["front", "side", "top"],
+          "properties": {"front": {"type": "string"}, "side": {"type": "string"}, "top": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

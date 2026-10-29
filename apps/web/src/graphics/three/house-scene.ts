@@ -34,6 +34,8 @@ import { materialPattern } from '../plan/floor-materials';
 import { floorTexture } from './floor-textures';
 import { isSoftwareGL, LOOK, type Look } from './beauty';
 import { partsGeometry } from './looks';
+import { plantGroup } from './plants';
+import { treeLine } from './setting';
 import { applyMaps, surfaceMaps } from './textures';
 import {
   backdrop,
@@ -77,7 +79,11 @@ export interface HouseScene {
 }
 
 /** `renderer`: light the scene with the sky environment too (it is prefiltered on that renderer); `look`: other light values */
-export async function houseScene(p: Project, doc: Document, opts: { renderer?: THREE.WebGLRenderer; look?: Look } = {}): Promise<HouseScene> {
+export async function houseScene(
+  p: Project,
+  doc: Document,
+  opts: { renderer?: THREE.WebGLRenderer; look?: Look; sun?: THREE.Vector3 } = {},
+): Promise<HouseScene> {
   const light = opts.look ?? LOOK;
   const color = (t: string) => new THREE.Color(themeColor(t, doc));
   const disposables: { dispose(): void }[] = [];
@@ -116,6 +122,11 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
       if (maps) applyMaps(mesh.material as THREE.MeshStandardMaterial, await maps);
       mesh.castShadow = castsShadow(style);
       mesh.receiveShadow = true;
+    }
+    const plants = await plantGroup(built.parts);
+    if (plants) {
+      plants.traverse(o => (o as THREE.Mesh).isMesh && ((o.userData.part = part), keep((o as THREE.Mesh).geometry)));
+      g.add(plants);
     }
     return g;
   };
@@ -222,10 +233,16 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
   keep(ground.material);
   ground.position.set(center.x, p.site.groundLevel * M - 0.001, center.z);
   scene.add(ground);
+  // In a landscape: a tree line on the horizon (setting.ts)
+  const setting = await treeLine(center, radius);
+  setting.position.y = p.site.groundLevel * M;
+  setting.traverse(o => (o as THREE.Mesh).isMesh && keep((o as THREE.Mesh).geometry));
+  scene.add(setting);
 
   // The 3D view's light, with the sky environment where the renderer can afford it; elsewhere the sky light carries it all
   scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, lit ? light.sky : SKYLIGHT_WITHOUT_ENVIRONMENT));
-  const sun = sunLight(color('--canvas-sun'), center, radius);
+  const toward = opts.sun ?? DEFAULT_SUN;
+  const sun = sunLight(color('--canvas-sun'), center, radius, undefined, toward);
   sun.intensity = light.sun;
   scene.add(sun, sun.target);
   // The sky as image-based light (issue 208)
@@ -239,7 +256,7 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
         ground: themeColor('--canvas-ground', doc),
         sun: themeColor('--canvas-sun', doc),
       },
-      DEFAULT_SUN,
+      toward,
     );
   if (env) {
     scene.environment = keep(env);

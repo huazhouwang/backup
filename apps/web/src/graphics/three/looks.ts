@@ -39,7 +39,7 @@ function profileShape(profile: Extract<BuiltPart, { kind: 'extrude' }>['profile'
 }
 
 /** The geometry of one built part, in metres */
-function partGeometry(p: Exclude<BuiltPart, { kind: 'base' }>): THREE.BufferGeometry {
+function partGeometry(p: Exclude<BuiltPart, { kind: 'base' | 'plant' }>): THREE.BufferGeometry {
   switch (p.kind) {
     case 'box': {
       const [w, h, d] = p.size.map(v => v * M);
@@ -93,11 +93,11 @@ function partGeometry(p: Exclude<BuiltPart, { kind: 'base' }>): THREE.BufferGeom
   }
 }
 
-/** Merged geometry per material for built parts; `base` parts are left to the caller */
+/** Merged geometry per material for built parts; `base` and `plant` parts are left to the caller */
 export function partsGeometry(parts: BuiltPart[]): [RecipeMaterial, THREE.BufferGeometry][] {
   const byMat = new Map<RecipeMaterial, THREE.BufferGeometry[]>();
   for (const p of parts) {
-    if (p.kind === 'base') continue;
+    if (p.kind === 'base' || p.kind === 'plant') continue;
     const g = partGeometry(p);
     // The parts mix indexed and non-indexed geometries; merging needs the same attributes everywhere
     const flat = g.index ? g.toNonIndexed() : g;

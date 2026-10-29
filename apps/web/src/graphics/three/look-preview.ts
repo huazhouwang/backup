@@ -12,7 +12,9 @@ import { themeColor } from '@/lib/theme';
 import { isSoftwareGL } from './beauty';
 import { cameraPosition, FOV, lookBounds, stageGround, stageSun } from './look-stage';
 import { castsShadow, M, standardMaterial } from './scene';
+
 import { partsGeometry } from './looks';
+import { disposePlants, plantGroup } from './plants';
 import { applyMaps, surfaceMaps } from './textures';
 
 type Opts = { width?: number; height?: number; single?: boolean; params?: Record<string, unknown>; materials?: Record<string, Material> };
@@ -62,7 +64,11 @@ async function draw(renderer: THREE.WebGLRenderer, recipe: Recipe, size: { w: nu
   const color = (t: string) => new THREE.Color(themeColor(t, doc));
   scene.background = color('--canvas-backdrop');
   scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), color('--card'), 2.4));
-  const parts = partsGeometry((await buildRecipe(recipe, size, opts.params).catch(() => ({ parts: [] }))).parts);
+  const built = (await buildRecipe(recipe, size, opts.params).catch(() => ({ parts: [] }))).parts;
+  const parts = partsGeometry(built);
+  // Its image plants (issue 214)
+  const plants = await plantGroup(built);
+  if (plants) scene.add(plants);
   const materials: THREE.Material[] = [];
   for (const [mat, g] of parts) {
     const m = materialOf(mat, recipe, opts.materials);
@@ -76,10 +82,11 @@ async function draw(renderer: THREE.WebGLRenderer, recipe: Recipe, size: { w: nu
     mesh.castShadow = castsShadow(style);
     scene.add(mesh);
   }
-  const { center, radius } = lookBounds(
-    parts.map(([, g]) => g),
-    size,
-  );
+  const plantGeometries: THREE.BufferGeometry[] = [];
+  plants?.updateMatrixWorld(true);
+  plants?.traverse(o => (o as THREE.Mesh).isMesh && plantGeometries.push((o as THREE.Mesh).geometry.clone().applyMatrix4(o.matrixWorld)));
+  const { center, radius } = lookBounds([...parts.map(([, g]) => g), ...plantGeometries], size);
+  plantGeometries.forEach(g => g.dispose());
   const sun = stageSun(color('--canvas-sun'), center, radius);
   scene.add(sun, sun.target);
   // On show, it stands on the ground in its soft shadow; for checking (three views), the outline of its footprint shows where
@@ -114,6 +121,7 @@ async function draw(renderer: THREE.WebGLRenderer, recipe: Recipe, size: { w: nu
   });
   const url = canvas.toDataURL('image/png');
   for (const [, g] of parts) g.dispose();
+  disposePlants(plants);
   materials.forEach(m => m.dispose());
   floor.geometry.dispose();
   (floor.material as THREE.Material).dispose();

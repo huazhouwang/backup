@@ -6,7 +6,8 @@
 import { Edges } from '@react-three/drei';
 import type { Element, OpeningFrame, Polygon, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@opensu/core';
 import { footing, lookRecipe, materialOf, SLAB_THICKNESS, textureOf, wallTarget, type Material } from '@opensu/core';
-import { useContext, useEffect, useMemo } from 'react';
+import { useThree } from '@react-three/fiber';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
 import { materialStyle, type MaterialStyle } from '@/lib/materials';
@@ -18,6 +19,7 @@ import { useHovered } from '../hover';
 import { useFloorTexture } from '@/graphics/three/floor-textures';
 import { mapProps, useSurfaceMaps } from '@/graphics/three/textures';
 import { partsGeometry, useBuild } from '@/graphics/three/looks';
+import { disposePlants, plantGroup } from '@/graphics/three/plants';
 import { castsShadow, elementExtent, M, railingPieces, slabGeometry, solidGeometry, standardMaterialProps, wallGeometry } from '@/graphics/three/scene';
 
 const unitBox = new THREE.BoxGeometry(1, 1, 1);
@@ -142,11 +144,11 @@ export function OpeningLook({
   const y = (base + fr.z) * M;
   const line = useLine(fr.id, o.sel);
   const ref = useFeedback<THREE.Group>(fr.id, null, !!o.sel);
-  const parts = useLookGeometry(recipe, fr.width, fr.thickness, fr.height, params);
-  if (!parts.length) return null;
+  const look = useLookGeometry(recipe, fr.width, fr.thickness, fr.height, params);
+  if (!look.parts.length && !look.plants) return null;
   return (
     <group ref={ref} position={[fr.center[0] * M, y, fr.center[1] * M]} rotation={[0, -fr.angle, 0]} userData={{ restY: y, opening: fr.id }}>
-      <LookMeshes parts={parts} id={fr.id} recipe={recipe} />
+      <LookMeshes look={look} id={fr.id} recipe={recipe} />
       {line && <BoxLine w={fr.width} d={fr.thickness} h={fr.height} line={line} />}
     </group>
   );
@@ -198,10 +200,10 @@ function FurnitureModel({ f, recipe, base, ...o }: Outline & { f: Project['furni
   const line = useLine(f.id, o.sel);
   const ref = useFeedback<THREE.Group>(f.id, null, !!o.sel);
   const { w, d, h } = f.size;
-  const parts = useLookGeometry(recipe, w, d, h, f.lookParams);
+  const look = useLookGeometry(recipe, w, d, h, f.lookParams);
   return (
     <group ref={ref} position={[f.position[0] * M, y, f.position[1] * M]} rotation={[0, (-f.rotation * Math.PI) / 180, 0]} userData={{ restY: y }}>
-      <LookMeshes parts={parts} id={f.id} recipe={recipe} />
+      <LookMeshes look={look} id={f.id} recipe={recipe} />
       {line && <BoxLine w={w} d={d} h={h} line={line} />}
     </group>
   );
@@ -225,10 +227,10 @@ export function RailingLook({ w, project, base, ...o }: Outline & { w: Wall; pro
 }
 
 function RailingPiece({ b, w, recipe }: { b: ReturnType<typeof railingPieces>[number]; w: Wall; recipe: Recipe | null }) {
-  const parts = useLookGeometry(recipe, b.length, b.thickness, b.height, w.lookParams);
+  const look = useLookGeometry(recipe, b.length, b.thickness, b.height, w.lookParams);
   return (
     <group position={[b.center[0] * M, b.z * M, b.center[1] * M]} rotation={[0, -b.angle, 0]}>
-      <LookMeshes parts={parts} id={w.id} recipe={recipe} />
+      <LookMeshes look={look} id={w.id} recipe={recipe} />
     </group>
   );
 }
@@ -237,11 +239,11 @@ function RailingPiece({ b, w, recipe }: { b: ReturnType<typeof railingPieces>[nu
 export function ElementExtras({ e, solids, recipe, base, ...o }: Outline & { e: Element; solids: Solid[]; recipe: Recipe; base: number }) {
   const ext = elementExtent(solids);
   const ref = useFeedback<THREE.Group>(e.id, null, !!o.sel);
-  const parts = useLookGeometry(recipe, ext.w, ext.d, ext.h, e.lookParams);
-  if (!parts.length) return null;
+  const look = useLookGeometry(recipe, ext.w, ext.d, ext.h, e.lookParams);
+  if (!look.parts.length && !look.plants) return null;
   return (
     <group ref={ref} position={[ext.center[0] * M, base * M, ext.center[1] * M]} userData={{ restY: base * M }}>
-      <LookMeshes parts={parts} id={e.id} recipe={recipe} />
+      <LookMeshes look={look} id={e.id} recipe={recipe} />
     </group>
   );
 }
@@ -257,17 +259,44 @@ function BoxLine({ w, d, h, line }: { w: number; d: number; h: number; line: { c
 }
 
 /** A recipe's geometry at a size (one per material), disposed when it changes */
-function useLookGeometry(recipe: Recipe | null, w: number, d: number, h: number, params?: Record<string, unknown>) {
+function useLookGeometry(recipe: Recipe | null, w: number, d: number, h: number, params?: Record<string, unknown>): LookGeometry {
   const built = useBuild(recipe, { w, d, h }, params);
   const parts = useMemo(() => (built ? partsGeometry(built.parts) : []), [built]);
   useEffect(() => () => parts.forEach(([, g]) => g.dispose()), [parts]);
-  return parts;
+  // Its image plants (issue 214), once their cut-outs have loaded
+  const [plants, setPlants] = useState<THREE.Group | null>(null);
+  const invalidate = useThree(s => s.invalidate);
+  useEffect(() => {
+    let live = true,
+      got: THREE.Group | null = null;
+    void plantGroup(built?.parts ?? []).then(g => {
+      got = g;
+      if (live) {
+        setPlants(g);
+        invalidate();
+      } else disposePlants(g);
+    });
+    return () => {
+      live = false;
+      disposePlants(got);
+    };
+  }, [built]);
+  return { parts, plants };
 }
+type LookGeometry = { parts: [RecipeMaterial, THREE.BufferGeometry][]; plants: THREE.Group | null };
 
-/** A look's meshes, one per material in its library's finish; glass lets light through: see-through, no shadow */
-function LookMeshes({ parts, id, recipe }: { parts: [RecipeMaterial, THREE.BufferGeometry][]; id: string; recipe: Recipe | null }) {
+/** A look's meshes, one per material in its library's finish (glass lets light through: see-through, no shadow), and its plants */
+function LookMeshes({ look, id, recipe }: { look: LookGeometry; id: string; recipe: Recipe | null }) {
   const design = useEditor(s => s.project.library.materials);
-  return parts.map(([mat, g]) => <LookPart key={mat} g={g} id={id} material={materialOf(mat, recipe, design)} />);
+  useEffect(() => look.plants?.traverse(o => void (o.userData.id = id)), [look.plants, id]);
+  return (
+    <>
+      {look.parts.map(([mat, g]) => (
+        <LookPart key={mat} g={g} id={id} material={materialOf(mat, recipe, design)} />
+      ))}
+      {look.plants && <primitive object={look.plants} />}
+    </>
+  );
 }
 
 /** One material of a look: its texture set laid on the part's box-projected coordinates (see partsGeometry) */

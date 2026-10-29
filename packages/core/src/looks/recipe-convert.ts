@@ -88,6 +88,9 @@ function part(p: RecipePart, indent: string): string {
       return `${emit(parseExpr(String(p.when)), 1)} ? ${list(p.parts)} : ${p.else ? list(p.else) : '[]'}`;
     case 'base':
       return `$base(${JSON.stringify(p.mats)})`;
+    case 'plant':
+      s = `$plant(${args(str(p.plant), v(p.at), e(p.h), p.rot !== undefined || p.spread ? e(p.rot ?? 0) : undefined, p.spread && v(p.spread))})`;
+      break;
     case 'box':
       s = `$box(${args(v(p.size), v(p.at), str(p.mat), p.r !== undefined || p.rot ? e(p.r ?? 0) : undefined, p.rot && v(p.rot))})`;
       break;

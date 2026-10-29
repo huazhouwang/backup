@@ -15,6 +15,7 @@ import {
   pointAt,
   type ElementPlan,
   type Furniture,
+  type PlanSymbol,
   type Opening,
   type Point,
   type Polygon,
@@ -50,7 +51,7 @@ export interface LevelShapes {
   walls: { w: Wall; d: string }[];
   openings: OpeningShape[];
   /** Each piece's footprint and, when it has a look, its plan symbol: outlines seen from above (lowest first) and lines */
-  furniture: { f: Furniture; d: string; symbol?: { items: { d: string; fill: boolean }[]; lines: string } }[];
+  furniture: { f: Furniture; d: string; symbol?: { items: { d: string; fill: boolean }[]; lines: string; plants?: PlanSymbol['plants'] } }[];
   /** Elements (stairs, ponds, drains) drawn on this level, including stairs seen from the level they arrive at */
   elements: ElementPlan[];
 }
@@ -238,6 +239,7 @@ export function levelShapes(p: Project, level: string): LevelShapes {
             ? {
                 items: sym.items.map(it => ({ d: polyPath([{ outer: it.ring }]), fill: it.fill })),
                 lines: sym.lines.map(l => `M${l.map(q => q.join(' ')).join('L')}`).join(''),
+                plants: sym.plants,
               }
             : undefined,
         };

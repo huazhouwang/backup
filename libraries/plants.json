@@ -1,0 +1,269 @@
+{
+  "$schema": "./plants.schema.json",
+  "format": "opensu-plants",
+  "formatVersion": 1,
+  "plants": {
+    "tree-small": {
+      "name": {
+        "zh": "小乔木",
+        "en": "Small tree"
+      },
+      "kind": "tree",
+      "source": {
+        "polyhaven": "tree_small_02",
+        "node": "all",
+        "url": "https://polyhaven.com/a/tree_small_02",
+        "authors": [
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 2917,
+        "d": 4292,
+        "h": 4557
+      },
+      "views": {
+        "front": "tree-small/front.webp",
+        "side": "tree-small/side.webp",
+        "top": "tree-small/top.webp"
+      }
+    },
+    "tree-island": {
+      "name": {
+        "zh": "多干景观树",
+        "en": "Multi-stem tree"
+      },
+      "kind": "tree",
+      "source": {
+        "polyhaven": "island_tree_02",
+        "node": "all",
+        "url": "https://polyhaven.com/a/island_tree_02",
+        "authors": [
+          "Rob Tuytel",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 4208,
+        "d": 4071,
+        "h": 3407
+      },
+      "views": {
+        "front": "tree-island/front.webp",
+        "side": "tree-island/side.webp",
+        "top": "tree-island/top.webp"
+      }
+    },
+    "tree-searsia": {
+      "name": {
+        "zh": "细叶灌木树",
+        "en": "Fine-leaved small tree"
+      },
+      "kind": "tree",
+      "source": {
+        "polyhaven": "searsia_lucida",
+        "node": 0,
+        "url": "https://polyhaven.com/a/searsia_lucida",
+        "authors": [
+          "James Ray Cock",
+          "Jenelle van Heerden"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 1806,
+        "d": 1966,
+        "h": 2339
+      },
+      "views": {
+        "front": "tree-searsia/front.webp",
+        "side": "tree-searsia/side.webp",
+        "top": "tree-searsia/top.webp"
+      }
+    },
+    "shrub-round": {
+      "name": {
+        "zh": "灌木丛",
+        "en": "Shrub"
+      },
+      "kind": "shrub",
+      "source": {
+        "polyhaven": "searsia_lucida",
+        "node": 2,
+        "url": "https://polyhaven.com/a/searsia_lucida",
+        "authors": [
+          "James Ray Cock",
+          "Jenelle van Heerden"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 1509,
+        "d": 1249,
+        "h": 1680
+      },
+      "views": {
+        "front": "shrub-round/front.webp",
+        "side": "shrub-round/side.webp",
+        "top": "shrub-round/top.webp"
+      }
+    },
+    "shrub-searsia": {
+      "name": {
+        "zh": "小灌木",
+        "en": "Small shrub"
+      },
+      "kind": "shrub",
+      "source": {
+        "polyhaven": "searsia_lucida",
+        "node": 3,
+        "url": "https://polyhaven.com/a/searsia_lucida",
+        "authors": [
+          "James Ray Cock",
+          "Jenelle van Heerden"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 1095,
+        "d": 954,
+        "h": 1424
+      },
+      "views": {
+        "front": "shrub-searsia/front.webp",
+        "side": "shrub-searsia/side.webp",
+        "top": "shrub-searsia/top.webp"
+      }
+    },
+    "fern": {
+      "name": {
+        "zh": "蕨类",
+        "en": "Fern"
+      },
+      "kind": "ground",
+      "source": {
+        "polyhaven": "fern_02",
+        "node": 0,
+        "url": "https://polyhaven.com/a/fern_02",
+        "authors": [
+          "Rob Tuytel",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 990,
+        "d": 894,
+        "h": 428
+      },
+      "views": {
+        "front": "fern/front.webp",
+        "side": "fern/side.webp",
+        "top": "fern/top.webp"
+      }
+    },
+    "grass-tall": {
+      "name": {
+        "zh": "观赏草丛",
+        "en": "Ornamental grass clump"
+      },
+      "kind": "ground",
+      "source": {
+        "polyhaven": "grass_medium_01",
+        "patch": {
+          "nodes": [
+            1,
+            2,
+            7,
+            8,
+            9,
+            10
+          ],
+          "count": 70,
+          "radius": 400
+        },
+        "url": "https://polyhaven.com/a/grass_medium_01",
+        "authors": [
+          "Rob Tuytel",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 1196,
+        "d": 1119,
+        "h": 248
+      },
+      "views": {
+        "front": "grass-tall/front.webp",
+        "side": "grass-tall/side.webp",
+        "top": "grass-tall/top.webp"
+      }
+    },
+    "celandine": {
+      "name": {
+        "zh": "地被花",
+        "en": "Flowering ground cover"
+      },
+      "kind": "ground",
+      "source": {
+        "polyhaven": "celandine_01",
+        "patch": {
+          "nodes": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "count": 36,
+          "radius": 380
+        },
+        "url": "https://polyhaven.com/a/celandine_01",
+        "authors": [
+          "Rob Tuytel",
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 1097,
+        "d": 954,
+        "h": 214
+      },
+      "views": {
+        "front": "celandine/front.webp",
+        "side": "celandine/side.webp",
+        "top": "celandine/top.webp"
+      }
+    },
+    "potted": {
+      "name": {
+        "zh": "盆栽",
+        "en": "Potted plant"
+      },
+      "kind": "potted",
+      "source": {
+        "polyhaven": "potted_plant_01",
+        "node": "all",
+        "url": "https://polyhaven.com/a/potted_plant_01",
+        "authors": [
+          "Rico Cilliers"
+        ],
+        "license": "CC0-1.0"
+      },
+      "size": {
+        "w": 587,
+        "d": 634,
+        "h": 1350
+      },
+      "views": {
+        "front": "potted/front.webp",
+        "side": "potted/side.webp",
+        "top": "potted/top.webp"
+      }
+    }
+  }
+}

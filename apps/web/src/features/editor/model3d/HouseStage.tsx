@@ -1,6 +1,6 @@
 /** What the house stands in, in the 3D view: sky light, the sun, and a ground that only catches shadows (see scene/lighting.ts) */
 import type { Project } from '@opensu/core';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { hops } from '@/canvas/hop';
@@ -19,6 +19,8 @@ import {
   sunSetup,
   type ShadowQuality,
 } from '@/graphics/three/scene';
+import { disposePlants } from '@/graphics/three/plants';
+import { hazeRange, treeLine } from '@/graphics/three/setting';
 
 export function HouseStage({
   project,
@@ -93,6 +95,34 @@ export function HouseStage({
     },
     [ground],
   );
+  // In a landscape (issue 220): a tree line on the horizon, fading into a haze that starts just past the house from wherever the
+  // camera stands. An effect's fog (Effects3D) replaces the haze while it is on
+  const [setting, setSetting] = useState<THREE.Group | null>(null);
+  useEffect(() => {
+    let live = true,
+      got: THREE.Group | null = null;
+    void treeLine(center, radius).then(g => {
+      got = g;
+      if (live) {
+        setSetting(g);
+        invalidate();
+      } else disposePlants(g);
+    });
+    return () => {
+      live = false;
+      disposePlants(got);
+    };
+  }, [center.x, center.z, radius]);
+  const haze = useMemo(() => new THREE.Fog(colors.backdrop, 1, 2), [colors.backdrop]);
+  useEffect(() => {
+    if (!scene.fog) scene.fog = haze;
+    return () => {
+      if (scene.fog === haze) scene.fog = null;
+    };
+  }, [haze]);
+  useFrame(({ camera }) => {
+    [haze.near, haze.far] = hazeRange(camera.position.distanceTo(center), radius);
+  });
   // The house stands on the site's ground, which catches its shadow just below the ground-floor walls and paving
   const groundY = project.site.groundLevel * M - 0.001;
   return (
@@ -102,6 +132,7 @@ export function HouseStage({
       <primitive object={sun} />
       <primitive object={sun.target} />
       <primitive object={ground} position={[cx, groundY, cz]} />
+      {setting && <primitive object={setting} position-y={project.site.groundLevel * M} />}
     </>
   );
 }

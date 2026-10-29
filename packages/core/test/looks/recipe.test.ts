@@ -71,7 +71,11 @@ describe('recipes', () => {
       const r = DEFAULT_LOOKS[`furniture:${type}`],
         s = FURNITURE_TYPES[type].size;
       const sym = builtPlan(await buildRecipe(r, s));
-      expect(sym.items.length, type).toBeGreaterThan(0);
+      expect(sym.items.length + (sym.plants?.length ?? 0), type).toBeGreaterThan(0);
+      for (const q of sym.plants ?? []) {
+        expect(Math.abs(q.at[0]) + q.w / 2, `${type} plant x`).toBeLessThanOrEqual(s.w / 2 + 200);
+        expect(Math.abs(q.at[1]) + q.d / 2, `${type} plant z`).toBeLessThanOrEqual(s.d / 2 + 200);
+      }
       for (const it of sym.items)
         for (const [x, z] of it.ring) {
           expect(Math.abs(x), `${type} x`).toBeLessThanOrEqual(s.w / 2 + 200);

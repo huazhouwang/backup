@@ -11,6 +11,7 @@
 import { z } from 'zod';
 import { evalExpr, type Scope } from './expr.js';
 import type { Point } from '../model/schema.js';
+import { PLANTS, plantSpread } from './plants.js';
 
 /** A material id: one of the default library's, or one the recipe's library or the recipe itself defines (see material.ts) */
 export type RecipeMaterial = string;
@@ -39,7 +40,12 @@ export type RecipePart =
   | (Common & { kind: 'extrude'; plane: 'side' | 'plan'; profile: ProfileItem[]; depth: Expr; bevel?: Expr; at?: V3 })
   | { kind: 'repeat'; count: Expr; as?: string; let?: Record<string, Expr>; parts: RecipePart[] }
   | { kind: 'if'; when: Expr; parts: RecipePart[]; else?: RecipePart[] }
-  | { kind: 'base'; mats: Partial<Record<'structure' | 'water' | 'grate', RecipeMaterial>> };
+  | { kind: 'base'; mats: Partial<Record<'structure' | 'water' | 'grate', RecipeMaterial>> }
+  /**
+   * An image plant of the catalog (plants.ts) standing at `at`, `h` tall, turned `rot` degrees about the vertical; `spread` [w, d]
+   * stretches it to that width and depth, else they follow the plant's proportions
+   */
+  | { kind: 'plant'; plant: string; at: V3; h: Expr; rot?: Expr; spread?: V2; plan?: boolean };
 
 /** A plan symbol drawn by hand instead of from the parts: filled rings and lines, in the local frame (x, z) */
 export type RecipePlanItem = { ring: V2[]; fill?: boolean } | { line: V2[] } | { circle: { at: V2; r: Expr }; fill?: boolean };
@@ -117,6 +123,15 @@ export const recipePartSchema: z.ZodType<RecipePart> = z.lazy(
       }),
       z.object({ kind: z.literal('if'), when: expr, parts: z.array(recipePartSchema).max(200), else: z.array(recipePartSchema).max(200).optional() }),
       z.object({ kind: z.literal('base'), mats: z.object({ structure: mat.optional(), water: mat.optional(), grate: mat.optional() }) }),
+      z.object({
+        kind: z.literal('plant'),
+        plant: z.string().max(64),
+        at: v3,
+        h: expr,
+        rot: expr.optional(),
+        spread: v2.optional(),
+        plan: z.boolean().optional(),
+      }),
     ]) as z.ZodType<RecipePart>,
 );
 const planItem = z.union([
@@ -154,7 +169,8 @@ export type BuiltPart =
   | (BuiltCommon & { kind: 'tube'; points: Vec3[]; r: number })
   | (BuiltCommon & { kind: 'panel'; from: [number, number]; to: [number, number]; y: number; h: number; t: number })
   | (BuiltCommon & { kind: 'extrude'; plane: 'side' | 'plan'; profile: BuiltProfile; depth: number; bevel: number; at: Vec3 })
-  | { kind: 'base'; mats: Partial<Record<'structure' | 'water' | 'grate', RecipeMaterial>> };
+  | { kind: 'base'; mats: Partial<Record<'structure' | 'water' | 'grate', RecipeMaterial>> }
+  | { kind: 'plant'; plant: string; at: Vec3; h: number; rot: number; w: number; d: number; plan: boolean };
 
 export class RecipeError extends Error {}
 
@@ -205,6 +221,15 @@ export function buildParts(recipe: PartRecipe, size: RecipeSize): BuiltPart[] {
           case 'base':
             out.push({ kind: 'base', mats: part.mats });
             return;
+          case 'plant':
+            if (!PLANTS[part.plant]) throw new RecipeError(`unknown plant ${part.plant} (one of ${Object.keys(PLANTS).join(', ')})`);
+            {
+              const h = n(part.h),
+                own = plantSpread(PLANTS[part.plant], h),
+                [w, d] = part.spread ? n2(part.spread) : [own.w, own.d];
+              out.push({ kind: 'plant', plant: part.plant, plan, at: n3(part.at), h, w, d, rot: part.rot === undefined ? 0 : n(part.rot) });
+            }
+            break;
           case 'box':
             out.push({
               kind: 'box',
@@ -312,6 +337,8 @@ function degenerate(p: BuiltPart): string | null {
       return pos(p.depth, 'depth') ?? (p.bevel < 0 ? 'bevel must not be negative' : null);
     case 'lathe':
       return p.profile.some(([r]) => r < 0) ? 'profile radii must not be negative' : null;
+    case 'plant':
+      return pos(p.h, 'h') ?? pos(p.w, 'spread width') ?? pos(p.d, 'spread depth');
     default:
       return null;
   }
@@ -344,6 +371,8 @@ export function checkParts(input: unknown, size: RecipeSize): string[] {
 export interface PlanSymbol {
   items: { ring: Point[]; fill: boolean }[];
   lines: Point[][];
+  /** Image plants seen from above: centred at `at`, w × d mm, turned `rot` degrees (drawn over the outlines) */
+  plants?: { plant: string; at: Point; w: number; d: number; rot: number }[];
 }
 
 const circle = (cx: number, cz: number, rx: number, rz: number, n = 24): Point[] =>
@@ -510,9 +539,14 @@ export function planSymbol(parts: BuiltPart[], plan?: BuiltPlanItem[]): PlanSymb
     return out;
   }
   const items: { ring: Point[]; top: number; fill: boolean }[] = [],
-    lines: Point[][] = [];
+    lines: Point[][] = [],
+    plants: NonNullable<PlanSymbol['plants']> = [];
   for (const p of parts) {
     if (p.kind === 'base' || !p.plan) continue;
+    if (p.kind === 'plant') {
+      plants.push({ plant: p.plant, at: [p.at[0], p.at[2]], w: p.w, d: p.d, rot: p.rot });
+      continue;
+    }
     if (p.kind === 'tube') {
       lines.push(p.points.map(([x, , z]) => [x, z]));
       continue;
@@ -521,7 +555,7 @@ export function planSymbol(parts: BuiltPart[], plan?: BuiltPlanItem[]): PlanSymb
     if (f && f.ring.length >= 3) items.push(f);
   }
   items.sort((a, b) => a.top - b.top);
-  return { items: items.map(({ ring, fill }) => ({ ring, fill })), lines };
+  return { items: items.map(({ ring, fill }) => ({ ring, fill })), lines, ...(plants.length ? { plants } : {}) };
 }
 
 // --- Inspection (for the agent's self-check) ---
@@ -574,6 +608,11 @@ export function partBounds(p: BuiltPart): [Vec3, Vec3] | null {
     case 'tube':
       for (const q of p.points) pad(q, [p.r, p.r, p.r]);
       break;
+    case 'plant': {
+      const r = Math.hypot(p.w, p.d) / 2;
+      pts.push([p.at[0] - r, p.at[1], p.at[2] - r], [p.at[0] + r, p.at[1] + p.h, p.at[2] + r]);
+      break;
+    }
     case 'panel':
       pts.push(
         [Math.min(p.from[0], p.to[0]) - p.t / 2, p.y, Math.min(p.from[1], p.to[1]) - p.t / 2],
