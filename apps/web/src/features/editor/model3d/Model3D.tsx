@@ -80,6 +80,7 @@ const useColors = () =>
       grate: '--muted-foreground',
       page: '--canvas-backdrop',
       sky: '--canvas-sky',
+      skyLight: '--canvas-sky-light',
       ground: '--canvas-ground',
       edge: '--canvas-edge',
       shadow: '--canvas-shadow',
@@ -332,7 +333,16 @@ export function Model3D() {
             {current && <Effects3D project={project} current={current.id} />}
             <Reveal ownerOf={ownerOf} />
             {/* Sections read as drawings: with edges */}
-            {quality && <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} quality={q} />}
+            {quality && (
+              <Renderer
+                draw={draw}
+                edges={style.edges || !!camera3d.section}
+                edgeStrength={camera3d.walking ? 0.3 : 1}
+                edgeColor={c.edge}
+                growth={growth}
+                quality={q}
+              />
+            )}
             {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
             {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
             <Wake on={[view.selection, view.highlight]} />

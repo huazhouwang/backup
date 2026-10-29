@@ -22,6 +22,8 @@ export interface SurfaceMaps {
   tint: THREE.Color;
 }
 
+const NORMAL_SCALE = new THREE.Vector2(0.6, 0.6);
+
 const images = new Map<string, Promise<THREE.Texture>>();
 /** An image of the catalog, loaded once (`color`: in sRGB; the other maps are data) */
 function image(path: string, color: boolean) {
@@ -95,6 +97,8 @@ export function useSurfaceMaps(m: Material | undefined) {
 export const mapProps = (s: SurfaceMaps) => ({
   map: s.map,
   normalMap: s.normalMap ?? null,
+  // Relief held back: a presentation's surfaces read calm, not gritty (issue 213)
+  normalScale: NORMAL_SCALE,
   roughnessMap: s.arm ?? null,
   aoMap: s.arm ?? null,
 });

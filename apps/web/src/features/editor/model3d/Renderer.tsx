@@ -41,12 +41,15 @@ export function detectQuality(win: Window, gl: WebGLRenderingContext | WebGL2Ren
 export function Renderer({
   draw,
   edges: withEdges,
+  edgeStrength = 1,
   edgeColor,
   growth,
   quality,
 }: {
   draw: React.RefObject<(() => void) | null>;
   edges: boolean;
+  /** How strongly the edges are drawn (faint while walking through) */
+  edgeStrength?: number;
   edgeColor: string;
   growth: React.RefObject<{ g: number }>;
   quality: Quality;
@@ -66,7 +69,7 @@ export function Renderer({
 
   const render = () => {
     if (edges) {
-      edges.uniforms.strength.value = THREE.MathUtils.smoothstep(growth.current.g, 0.2, 0.7);
+      edges.uniforms.strength.value = edgeStrength * THREE.MathUtils.smoothstep(growth.current.g, 0.2, 0.7);
       // About a CSS pixel wide: the thin profiles of a presentation (issue 213)
       edges.uniforms.profile.value = 1 * gl.getPixelRatio();
     }
