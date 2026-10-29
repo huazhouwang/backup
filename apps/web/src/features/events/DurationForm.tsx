@@ -1,3 +1,4 @@
+import { Menu } from '@base-ui/react/menu'
 import {
   type BreastSide,
   type Event,
@@ -7,13 +8,17 @@ import {
   isRunning,
   recordKind,
 } from '@lullabo/shared'
-import { Button } from '@lullabo/ui/button'
+import { Button, type ButtonTone } from '@lullabo/ui/button'
 import { FormError } from '@lullabo/ui/form-error'
 import { Input } from '@lullabo/ui/input'
 import { SegmentedControl } from '@lullabo/ui/segmented-control'
+import { cn } from '@lullabo/ui/utils'
 import { type FormEvent, type ReactNode, useReducer, useState } from 'react'
 
+import { CheckIcon } from '../../components/icons/CheckIcon'
+import { Chevron } from '../../components/icons/Chevron'
 import { useLocalStore } from '../../db'
+import { createStoredValue, jsonCodec, useStore } from '../../lib/store'
 import { quantityInputProps, unitLabel } from '../../lib/units'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
@@ -79,6 +84,8 @@ export function DurationForm({
   // The side a breastfeed starts on, timed or logged afterwards.
   const breastSide = times.firstSide
   const [errors, setErrors] = useState<Errors>({})
+  /** Starting the timer that far back runs into a sleep already logged. */
+  const [startError, setStartError] = useState<string | null>(null)
 
   const running = runningOf(events, kind)
 
@@ -120,20 +127,28 @@ export function DurationForm({
   const eventsOf = (babyId: string) =>
     babyId === babyIds[0] ? events : (eventsByBaby.get(babyId) ?? [])
 
-  function startNow() {
+  /** Starts the timer now, or `ago` minutes back when it began before anyone tapped. */
+  function startTimer(ago = 0) {
     const record = details(false)
     if (!('kind' in record)) {
       setErrors(record)
       return
     }
     const current = Date.now()
+    const from = current - ago * MINUTE
+    // This baby's own sleep in the way says so; a baby logged together that is busy (its
+    // timer already running, or a sleep in the way) keeps what it has.
+    const own = kind === 'sleep' ? clashingSleep(events, from, current + 1, current) : undefined
+    if (own) {
+      setStartError(sleepOverlapMessage(own, current))
+      return
+    }
     for (const babyId of babyIds) {
       const theirs = eventsOf(babyId)
-      // A baby logged together that already has this timer running keeps it.
       const busy =
         runningOf(theirs, kind) ||
-        (kind === 'sleep' && overlapsSleep(theirs, current, current + 1, current))
-      if (!busy) addEvent(store, startRecord(babyId, record, current))
+        (kind === 'sleep' && overlapsSleep(theirs, from, current + 1, current))
+      if (!busy) addEvent(store, startRecord(babyId, record, from, current))
     }
     onDone()
   }
@@ -202,9 +217,10 @@ export function DurationForm({
       {running ? (
         <p className="m-0 text-muted-foreground">{m.durationAlreadyRunning()}</p>
       ) : (
-        <Button tone={durationTone(kind)} size="lg" block className="min-h-16" onClick={startNow}>
-          {kind === 'sleep' ? m.sleepStartNow() : m.durationStartTimer()}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <StartButton kind={kind} onStart={startTimer} />
+          {startError && <FormError>{startError}</FormError>}
+        </div>
       )}
 
       <form
@@ -235,5 +251,84 @@ export function DurationForm({
         </Button>
       </form>
     </div>
+  )
+}
+
+/** How long ago a timer can be said to have started, in minutes, beside starting it now. */
+const STARTED_AGO = [5, 10, 15, 30] as const
+type StartedAgo = (typeof STARTED_AGO)[number]
+const isStartedAgo = (value: unknown): value is StartedAgo =>
+  STARTED_AGO.some((ago) => ago === value)
+
+/** The tick's colour on the last choice, by the timer's tone. */
+const TONE_TEXT: Partial<Record<ButtonTone, string>> = {
+  feeding: 'text-feeding-text',
+  sleep: 'text-sleep-text',
+  pumping: 'text-pumping-text',
+}
+
+/** The "minutes ago" last chosen on this device, shown first next time. */
+const lastStartedAgo = createStoredValue<StartedAgo>(
+  'lullabo.startedAgo',
+  jsonCodec((value) => (isStartedAgo(value) ? value : STARTED_AGO[0])),
+  STARTED_AGO[0],
+)
+
+/**
+ * Starting the timer: now, the big part, or a few minutes back, on its right, all one button,
+ * for when the feed or nap began before anyone could tap. Only the minutes last chosen show;
+ * a tap opens every choice in a menu below it, and a choice starts the timer.
+ */
+function StartButton({ kind, onStart }: { kind: DurationKind; onStart: (ago?: number) => void }) {
+  const tone = durationTone(kind)
+  const recent = useStore(lastStartedAgo)
+  return (
+    <fieldset aria-label={m.durationStartTimer()} className="m-0 flex min-w-0 border-0 p-0">
+      <Button
+        tone={tone}
+        size="lg"
+        className="min-h-16 flex-1 rounded-r-none px-3"
+        onClick={() => onStart()}
+      >
+        {kind === 'sleep' ? m.sleepStartNow() : m.durationStartTimer()}
+      </Button>
+      <Menu.Root>
+        <Menu.Trigger
+          aria-label={m.durationStartEarlier({ minutes: recent })}
+          render={
+            <Button
+              tone={tone}
+              className="min-h-16 w-20 gap-1 rounded-l-none border-l-2 border-l-black/15 px-0 leading-none"
+            />
+          }
+        >
+          <span className="flex flex-col items-center">
+            <span className="text-label tabular-nums">{recent}</span>
+            <span className="text-caption font-bold opacity-90">{m.durationMinutesAgo()}</span>
+          </span>
+          <Chevron direction="down" className="size-3.5" />
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner side="bottom" align="end" sideOffset={6} className="z-(--layer-popover)">
+            <Menu.Popup className="flex min-w-36 flex-col rounded-lg border-2 border-b-4 border-border bg-background p-1.5 outline-none">
+              {STARTED_AGO.map((ago) => (
+                <Menu.Item
+                  key={ago}
+                  aria-label={m.durationStartedAgo({ minutes: ago })}
+                  onClick={() => {
+                    lastStartedAgo.set(ago)
+                    onStart(ago)
+                  }}
+                  className="flex min-h-touch cursor-pointer items-center justify-between gap-3 rounded-md px-3 font-extrabold outline-none select-none data-[highlighted]:bg-muted"
+                >
+                  {m.timeMinutesAgo({ minutes: ago })}
+                  {ago === recent && <CheckIcon className={cn('size-5', TONE_TEXT[tone])} />}
+                </Menu.Item>
+              ))}
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    </fieldset>
   )
 }

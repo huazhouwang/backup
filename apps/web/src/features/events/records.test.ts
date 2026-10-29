@@ -39,6 +39,17 @@ describe('duration records', () => {
     }
   })
 
+  it('start a timer a few minutes back, recorded as made now', () => {
+    const record = startRecord(BABY, { kind: 'breast', side: 'left' }, T0 - 10 * MINUTE, T0)
+    expect(record.startAt).toBe(T0 - 10 * MINUTE)
+    expect(record.type === 'feeding' && record.data).toEqual({
+      kind: 'breast',
+      segments: [{ side: 'left', startAt: T0 - 10 * MINUTE, endAt: null }],
+    })
+    // Sync orders changes by when they were made, not when the feed began.
+    expect(record).toMatchObject({ createdAt: T0, updatedAt: T0 })
+  })
+
   it('log a breastfeed afterwards with minutes per side, the first side first', () => {
     const sides = { left: 6 * MINUTE, right: 10 * MINUTE }
     const record = logRecord(

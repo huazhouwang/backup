@@ -9,6 +9,7 @@ import { cn } from '@lullabo/ui/utils'
 import { AnimatePresence, m as motion } from 'motion/react'
 import { type FormEvent, useState } from 'react'
 
+import { EditIcon } from '../../components/icons/EditIcon'
 import { useLocalStore } from '../../db'
 import { formatTime } from '../../lib/i18n'
 import { quantityInputProps, unitLabel } from '../../lib/units'
@@ -16,6 +17,7 @@ import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
 import { saveEvent } from './actions'
+import { EditEventSheet } from './EditEventSheet'
 import { EventIcon, eventIconProps } from './EventIcon'
 import { parseVolume } from './fields/measure-input'
 import { type DurationKind, DURATION_LOOK, durationTone, isDurationKind } from './kinds'
@@ -105,10 +107,12 @@ function TimerCard({
   event,
   now,
   onFinishPumping,
+  onEdit,
 }: {
   event: Event
   now: number
   onFinishPumping: (event: Extract<Event, { type: 'pumping' }>) => void
+  onEdit: (event: Event) => void
 }) {
   const store = useLocalStore()
   const canEdit = useAccess().canEditEvent(event)
@@ -140,9 +144,21 @@ function TimerCard({
           <span className={cn('truncate font-extrabold', TITLE_TONE[kind])}>
             {title(event, kind)}
           </span>
-          <span className="text-caption text-muted-foreground">
-            {m.timerStartedAt({ time: formatTime(event.startAt) })}
-          </span>
+          {/* Started earlier than tapped: the start time is put right from here. */}
+          {canEdit ? (
+            <button
+              type="button"
+              onClick={() => onEdit(event)}
+              className="flex items-center gap-1 self-start text-caption font-bold text-muted-foreground"
+            >
+              {m.timerStartedAt({ time: formatTime(event.startAt) })}
+              <EditIcon className="size-3.5" />
+            </button>
+          ) : (
+            <span className="text-caption text-muted-foreground">
+              {m.timerStartedAt({ time: formatTime(event.startAt) })}
+            </span>
+          )}
         </div>
         <span className="text-display font-extrabold tabular-nums" role="timer">
           {formatClock(now - event.startAt)}
@@ -191,6 +207,7 @@ export function RunningTimers({ events }: { events: readonly Event[] }) {
   const running = events.filter(isRunning)
   const now = useNow(1000, running.length > 0)
   const [finishing, setFinishing] = useState<Extract<Event, { type: 'pumping' }> | null>(null)
+  const [editing, setEditing] = useState<string | null>(null)
 
   // Each card carries its own spacing (cancelled by the list's negative margin), so a card
   // growing in or shrinking away moves the page smoothly; the empty list takes no room.
@@ -200,12 +217,18 @@ export function RunningTimers({ events }: { events: readonly Event[] }) {
         <AnimatePresence initial={false}>
           {running.map((event) => (
             <motion.div key={event.id} {...growInOut(TIMER_GAP)} className="overflow-hidden">
-              <TimerCard event={event} now={now} onFinishPumping={setFinishing} />
+              <TimerCard
+                event={event}
+                now={now}
+                onFinishPumping={setFinishing}
+                onEdit={(e) => setEditing(e.id)}
+              />
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
       <FinishPumping event={finishing} onClose={() => setFinishing(null)} />
+      <EditEventSheet eventId={editing} events={events} onClose={() => setEditing(null)} />
     </>
   )
 }

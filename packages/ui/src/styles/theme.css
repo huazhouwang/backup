@@ -27,6 +27,8 @@
   --radius: 16px;
   /* Sheets cover everything, toasts included, as a modal dialog's top layer did. */
   --layer-sheet: 1000000000;
+  /* Menus open from inside a sheet, so they stand above it. */
+  --layer-popover: 1000000001;
 
   --primary: #4152b8;
   --primary-edge: #2e3c8f;

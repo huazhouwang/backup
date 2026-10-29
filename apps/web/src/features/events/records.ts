@@ -122,9 +122,13 @@ export function setBreastSides(
   }
 }
 
-/** Starts a timer now. */
-export const startRecord = (babyId: string, details: DurationDetails, now: number): Event =>
-  durationRecord(babyId, details, now, null, now)
+/** Starts a timer at `startAt`: now, or a little earlier when it began before anyone tapped. */
+export const startRecord = (
+  babyId: string,
+  details: DurationDetails,
+  startAt: number,
+  now: number = startAt,
+): Event => durationRecord(babyId, details, startAt, null, now)
 
 /** A duration record logged afterwards, with when it started and ended. */
 export const logRecord = (
