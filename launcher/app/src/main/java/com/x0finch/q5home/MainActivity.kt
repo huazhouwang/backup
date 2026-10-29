@@ -209,10 +209,20 @@ class MainActivity : Activity() {
         overlay.dismiss()
     }
 
-    /** 开机后第一次显示桌面时，按设置自动打开 CarPlay。 */
+    /**
+     * 开机后第一次显示桌面时，按设置自动打开 CarPlay。每次开机只做一次：记下系统的开机次数，
+     * 桌面因为崩溃、更新而重启时不会再自动打开（只记在内存里的话，进程一重启就会忘）。
+     */
     private fun maybeAutoStartCarPlay() {
-        if (bootHandled) return
-        bootHandled = true
+        val boot = Settings.Global.getInt(contentResolver, Settings.Global.BOOT_COUNT, -1)
+        val prefs = getSharedPreferences("session", MODE_PRIVATE)
+        if (boot >= 0) {
+            if (prefs.getInt(KEY_AUTO_BOOT, -1) == boot) return
+            prefs.edit().putInt(KEY_AUTO_BOOT, boot).apply()
+        } else {
+            if (bootHandled) return // 读不到开机次数的系统：退回按进程记
+            bootHandled = true
+        }
         if (!config.autoCarplay || SystemClock.elapsedRealtime() > 5 * 60_000) return
         handler.postDelayed({ Targets.launch(this, config.carplay) }, 2500)
     }
@@ -509,8 +519,9 @@ class MainActivity : Activity() {
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
     companion object {
-        /** 进程级：只在开机后第一次创建桌面时自动打开 CarPlay。 */
+        /** 读不到开机次数时的后备：进程级记录。 */
         private var bootHandled = false
+        private const val KEY_AUTO_BOOT = "auto_carplay_boot"
 
         private const val REQ_CARPLAY = 1
         private const val REQ_OEM = 2
