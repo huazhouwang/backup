@@ -1,7 +1,6 @@
 package com.x0finch.q5home
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -25,7 +24,9 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
+import com.x0finch.q5home.ui.MenuItem
+import com.x0finch.q5home.ui.Menus
+import com.x0finch.q5home.ui.Overlay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -65,7 +66,7 @@ class MainActivity : Activity() {
     private var tileHeight = 0
     private var ambientColor = 0
     private var shownWallpaper: String? = null
-    private var dialog: AlertDialog? = null
+    private lateinit var overlay: Overlay
 
     private val timeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -96,13 +97,16 @@ class MainActivity : Activity() {
         greeting = findViewById(R.id.greeting)
         date = findViewById(R.id.date)
 
+        overlay = Overlay(root as FrameLayout)
         config = Config(this)
         config.reload()?.let { toast("config.json 有误：$it") }
 
         findViewById<View>(R.id.pillApps).setOnClickListener {
             startActivity(Intent(this, LibraryActivity::class.java))
         }
-        findViewById<View>(R.id.pillSettings).setOnClickListener { showSettings() }
+        findViewById<View>(R.id.pillSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
 
         // 磁贴大小跟着安卓区域的高度走：车机分辨率和 WY 侧栏占位还没摸清，先做成自适应。
         root.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
@@ -151,13 +155,14 @@ class MainActivity : Activity() {
     /** 已经在桌面时再按 HOME：回到最左边，关掉弹窗。 */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        dialog?.dismiss()
+        overlay.dismiss(animate = false)
         tileScroll.smoothScrollTo(0, 0)
     }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        // 桌面上按返回不做任何事。
+        // 桌面上按返回只关闭弹出的卡片，不做别的。
+        overlay.dismiss()
     }
 
     /** 开机后第一次显示桌面时，按设置自动打开 CarPlay。 */
@@ -315,7 +320,7 @@ class MainActivity : Activity() {
         }
 
         card.setOnClickListener { onTileClick(tile, available) }
-        card.setOnLongClickListener { onTileLongClick(tile); true }
+        card.setOnLongClickListener { v -> onTileLongClick(tile, v); true }
         card.setOnFocusChangeListener { v, focused ->
             v.animate().scaleX(if (focused) 1.05f else 1f).scaleY(if (focused) 1.05f else 1f)
                 .setDuration(150).start()
@@ -363,32 +368,31 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun onTileLongClick(tile: Tile) {
+    private fun onTileLongClick(tile: Tile, view: View) {
         if (tile.slot == Slot.ADD) { pick(REQ_ADD); return }
-        val actions = mutableListOf<Pair<String, () -> Unit>>()
-        actions += "更换应用…" to { pick(requestCodeFor(tile)) }
+        val items = mutableListOf(MenuItem("更换应用", R.drawable.ui_swap) { pick(requestCodeFor(tile)) })
         if (tile.slot == Slot.DOCK) {
-            actions += "更换图标…" to { pickIcon(tile.index) }
-            if (tile.index > 0) actions += "向左移" to { config.moveInDock(tile.index, -1); rebuild() }
-            if (tile.index < config.dock.size - 1) actions += "向右移" to { config.moveInDock(tile.index, 1); rebuild() }
-            actions += "从桌面移除" to { config.removeFromDock(tile.index); rebuild() }
+            items += MenuItem("更换图标", R.drawable.ui_palette) { pickIcon(tile) }
+            if (tile.index > 0) items += MenuItem("向左移", R.drawable.ui_left) { config.moveInDock(tile.index, -1); rebuild() }
+            if (tile.index < config.dock.size - 1) {
+                items += MenuItem("向右移", R.drawable.ui_right) { config.moveInDock(tile.index, 1); rebuild() }
+            }
         }
-        Targets.packageOf(tile.spec)?.let { pkg -> actions += "应用信息" to { openAppInfo(pkg) } }
-        dialog = AlertDialog.Builder(this)
-            .setTitle(tile.title)
-            .setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }
-            .show()
+        Targets.packageOf(tile.spec)?.let { pkg -> items += MenuItem("应用信息", R.drawable.ui_info) { openAppInfo(pkg) } }
+        if (tile.slot == Slot.DOCK) {
+            items += MenuItem("从桌面移除", R.drawable.ui_delete, danger = true) {
+                config.removeFromDock(tile.index); rebuild()
+                overlay.snackbar("已移除「${tile.title}」")
+            }
+        }
+        Menus.menu(overlay, this, tile.title, items, anchor = view, titleIcon = iconFor(tile))
     }
 
-    private fun pickIcon(index: Int) {
-        val names = Icons.ALL.map { it.name } + "应用自带图标"
-        dialog = AlertDialog.Builder(this)
-            .setTitle("更换图标")
-            .setItems(names.toTypedArray()) { _, which ->
-                config.setIcon(index, Icons.ALL.getOrNull(which)?.key)
-                rebuild()
-            }
-            .show()
+    private fun pickIcon(tile: Tile) {
+        Menus.iconPicker(overlay, this, tile.icon?.key, Targets.icon(this, tile.spec)) { key ->
+            config.setIcon(tile.index, key)
+            rebuild()
+        }
     }
 
     private fun requestCodeFor(tile: Tile) = when (tile.slot) {
@@ -420,93 +424,6 @@ class MainActivity : Activity() {
         rebuild()
     }
 
-    // ---- 设置 ----
-
-    private fun showSettings() {
-        val actions = listOf<Pair<String, () -> Unit>>(
-            "壁纸：${Wallpapers.label(this, config.wallpaper)}" to { pickWallpaper() },
-            "在线壁纸：${if (config.onlineWallpapers) "开（仅 Wi-Fi，每天一次）" else "关"}" to { toggleOnline() },
-            "立即更新在线壁纸" to {
-                if (!config.onlineWallpapers) config.setOnlineWallpapers(true)
-                WallpaperJob.schedule(this)
-                WallpaperJob.runSoon(this)
-                toast("连上 Wi-Fi 后会在后台下载，完成后回到桌面即可看到")
-            },
-            "清除在线壁纸（占用 ${onlineUsage()}）" to { confirmClearOnline() },
-            "开机自动进入 CarPlay：${if (config.autoCarplay) "开" else "关"}" to {
-                config.setAutoCarplay(!config.autoCarplay)
-                toast("开机自动进入 CarPlay 已${if (config.autoCarplay) "打开" else "关闭"}")
-            },
-            "系统设置" to { launchOrToast(Intent(Settings.ACTION_SETTINGS)) },
-            "恢复默认布局" to { confirmReset() },
-            "配置文件说明" to { showConfigHelp() },
-        )
-        dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.settings)
-            .setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }
-            .show()
-    }
-
-    private fun pickWallpaper() {
-        val all = Wallpapers.available(this)
-        val keys = listOf(Wallpapers.DAILY) + all.map { it.key } + Wallpapers.NONE
-        val labels = listOf("每日轮换") + all.map { it.name } + "纯黑"
-        dialog = AlertDialog.Builder(this)
-            .setTitle("壁纸")
-            .setSingleChoiceItems(labels.toTypedArray(), keys.indexOf(config.wallpaper)) { d, which ->
-                config.setWallpaper(keys[which])
-                updateWallpaper()
-                d.dismiss()
-            }
-            .show()
-    }
-
-    private fun toggleOnline() {
-        val on = !config.onlineWallpapers
-        config.setOnlineWallpapers(on)
-        if (on) WallpaperJob.schedule(this) else WallpaperJob.cancel(this)
-        toast(if (on) "已打开：连上 Wi-Fi 时每天最多下载 ${OnlineWallpapers.PER_RUN} 张" else "已关闭在线壁纸更新")
-    }
-
-    private fun onlineUsage(): String {
-        val bytes = OnlineWallpapers(this).dir.listFiles()?.sumOf { it.length() } ?: 0L
-        return String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
-    }
-
-    private fun confirmClearOnline() {
-        dialog = AlertDialog.Builder(this)
-            .setMessage("删除已下载的在线壁纸？内置壁纸不受影响。")
-            .setPositiveButton("删除") { _, _ ->
-                OnlineWallpapers(this).clear()
-                shownWallpaper = null
-                updateWallpaper()
-            }
-            .setNegativeButton("取消", null)
-            .show()
-    }
-
-    private fun confirmReset() {
-        dialog = AlertDialog.Builder(this)
-            .setMessage("清空手动设置的 CarPlay、原车入口、常用应用和壁纸？")
-            .setPositiveButton("恢复") { _, _ -> config.reset(); shownWallpaper = null; updateWallpaper(); rebuild() }
-            .setNegativeButton("取消", null)
-            .show()
-    }
-
-    private fun showConfigHelp() {
-        val dir = getExternalFilesDir(null)?.absolutePath ?: "(不可用)"
-        dialog = AlertDialog.Builder(this)
-            .setTitle("配置文件")
-            .setMessage(
-                "用电脑通过 adb 推送配置：\n$dir/${Config.FILE}\n\n" +
-                    "当前生效的配置：\n$dir/${Config.CURRENT_FILE}\n\n" +
-                    "当前 CarPlay：${config.carplay ?: "未设置"}\n当前原车：${config.oem ?: "未设置"}\n\n" +
-                    "壁纸来自 Unsplash，详见项目 CREDITS.md。"
-            )
-            .setPositiveButton(R.string.close, null)
-            .show()
-    }
-
     private fun openAppInfo(pkg: String) {
         launchOrToast(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null)))
     }
@@ -519,7 +436,7 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    private fun toast(msg: String) = overlay.snackbar(msg)
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 

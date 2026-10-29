@@ -5,7 +5,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.content.Intent
 import android.os.Looper
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,5 +58,67 @@ class ScreenshotTest {
         RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
         FakeApps.installCar(context)
         shoot(Robolectric.buildActivity(LibraryActivity::class.java).setup().get(), "library")
+    }
+
+    /** 在 View 树里找显示某段文字的 View（取最后一个，和 CI 的点击逻辑一致）。 */
+    private fun findText(root: View, text: String): View? {
+        var hit: View? = null
+        fun walk(v: View) {
+            if (v is TextView && v.text?.toString() == text) hit = v
+            if (v is ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+        }
+        walk(root)
+        return hit
+    }
+
+    /** 找到文字所在的可点击父 View（磁贴、行）。 */
+    private fun clickableParent(v: View): View {
+        var cur: View = v
+        while (!cur.isClickable && cur.parent is View) cur = cur.parent as View
+        return cur
+    }
+
+    private fun homeActivity(): MainActivity {
+        RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
+        FakeApps.installCar(context)
+        Config(context).setWallpaper("stars")
+        return Robolectric.buildActivity(MainActivity::class.java).setup().get()
+    }
+
+    @Test
+    fun tileMenuAndIconPicker() {
+        val home = homeActivity()
+        shadowOf(Looper.getMainLooper()).idle()
+        clickableParent(findText(home.window.decorView, "设置")!!).performLongClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        shoot(home, "ui-tile-menu")
+        clickableParent(findText(home.window.decorView, "更换图标")!!).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        shoot(home, "ui-icon-picker")
+    }
+
+    private fun settings(section: String, name: String) {
+        RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
+        FakeApps.installCar(context)
+        Config(context).setWallpaper("city")
+        val intent = Intent(context, SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_SECTION, section)
+        shoot(Robolectric.buildActivity(SettingsActivity::class.java, intent).setup().get(), name)
+    }
+
+    @Test fun settingsWallpaper() = settings(SettingsActivity.SECTION_WALLPAPER, "ui-settings-wallpaper")
+    @Test fun settingsCarPlay() = settings(SettingsActivity.SECTION_CARPLAY, "ui-settings-carplay")
+    @Test fun settingsAdvanced() = settings(SettingsActivity.SECTION_ADVANCED, "ui-settings-advanced")
+
+    @Test
+    fun confirmCard() {
+        RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
+        FakeApps.installCar(context)
+        val intent = Intent(context, SettingsActivity::class.java)
+            .putExtra(SettingsActivity.EXTRA_SECTION, SettingsActivity.SECTION_ADVANCED)
+        val activity = Robolectric.buildActivity(SettingsActivity::class.java, intent).setup().get()
+        shadowOf(Looper.getMainLooper()).idle()
+        clickableParent(findText(activity.window.decorView, "恢复默认布局")!!).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        shoot(activity, "ui-confirm")
     }
 }

@@ -52,7 +52,10 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
   - 壁纸在 `res/drawable-nodpi/wall_*.webp`，来源记在 `CREDITS.md`，新增壁纸要同步更新。
   - 在线壁纸：`OnlineWallpapers.kt` + `WallpaperJob.kt`（仅 Wi-Fi、每天一次）；存储上限 8 张 / 6 MB，
     剩余空间 < 300 MB 不下载。改动时不要放宽这些上限，除非用户同意。清单在仓库根目录 `wallpapers/feed.json`。
+  - 界面组件在 `ui/`（`Ui` 风格常量、`Overlay` 弹出层、`Menus` 菜单/确认/图标网格、`Toggle` 开关），
+    设置是整页 `SettingsActivity`。不要再用系统 AlertDialog / Toast。
   - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。
   - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。
-- `ci/demo.py`：CI 模拟器演示脚本（截图 + 录屏），由 `.github/workflows/launcher.yml` 调用。
+- `ci/demo.py`：CI 模拟器演示脚本（显示触点 + 中文步骤字幕 + 截图标点击位置），由 `.github/workflows/launcher.yml` 调用；
+  改了界面文字要同步改这里按文字查找的步骤。
 - 后续计划：`tools/disable.sh` / `tools/restore.sh`、`examples/wy20/debloat.txt`。结构参考 CleanYourTV（MIT）。

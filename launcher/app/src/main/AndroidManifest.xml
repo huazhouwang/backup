@@ -36,6 +36,12 @@
         </activity>
 
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|density|uiMode" />
+
+        <activity
             android:name=".LibraryActivity"
             android:exported="false"
             android:excludeFromRecents="true"

@@ -63,6 +63,13 @@ jobs:
           name: fakeapps-apk
           path: fakeapps
 
+      # Pillow 和中文字体：截图上标点击位置；ffmpeg：把字幕压进视频。
+      - name: Install Pillow, ffmpeg, CJK font
+        run: |
+          pip install --quiet pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-cjk > /dev/null
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -78,6 +85,15 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1920x720
           script: python3 ci/demo.py --launcher apk/app-release.apk --fake fakeapps/zlink/release/fakeapps-zlink-release.apk --fake fakeapps/oem/release/fakeapps-oem-release.apk --out demo-out
+
+      # 把每一步的中文字幕压进视频（显示在顶部中间），原始录屏另存为 demo-raw.mp4。
+      - name: Burn captions into video
+        if: always()
+        run: |
+          if [ ! -f demo-out/demo-raw.mp4 ] || [ ! -f demo-out/captions.srt ]; then exit 0; fi
+          ffmpeg -loglevel error -y -i demo-out/demo-raw.mp4 \
+            -vf "subtitles=demo-out/captions.srt:original_size=1920x720:force_style='FontName=Noto Sans CJK SC,FontSize=30,PrimaryColour=&H00FFFFFF,OutlineColour=&H66000000,BorderStyle=3,Outline=10,Shadow=0,Alignment=6,MarginV=20'" \
+            -c:v libx264 -preset veryfast -crf 26 -pix_fmt yuv420p demo-out/demo.mp4
 
       - uses: actions/upload-artifact@v4
         if: always()
