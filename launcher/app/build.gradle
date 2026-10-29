@@ -1,0 +1,36 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.x0finch.q5home'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.x0finch.q5home'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 只通过 adb 侧载，不上架：用 debug 签名，方便覆盖安装。
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}

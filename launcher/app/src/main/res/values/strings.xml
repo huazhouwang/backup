@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Q5 Home</string>
+    <string name="apps">应用</string>
+    <string name="settings">设置</string>
+    <string name="date_format">M月d日 EEEE</string>
+    <string name="carplay">CarPlay</string>
+    <string name="oem">原车</string>
+    <string name="oem_sub">MMI 原车画面</string>
+    <string name="add">添加</string>
+    <string name="not_set">长按选择应用</string>
+    <string name="all_apps">全部应用</string>
+    <string name="pick_app">选择应用</string>
+    <string name="close">关闭</string>
+</resources>
