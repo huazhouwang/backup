@@ -35,7 +35,7 @@
     },
     "oatmeal": {
       "name": {"zh": "燕麦色亚麻", "en": "Oatmeal linen"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.6584, 0.5647, 0.4179, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.7605, 0.6724, 0.5333, 1], "metallicFactor": 0, "roughnessFactor": 0.95},
       "extras": {"texture": "linen"}
     },
     "linen": {
@@ -359,10 +359,10 @@
       "pbrMetallicRoughness": {"baseColorFactor": [0.6105, 0.4851, 0.314, 1], "metallicFactor": 0, "roughnessFactor": 0.85},
       "extras": {"pattern": "tiles", "size": 600, "color2": [0.4508, 0.3515, 0.2159, 1], "texture": "paving"}
     },
-    "rustcement": {
-      "name": {"zh": "锈红微水泥", "en": "Rust microcement"},
-      "pbrMetallicRoughness": {"baseColorFactor": [0.4793, 0.1301, 0.0497, 1], "metallicFactor": 0, "roughnessFactor": 0.55},
-      "extras": {"texture": "cement"}
+    "ochreplaster": {
+      "name": {"zh": "赭红灰泥", "en": "Terracotta lime plaster"},
+      "pbrMetallicRoughness": {"baseColorFactor": [0.5271, 0.117, 0.0423, 1], "metallicFactor": 0, "roughnessFactor": 0.9},
+      "extras": {"texture": "stucco"}
     },
     "deck": {
       "name": {"zh": "户外木平台", "en": "Timber decking"},

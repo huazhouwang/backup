@@ -19,12 +19,12 @@
         "#efe9df",
         "#cdb998",
         "#d2c7b2",
-        "#b8653f",
+        "#c0603a",
         "#3d3b38"
       ],
       "finishes": {
         "walls": "limewash",
-        "accent": "rustcement",
+        "accent": "ochreplaster",
         "floors": {
           "living": "greystone",
           "dining": "greystone",
@@ -35,7 +35,7 @@
           "laundry": "antislip",
           "storage": "cement",
           "hall": "greystone",
-          "stair": "rustcement",
+          "stair": "ochreplaster",
           "shrine": "greystone",
           "tea": "naturaloak",
           "garage": "cement",

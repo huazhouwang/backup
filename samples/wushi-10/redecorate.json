@@ -11,14 +11,14 @@
    "name": "wall_update",
    "input": {
     "wall": "L1-w08",
-    "finish": "rustcement"
+    "finish": "ochreplaster"
    }
   },
   {
    "name": "wall_update",
    "input": {
     "wall": "L1-w09",
-    "finish": "rustcement"
+    "finish": "ochreplaster"
    }
   },
   {

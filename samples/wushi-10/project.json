@@ -339,7 +339,7 @@
    "kind": "fence",
    "height": 1970,
    "openings": [],
-   "finish": "rustcement"
+   "finish": "ochreplaster"
   },
   {
    "id": "L1-w09",
@@ -357,7 +357,7 @@
    "kind": "fence",
    "height": 1970,
    "openings": [],
-   "finish": "rustcement"
+   "finish": "ochreplaster"
   },
   {
    "id": "L1-w10",
@@ -2006,7 +2006,7 @@
      ]
     }
    ],
-   "floor": "rustcement",
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
@@ -2389,7 +2389,7 @@
      ]
     }
    ],
-   "floor": "rustcement",
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
@@ -2603,7 +2603,7 @@
      ]
     }
    ],
-   "floor": "rustcement",
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
@@ -2796,7 +2796,7 @@
      ]
     }
    ],
-   "floor": "rustcement",
+   "floor": "ochreplaster",
    "extras": {
     "stair": true
    }
