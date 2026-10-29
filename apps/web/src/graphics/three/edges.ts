@@ -20,7 +20,7 @@ const shader = {
     /** 0 hides the edges (while the house still lies flat as the plan), 1 shows them */
     strength: { value: 1 },
     /** Profile width in pixels */
-    profile: { value: 1.5 },
+    profile: { value: 1 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;

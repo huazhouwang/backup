@@ -81,7 +81,7 @@ const useColors = () =>
       page: '--canvas-backdrop',
       sky: '--canvas-sky',
       ground: '--canvas-ground',
-      edge: '--foreground',
+      edge: '--canvas-edge',
       shadow: '--canvas-shadow',
       sel: '--canvas-selection',
       changed: '--chart-1',

@@ -16,6 +16,8 @@ const FILL = 0.86;
 export const nearPlane = (distance: number) => Math.max(0.05, distance * 0.02);
 /** Default viewing direction: from the south-east, looking down at about 45°, steep enough to see into the rooms */
 export const BIRD = new THREE.Vector3(0.9, 1.4, 1.1).normalize();
+/** A house still's direction (issue 213): lower, at about 28°, closer to how a person sees a house than to a plan */
+export const PRESENTATION = new THREE.Vector3(0.9, 0.75, 1.1).normalize();
 
 /**
  * Camera looking from this direction at the model's box: close enough that the box fills the view, and aimed so its outline

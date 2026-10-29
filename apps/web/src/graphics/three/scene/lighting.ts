@@ -16,7 +16,7 @@ export const ENVIRONMENT_INTENSITY = 0.6;
 /** Exposure for the Neutral tone mapping: white walls in the sun stay white */
 export const TONE_EXPOSURE = 1.0;
 /** How dark the shadows are on the ground around the house */
-export const GROUND_SHADOW_OPACITY = 0.35;
+export const GROUND_SHADOW_OPACITY = 0.28;
 
 /** Toward the sun when no time is given: from the south-west, high */
 export const DEFAULT_SUN = new THREE.Vector3(-1.2, 2, 0.9).normalize();
@@ -37,7 +37,7 @@ export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQ
   return {
     position: center.clone().addScaledVector(toward, radius * 2.5),
     mapSize,
-    shadowRadius: quality === 'high' ? 6 : 3,
+    shadowRadius: quality === 'high' ? 10 : 4,
     bias: -0.0004,
     normalBias: ((half * 2) / mapSize) * 2,
     camera: { left: -half, right: half, top: half, bottom: -half, near: 0.5, far: radius * 10 },
