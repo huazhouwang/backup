@@ -93,7 +93,15 @@ export function useFieldAboveKeyboard(ref: RefObject<HTMLElement | null>, active
         element.getBoundingClientRect().bottom,
       )
       const over = field.getBoundingClientRect().bottom - (bottom - TOOLBAR_ROOM)
-      if (over > 0) element.scrollTop += over
+      if (over > 0) {
+        element.scrollTop += over
+        // Temporary, for the app's keyboard probe.
+        document.dispatchEvent(
+          new CustomEvent('keyboard-reveal', {
+            detail: { over: Math.round(over), to: element.scrollTop },
+          }),
+        )
+      }
     }
     // Again each frame while the keyboard comes up: at the focus it isn't there yet.
     const settle = untilSettled(reveal)
