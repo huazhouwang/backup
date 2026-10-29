@@ -108,6 +108,7 @@ class Demo:
     def tap(self, text, caption, **kw):
         _, x, y = self.find(text, **kw)
         self.caption(caption)
+        time.sleep(0.9)  # 先给字幕和圆环一点时间，看清要点哪里
         self.last_touch = (x, y, "点击")
         self.log_tap(x, y, "tap")
         shell(f"input tap {x} {y}")
@@ -116,6 +117,7 @@ class Demo:
     def long_press(self, text, caption, **kw):
         _, x, y = self.find(text, **kw)
         self.caption(caption)
+        time.sleep(0.9)
         self.last_touch = (x, y, "长按")
         self.log_tap(x, y, "hold")
         shell(f"input swipe {x} {y} {x} {y} 1200")
@@ -192,6 +194,8 @@ def main():
     shell("svc power stayon true")
     # 录屏里显示触点。
     shell("settings put system show_touches 1")
+    # 安全模式演示里会故意崩溃，隐藏系统的"应用停止运行"弹窗。
+    shell("settings put global hide_error_dialogs 1", check=False)
     # 设为默认桌面：安卓 10+ 用"桌面"角色，旧方法兜底；否则按 HOME 会弹系统的选择框。
     shell(f"cmd role add-role-holder --user 0 android.app.role.HOME {PKG}", check=False)
     shell(f"cmd package set-home-activity {HOME}", check=False)
@@ -258,10 +262,26 @@ def main():
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "⑰ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始", times=2)
+        demo.key("KEYCODE_DPAD_DOWN", "⑰ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
         demo.key("KEYCODE_DPAD_RIGHT", "⑱ 方向键 →：焦点移到下一个磁贴", times=4)
         demo.shot("dpad-focus")
         demo.home()
+
+        # 安全模式：让桌面故意连续崩溃 3 次（只有放了标记文件才会崩，见 MainActivity.maybeCrashForTest）
+        marker = f"/sdcard/Android/data/{PKG}/files/crash-test"
+        shell(f"touch {marker}")
+        demo.caption("⑲ 测试：让桌面故意连续崩溃 3 次")
+        for _ in range(3):
+            shell(f"am start -n {HOME} --ez crash_test true", check=False)
+            time.sleep(2.5)
+        shell(f"rm -f {marker}")
+        demo.key("KEYCODE_HOME", "⑳ 再按 HOME：自动进入安全模式（不会反复崩溃）")
+        demo.find("安全模式")
+        time.sleep(1)
+        demo.shot("safe-mode")
+        demo.tap("再试一次正常启动", "㉑ 点「再试一次正常启动」→ 回到正常桌面")
+        demo.find("CarPlay")
+        demo.shot("home-after-safe-mode")
         demo.caption("演示结束")
         time.sleep(2)
     except Exception as e:  # noqa: BLE001 - 失败也要保留录屏
@@ -283,8 +303,10 @@ def main():
     crashes = shell("logcat -d -b crash", check=False) or ""
     with open(os.path.join(args.out, "crash.log"), "w") as f:
         f.write(crashes)
-    if PKG in crashes:
-        print("桌面发生崩溃，见 crash.log", file=sys.stderr)
+    # 按 "FATAL EXCEPTION" 分段；故意制造的 crash_test 崩溃不算，其它桌面崩溃都算失败。
+    real = [b for b in crashes.split("FATAL EXCEPTION")[1:] if PKG in b and "crash_test" not in b]
+    if real:
+        print(f"桌面发生了 {len(real)} 次意外崩溃，见 crash.log", file=sys.stderr)
         sys.exit(1)
     if failed:
         print(f"演示失败：{failed}", file=sys.stderr)

@@ -105,8 +105,9 @@ jobs:
           path: demo-out/
 
   # 推送到 main：发布 GitHub Release（车机里的"检查更新"读这里）。
+  # 必须等模拟器演示也通过（演示里桌面崩溃会失败），崩溃的版本不会发到车机。
   release:
-    needs: build
+    needs: [build, emulator-demo]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

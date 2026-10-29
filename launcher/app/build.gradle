@@ -3,7 +3,9 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-// 版本号 = 提交数：只增不减，GitHub Release 的 tag 也是 v1.0.<提交数>，应用内更新据此比较新旧。
+// 版本：versionName = 1.0.<提交数>，versionCode = 提交数 × 10（只增不减）。
+// "回退发布"用旧代码重新编译，版本号取当前提交数 × 10 + 1~9（versionName 1.0.<提交数>.<n>），
+// 由 rollback 工作流通过环境变量 VERSION_CODE / VERSION_NAME 传入，这样车机会把它当作普通更新安装。
 def commitCount = {
     try {
         return providers.exec { commandLine 'git', 'rev-list', '--count', 'HEAD' }
@@ -21,8 +23,8 @@ android {
         applicationId 'com.x0finch.q5home'
         minSdk 26
         targetSdk 34
-        versionCode commitCount
-        versionName "1.0.$commitCount"
+        versionCode((System.getenv('VERSION_CODE') ?: "${commitCount * 10}").toInteger())
+        versionName System.getenv('VERSION_NAME') ?: "1.0.$commitCount"
     }
 
     // 所有构建（本地、CI、Release）用同一把签名，新版本才能覆盖安装旧版本。

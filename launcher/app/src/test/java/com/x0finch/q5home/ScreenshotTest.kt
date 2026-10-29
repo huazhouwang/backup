@@ -141,4 +141,13 @@ class ScreenshotTest {
         fakeNewRelease()
         home("w1280dp-h480dp-land-mdpi", "home-update-badge")
     }
+
+    @Test
+    fun safeMode() {
+        RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
+        FakeApps.installCar(context)
+        val now = System.currentTimeMillis()
+        repeat(3) { CrashGuard.record(context, IllegalStateException("crash_test：故意崩溃，用来测试安全模式"), now) }
+        shoot(Robolectric.buildActivity(SafeModeActivity::class.java).setup().get(), "safe-mode")
+    }
 }

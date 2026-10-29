@@ -50,19 +50,22 @@ def main():
 
     taps_short = [t for t in taps if t["kind"] == "tap"]
     taps_long = [t for t in taps if t["kind"] == "hold"]
-    parts = [f"[0:v]pad=iw:ih+{STRIP}:0:0:color=black[v0]"]
+    # screenrecord 是可变帧率（画面不动时不出帧），先转成固定 30fps，字幕和圆环的时间才对得上。
+    parts = [f"[0:v]fps=30,pad=iw:ih+{STRIP}:0:0:color=black[v0]"]
     if taps_short:
         parts.append(f"[1:v]split={len(taps_short)}" + "".join(f"[t{i}]" for i in range(len(taps_short))))
     if taps_long:
         parts.append(f"[2:v]split={len(taps_long)}" + "".join(f"[h{i}]" for i in range(len(taps_long))))
     cur = "v0"
     n = 0
-    for label, group, dur in (("t", taps_short, 0.8), ("h", taps_long, 1.8)):
+    # 圆环在点下去之前 0.7 秒就出现（界面一点就变，之后再画会落在下一个画面上），长按期间一直显示。
+    for label, group, before, after in (("t", taps_short, 0.7, 0.25), ("h", taps_long, 0.7, 1.3)):
         for i, t in enumerate(group):
             n += 1
             nxt = f"v{n}"
-            x, y, start = t["x"] - RING // 2, t["y"] - RING // 2, t["t"]
-            parts.append(f"[{cur}][{label}{i}]overlay={x}:{y}:shortest=1:enable='between(t,{start:.2f},{start + dur:.2f})'[{nxt}]")
+            x, y = t["x"] - RING // 2, t["y"] - RING // 2
+            start, end = max(t["t"] - before, 0), t["t"] + after
+            parts.append(f"[{cur}][{label}{i}]overlay={x}:{y}:shortest=1:enable='between(t,{start:.2f},{end:.2f})'[{nxt}]")
             cur = nxt
     # 字幕的字号和边距按 288 行高的坐标算（libass 默认），换算成实际像素：字高约 52px，放在底部字幕栏中间。
     scale = 288 / (height + STRIP)
@@ -78,7 +81,7 @@ def main():
     cmd = ["ffmpeg", "-loglevel", "error", "-y", "-i", raw,
            "-loop", "1", "-i", tap_png, "-loop", "1", "-i", hold_png,
            "-filter_complex_script", script, "-map", "[out]",
-           "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
+           "-r", "30", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
            os.path.join(out, "demo.mp4")]
     subprocess.run(cmd, check=True)
     for f in (tap_png, hold_png, script):

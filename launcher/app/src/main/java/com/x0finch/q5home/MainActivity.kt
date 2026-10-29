@@ -67,6 +67,7 @@ class MainActivity : Activity() {
     private var ambientColor = 0
     private var shownWallpaper: String? = null
     private lateinit var overlay: Overlay
+    private var started = false
 
     private val timeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -84,6 +85,13 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 这个版本最近连续崩溃：先进安全模式，别让桌面卡死在反复崩溃里。
+        if (CrashGuard.shouldEnterSafeMode(this)) {
+            startActivity(Intent(this, SafeModeActivity::class.java))
+            finish()
+            return
+        }
+        maybeCrashForTest(intent)
         setContentView(R.layout.activity_main)
         root = findViewById(R.id.root)
         wallpaperView = findViewById(R.id.wallpaper)
@@ -140,9 +148,21 @@ class MainActivity : Activity() {
         }
 
         maybeAutoStartCarPlay()
+        started = true
+    }
+
+    /**
+     * CI 用来验证安全模式：带 crash_test 参数启动、且外部文件目录里有 crash-test 标记文件（只有 adb 能放）时故意崩溃。
+     */
+    private fun maybeCrashForTest(intent: Intent?) {
+        if (intent?.getBooleanExtra("crash_test", false) == true &&
+            java.io.File(getExternalFilesDir(null), "crash-test").exists()) {
+            throw IllegalStateException("crash_test：故意崩溃，用来测试安全模式")
+        }
     }
 
     override fun onDestroy() {
+        if (!started) { super.onDestroy(); return }
         unregisterReceiver(timeReceiver)
         unregisterReceiver(packageReceiver)
         handler.removeCallbacksAndMessages(null)
@@ -151,6 +171,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        if (!started) return // 已经转去安全模式，没有初始化界面
         config.reload()?.let { toast("config.json 有误：$it") }
         updateGreeting()
         updateWallpaper()
@@ -170,11 +191,16 @@ class MainActivity : Activity() {
     /** 已经在桌面时再按 HOME：回到最左边，关掉弹窗。 */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        maybeCrashForTest(intent)
         overlay.dismiss(animate = false)
         // 清掉焦点再回到最左边，否则获得焦点的磁贴会把滚动位置拉回去。
         currentFocus?.clearFocus()
         tileScroll.scrollTo(0, 0)
-        tileScroll.post { tileScroll.scrollTo(0, 0) }
+        tileScroll.post {
+            tileScroll.scrollTo(0, 0)
+            // 用旋钮 / 方向键时，回到桌面后焦点落在 CarPlay 上。
+            if (!root.isInTouchMode) findViewById<View>(R.id.firstTile)?.requestFocus()
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -265,6 +291,8 @@ class MainActivity : Activity() {
             showHero(first.tag as TileInfo)
             // 旋钮 / 方向键：从右上角按钮往下，先到 CarPlay，而不是离得最近的最右边磁贴。
             first.id = R.id.firstTile
+            // 第一次按方向键 / 转旋钮时直接选中 CarPlay，而不是右上角的按钮。
+            first.isFocusedByDefault = true
             findViewById<View>(R.id.pillApps).nextFocusDownId = R.id.firstTile
             findViewById<View>(R.id.pillSettings).nextFocusDownId = R.id.firstTile
         }

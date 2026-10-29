@@ -58,6 +58,10 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
   - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。
   - 应用内更新：`Updates.kt`（GitHub Release 检查 / 下载 / 校验 / PackageInstaller 安装）、`UpdateJob.kt`（每天检查）。
     版本号 = 提交数（`app/build.gradle`），推送到 main 自动发 Release（工作流 `release` job）。
+  - 崩溃保护：`CrashGuard.kt`（同版本 10 分钟内崩 3 次）→ `SafeModeActivity.kt`（极简，只用系统控件，别给它加依赖）。
+    回退：`.github/workflows/rollback.yml`（旧代码 + 更高版本号重新发布）。发布要等模拟器演示通过。
+  - **数据向后兼容**：SharedPreferences / config.json 只加字段、不改旧字段的含义；要换格式就用新 key（如 `dock_v2`），
+    旧 key 保留读取，保证回退到旧版本时设置还能用。
   - 签名密钥 `signing/q5home.keystore` 在仓库里（用户选择的），所有构建共用，不要改动或重新生成，否则车机无法覆盖安装。
 - `ci/demo.py`：CI 模拟器演示脚本（中文步骤字幕 + 点击记录 + 截图标点击位置），`ci/render_video.py` 把字幕放进视频下方的字幕栏、
   在点击处画圆环。改了界面文字要同步改 demo.py 里按文字查找的步骤。录完要逐帧检查视频（见下）。

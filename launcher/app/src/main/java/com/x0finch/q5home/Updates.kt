@@ -16,7 +16,7 @@ import java.security.MessageDigest
 /**
  * 应用内更新：从 GitHub Releases（x0finch/audi-q5-launcher）检查新版本，下载 APK 并安装。
  *
- * Release 的 tag 是 v1.0.<提交数>，和 versionCode 一一对应，比大小就知道新旧。
+ * Release 的 tag 是 v1.0.<提交数>（回退发布是 v1.0.<提交数>.<n>），换算成 versionCode 比大小就知道新旧。
  * 安装前校验：GitHub 给的 sha256、包名一致、版本号更大；签名不一致系统也会拒绝安装。
  */
 class Updates(private val context: Context, private val apiUrl: String = DEFAULT_API) {
@@ -184,11 +184,22 @@ class Updates(private val context: Context, private val apiUrl: String = DEFAULT
         private const val KEY_ERROR = "error"
         private const val KEY_AUTO = "auto_check"
 
-        /** 解析 GitHub release JSON；tag 形如 v1.0.57，没有 APK 附件返回 null。 */
+        /**
+         * tag → versionCode：v1.0.57 → 570；回退发布 v1.0.57.1 → 571（和 app/build.gradle 的规则一致）。
+         */
+        fun versionCodeOf(tag: String): Long? {
+            val parts = tag.removePrefix("v").split('.')
+            val count = parts.getOrNull(2)?.toLongOrNull() ?: return null
+            val patch = parts.getOrNull(3)?.toLongOrNull() ?: 0
+            if (patch !in 0..9) return null
+            return count * 10 + patch
+        }
+
+        /** 解析 GitHub release JSON；没有 APK 附件返回 null。 */
         fun parse(json: String): Release? {
             val o = JSONObject(json)
             val tag = o.getString("tag_name").removePrefix("v")
-            val code = tag.substringAfterLast('.').toLongOrNull() ?: return null
+            val code = versionCodeOf(tag) ?: return null
             val assets = o.optJSONArray("assets") ?: return null
             for (i in 0 until assets.length()) {
                 val a = assets.getJSONObject(i)

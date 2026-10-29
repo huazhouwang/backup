@@ -1,0 +1,72 @@
+name: rollback
+
+# 回退发布：车机上的新版本有问题时，在手机上打开 GitHub → Actions → rollback → Run workflow，
+# 填要回退到的版本号（例如 1.0.12）。CI 用那个版本的代码重新编译，但给它一个更高的版本号
+# （1.0.<当前提交数>.<n>），作为最新 Release 发布；车机"检查更新"会把它当作普通更新安装。
+# 安卓不允许直接装回版本号更低的安装包，所以用这种方式绕开。
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '要回退到的版本号（例如 1.0.12）'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TARGET: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Work out the rollback version
+        id: v
+        run: |
+          set -euo pipefail
+          tag="v${TARGET#v}"
+          if ! git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+            echo "::error::找不到版本 $tag（看 Releases 页面里已有的版本号）"
+            exit 1
+          fi
+          count=$(git rev-list --count origin/main)
+          n=1
+          while git rev-parse -q --verify "refs/tags/v1.0.$count.$n" > /dev/null; do n=$((n + 1)); done
+          if [ "$n" -gt 9 ]; then echo "::error::同一个版本号最多回退 9 次，请先推一次 main"; exit 1; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse "$tag^{commit}")" >> "$GITHUB_OUTPUT"
+          echo "name=1.0.$count.$n" >> "$GITHUB_OUTPUT"
+          echo "code=$((count * 10 + n))" >> "$GITHUB_OUTPUT"
+          git checkout --quiet "$tag"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the old version with a new version number
+        working-directory: launcher
+        env:
+          VERSION_CODE: ${{ steps.v.outputs.code }}
+          VERSION_NAME: ${{ steps.v.outputs.name }}
+        run: ./gradlew --no-daemon :app:assembleRelease :app:testDebugUnitTest
+
+      - name: Name the APK, write release notes
+        run: |
+          mv launcher/app/build/outputs/apk/release/app-release.apk "q5home-${{ steps.v.outputs.name }}.apk"
+          printf '回退：内容与 %s 相同。\n\n' "${{ steps.v.outputs.tag }}" > notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.name }}
+          target_commitish: ${{ steps.v.outputs.sha }}
+          name: Q5 Home ${{ steps.v.outputs.name }}（回退到 ${{ steps.v.outputs.tag }}）
+          body_path: notes.md
+          files: q5home-${{ steps.v.outputs.name }}.apk
+          make_latest: true

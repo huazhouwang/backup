@@ -32,7 +32,10 @@ class UpdatesTest {
     @Test
     fun parsesTagAndAsset() {
         val r = Updates.parse(releaseJson("http://x", "v1.0.57"))!!
-        assertEquals(57L, r.versionCode)
+        assertEquals(570L, r.versionCode)
+        assertEquals(571L, Updates.parse(releaseJson("http://x", "v1.0.57.1"))!!.versionCode)
+        // 回退发布排在同一提交数的正常版本之后、下一个正常版本之前
+        assertTrue(Updates.versionCodeOf("v1.0.57.1")!! < Updates.versionCodeOf("v1.0.58")!!)
         assertEquals("1.0.57", r.versionName)
         assertEquals(sha, r.sha256)
         assertTrue(r.notes.contains("检查更新"))
@@ -56,7 +59,7 @@ class UpdatesTest {
                 val updates = Updates(context, "${api.base}/latest")
                 val latest = updates.check()!!
                 assertTrue(updates.hasUpdate)
-                assertEquals(9999L, updates.latest!!.versionCode)
+                assertEquals(99990L, updates.latest!!.versionCode)
                 assertNull(updates.lastError)
 
                 var lastProgress = -1
