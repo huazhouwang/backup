@@ -5,7 +5,7 @@
  */
 import { Edges } from '@react-three/drei';
 import type { Element, OpeningFrame, Polygon, Project, Recipe, RecipeMaterial, Roof, Solid, Space, Wall } from '@opensu/core';
-import { footing, lookRecipe, materialOf, SLAB_THICKNESS, wallTarget, type Material } from '@opensu/core';
+import { footing, lookRecipe, materialOf, SLAB_THICKNESS, textureOf, wallTarget, type Material } from '@opensu/core';
 import { useContext, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useCanvasDocument } from '@/canvas/CanvasFrame';
@@ -16,7 +16,8 @@ import { roofKey } from '@/canvas/hop';
 import { TintColors, useFeedback } from './feedback';
 import { useHovered } from '../hover';
 import { useFloorTexture } from '@/graphics/three/floor-textures';
-import { lookMaterial, partsGeometry, useBuild } from '@/graphics/three/looks';
+import { mapProps, useSurfaceMaps } from '@/graphics/three/textures';
+import { partsGeometry, useBuild } from '@/graphics/three/looks';
 import { castsShadow, elementExtent, M, railingPieces, slabGeometry, solidGeometry, standardMaterialProps, wallGeometry } from '@/graphics/three/scene';
 
 const unitBox = new THREE.BoxGeometry(1, 1, 1);
@@ -38,15 +39,31 @@ function useDisposed(geo: THREE.BufferGeometry) {
 }
 
 /** A wall as one solid in its finish (see wallGeometry), down to the ground on the ground floor; glass is drawn by the openings' looks */
-export function WallMesh({ w, project, base, finish, ...o }: Outline & { w: Wall; project: Project; base: number; finish: MaterialStyle }) {
+export function WallMesh({
+  w,
+  project,
+  base,
+  finish,
+  material,
+  ...o
+}: Outline & { w: Wall; project: Project; base: number; finish: MaterialStyle; material?: Material }) {
   const line = useLine(w.id, o.sel);
-  const ref = useFeedback<THREE.Mesh>(w.id, finish.color, !!o.sel);
+  // Its finish's texture set, laid along the wall and up (the extruded elevation's own coordinates, in metres)
+  const maps = useSurfaceMaps(material);
+  const ref = useFeedback<THREE.Mesh>(w.id, maps?.tint ?? finish.color, !!o.sel);
   const below = footing(base, project.site.groundLevel);
   const geo = useDisposed(useMemo(() => wallGeometry(project, w, below), [w, project, below]));
   const y = base * M;
   return (
     <mesh ref={ref} geometry={geo} position={[w.start[0] * M, y, w.start[1] * M]} castShadow receiveShadow userData={{ id: w.id, restY: y }}>
-      <meshStandardMaterial color={finish.color} roughness={finish.roughness} metalness={finish.metalness} />
+      {/* Remounted when the maps arrive: a material compiles once for having maps or not */}
+      <meshStandardMaterial
+        key={maps ? 'maps' : 'plain'}
+        color={maps?.tint ?? finish.color}
+        roughness={finish.roughness}
+        metalness={finish.metalness}
+        {...(maps && mapProps(maps))}
+      />
       {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
     </mesh>
   );
@@ -65,10 +82,13 @@ export function Slab({
 }: Outline & { s: Space; shape: Polygon[]; y: number; thickness: number; color: string; materials: Record<string, Material>; ceiling: string }) {
   // The floor's material, as on the plan: its pattern, else its colour (white with a style that draws plain floors)
   const floor = modelStyle().floors === 'material' ? materialOf(s.floor, null, materials) : undefined;
-  const map = useFloorTexture(useCanvasDocument(), s.floor, floor);
-  if (floor && !map) color = materialStyle(floor).color;
+  // Its texture set if it has one (in the slab's plan coordinates, metres), else its pattern as in the plan, else its colour
+  const maps = useSurfaceMaps(floor);
+  const map = useFloorTexture(useCanvasDocument(), s.floor, textureOf(floor) ? undefined : floor);
+  const style = floor && materialStyle(floor);
+  const tint: string | THREE.Color = maps?.tint ?? (floor && !map ? style!.color : color);
   const line = useLine(s.id, o.sel);
-  const ref = useFeedback<THREE.Mesh>(s.id, color, !!o.sel);
+  const ref = useFeedback<THREE.Mesh>(s.id, tint, !!o.sel);
   const geo = useDisposed(useMemo(() => slabGeometry(shape, thickness), [shape, thickness]));
   const ceiling = useDisposed(useMemo(() => slabGeometry(shape, 1), [shape]));
   // Two millimetres up: the walls of the floor below end exactly at this floor's level, and their tops would flicker through it
@@ -76,7 +96,13 @@ export function Slab({
   return (
     <mesh ref={ref} geometry={geo} position={[0, bottom, 0]} receiveShadow userData={{ id: s.id, restY: bottom }}>
       {/* Remounted when the texture arrives: a material compiles once for having a map or not */}
-      <meshStandardMaterial key={map ? 'map' : 'plain'} color={color} map={map} roughness={1} />
+      <meshStandardMaterial
+        key={maps ? 'maps' : map ? 'map' : 'plain'}
+        color={tint}
+        map={map}
+        roughness={maps ? style!.roughness : 1}
+        {...(maps && mapProps(maps))}
+      />
       {line && <Edges threshold={20} color={line.color} lineWidth={line.width} />}
       {/* Its underside is the ceiling of the room below: painted white, a millimetre under the slab */}
       <mesh geometry={ceiling} position={[0, -0.001, 0]} receiveShadow raycast={() => null} userData={{ noEdges: true }}>
@@ -241,18 +267,17 @@ function useLookGeometry(recipe: Recipe | null, w: number, d: number, h: number,
 /** A look's meshes, one per material in its library's finish; glass lets light through: see-through, no shadow */
 function LookMeshes({ parts, id, recipe }: { parts: [RecipeMaterial, THREE.BufferGeometry][]; id: string; recipe: Recipe | null }) {
   const design = useEditor(s => s.project.library.materials);
-  return parts.map(([mat, g]) => {
-    const style = lookMaterial(mat, recipe, design);
-    return (
-      <mesh
-        key={mat}
-        geometry={g}
-        castShadow={castsShadow(style)}
-        receiveShadow
-        userData={{ id, baseColor: new THREE.Color(style.color), noEdges: !castsShadow(style) }}
-      >
-        <meshStandardMaterial {...standardMaterialProps(style)} />
-      </mesh>
-    );
-  });
+  return parts.map(([mat, g]) => <LookPart key={mat} g={g} id={id} material={materialOf(mat, recipe, design)} />);
+}
+
+/** One material of a look: its texture set laid on the part's box-projected coordinates (see partsGeometry) */
+function LookPart({ g, id, material }: { g: THREE.BufferGeometry; id: string; material: Material | undefined }) {
+  const style = materialStyle(material);
+  const maps = useSurfaceMaps(material);
+  const baseColor = useMemo(() => maps?.tint ?? new THREE.Color(style.color), [maps, style.color]);
+  return (
+    <mesh geometry={g} castShadow={castsShadow(style)} receiveShadow userData={{ id, baseColor, noEdges: !castsShadow(style) }}>
+      <meshStandardMaterial key={maps ? 'maps' : 'plain'} {...standardMaterialProps(style)} {...(maps && { color: maps.tint, ...mapProps(maps) })} />
+    </mesh>
+  );
 }

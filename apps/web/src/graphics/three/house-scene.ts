@@ -15,6 +15,9 @@ import {
   projectElements,
   requestBuild,
   buildError,
+  materialOf,
+  textureOf,
+  type Material,
   roofs,
   SLAB_THICKNESS,
   wallTarget,
@@ -30,7 +33,8 @@ import { modelStyle } from '../model-style';
 import { materialPattern } from '../plan/floor-materials';
 import { floorTexture } from './floor-textures';
 import { isSoftwareGL, LOOK, type Look } from './beauty';
-import { lookMaterial, partsGeometry } from './looks';
+import { partsGeometry } from './looks';
+import { applyMaps, surfaceMaps } from './textures';
 import {
   backdrop,
   DEFAULT_SUN,
@@ -53,6 +57,7 @@ import {
   sunLight,
   wallFinish,
   wallGeometry,
+  wallMaterial,
 } from './scene';
 
 /** What a mesh is part of */
@@ -87,6 +92,14 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
   const elev = new Map(p.levels.map(l => [l.id, l.elevation]));
   const white = themeColor('--card', doc);
   const plain = (c: string, roughness: number) => ({ ...materialStyle(undefined), color: c, roughness });
+  // The renderer the full setup is affordable on (the sky environment, every map of a texture set), if any
+  const lit = opts.renderer && !isSoftwareGL(opts.renderer.getContext()) ? opts.renderer : null;
+  const jobs: Promise<void>[] = [];
+  // A material's texture set on a mesh's material, once loaded (see textures.ts)
+  const textured = (material: THREE.MeshStandardMaterial, m: Material | undefined) => {
+    const maps = surfaceMaps(m, !lit);
+    if (maps) jobs.push(maps.then(s => applyMaps(material, s)));
+  };
 
   // A look built at a size, as meshes in its materials
   const look = async (recipe: Recipe | null, size: RecipeSize, part: HousePart, params?: Record<string, unknown>) => {
@@ -96,8 +109,11 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
     if (recipe && !built && !buildError(recipe, size, params)) built = await requestBuild(recipe, size, params);
     if (!built) return g;
     for (const [mat, geo] of partsGeometry(built.parts)) {
-      const style = lookMaterial(mat, recipe, p.library.materials);
+      const m = materialOf(mat, recipe, p.library.materials);
+      const style = materialStyle(m);
       const mesh = add(g, geo, standardMaterial(style), part);
+      const maps = surfaceMaps(m, !lit);
+      if (maps) applyMaps(mesh.material as THREE.MeshStandardMaterial, await maps);
       mesh.castShadow = castsShadow(style);
       mesh.receiveShadow = true;
     }
@@ -109,15 +125,15 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
     g.rotation.y = -angle;
     house.add(g);
   };
-  const jobs: Promise<void>[] = [];
 
-  // Floors, in their material (its pattern, else its colour)
+  // Floors, in their material (its texture set, else its pattern, else its colour)
   for (const s of p.spaces) {
     if (!hasSlab(s)) continue;
     const { y, thickness } = slabLevel(s, elev.get(s.level) ?? 0, p.site.groundLevel);
     const m = floorMaterial(p, s.floor);
     const material = standardMaterial(m ? materialStyle(m) : plain(white, 1));
-    if (m && materialPattern(m)) {
+    if (textureOf(m)) textured(material, m);
+    else if (m && materialPattern(m)) {
       material.color.set(white);
       material.map = await floorTexture(doc, m);
     }
@@ -146,7 +162,9 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
         );
       continue;
     }
-    const mesh = add(house, wallGeometry(p, w, footing(base, p.site.groundLevel)), standardMaterial(wallFinish(p, w)), 'wall');
+    const material = standardMaterial(wallFinish(p, w));
+    textured(material, wallMaterial(p, w));
+    const mesh = add(house, wallGeometry(p, w, footing(base, p.site.groundLevel)), material, 'wall');
     mesh.position.set(w.start[0] * M, base * M, w.start[1] * M);
     mesh.castShadow = mesh.receiveShadow = true;
   }
@@ -206,7 +224,6 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
   scene.add(ground);
 
   // The 3D view's light, with the sky environment where the renderer can afford it; elsewhere the sky light carries it all
-  const lit = opts.renderer && !isSoftwareGL(opts.renderer.getContext()) ? opts.renderer : null;
   scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, lit ? light.sky : SKYLIGHT_WITHOUT_ENVIRONMENT));
   const sun = sunLight(color('--canvas-sun'), center, radius);
   sun.intensity = light.sun;

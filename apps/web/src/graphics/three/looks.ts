@@ -1,19 +1,16 @@
 /**
  * 3D geometry from recipes (see packages/core/src/looks/recipe.ts): each built part becomes a three.js geometry in metres, and the
- * parts are merged into one geometry per material (one draw call each). Recipes only name materials; what a material looks
- * like comes from its library (lookMaterial).
+ * parts are merged into one geometry per material (one draw call each), with box-projected texture coordinates for texture
+ * sets. Recipes only name materials; what a material looks like comes from its library (materialOf in @opensu/core).
  */
-import { getBuild, materialOf, type Built, type BuiltPart, type Material, type Recipe, type RecipeMaterial, type RecipeSize } from '@opensu/core';
-import { materialStyle } from '@/lib/materials';
+import { getBuild, type Built, type BuiltPart, type Recipe, type RecipeMaterial, type RecipeSize } from '@opensu/core';
 import { useRef } from 'react';
 import { useBuildsVersion } from '@/lib/builds';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { M } from './scene';
-
-/** How a material a recipe names is drawn: the recipe's own (its library's), the design's, or the default library's */
-export const lookMaterial = (id: RecipeMaterial, recipe?: Recipe | null, design?: Record<string, Material>) => materialStyle(materialOf(id, recipe, design));
+import { boxUV } from './textures';
 
 const DEG = Math.PI / 180;
 const v3 = ([x, y, z]: [number, number, number]) => new THREE.Vector3(x * M, y * M, z * M);
@@ -112,7 +109,8 @@ export function partsGeometry(parts: BuiltPart[]): [RecipeMaterial, THREE.Buffer
   return [...byMat].map(([mat, list]) => {
     const merged = mergeGeometries(list);
     for (const g of list) g.dispose();
-    return [mat, merged];
+    // Texture sets are laid by box projection, in metres in the look's own frame: they move with the object
+    return [mat, boxUV(merged)];
   });
 }
 
