@@ -29,11 +29,12 @@ import { themeColor } from '@/lib/theme';
 import { modelStyle } from '../model-style';
 import { materialPattern } from '../plan/floor-materials';
 import { floorTexture } from './floor-textures';
-import { LOOK, type Look } from './beauty';
+import { isSoftwareGL, LOOK, type Look } from './beauty';
 import { lookMaterial, partsGeometry } from './looks';
 import {
   backdrop,
   DEFAULT_SUN,
+  SKYLIGHT_WITHOUT_ENVIRONMENT,
   skyEnvironment,
   castsShadow,
   elementLook,
@@ -204,16 +205,17 @@ export async function houseScene(p: Project, doc: Document, opts: { renderer?: T
   ground.position.set(center.x, p.site.groundLevel * M - 0.001, center.z);
   scene.add(ground);
 
-  // The 3D view's light
-  scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, light.sky));
+  // The 3D view's light, with the sky environment where the renderer can afford it; elsewhere the sky light carries it all
+  const lit = opts.renderer && !isSoftwareGL(opts.renderer.getContext()) ? opts.renderer : null;
+  scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, lit ? light.sky : SKYLIGHT_WITHOUT_ENVIRONMENT));
   const sun = sunLight(color('--canvas-sun'), center, radius);
   sun.intensity = light.sun;
   scene.add(sun, sun.target);
   // The sky as image-based light (issue 208)
   const env =
-    opts.renderer &&
+    lit &&
     skyEnvironment(
-      opts.renderer,
+      lit,
       {
         sky: themeColor('--canvas-sky', doc),
         horizon: themeColor('--canvas-backdrop', doc),

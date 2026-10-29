@@ -194,7 +194,11 @@ export function Model3D() {
             setQuality(detectQuality(doc.defaultView!, gl.getContext()));
           }}
         >
-          <HouseStage project={project} center={center} radius={radius} span={span} quality={q} colors={c} toward={sunToward} strength={sunStrength} />
+          {/* The light, the sky environment and the post-processing wait for the quality: building the full setup only to drop it costs
+              seconds on a slow device */}
+          {quality && (
+            <HouseStage project={project} center={center} radius={radius} span={span} quality={q} colors={c} toward={sunToward} strength={sunStrength} />
+          )}
 
           {/* The plan's page around the drawing at the current floor, while the house lies flat */}
           <group position={[0, (current?.elevation ?? 0) * M, 0]}>
@@ -316,7 +320,7 @@ export function Model3D() {
           {current && <Effects3D project={project} current={current.id} />}
           <Reveal ownerOf={ownerOf} />
           {/* Sections read as drawings: with edges */}
-          <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} quality={q} />
+          {quality && <Renderer draw={draw} edges={style.edges || !!camera3d.section} edgeColor={c.edge} growth={growth} quality={q} />}
           {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}
           {touch && q === 'high' && <PerformanceMonitor bounds={() => [25, 50]} onDecline={() => setQuality('low')} />}
           <Wake on={[view.selection, view.highlight]} />

@@ -24,6 +24,14 @@ export interface Look {
   aoRadius: number;
 }
 
+/** WebGL drawn on the CPU (no GPU, a virtual machine, a blocklisted driver): the sky environment and ambient occlusion would take seconds */
+const SOFTWARE_GL = /SwiftShader|llvmpipe|softpipe|Software Rasterizer|Microsoft Basic Render/i;
+
+export function isSoftwareGL(gl: WebGLRenderingContext | WebGL2RenderingContext) {
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  return SOFTWARE_GL.test(info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '');
+}
+
 export const LOOK: Look = { sun: SUN_INTENSITY, sky: SKYLIGHT_INTENSITY, environment: ENVIRONMENT_INTENSITY, exposure: TONE_EXPOSURE, ao: 3.5, aoRadius: 1.5 };
 
 /** The renderer set up for the look: Neutral tone mapping at the look's exposure */
@@ -69,7 +77,7 @@ export function beautyComposer(
   height: number,
   opts: { ao?: boolean; look?: Look; extra?: { addPass(c: EffectComposer): void } } = {},
 ) {
-  const ao = opts.ao ?? true;
+  const ao = opts.ao ?? !isSoftwareGL(renderer.getContext());
   const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType, samples: ao ? 0 : 4 }));
   composer.addPass(ao ? aoPass(scene, camera, width, height, opts.look) : new RenderPass(scene, camera));
   opts.extra?.addPass(composer);
