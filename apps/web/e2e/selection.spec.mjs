@@ -56,7 +56,13 @@ test('selection', async ({ browser: b }) => {
   // 3D: find a window under the mouse by its tooltip, then click it
   await page.mouse.click(iframe.x + 10, iframe.y + iframe.height - 10);
   await page.getByRole('button', { name: '切换到三维' }).click();
-  await page.waitForTimeout(7000);
+  // Wait for the house to have grown and the camera to have come to rest: the scan below needs the view to hold still
+  for (let last = null, i = 0; i < 40; i++) {
+    await page.waitForTimeout(1000);
+    const shot = await page.screenshot({ clip: iframe });
+    if (last && shot.equals(last)) break;
+    last = shot;
+  }
   // A door or window, and a floor (a large surface, to see its stipple go when something else is selected)
   let found = null,
     floor = null;
