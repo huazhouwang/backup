@@ -54,6 +54,27 @@ export function MicControls({
             <MicIcon className={cn('size-9', talk.recording && !talk.ready && 'animate-breathe')} />
           )}
         </button>
+        {/* Hands-free, a pause after speaking fills a ring round it; full, it sends. */}
+        {talk.mode === 'free' && talk.pause > 0 && (
+          <svg
+            aria-hidden
+            viewBox="0 0 96 96"
+            className="pointer-events-none absolute -inset-4 size-24 -rotate-90"
+          >
+            <circle
+              cx="48"
+              cy="48"
+              r="44"
+              fill="none"
+              stroke="var(--color-primary)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              pathLength={100}
+              strokeDasharray={`${talk.pause * 100} 100`}
+              className="transition-[stroke-dasharray] duration-100 ease-linear"
+            />
+          </svg>
+        )}
         {/* Taking the microphone: an arc runs round it until it listens. */}
         {talk.recording && !talk.ready && (
           <svg

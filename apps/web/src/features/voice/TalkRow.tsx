@@ -52,7 +52,7 @@ function Levels({ analyser }: { analyser: AnalyserNode | null }) {
 
 /**
  * The chat's input row with a microphone: hold it to talk and let go to send, slide up to
- * drop it, or tap it to talk hands-free and tap again to send. While recording, the field
+ * drop it, or tap it to talk hands-free: it sends once the speaker pauses, or at another tap. While recording, the field
  * gives way to the voice's level and time, and what has been said so far goes to
  * `onPartial` every so often, one at a time. The button stays the same element throughout,
  * so the finger holding it is never lost.
@@ -124,7 +124,7 @@ export function TalkRow({
                 {talk.ready && <Elapsed since={startedAt} />}
                 <span className="min-w-0 flex-1 truncate text-caption font-bold">{status}</span>
                 {mode === 'free' && (
-                  <Button variant="ghost" className="-mr-2 py-1" onClick={talk.drop}>
+                  <Button variant="ghost" className="-mr-2 py-1" onClick={() => talk.drop()}>
                     {m.voiceMicCancel()}
                   </Button>
                 )}

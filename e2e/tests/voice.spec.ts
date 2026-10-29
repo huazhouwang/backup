@@ -3,6 +3,13 @@ import { type Page, expect, test } from '@playwright/test'
 import { newDevice, onboard, signIn } from '../support/app'
 import { drag, transformOf } from '../support/touch'
 
+declare global {
+  interface Window {
+    /** The stand-in microphone speaks, or goes quiet (the hands-free test). */
+    speak?: (on: boolean) => void
+  }
+}
+
 /** One server-sent event. */
 const event = (name: string, data: unknown) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`
 
@@ -141,7 +148,7 @@ test('talks to the AI on its own page, by holding the microphone or tapping it',
 
   // A tap records hands-free until the next tap.
   await mic.click()
-  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible()
   await page.waitForTimeout(1000)
   await page.getByRole('button', { name: '说完了，发送' }).click()
   await expect.poll(() => api.uploads.length).toBe(2)
@@ -159,6 +166,63 @@ test('talks to the AI on its own page, by holding the microphone or tapping it',
   await page.getByRole('button', { name: '收起' }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByText('今天的记录')).toBeVisible()
+  await context.close()
+})
+
+test('hands-free, it sends on its own once the speaker pauses', async ({ browser }) => {
+  const { context, page } = await newDevice(browser)
+  await context.grantPermissions(['microphone'])
+  await onboard(page)
+  await signIn(context, 'micPause')
+  // A microphone that speaks when told: a tone while speaking, otherwise a faint hum, as a
+  // real room never is quite silent (and nothing at all reads as no microphone).
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const audio = new AudioContext()
+      const tone = audio.createOscillator()
+      const loudness = audio.createGain()
+      loudness.gain.value = 0.002
+      const out = audio.createMediaStreamDestination()
+      tone.connect(loudness).connect(out)
+      tone.start()
+      window.speak = (on: boolean) => {
+        loudness.gain.value = on ? 0.5 : 0.002
+      }
+      return out.stream
+    }
+  })
+  const speak = (on: boolean) => page.evaluate((loud) => window.speak?.(loud), on)
+  const api = await standInApi(page)
+  await page.goto('/')
+  await page
+    .locator('main')
+    .getByRole('button', { name: /对话记录/ })
+    .click()
+  await page.waitForTimeout(500)
+
+  await page.getByRole('button', { name: '按住说话' }).click()
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible()
+  // Quiet at first: the room. Then a sentence, with a short breath in the middle.
+  await page.waitForTimeout(600)
+  await speak(true)
+  await page.waitForTimeout(800)
+  await speak(false)
+  await page.waitForTimeout(600)
+  await speak(true)
+  await page.waitForTimeout(800)
+  expect(api.uploads).toHaveLength(0)
+  // Done talking: a moment later it sends by itself.
+  await speak(false)
+  await expect.poll(() => api.uploads.length, { timeout: 5_000 }).toBe(1)
+  api.hear()
+  await expect(page.getByText('我说：换尿不 1')).toBeVisible()
+  api.answer()
+  await expect(page.getByText('已记录：换尿布 1。还有吗？')).toBeVisible()
+
+  // Tapped and nothing said: it stops listening after a while, and says so.
+  await page.getByRole('button', { name: '按住说话' }).click()
+  await expect(page.getByText('没录到声音，请再试一次')).toBeVisible({ timeout: 12_000 })
+  expect(api.uploads).toHaveLength(1)
   await context.close()
 })
 
@@ -209,7 +273,7 @@ test('takes the microphone again when the first one sends nothing', async ({ bro
   await page.waitForTimeout(600)
   await expect(preparing).toHaveCount(2)
   await expect(page.getByText(/\d+:\d\d/)).toHaveCount(0)
-  await expect(page.getByText('点麦克风发送')).toBeVisible({ timeout: 5_000 })
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible({ timeout: 5_000 })
   expect(await micsTaken()).toBe(2)
   await page.waitForTimeout(800)
   // Muted by the system while recording (a call, another app): taken again, recording on.
@@ -219,7 +283,7 @@ test('takes the microphone again when the first one sends nothing', async ({ bro
   })
   await expect.poll(micsTaken).toBe(3)
   await page.waitForTimeout(500)
-  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible()
   await page.getByRole('button', { name: '说完了，发送' }).click()
   await expect.poll(() => api.uploads.length).toBe(1)
   expect(api.uploads[0]).toMatchObject({ type: 'audio/wav', head: 'RIFF' })
@@ -261,7 +325,7 @@ test('explains the microphone before the system asks, and how to turn it back on
   await mic.click()
   await explain.getByLabel('不再显示这段说明').check()
   await explain.getByRole('button', { name: '继续' }).click()
-  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible()
   await page.waitForTimeout(1000)
   await page.getByRole('button', { name: '说完了，发送' }).click()
   await expect.poll(() => api.uploads.length).toBe(1)
@@ -300,10 +364,10 @@ test('explains the microphone once until the app is opened again', async ({ brow
   // Explained once, gone on: recording starts; dropped, then pressed again, no explanation.
   await mic.click()
   await explain.getByRole('button', { name: '继续' }).click()
-  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible()
   await page.getByRole('button', { name: '取消' }).click()
   await mic.click()
-  await expect(page.getByText('点麦克风发送')).toBeVisible()
+  await expect(page.getByText('说完停一下就发送，也可以点麦克风')).toBeVisible()
   await expect(explain).toHaveCount(0)
   await page.getByRole('button', { name: '取消' }).click()
 

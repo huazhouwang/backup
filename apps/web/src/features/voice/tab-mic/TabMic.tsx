@@ -174,8 +174,14 @@ export function TabMic() {
     else void navigate({ to: '/settings/ai', search: { from: 'mic' } })
   }
   const ready = Boolean(userId) && !noAi
-  // Tapped, the microphone turning into stop says it all.
-  const hint = talk.mode === 'hold' ? m.tabMicHint() : phase === 'done' ? m.tabMicMore() : null
+  const hint =
+    talk.mode === 'hold'
+      ? m.tabMicHint()
+      : talk.mode === 'free'
+        ? m.tabMicPauseToSend()
+        : phase === 'done'
+          ? m.tabMicMore()
+          : null
   const last = turns.at(-1)
   return (
     <>

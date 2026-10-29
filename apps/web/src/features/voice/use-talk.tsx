@@ -14,11 +14,14 @@ import { m } from '../../paraglide/messages.js'
 import { voiceApi } from './api'
 import { MicDeniedSheet, MicExplainSheet } from './MicSheets'
 import { MAX_RECORDING_MS, type Startup, useMicPermission, useRecorder } from './recorder'
+import { levelOf, listenForPause } from './silence'
 
 /** Let go sooner than this (ms) and it was a tap: record hands-free until the next tap. */
 const TAP_MS = 300
 /** While talking, what has been said so far is heard this often. */
 const PARTIAL_EVERY_MS = 1500
+/** Hands-free, the microphone's level is heard this often, for the pause that ends it. */
+const LEVEL_EVERY_MS = 50
 
 export type TalkMode = 'off' | 'hold' | 'free'
 
@@ -53,7 +56,7 @@ export interface TalkOptions {
 
 /**
  * Talking by microphone: hold it to talk and let go to send, slide away to drop it, or tap it
- * to talk hands-free and tap again to send. Before the microphone is first used, the system's
+ * to talk hands-free: it sends once the speaker pauses, or at another tap. Before the microphone is first used, the system's
  * question is explained (or how to turn it back on, once refused). While recording, what has
  * been said so far goes to `onPartial` every so often, one at a time. `buttonProps` go on the
  * microphone button, which must stay the same element while held so the finger is never
@@ -70,6 +73,8 @@ export function useTalk({
   onSpoken,
 }: TalkOptions) {
   const [mode, setMode] = useState<TalkMode>('off')
+  /** Hands-free, how far the pause after speaking has gone (0 to 1): at 1 it sends. */
+  const [pause, setPause] = useState(0)
   const [aiming, setAiming] = useState<TalkAim>(null)
   const [error, setError] = useState<string | null>(null)
   const [permission, setPermission] = useMicPermission()
@@ -142,14 +147,39 @@ export function useTalk({
     }, PARTIAL_EVERY_MS)
     return () => clearInterval(every)
   }, [recorderState, snapshot])
-  const drop = () => {
+  // Hands-free, it sends itself once the speaker pauses, as Siri does; said nothing, it
+  // stops listening after a while.
+  const { analyser } = recorder
+  const latestDrop = useRef<(why?: string) => void>(() => undefined)
+  useEffect(() => {
+    if (mode !== 'free' || recorderState !== 'recording' || !analyser) return undefined
+    const hear = listenForPause()
+    const samples = new Uint8Array(analyser.fftSize)
+    const every = setInterval(() => {
+      analyser.getByteTimeDomainData(samples)
+      const heard = hear(levelOf(samples), performance.now())
+      setPause(Math.round(heard.pause * 20) / 20)
+      if (!heard.over) return
+      if (heard.spoken) latestDone.current()
+      else latestDrop.current(m.voiceMicUnheard())
+    }, LEVEL_EVERY_MS)
+    return () => {
+      clearInterval(every)
+      setPause(0)
+    }
+  }, [mode, recorderState, analyser])
+  const drop = (why?: string) => {
     recorder.cancel()
     playCue('cancel')
     tapPhone()
     setMode('off')
     setAiming(null)
+    if (why) setError(why)
     onDrop()
   }
+  useEffect(() => {
+    latestDrop.current = drop
+  })
   const begin = (next: TalkMode) => {
     setError(null)
     setMode(next)
@@ -234,6 +264,7 @@ export function useTalk({
     /** Recording for real; before, the microphone is still being taken. */
     ready: recorderState === 'recording',
     aiming,
+    pause,
     dropping: aiming === 'drop',
     /** When it really started listening (epoch ms). */
     startedAt: recorder.startedAt,

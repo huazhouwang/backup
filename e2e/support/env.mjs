@@ -94,6 +94,13 @@ export const SESSIONS = [
     email: 'tab-mic-hints@example.com',
   },
   {
+    key: 'micPause',
+    token: 'e2e-mic-pause',
+    userId: 'e2e-mic-pause',
+    name: '测试家长',
+    email: 'mic-pause@example.com',
+  },
+  {
     key: 'micRetake',
     token: 'e2e-mic-retake',
     userId: 'e2e-mic-retake',
