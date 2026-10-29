@@ -2,8 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FF000000">
+    android:layout_height="match_parent">
 
     <!-- 环境光：当前选中磁贴的主色，从左下角晕开。 -->
     <View
@@ -72,15 +71,14 @@
                         android:layout_marginBottom="8dp"
                         android:background="#33FFFFFF" />
 
-                    <TextClock
+                    <!-- 日期固定用中文显示，不跟随系统语言（车机可能是英文系统）。 -->
+                    <TextView
                         android:id="@+id/date"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
                         android:layout_marginBottom="9dp"
                         android:singleLine="true"
-                        android:format12Hour="@string/date_format"
-                        android:format24Hour="@string/date_format"
                         android:textColor="#A6FFFFFF"
                         android:textSize="15sp"
                         android:fontFamily="@font/outfit_regular"

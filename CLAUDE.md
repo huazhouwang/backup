@@ -44,5 +44,8 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
 ## 目录
 
 - `tools/recon.sh`：只读摸底，输出到 `recon/<时间戳>/`（已 gitignore）。
-- 后续计划：`launcher/`（桌面 APK）、`tools/disable.sh` / `tools/restore.sh`、
-  `examples/wy20/debloat.txt`。结构参考 CleanYourTV（MIT）。
+- `launcher/`：桌面 APK，Kotlin + 传统 View（不用 Compose，车机 CPU 弱），无第三方依赖。
+  - `build-and-install.sh`：编译安装；`--set-home` 切换默认桌面前会确认、记录并可回滚。
+  - 配置：SharedPreferences + 可用 adb 推送的 `config.json`（见 `Config.kt`、`Targets.kt`）。
+  - 摸底查到原车切换组件后，写进 config.json 的 `oem` 字段，不要硬编码进代码。
+- 后续计划：`tools/disable.sh` / `tools/restore.sh`、`examples/wy20/debloat.txt`。结构参考 CleanYourTV（MIT）。

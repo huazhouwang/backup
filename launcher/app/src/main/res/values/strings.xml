@@ -3,7 +3,6 @@
     <string name="app_name">Q5 Home</string>
     <string name="apps">应用</string>
     <string name="settings">设置</string>
-    <string name="date_format">M月d日 EEEE</string>
     <string name="carplay">CarPlay</string>
     <string name="oem">原车</string>
     <string name="oem_sub">MMI 原车画面</string>
