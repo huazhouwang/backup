@@ -1,6 +1,28 @@
 import { type RefObject, useEffect } from 'react'
 
 /**
+ * iOS brings the keyboard up, and pans the page to the field, over several frames and in
+ * more than one step, while telling the page only now and then. So after each sign of it
+ * (a focus, a resize, a pan), `run` runs again every frame until things have settled.
+ * Returns a way to start it, and one to stop for good.
+ */
+function untilSettled(run: () => void, ms = 1000) {
+  let frame = 0
+  let until = 0
+  const tick = () => {
+    run()
+    frame = performance.now() < until ? requestAnimationFrame(tick) : 0
+  }
+  return {
+    follow: () => {
+      until = performance.now() + ms
+      if (!frame) frame = requestAnimationFrame(tick)
+    },
+    stop: () => cancelAnimationFrame(frame),
+  }
+}
+
+/**
  * iOS lays the keyboard over the page without resizing it, so whatever sits at the bottom
  * would end up behind it. While `active`, this keeps CSS variables on `ref`'s element with
  * the part of the screen still visible: `--visible-top` and `--visible` (its top and height)
@@ -18,11 +40,19 @@ export function useVisibleArea(ref: RefObject<HTMLElement | null>, active: boole
       element.style.setProperty('--visible-top', `${viewport.offsetTop}px`)
     }
     fit()
-    viewport.addEventListener('resize', fit)
-    viewport.addEventListener('scroll', fit)
+    const settle = untilSettled(fit)
+    const onChange = () => {
+      fit()
+      settle.follow()
+    }
+    viewport.addEventListener('resize', onChange)
+    viewport.addEventListener('scroll', onChange)
+    document.addEventListener('focusin', settle.follow)
     return () => {
-      viewport.removeEventListener('resize', fit)
-      viewport.removeEventListener('scroll', fit)
+      settle.stop()
+      viewport.removeEventListener('resize', onChange)
+      viewport.removeEventListener('scroll', onChange)
+      document.removeEventListener('focusin', settle.follow)
       for (const name of ['--keyboard', '--visible', '--visible-top']) {
         element.style.removeProperty(name)
       }
@@ -65,13 +95,20 @@ export function useFieldAboveKeyboard(ref: RefObject<HTMLElement | null>, active
       const over = field.getBoundingClientRect().bottom - (bottom - TOOLBAR_ROOM)
       if (over > 0) element.scrollTop += over
     }
-    element.addEventListener('focusin', reveal)
-    viewport?.addEventListener('resize', reveal)
-    viewport?.addEventListener('scroll', reveal)
+    // Again each frame while the keyboard comes up: at the focus it isn't there yet.
+    const settle = untilSettled(reveal)
+    const onChange = () => {
+      reveal()
+      settle.follow()
+    }
+    element.addEventListener('focusin', onChange)
+    viewport?.addEventListener('resize', onChange)
+    viewport?.addEventListener('scroll', onChange)
     return () => {
-      element.removeEventListener('focusin', reveal)
-      viewport?.removeEventListener('resize', reveal)
-      viewport?.removeEventListener('scroll', reveal)
+      settle.stop()
+      element.removeEventListener('focusin', onChange)
+      viewport?.removeEventListener('resize', onChange)
+      viewport?.removeEventListener('scroll', onChange)
     }
   }, [ref, active])
 }

@@ -60,6 +60,8 @@ test('logs a breastfeed afterwards with minutes on each side', async ({ page }) 
 })
 
 test('edits a finished record by its start, duration and end', async ({ page }) => {
+  // Midday, so the hour before and the shortened sleep both stay on today's list.
+  await page.clock.install({ time: new Date('2026-10-27T12:00:00+08:00') })
   await onboard(page)
   await page.locator('main').getByRole('button', { name: '睡眠', exact: true }).click()
   // Logged afterwards: an hour that just ended.
