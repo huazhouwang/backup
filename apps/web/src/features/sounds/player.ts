@@ -16,6 +16,7 @@ const playing = createStore<Playing | null>(null)
 
 /** What is playing on this device, if anything. */
 export const useSoundPlaying = () => useStore(playing)
+export const isSoundPlaying = () => playing.get() !== null
 
 /** Kept by the service worker for nights without a connection (scripts/generate-sw.mjs). */
 const SOUND_CACHE = 'sounds'

@@ -125,7 +125,7 @@ export const getWaitingUpdate = () => waitingUpdate.get()
 
 /**
  * Registers the service worker in production builds and offers updates as they are found.
- * Applying one is left to the user so an update never interrupts logging.
+ * Applying one is up to UpdatePrompt, which waits until it interrupts nothing.
  */
 export function useServiceWorker() {
   useEffect(() => {

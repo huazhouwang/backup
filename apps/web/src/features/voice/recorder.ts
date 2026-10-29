@@ -176,13 +176,23 @@ const NOTHING_YET_MS = 1_000
 /** Times the microphone is taken again in one recording, at most. */
 const MAX_RETAKES = 2
 
-const takeMicrophone = () =>
-  navigator.mediaDevices.getUserMedia({
+/** Microphone streams taken and not yet let go of. */
+const taken = new Set<MediaStream>()
+
+/** Whether the microphone is in use: someone is speaking, so the app mustn't reload. */
+export const isMicrophoneOn = () => taken.size > 0
+
+const takeMicrophone = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: true, noiseSuppression: true },
   })
+  taken.add(stream)
+  return stream
+}
 
 const stopTracks = (stream: MediaStream) => {
   for (const track of stream.getTracks()) track.stop()
+  taken.delete(stream)
 }
 
 /** Hears the microphone through `context`, handing its samples to `take`. */
