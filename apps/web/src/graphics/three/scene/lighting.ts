@@ -37,7 +37,7 @@ export function sunSetup(center: THREE.Vector3, radius: number, quality: ShadowQ
   return {
     position: center.clone().addScaledVector(toward, radius * 2.5),
     mapSize,
-    shadowRadius: quality === 'high' ? 10 : 4,
+    shadowRadius: quality === 'high' ? 6 : 3,
     bias: -0.0004,
     normalBias: ((half * 2) / mapSize) * 2,
     camera: { left: -half, right: half, top: half, bottom: -half, near: 0.5, far: radius * 10 },
