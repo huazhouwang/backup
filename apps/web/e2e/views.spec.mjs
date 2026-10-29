@@ -82,7 +82,9 @@ test('views', async ({ browser: b }) => {
   // The section left the view in 3D
   check(!(await frame.locator('svg[role="img"]').count()), 'the plan is gone in 3D');
   await page.getByRole('button', { name: '切换到平面' }).click({ timeout: 5000 });
-  await page.waitForTimeout(5000);
+  // Until the plan is drawn (software GL leaves 3D slowly), and a moment more for any second framing
+  await frame.waitForFunction(() => window.viewBoxes.length > 0, null, { timeout: 30000 }).catch(() => {});
+  await page.waitForTimeout(3000);
   const boxes = await frame.evaluate(() => window.viewBoxes);
   check(boxes.length === 1, `leaving 3D, the plan shows at one framing (${boxes.join(' | ')})`);
 
