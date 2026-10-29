@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "q5home"
 include ':app'
+// 仅 CI 录屏用：模拟 ZLINK 和原车应用。
+include ':fakeapps'

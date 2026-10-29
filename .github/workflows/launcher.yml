@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'launcher/**'
+      - 'ci/**'
       - '.github/workflows/launcher.yml'
   workflow_dispatch:
 
 jobs:
+  # 编译 APK、代码检查、单元测试 + 多分辨率截图
   build:
     runs-on: ubuntu-latest
     defaults:
@@ -19,9 +21,66 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Build release APK
-        run: ./gradlew --no-daemon assembleRelease lintRelease
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, lint, test
+        run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease :app:testDebugUnitTest :fakeapps:assembleRelease
+
       - uses: actions/upload-artifact@v4
         with:
           name: q5home-apk
           path: launcher/app/build/outputs/apk/release/app-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fakeapps-apk
+          path: launcher/fakeapps/build/outputs/apk/*/release/*.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: launcher/app/build/screenshots/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            launcher/app/build/reports/tests/
+            launcher/app/build/reports/lint-results-release.html
+
+  # 安卓 12 模拟器（1920x720，车机常见比例）上实际点一遍，截图 + 录屏
+  emulator-demo:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: q5home-apk
+          path: apk
+      - uses: actions/download-artifact@v4
+        with:
+          name: fakeapps-apk
+          path: fakeapps
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run demo on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: default
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1920x720
+          script: python3 ci/demo.py --launcher apk/app-release.apk --fake fakeapps/zlink/release/fakeapps-zlink-release.apk --fake fakeapps/oem/release/fakeapps-oem-release.apk --out demo-out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-demo
+          path: demo-out/

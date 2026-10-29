@@ -1,7 +1,11 @@
 {
   "carplay": "com.zjinnova.zlink",
   "oem": "",
-  "dock": [],
+  "dock": [
+    { "icon": "files", "target": "com.android.documentsui" },
+    { "icon": "settings", "target": "action:android.settings.SETTINGS" }
+  ],
+  "wallpaper": "daily",
   "autoCarplay": false,
   "title": "AUDI Q5"
 }

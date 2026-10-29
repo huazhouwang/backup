@@ -48,4 +48,9 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
   - `build-and-install.sh`：编译安装；`--set-home` 切换默认桌面前会确认、记录并可回滚。
   - 配置：SharedPreferences + 可用 adb 推送的 `config.json`（见 `Config.kt`、`Targets.kt`）。
   - 摸底查到原车切换组件后，写进 config.json 的 `oem` 字段，不要硬编码进代码。
+  - 首页图标在 `Icons.kt`（Material Symbols 矢量图），磁贴 = 图标 key + 目标；换应用只改目标。
+  - 壁纸在 `res/drawable-nodpi/wall_*.webp`，来源记在 `CREDITS.md`，新增壁纸要同步更新。
+  - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。
+  - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。
+- `ci/demo.py`：CI 模拟器演示脚本（截图 + 录屏），由 `.github/workflows/launcher.yml` 调用。
 - 后续计划：`tools/disable.sh` / `tools/restore.sh`、`examples/wy20/debloat.txt`。结构参考 CleanYourTV（MIT）。

@@ -23,7 +23,7 @@ done
 
 if [ -z "$apk" ]; then
   echo "编译中…"
-  ./gradlew -q assembleRelease
+  ./gradlew -q :app:assembleRelease
   apk=app/build/outputs/apk/release/app-release.apk
 fi
 

@@ -4,6 +4,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- 壁纸（设置里可选每日轮换 / 指定 / 纯黑）。 -->
+    <ImageView
+        android:id="@+id/wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:importantForAccessibility="no" />
+
+    <!-- 压暗壁纸，保证时钟和磁贴文字看得清：上下更暗，中间透一点。 -->
+    <View
+        android:id="@+id/scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/wallpaper_scrim"
+        android:importantForAccessibility="no" />
+
     <!-- 环境光：当前选中磁贴的主色，从左下角晕开。 -->
     <View
         android:id="@+id/ambient"

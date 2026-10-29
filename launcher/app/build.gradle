@@ -30,7 +30,22 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            // 截图测试的输出目录，CI 会上传。
+            systemProperty 'screenshots.dir', layout.buildDirectory.dir('screenshots').get().asFile.path
+        }
+    }
+
     kotlinOptions {
         jvmTarget = '17'
     }
+}
+
+dependencies {
+    // 仅测试用，不进 APK。
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
+    testImplementation 'androidx.test:core:1.6.1'
 }

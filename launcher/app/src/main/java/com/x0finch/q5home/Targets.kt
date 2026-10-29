@@ -24,6 +24,16 @@ object Targets {
         "com.carconnect5.connect",
         "com.shihab.diplay",
     )
+    /** 系统设置：用 action 写法，任何车机都能打开。 */
+    const val SYSTEM_SETTINGS = "action:android.settings.SETTINGS"
+
+    private val FILES_PACKAGES = listOf(
+        "com.android.documentsui",
+        "com.google.android.documentsui",
+        "com.mediatek.filemanager",
+        "com.android.fileexplorer",
+    )
+    private val FILES_KEYWORDS = listOf("文件", "file")
     private val CARPLAY_KEYWORDS = listOf("zlink", "carplay", "diplay", "autokit", "carlink")
     private val OEM_KEYWORDS = listOf("原车", "原厂", "oem", "original")
 
@@ -126,6 +136,13 @@ object Targets {
 
     /** 自动找原车应用：按名称关键词。找不到时由用户长按指定，或用 config.json 配置。 */
     fun findOem(context: Context): String? = findByKeywords(context, OEM_KEYWORDS)
+
+    /** 自动找文件管理器。 */
+    fun findFiles(context: Context): String? {
+        launchableApps(context).firstOrNull { it.activityInfo.packageName in FILES_PACKAGES }
+            ?.let { return specOf(it) }
+        return findByKeywords(context, FILES_KEYWORDS)
+    }
 
     private fun findByKeywords(context: Context, keywords: List<String>): String? {
         val pm = context.packageManager
