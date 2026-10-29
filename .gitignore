@@ -1,0 +1,4 @@
+# 车机摸底输出，含序列号等设备信息
+recon/
+backups/
+.DS_Store
