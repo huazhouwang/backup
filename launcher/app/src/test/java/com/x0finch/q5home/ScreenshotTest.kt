@@ -121,4 +121,24 @@ class ScreenshotTest {
         shadowOf(Looper.getMainLooper()).idle()
         shoot(activity, "ui-confirm")
     }
+
+    /** 假装已经检查到一个新版本（不联网）。 */
+    private fun fakeNewRelease() {
+        val json = Updates.Release(9999, "1.0.9999", "- 修好了长按菜单遮挡磁贴\n- 新增：检查 GitHub 更新\n- 方向键焦点从 CarPlay 开始",
+            "http://x/q5home.apk", 1_010_000, null, "2026-10-30T08:00:00Z").toJson().toString()
+        context.getSharedPreferences("updates", Context.MODE_PRIVATE).edit()
+            .putString("latest", json).putLong("checked_at", System.currentTimeMillis()).commit()
+    }
+
+    @Test
+    fun settingsUpdate() {
+        fakeNewRelease()
+        settings(SettingsActivity.SECTION_UPDATE, "ui-settings-update")
+    }
+
+    @Test
+    fun homeWithUpdateBadge() {
+        fakeNewRelease()
+        home("w1280dp-h480dp-land-mdpi", "home-update-badge")
+    }
 }

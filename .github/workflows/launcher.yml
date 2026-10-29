@@ -15,8 +15,12 @@ jobs:
     defaults:
       run:
         working-directory: launcher
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 版本号 = 提交数，需要完整历史
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -25,6 +29,9 @@ jobs:
 
       - name: Build, lint, test
         run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease :app:testDebugUnitTest :fakeapps:assembleRelease
+
+      - id: version
+        run: echo "version=1.0.$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -47,7 +54,7 @@ jobs:
             launcher/app/build/reports/tests/
             launcher/app/build/reports/lint-results-release.html
 
-  # 安卓 12 模拟器（1920x720，车机常见比例）上实际点一遍，截图 + 录屏
+  # 安卓 12 模拟器（1920x720，车机常见比例）上实际点一遍：截图 + 带字幕和点击圆环的录屏
   emulator-demo:
     needs: build
     runs-on: ubuntu-latest
@@ -63,7 +70,7 @@ jobs:
           name: fakeapps-apk
           path: fakeapps
 
-      # Pillow 和中文字体：截图上标点击位置；ffmpeg：把字幕压进视频。
+      # Pillow：截图标点击位置、画圆环；ffmpeg + 中文字体：加工视频。
       - name: Install Pillow, ffmpeg, CJK font
         run: |
           pip install --quiet pillow
@@ -86,17 +93,40 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1920x720
           script: python3 ci/demo.py --launcher apk/app-release.apk --fake fakeapps/zlink/release/fakeapps-zlink-release.apk --fake fakeapps/oem/release/fakeapps-oem-release.apk --out demo-out
 
-      # 把每一步的中文字幕压进视频（显示在顶部中间），原始录屏另存为 demo-raw.mp4。
-      - name: Burn captions into video
+      # 视频下方加字幕栏，点击 / 长按处画圆环；原始录屏留作 demo-raw.mp4。
+      - name: Render demo video
         if: always()
-        run: |
-          if [ ! -f demo-out/demo-raw.mp4 ] || [ ! -f demo-out/captions.srt ]; then exit 0; fi
-          ffmpeg -loglevel error -y -i demo-out/demo-raw.mp4 \
-            -vf "subtitles=demo-out/captions.srt:original_size=1920x720:force_style='FontName=Noto Sans CJK SC,FontSize=30,PrimaryColour=&H00FFFFFF,OutlineColour=&H66000000,BorderStyle=3,Outline=10,Shadow=0,Alignment=6,MarginV=20'" \
-            -c:v libx264 -preset veryfast -crf 26 -pix_fmt yuv420p demo-out/demo.mp4
+        run: python3 ci/render_video.py demo-out
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: emulator-demo
           path: demo-out/
+
+  # 推送到 main：发布 GitHub Release（车机里的"检查更新"读这里）。
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: q5home-apk
+          path: apk
+      - name: Name the APK, write release notes
+        run: |
+          mv apk/app-release.apk "apk/q5home-${{ needs.build.outputs.version }}.apk"
+          # 更新说明 = 提交信息（去掉署名行），车机"版本更新"页面会显示。
+          git log -1 --format=%B | grep -v -E '^(Co-Authored-By|Claude-Session):' > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: Q5 Home ${{ needs.build.outputs.version }}
+          body_path: notes.md
+          files: apk/q5home-${{ needs.build.outputs.version }}.apk
+          make_latest: true

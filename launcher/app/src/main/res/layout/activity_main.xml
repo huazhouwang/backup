@@ -125,6 +125,14 @@
                 android:layout_marginTop="4dp"
                 android:orientation="horizontal">
 
+                <!-- 有新版本时显示，点了进设置的"版本更新"。 -->
+                <TextView
+                    android:id="@+id/pillUpdate"
+                    style="@style/Pill"
+                    android:background="@drawable/pill_accent"
+                    android:textColor="#FF0B2A17"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/pillApps"
                     style="@style/Pill"

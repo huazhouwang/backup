@@ -56,6 +56,14 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
     设置是整页 `SettingsActivity`。不要再用系统 AlertDialog / Toast。
   - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。
   - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。
-- `ci/demo.py`：CI 模拟器演示脚本（显示触点 + 中文步骤字幕 + 截图标点击位置），由 `.github/workflows/launcher.yml` 调用；
-  改了界面文字要同步改这里按文字查找的步骤。
+  - 应用内更新：`Updates.kt`（GitHub Release 检查 / 下载 / 校验 / PackageInstaller 安装）、`UpdateJob.kt`（每天检查）。
+    版本号 = 提交数（`app/build.gradle`），推送到 main 自动发 Release（工作流 `release` job）。
+  - 签名密钥 `signing/q5home.keystore` 在仓库里（用户选择的），所有构建共用，不要改动或重新生成，否则车机无法覆盖安装。
+- `ci/demo.py`：CI 模拟器演示脚本（中文步骤字幕 + 点击记录 + 截图标点击位置），`ci/render_video.py` 把字幕放进视频下方的字幕栏、
+  在点击处画圆环。改了界面文字要同步改 demo.py 里按文字查找的步骤。录完要逐帧检查视频（见下）。
+
+## 录屏检查
+
+每次 CI 出了新录屏，按 0.5 秒抽帧拼成总览图逐张看，关键时刻看原尺寸帧。检查：字幕和动作是否同步、
+点击圆环位置、弹出卡片位置是否遮挡、文字是否截断、焦点和滚动、有没有系统弹窗或闪屏。问题和改进写清楚视频时间点。
 - 后续计划：`tools/disable.sh` / `tools/restore.sh`、`examples/wy20/debloat.txt`。结构参考 CleanYourTV（MIT）。

@@ -3,6 +3,16 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// 版本号 = 提交数：只增不减，GitHub Release 的 tag 也是 v1.0.<提交数>，应用内更新据此比较新旧。
+def commitCount = {
+    try {
+        return providers.exec { commandLine 'git', 'rev-list', '--count', 'HEAD' }
+            .standardOutput.asText.get().trim().toInteger()
+    } catch (Exception ignored) {
+        return 1
+    }
+}()
+
 android {
     namespace 'com.x0finch.q5home'
     compileSdk 34
@@ -11,17 +21,30 @@ android {
         applicationId 'com.x0finch.q5home'
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName '0.1'
+        versionCode commitCount
+        versionName "1.0.$commitCount"
+    }
+
+    // 所有构建（本地、CI、Release）用同一把签名，新版本才能覆盖安装旧版本。
+    // 密钥按你的选择放在仓库里（公开仓库：别人也能用它签名，见 README 说明）。
+    signingConfigs {
+        q5home {
+            storeFile file('../signing/q5home.keystore')
+            storePassword 'q5home-public'
+            keyAlias 'q5home'
+            keyPassword 'q5home-public'
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.q5home
+        }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // 只通过 adb 侧载，不上架：用 debug 签名，方便覆盖安装。
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.q5home
         }
     }
 

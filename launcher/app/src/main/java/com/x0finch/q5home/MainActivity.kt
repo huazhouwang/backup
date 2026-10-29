@@ -133,6 +133,11 @@ class MainActivity : Activity() {
         })
 
         if (config.onlineWallpapers) WallpaperJob.schedule(this)
+        if (Updates(this).autoCheck) UpdateJob.schedule(this)
+        findViewById<View>(R.id.pillUpdate).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java)
+                .putExtra(SettingsActivity.EXTRA_SECTION, SettingsActivity.SECTION_UPDATE))
+        }
 
         maybeAutoStartCarPlay()
     }
@@ -149,14 +154,27 @@ class MainActivity : Activity() {
         config.reload()?.let { toast("config.json 有误：$it") }
         updateGreeting()
         updateWallpaper()
+        updateBadge()
         rebuild()
+    }
+
+    /** 有新版本时右上角显示绿色胶囊。 */
+    private fun updateBadge() {
+        val updates = Updates(this)
+        val pill = findViewById<TextView>(R.id.pillUpdate)
+        val latest = updates.latest
+        pill.visibility = if (updates.hasUpdate && latest != null) View.VISIBLE else View.GONE
+        if (latest != null) pill.text = "新版本 ${latest.versionName}"
     }
 
     /** 已经在桌面时再按 HOME：回到最左边，关掉弹窗。 */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         overlay.dismiss(animate = false)
-        tileScroll.smoothScrollTo(0, 0)
+        // 清掉焦点再回到最左边，否则获得焦点的磁贴会把滚动位置拉回去。
+        currentFocus?.clearFocus()
+        tileScroll.scrollTo(0, 0)
+        tileScroll.post { tileScroll.scrollTo(0, 0) }
     }
 
     @Deprecated("Deprecated in Java")
@@ -243,7 +261,13 @@ class MainActivity : Activity() {
             tiles.addView(view, lp)
         }
         // 默认展示 CarPlay 的信息和光晕。
-        tiles.getChildAt(0)?.let { showHero(it.tag as TileInfo) }
+        tiles.getChildAt(0)?.let { first ->
+            showHero(first.tag as TileInfo)
+            // 旋钮 / 方向键：从右上角按钮往下，先到 CarPlay，而不是离得最近的最右边磁贴。
+            first.id = R.id.firstTile
+            findViewById<View>(R.id.pillApps).nextFocusDownId = R.id.firstTile
+            findViewById<View>(R.id.pillSettings).nextFocusDownId = R.id.firstTile
+        }
     }
 
     /** 磁贴的图标：画好的统一图标优先，没有就用应用自带图标。 */
@@ -324,7 +348,10 @@ class MainActivity : Activity() {
         card.setOnFocusChangeListener { v, focused ->
             v.animate().scaleX(if (focused) 1.05f else 1f).scaleY(if (focused) 1.05f else 1f)
                 .setDuration(150).start()
-            if (focused) showHero(v.tag as TileInfo)
+            if (focused) {
+                showHero(v.tag as TileInfo)
+                keepVisible(v)
+            }
         }
         card.setOnTouchListener { v, event ->
             when (event.actionMasked) {
@@ -340,6 +367,19 @@ class MainActivity : Activity() {
             false
         }
         return card
+    }
+
+    /** 选中的磁贴（放大 5% 加描边）完整留在屏幕里，两边留出边距。 */
+    private fun keepVisible(v: View) {
+        tileScroll.post {
+            val margin = dp(40)
+            val left = v.left - tileScroll.scrollX
+            val right = v.right - tileScroll.scrollX
+            when {
+                left < margin -> tileScroll.smoothScrollTo((v.left - margin).coerceAtLeast(0), 0)
+                right > tileScroll.width - margin -> tileScroll.smoothScrollTo(v.right + margin - tileScroll.width, 0)
+            }
+        }
     }
 
     private fun showHero(info: TileInfo) {

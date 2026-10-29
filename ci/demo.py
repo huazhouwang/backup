@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """CI 演示：在模拟器上安装桌面和假应用，按步骤点一遍，截图并录屏。
 
-- 打开"显示触摸操作"，录屏里每次点击 / 长按都有白色圆点。
-- 每一步写一条中文字幕（captions.srt），工作流再用 ffmpeg 压进视频；按键类操作（HOME、返回、方向键）也有字幕。
-- 每张截图上用圆圈标出这一步点击的位置（需要 Pillow，没有就跳过）。
+- 每一步写一条中文字幕（captions.srt），按键类操作（HOME、返回、方向键）也有字幕。
+- 每次点击 / 长按记到 taps.json；模拟器对脚本注入的点击不显示系统触点，由 ci/render_video.py 画圆环。
+- 每张截图上用红圈标出这一步点击的位置（需要 Pillow，没有就跳过）。
 
 用法：python3 ci/demo.py --launcher app-release.apk --fake zlink.apk --fake oem.apk --out demo-out
 任何一步找不到要点的文字就失败（截图和录屏仍会保留，方便排查）。
 """
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -44,6 +45,7 @@ class Demo:
         self.t0 = None
         self.captions = []  # (开始秒, 文字)
         self.last_touch = None  # (x, y, 说明)
+        self.taps = []  # 给 render_video.py 画圆环用
         os.makedirs(out, exist_ok=True)
 
     # ---- 字幕 ----
@@ -107,6 +109,7 @@ class Demo:
         _, x, y = self.find(text, **kw)
         self.caption(caption)
         self.last_touch = (x, y, "点击")
+        self.log_tap(x, y, "tap")
         shell(f"input tap {x} {y}")
         time.sleep(1.8)
 
@@ -114,8 +117,17 @@ class Demo:
         _, x, y = self.find(text, **kw)
         self.caption(caption)
         self.last_touch = (x, y, "长按")
+        self.log_tap(x, y, "hold")
         shell(f"input swipe {x} {y} {x} {y} 1200")
         time.sleep(1.8)
+
+    def log_tap(self, x, y, kind):
+        if self.t0 is not None:
+            self.taps.append({"t": round(time.time() - self.t0, 2), "x": x, "y": y, "kind": kind})
+
+    def write_taps(self):
+        with open(os.path.join(self.out, "taps.json"), "w") as f:
+            json.dump(self.taps, f)
 
     def key(self, code, caption, times=1):
         self.caption(caption)
@@ -180,18 +192,26 @@ def main():
     shell("svc power stayon true")
     # 录屏里显示触点。
     shell("settings put system show_touches 1")
-    shell(f"cmd package set-home-activity {HOME}")
+    # 设为默认桌面：安卓 10+ 用"桌面"角色，旧方法兜底；否则按 HOME 会弹系统的选择框。
+    shell(f"cmd role add-role-holder --user 0 android.app.role.HOME {PKG}", check=False)
+    shell(f"cmd package set-home-activity {HOME}", check=False)
     shell("input keyevent KEYCODE_WAKEUP")
     shell("wm dismiss-keyguard", check=False)
+    shell("input keyevent KEYCODE_HOME")
+    for _ in range(10):  # 等桌面真正出现在前台再开始录
+        if PKG in (shell("dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'", check=False) or ""):
+            break
+        time.sleep(1)
+    else:
+        print("警告：桌面没有出现在前台", file=sys.stderr)
+    time.sleep(2)
 
     demo = Demo(args.out)
     recorder = subprocess.Popen(
         ["adb", "shell", "screenrecord", "--time-limit", "180", "--bit-rate", "8000000", "/sdcard/demo.mp4"])
-    time.sleep(1)
-    demo.t0 = time.time()
+    demo.t0 = time.time()  # 录屏大约在这之后零点几秒开始，字幕会比动作稍早一点出现
     failed = None
     try:
-        demo.home()
         time.sleep(1)
         demo.caption("① 首页：CarPlay、原车、文件、设置")
         time.sleep(2)
@@ -231,12 +251,15 @@ def main():
         demo.tap("恢复默认布局", "⑬ 点「恢复默认布局」→ 确认卡片")
         demo.shot("confirm")
         demo.tap("取消", "⑭ 点「取消」")
-        demo.tap("返回桌面", "⑮ 点「返回桌面」")
+        demo.tap("版本更新", "⑮ 左侧切到「版本更新」→ 检查 GitHub Release", prefix=True)
+        time.sleep(3)  # 等检查结果
+        demo.shot("settings-update")
+        demo.tap("返回桌面", "⑯ 点「返回桌面」")
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "⑯ 方向键 ↓（模拟旋钮）", times=2)
-        demo.key("KEYCODE_DPAD_RIGHT", "⑰ 方向键 →：焦点移到下一个磁贴", times=2)
+        demo.key("KEYCODE_DPAD_DOWN", "⑰ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始", times=2)
+        demo.key("KEYCODE_DPAD_RIGHT", "⑱ 方向键 →：焦点移到下一个磁贴", times=4)
         demo.shot("dpad-focus")
         demo.home()
         demo.caption("演示结束")
@@ -255,6 +278,7 @@ def main():
         time.sleep(2)
         adb("pull", "/sdcard/demo.mp4", os.path.join(args.out, "demo-raw.mp4"), check=False)
         demo.write_srt(end)
+        demo.write_taps()
 
     crashes = shell("logcat -d -b crash", check=False) or ""
     with open(os.path.join(args.out, "crash.log"), "w") as f:

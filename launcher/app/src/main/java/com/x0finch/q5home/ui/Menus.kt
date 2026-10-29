@@ -111,7 +111,7 @@ object Menus {
             })
         }
         cell.addView(frame, LinearLayout.LayoutParams(Ui.dp(context, 56), Ui.dp(context, 56)))
-        cell.addView(Ui.text(context, name, 12f, if (selected) Ui.ACCENT else Ui.TEXT_DIM).apply {
+        cell.addView(Ui.text(context, name, 13f, if (selected) Ui.ACCENT else Ui.TEXT_DIM).apply {
             gravity = Gravity.CENTER
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = Ui.dp(context, 6) })
         return cell

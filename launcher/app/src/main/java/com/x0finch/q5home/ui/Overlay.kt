@@ -52,7 +52,10 @@ class Overlay(private val host: FrameLayout) {
         card.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(160).start()
     }
 
-    /** 卡片放在锚点上方（放不下就放下方），左右不超出屏幕。 */
+    /**
+     * 卡片不遮住锚点：优先放在上方，其次下方；上下都放不下（车机屏幕矮）就放在锚点旁边，
+     * 锚点在右半屏放左边，否则放右边。
+     */
     private fun placeNear(card: View, anchor: View) {
         val a = Rect()
         anchor.getGlobalVisibleRect(a)
@@ -61,11 +64,18 @@ class Overlay(private val host: FrameLayout) {
         a.offset(-h.left, -h.top)
         val margin = Ui.dp(context, 16)
         val gap = Ui.dp(context, 12)
-        val x = a.left.coerceIn(margin, (host.width - card.width - margin).coerceAtLeast(margin))
-        var y = a.top - card.height - gap
-        if (y < margin) y = (a.bottom + gap).coerceAtMost(host.height - card.height - margin)
+        val maxX = (host.width - card.width - margin).coerceAtLeast(margin)
+        val maxY = (host.height - card.height - margin).coerceAtLeast(margin)
+        val (x, y) = when {
+            a.top - card.height - gap >= margin -> a.left.coerceIn(margin, maxX) to a.top - card.height - gap
+            a.bottom + gap + card.height <= host.height - margin -> a.left.coerceIn(margin, maxX) to a.bottom + gap
+            else -> {
+                val side = if (a.centerX() > host.width / 2) a.left - card.width - gap else a.right + gap
+                side.coerceIn(margin, maxX) to (a.centerY() - card.height / 2).coerceIn(margin, maxY)
+            }
+        }
         card.x = x.toFloat()
-        card.y = y.coerceAtLeast(margin).toFloat()
+        card.y = y.toFloat()
     }
 
     fun dismiss(animate: Boolean = true) {

@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
@@ -21,6 +22,8 @@ import com.x0finch.q5home.ui.Menus
 import com.x0finch.q5home.ui.Overlay
 import com.x0finch.q5home.ui.Toggle
 import com.x0finch.q5home.ui.Ui
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 /** 整页设置：左边分类，右边内容。和首页同一套视觉，不用系统弹窗。 */
@@ -33,6 +36,9 @@ class SettingsActivity : Activity() {
     private lateinit var content: LinearLayout
     private lateinit var scroll: ScrollView
     private var section = SECTION_WALLPAPER
+    private var checking = false
+    /** 下载进度 0–100；null 表示没在下载。 */
+    private var downloadProgress: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +81,7 @@ class SettingsActivity : Activity() {
         when (section) {
             SECTION_CARPLAY -> renderCarPlay()
             SECTION_ADVANCED -> renderAdvanced()
+            SECTION_UPDATE -> renderUpdate()
             else -> renderWallpaper()
         }
     }
@@ -87,6 +94,8 @@ class SettingsActivity : Activity() {
             LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(20); marginStart = dp(6) })
         navItem(SECTION_WALLPAPER, "壁纸", R.drawable.ui_wallpaper)
         navItem(SECTION_CARPLAY, "CarPlay 与原车", R.drawable.glyph_carplay)
+        val badge = if (Updates(this).hasUpdate) "  ●" else ""
+        navItem(SECTION_UPDATE, "版本更新$badge", R.drawable.ui_update)
         navItem(SECTION_ADVANCED, "高级", R.drawable.ui_tune)
         nav.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         nav.addView(Ui.pill(this, "返回桌面") { finish() },
@@ -123,8 +132,7 @@ class SettingsActivity : Activity() {
 
         val all = Wallpapers.available(this)
         val strip = LinearLayout(this).apply { setPadding(0, dp(4), 0, dp(4)) }
-        val today = Wallpapers.current(this, Wallpapers.DAILY)
-        strip.addView(thumb(Wallpapers.DAILY, "每日轮换", today, badge = "每日"))
+        strip.addView(thumb(Wallpapers.DAILY, "每日轮换", null, collage = all.take(3)))
         all.forEach { strip.addView(thumb(it.key, it.name, it)) }
         strip.addView(thumb(Wallpapers.NONE, "纯黑", null))
         content.addView(HorizontalScrollView(this).apply {
@@ -156,7 +164,8 @@ class SettingsActivity : Activity() {
     }
 
     /** 壁纸缩略图：当前用的那张有绿色描边和对勾。 */
-    private fun thumb(key: String, name: String, wallpaper: Wallpapers.Wallpaper?, badge: String? = null): View {
+    private fun thumb(key: String, name: String, wallpaper: Wallpapers.Wallpaper?,
+                      collage: List<Wallpapers.Wallpaper> = emptyList()): View {
         val selected = key == config.wallpaper
         val w = dp(176); val h = w * 3 / 8
         val cell = LinearLayout(this).apply {
@@ -183,13 +192,21 @@ class SettingsActivity : Activity() {
                 }, FrameLayout.LayoutParams(-1, -1))
             }
         }
-        badge?.let {
-            frame.addView(Ui.text(this, it, 11f, Ui.TEXT, Ui.Font.MEDIUM).apply {
-                background = Ui.rounded(this@SettingsActivity, 0x99000000.toInt(), 8)
-                setPadding(dp(8), dp(3), dp(8), dp(3))
-            }, FrameLayout.LayoutParams(-2, -2, Gravity.START or Gravity.BOTTOM).apply {
-                setMargins(dp(8), 0, 0, dp(8))
-            })
+        // 每日轮换：几张壁纸拼在一起，中间一个轮换图标，和单张壁纸区分开。
+        if (collage.isNotEmpty()) {
+            val strips = LinearLayout(this)
+            collage.forEach { wp ->
+                strips.addView(ImageView(this).apply {
+                    Wallpapers.decode(this@SettingsActivity, wp, w / 2)?.let { setImageBitmap(it) }
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                }, LinearLayout.LayoutParams(0, -1, 1f).apply { marginEnd = dp(2) })
+            }
+            frame.addView(strips, FrameLayout.LayoutParams(-1, -1))
+            frame.addView(View(this).apply { setBackgroundColor(0x66000000) }, FrameLayout.LayoutParams(-1, -1))
+            frame.addView(Ui.glyph(this, R.drawable.ui_refresh, 22).apply {
+                background = Ui.rounded(this@SettingsActivity, 0x99000000.toInt(), 20)
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+            }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         }
         if (selected) {
             frame.addView(Ui.glyph(this, R.drawable.ui_check, 16, 0xFF0B2A17.toInt()).apply {
@@ -234,12 +251,15 @@ class SettingsActivity : Activity() {
     /** 存储占用条。 */
     private class Meter(context: android.content.Context, private val fraction: Float) : View(context) {
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        private val rect = RectF()
         override fun onDraw(canvas: Canvas) {
             val r = height / 2f
             paint.color = 0x26FFFFFF
-            canvas.drawRoundRect(RectF(0f, 0f, width.toFloat(), height.toFloat()), r, r, paint)
+            rect.set(0f, 0f, width.toFloat(), height.toFloat())
+            canvas.drawRoundRect(rect, r, r, paint)
             paint.color = if (fraction > 0.85f) Ui.DANGER else Ui.ACCENT
-            canvas.drawRoundRect(RectF(0f, 0f, width * fraction, height.toFloat()), r, r, paint)
+            rect.right = width * fraction
+            canvas.drawRoundRect(rect, r, r, paint)
         }
     }
 
@@ -293,6 +313,100 @@ class SettingsActivity : Activity() {
         }
         overlay.snackbar("已更换为 ${Targets.label(this, spec) ?: spec}")
         render()
+    }
+
+    // ---- 版本更新 ----
+
+    private fun renderUpdate() {
+        val updates = Updates(this)
+        header("版本更新", "从 GitHub Releases（${Updates.REPO}）检查新版本")
+        // 进入页面时，距离上次检查超过 10 分钟就自动查一次。
+        if (!checking && System.currentTimeMillis() - updates.lastCheckedAt > 10 * 60_000) checkNow()
+
+        val latest = updates.latest
+        val checkedAt = updates.lastCheckedAt.takeIf { it > 0 }
+            ?.let { "上次检查 " + SimpleDateFormat("M月d日 HH:mm", Locale.CHINA).format(Date(it)) }
+        val status = when {
+            checking -> "正在检查…"
+            updates.lastError != null -> "出错了：${updates.lastError}"
+            checkedAt == null -> "还没检查过"
+            latest == null -> "还没有发布版本"
+            updates.hasUpdate -> "有新版本 ${latest.versionName}"
+            else -> "已是最新版本"
+        }
+        group(
+            row(R.drawable.ui_info, "当前版本", updates.currentVersionName, null),
+            row(R.drawable.ui_refresh, status, checkedAt ?: "连上网络后点右边检查",
+                Ui.pill(this, if (checking) "检查中…" else "检查更新") { if (!checking) checkNow() }),
+        )
+
+        if (latest != null && updates.hasUpdate) {
+            subheader("新版本 ${latest.versionName}")
+            val notes = latest.notes.ifBlank { "（这个版本没有写更新说明）" }
+            val mb = String.format(Locale.US, "%.1f MB", latest.apkSize / 1024.0 / 1024.0)
+            val progress = downloadProgress
+            val button = if (progress != null) {
+                Ui.pill(this, "下载中 $progress%") {}.apply { isEnabled = false }
+            } else {
+                Ui.pill(this, "下载并安装（$mb）", Ui.PillStyle.PRIMARY) { downloadAndInstall(latest) }
+            }
+            val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            texts.addView(Ui.text(this, notes, 15f, Ui.TEXT, singleLine = false).apply { maxLines = 8 })
+            texts.addView(Ui.text(this, "发布于 ${latest.publishedAt.take(10)}", 13f, Ui.TEXT_DIM),
+                LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(10) })
+            group(rowWith(R.drawable.ui_download, texts, button))
+        }
+
+        subheader("自动检查")
+        group(
+            toggleRow(R.drawable.ui_power, "自动检查更新", "每天检查一次，有新版本时首页右上角会提示，不会自动安装",
+                updates.autoCheck) { on ->
+                updates.autoCheck = on
+                if (on) UpdateJob.schedule(this) else UpdateJob.cancel(this)
+            },
+        )
+        hint("安装时安卓会弹出系统确认；第一次需要允许 Q5 Home「安装未知应用」。所有版本用同一签名，设置会保留。")
+    }
+
+    private fun checkNow() {
+        checking = true
+        Thread {
+            runCatching { Updates(this).check() }
+            runOnUiThread {
+                checking = false
+                if (section == SECTION_UPDATE) render()
+            }
+        }.start()
+    }
+
+    private fun downloadAndInstall(release: Updates.Release) {
+        if (!packageManager.canRequestPackageInstalls()) {
+            Menus.confirm(overlay, this, "需要允许安装更新",
+                "第一次更新需要在系统设置里允许 Q5 Home「安装未知应用」。打开开关后返回，再点一次下载并安装。", "去设置") {
+                runCatching {
+                    startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                }.onFailure { overlay.snackbar("车机不支持这个页面，可以用电脑执行 README 里的 adb 命令") }
+            }
+            return
+        }
+        downloadProgress = 0
+        render()
+        Thread {
+            val updates = Updates(this)
+            val error = try {
+                val apk = updates.download(release) { p ->
+                    runOnUiThread { downloadProgress = p; if (section == SECTION_UPDATE) render() }
+                }
+                updates.verify(apk) ?: run { updates.install(apk); null }
+            } catch (e: Exception) {
+                e.message ?: e.toString()
+            }
+            runOnUiThread {
+                downloadProgress = null
+                render()
+                overlay.snackbar(error ?: "下载完成，请在系统弹窗里确认安装")
+            }
+        }.start()
     }
 
     // ---- 高级 ----
@@ -425,6 +539,7 @@ class SettingsActivity : Activity() {
         const val SECTION_WALLPAPER = "wallpaper"
         const val SECTION_CARPLAY = "carplay"
         const val SECTION_ADVANCED = "advanced"
+        const val SECTION_UPDATE = "update"
         private const val REQ_CARPLAY = 1
         private const val REQ_OEM = 2
     }
