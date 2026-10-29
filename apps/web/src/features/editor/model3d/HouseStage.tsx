@@ -68,13 +68,16 @@ export function HouseStage({
   );
   useEffect(() => {
     scene.environment = env;
-    scene.environmentIntensity = ENVIRONMENT_INTENSITY * mood.sky;
     invalidate();
     return () => {
       if (scene.environment === env) scene.environment = null;
       env.dispose();
     };
-  }, [env, mood.sky]);
+  }, [env]);
+  useEffect(() => {
+    scene.environmentIntensity = ENVIRONMENT_INTENSITY * mood.sky;
+    invalidate();
+  }, [mood.sky]);
   const [cx, cz] = useMemo(() => {
     const [x0, y0, x1, y1] = siteBounds(project);
     return [((x0 + x1) / 2) * M, ((y0 + y1) / 2) * M];
