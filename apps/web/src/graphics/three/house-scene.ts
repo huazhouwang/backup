@@ -35,7 +35,7 @@ import { floorTexture } from './floor-textures';
 import { isSoftwareGL, LOOK, type Look } from './beauty';
 import { partsGeometry } from './looks';
 import { plantGroup } from './plants';
-import { treeLine } from './setting';
+import { lawn, treeLine } from './setting';
 import { applyMaps, surfaceMaps } from './textures';
 import {
   backdrop,
@@ -239,6 +239,13 @@ export async function houseScene(
   setting.position.y = p.site.groundLevel * M;
   setting.traverse(o => (o as THREE.Mesh).isMesh && keep((o as THREE.Mesh).geometry));
   scene.add(setting);
+  // On a lawn, which takes the shadows instead of the bare ground
+  const grass = await lawn(center, radius, themeColor('--canvas-backdrop', doc), !lit);
+  grass.position.y += p.site.groundLevel * M;
+  keep(grass.geometry);
+  keep(grass.material as THREE.Material);
+  scene.add(grass);
+  ground.visible = false;
 
   // The 3D view's light, with the sky environment where the renderer can afford it; elsewhere the sky light carries it all
   scene.add(new THREE.HemisphereLight(color('--canvas-skylight'), white, lit ? light.sky : SKYLIGHT_WITHOUT_ENVIRONMENT));

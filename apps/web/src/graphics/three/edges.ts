@@ -56,10 +56,14 @@ const shader = {
       fwd[0] = vec2(px.x, 0.0); fwd[1] = vec2(0.0, px.y);
       for (int i = 0; i < 2; i++) {
         vec2 q = vUv + fwd[i];
-        if (here && !empty(q)) {
+        vec2 q2 = vUv + 2.0 * fwd[i];
+        if (here && !empty(q) && !empty(q2)) {
           float zq = -depthAt(q);
-          // Only between faces at about the same depth: depth jumps are profiles
-          if (abs(zq - z) < 0.06 * z + 0.05 && dot(n, normalAt(q)) < 0.8) crease = 1.0;
+          // Only between faces at about the same depth (depth jumps are profiles), and only where the other face is more than a
+          // pixel wide: a ledge narrower than a pixel (a thinner wall standing on a thicker one) would come and go along its
+          // length and draw as dots
+          vec3 nq = normalAt(q);
+          if (abs(zq - z) < 0.06 * z + 0.05 && dot(n, nq) < 0.8 && dot(nq, normalAt(q2)) > 0.9) crease = 1.0;
         }
       }
 

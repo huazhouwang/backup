@@ -3,10 +3,11 @@
  * in a landscape instead of on an empty plane. Image plants (plants.ts) far enough out that no view ever looks through them,
  * varied in species, height and spacing. It is scenery, not part of the design.
  */
-import type { BuiltPart } from '@opensu/core';
+import { DEFAULT_MATERIALS, type BuiltPart } from '@opensu/core';
 import * as THREE from 'three';
 import { plantGroup } from './plants';
 import { M } from './scene';
+import { applyMaps, surfaceMaps } from './textures';
 
 const SPECIES = ['tree-small', 'tree-island', 'tree-searsia', 'tree-small', 'tree-island'];
 
@@ -20,7 +21,7 @@ export const settingDistance = (radius: number) => Math.max(70, radius * 7);
  */
 export function hazeRange(view: number, radius: number): [number, number] {
   const near = view + radius * 1.5;
-  return [near, near + settingDistance(radius) * 1.6];
+  return [near, near + settingDistance(radius) * 3];
 }
 
 /** A tree line around `center` (metres), beyond `radius`; resolves to a group to add to the scene */
@@ -63,4 +64,30 @@ export async function treeLine(center: THREE.Vector3, radius: number): Promise<T
     o.userData.scenery = true;
   });
   return g;
+}
+
+/**
+ * The ground around the site: a lawn in the default library's grass, as presentations set a house in a garden rather than on a
+ * void. It lies just under the site's own floors and paving and catches shadows; `lite` takes the colour map only.
+ */
+export async function lawn(center: THREE.Vector3, radius: number, horizon: THREE.ColorRepresentation, lite = false): Promise<THREE.Mesh> {
+  const grass = DEFAULT_MATERIALS.grass;
+  const [r, g, b] = grass.pbrMetallicRoughness.baseColorFactor;
+  const material = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(r, g, b, THREE.LinearSRGBColorSpace), roughness: 1 });
+  const maps = surfaceMaps(grass, lite);
+  if (maps) applyMaps(material, await maps);
+  // A muted lawn, half-way to the horizon's colour: the setting stays quieter than the house
+  material.color.lerp(new THREE.Color(horizon), 0.55);
+  const size = settingDistance(radius) * 2.4;
+  const geometry = new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2);
+  // Texture coordinates in metres, as the maps are laid (textures.ts)
+  const uv = geometry.getAttribute('uv');
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) - 0.5) * size, (uv.getY(i) - 0.5) * size);
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(center.x, -0.012, center.z);
+  mesh.receiveShadow = true;
+  mesh.raycast = () => {};
+  mesh.userData.scenery = true;
+  mesh.userData.noEdges = true;
+  return mesh;
 }

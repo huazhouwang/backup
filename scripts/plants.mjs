@@ -249,7 +249,13 @@ try {
       const out = await page.evaluate(inPage, { url, node: plant.source.node ?? 0, size: SIZE, patch: plant.source.patch, pose: plant.source.pose });
       mkdirSync(join(DIR, id), { recursive: true });
       for (const v of ['front', 'side', 'top'])
-        await (await padEdges(Buffer.from(out[v].split(',')[1], 'base64'))).webp({ quality: 85, alphaQuality: 90 }).toFile(join(DIR, views[v]));
+        await (
+          await padEdges(Buffer.from(out[v].split(',')[1], 'base64'))
+        )
+          // A touch brighter and fresher than the studio render: leaves read as living green next to a light model
+          .modulate(plant.kind === 'person' ? {} : { brightness: 1.12, saturation: 1.15 })
+          .webp({ quality: 85, alphaQuality: 90 })
+          .toFile(join(DIR, views[v]));
       if (ph) {
         const info = await json(`https://api.polyhaven.com/info/${ph}`);
         plant.source = { ...plant.source, url: `https://polyhaven.com/a/${ph}`, authors: Object.keys(info.authors ?? {}), license: 'CC0-1.0' };

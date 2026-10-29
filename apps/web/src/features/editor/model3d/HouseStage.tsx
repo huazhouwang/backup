@@ -21,7 +21,7 @@ import {
   type ShadowQuality,
 } from '@/graphics/three/scene';
 import { disposePlants } from '@/graphics/three/plants';
-import { hazeRange, treeLine } from '@/graphics/three/setting';
+import { hazeRange, lawn, treeLine } from '@/graphics/three/setting';
 
 export function HouseStage({
   project,
@@ -115,6 +115,23 @@ export function HouseStage({
       disposePlants(got);
     };
   }, [center.x, center.z, radius]);
+  const [grass, setGrass] = useState<THREE.Mesh | null>(null);
+  useEffect(() => {
+    let live = true,
+      got: THREE.Mesh | null = null;
+    void lawn(center, radius, colors.backdrop, !lit).then(m => {
+      got = m;
+      if (live) {
+        setGrass(m);
+        invalidate();
+      }
+    });
+    return () => {
+      live = false;
+      got?.geometry.dispose();
+      (got?.material as THREE.Material | undefined)?.dispose();
+    };
+  }, [center.x, center.z, radius, lit, colors.backdrop]);
   const haze = useMemo(() => new THREE.Fog(colors.backdrop, 1, 2), [colors.backdrop]);
   useEffect(() => {
     if (!scene.fog) scene.fog = haze;
@@ -133,7 +150,9 @@ export function HouseStage({
       <hemisphereLight args={[colors.skylight, colors.wall, (lit ? SKYLIGHT_INTENSITY : SKYLIGHT_WITHOUT_ENVIRONMENT) * mood.sky]} />
       <primitive object={sun} />
       <primitive object={sun.target} />
-      <primitive object={ground} position={[cx, groundY, cz]} />
+      {/* The lawn takes the shadows once it is there; the bare ground until then */}
+      <primitive object={ground} position={[cx, groundY, cz]} visible={!grass} />
+      {grass && <primitive object={grass} position-y={project.site.groundLevel * M - 0.012} />}
       {setting && <primitive object={setting} position-y={project.site.groundLevel * M} />}
     </>
   );

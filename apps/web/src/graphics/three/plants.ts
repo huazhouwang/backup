@@ -57,7 +57,7 @@ function figure(tex: THREE.Texture) {
   let m = figures.get(tex);
   if (!m) {
     m = {
-      color: new THREE.MeshBasicMaterial({ map: tex, alphaTest: ALPHA_TEST, side: THREE.DoubleSide }),
+      color: new THREE.MeshBasicMaterial({ map: tex, alphaTest: ALPHA_TEST, alphaToCoverage: true, side: THREE.DoubleSide }),
       depth: new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: ALPHA_TEST }),
     };
     figures.set(tex, m);
