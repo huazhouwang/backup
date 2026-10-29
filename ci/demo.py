@@ -95,9 +95,12 @@ class Demo:
                 found.append((text, (x1 + x2) // 2, (y1 + y2) // 2))
         return found
 
-    def find(self, text, which="last", prefix=False):
+    def exists(self, text):
+        return any(n[0] == text for n in self.nodes())
+
+    def find(self, text, which="last", prefix=False, tries=5):
         """同一文字可能出现多次（顶部名称和磁贴标题）：last 取最靠下的，first 取最靠上的。"""
-        for _ in range(5):
+        for _ in range(tries):
             hits = [n for n in self.nodes() if (n[0].startswith(text) if prefix else n[0] == text)]
             if hits:
                 hits.sort(key=lambda n: n[2])
@@ -275,7 +278,15 @@ def main():
             shell(f"am start -n {HOME} --ez crash_test true", check=False)
             time.sleep(2.5)
         shell(f"rm -f {marker}")
-        demo.key("KEYCODE_HOME", "⑳ 再按 HOME：自动进入安全模式（不会反复崩溃）")
+        demo.caption("⑳ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
+        time.sleep(2)
+        # 默认桌面反复崩溃时，安卓自己会取消默认桌面、让用户重新选（车上也一样，这时也可以选原厂桌面）。
+        if demo.exists("Select a Home app") or demo.exists("Q5 Home"):
+            demo.tap("Q5 Home", "安卓发现桌面反复崩溃，让你重新选桌面：选 Q5 Home")
+            for label in ("Always", "始终", "总是"):
+                if demo.exists(label):
+                    demo.tap(label, "选「始终」")
+                    break
         demo.find("安全模式")
         time.sleep(1)
         demo.shot("safe-mode")

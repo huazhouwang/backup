@@ -163,4 +163,7 @@ adb pull /sdcard/Android/data/com.x0finch.q5home/files/current.json   # 查看�
    - **修复发布**：让 Claude Code 撤销有问题的改动（`git revert`）推到 main，自动发布新版本。
    - **adb 降级**（需要电脑，且车机允许降级，`getprop ro.debuggable` 为 1）：`adb install -r -d 旧版本.apk`。
 
+另外，安卓自己也有一层保护：默认桌面反复崩溃时，系统会取消它的默认身份，按 HOME 时让你重新选桌面——
+这时也可以直接选原厂桌面。
+
 设置数据始终保持向后兼容，回退后旧版本也能读懂新版本存下的设置。
