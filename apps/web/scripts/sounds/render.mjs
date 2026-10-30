@@ -96,8 +96,9 @@ function tine(note) {
 }
 
 /**
- * One pass of a tune on the music box, with room for the last notes and the reverb to die
- * away. With `fading`, it grows quieter to the end: the ending after the timer.
+ * One pass of a tune on the music box, exactly as long as its bars, so the loop comes round
+ * in time: the last notes and the reverb ring on into the next pass's start. With `fading`,
+ * it grows quieter to the end and has room for them to die away: the ending after the timer.
  */
 function playTune({ bpm, beatsPerBar, pickup = 0, notes }, fading = false) {
   const beat = 60 / bpm
@@ -120,7 +121,13 @@ function playTune({ bpm, beatsPerBar, pickup = 0, notes }, fading = false) {
     beats += length
   }
   const out = reverb(buf, 0.12)
-  // The last half second goes to silence, so passes join without a click.
+  if (!fading) {
+    const pass = Math.round(total * beat * SR)
+    const loop = out.slice(0, pass)
+    for (let i = pass; i < out.length; i += 1) loop[i % pass] += out[i]
+    return scale(loop, 0.32 / peak(loop))
+  }
+  // The last half second goes to silence, so the ending stops without a click.
   const tail = Math.round(0.5 * SR)
   for (let i = 0; i < tail; i += 1) out[out.length - tail + i] *= 1 - i / tail
   return scale(out, 0.32 / peak(out))

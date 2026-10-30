@@ -175,7 +175,7 @@ function showOnLockScreen(sound: SoundId) {
   navigator.mediaSession.metadata = new MediaMetadata({
     title: soundById(sound).title(),
     artist: 'Lullabo',
-    artwork: [{ src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    artwork: [{ src: '/icons/cover-512.png', sizes: '512x512', type: 'image/png' }],
   })
   navigator.mediaSession.setActionHandler('play', resumeSound)
   navigator.mediaSession.setActionHandler('pause', pauseSound)

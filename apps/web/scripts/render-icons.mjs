@@ -15,12 +15,16 @@ const maskable = svg
   )
   .replace('</svg>', '</g></svg>')
 
+// The lock screen's Now Playing shows artwork as a square and fills transparency with white.
+const cover = svg.replace('rx="112" ', '')
+
 const targets = [
   { file: 'icon-192.png', size: 192, source: svg },
   { file: 'icon-512.png', size: 512, source: svg },
   { file: 'icon-maskable-512.png', size: 512, source: maskable },
   // iOS applies its own rounded mask and ignores transparency, so use the full-bleed variant.
   { file: 'apple-touch-icon.png', size: 180, source: maskable },
+  { file: 'cover-512.png', size: 512, source: cover },
 ]
 
 // One page renders the icons one after another on purpose.
