@@ -1,6 +1,7 @@
 import {
   type PushMessage,
   type VaccineNotice,
+  noChoices,
   vaccineNotices,
   vaccinePlan,
   vaccinePlanSchema,
@@ -138,7 +139,7 @@ export async function dispatchVaccineReminders(
     const settings = baby.vaccinePlan
       ? vaccinePlanSchema.safeParse(JSON.parse(baby.vaccinePlan))
       : null
-    const choices = settings?.success ? settings.data : { picked: {}, selfPaid: [] }
+    const choices = settings?.success ? settings.data : noChoices('cn')
     const notices = vaccineNotices(
       vaccinePlan(baby.birthDate, baby.sex, today, choices, doses),
       today,

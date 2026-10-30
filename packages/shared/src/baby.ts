@@ -2,16 +2,17 @@ import { z } from 'zod'
 
 import { checkTimestamps, syncFields, timestampSchema } from './common'
 import { idSchema } from './id'
+import { VACCINE_REGIONS } from './vaccines'
 
 export const babySexSchema = z.enum(['female', 'male', 'unspecified'])
 export const avatarColorSchema = z.enum(['green', 'blue', 'orange', 'purple', 'pink', 'yellow'])
 
 /**
- * How a family plans a baby's vaccinations (VACCINES): the region whose schedule it follows,
- * the kind picked where there is a choice, and the self-paid vaccines planned.
+ * How a family plans a baby's vaccinations (vaccinesOf): the region whose schedule it
+ * follows, the kind picked where there is a choice, and the optional vaccines planned.
  */
 export const vaccinePlanSchema = z.object({
-  region: z.enum(['cn']),
+  region: z.enum(VACCINE_REGIONS),
   picked: z.record(z.string().max(40), z.string().max(40)),
   selfPaid: z.array(z.string().max(40)).max(40),
 })

@@ -1,13 +1,20 @@
 import type { BabySex } from './baby'
 import { parseDay, shiftDay } from './date'
+import { AU } from './vaccine-schedules/au'
+import { CA } from './vaccine-schedules/ca'
+import { CN } from './vaccine-schedules/cn'
+import { GB } from './vaccine-schedules/gb'
+import { SG } from './vaccine-schedules/sg'
+import { US } from './vaccine-schedules/us'
 
 /**
- * The vaccines a baby in China gets: the national programme (国家免疫规划疫苗儿童免疫程序
- * 及说明, 2026 edition, National Disease Control and Prevention Administration, June 2026),
- * free; and the common self-paid ones, at the schedule most products give (the clinic has the
- * last word). Ages are in months from birth; `by` is the age to finish a dose by, as the
- * programme recommends, after which it is a catch-up.
+ * The places whose childhood schedule a baby can follow, each from its official source
+ * (vaccine-schedules/). Ages are in months from birth; `by` is the age to finish a dose by,
+ * as the schedule recommends, after which it is a catch-up.
  */
+export const VACCINE_REGIONS = ['cn', 'us', 'gb', 'ca', 'au', 'sg'] as const
+export type VaccineRegion = (typeof VACCINE_REGIONS)[number]
+
 export interface VaccineDose {
   /** From this age (months; plus days, for a dose days after another). */
   months: number
@@ -17,218 +24,59 @@ export interface VaccineDose {
 }
 
 export interface Vaccine {
+  /** Unique across regions: a record keeps it wherever the family lives later. */
   id: string
-  /** Short Chinese name, as clinics and the vaccination booklet say it. */
+  /** Short Chinese name, as clinics in China say it. */
   name: string
+  /** Its name where it is given (DTaP, 6-in-1), as the clinic and the booklet write it. */
+  local?: string
   /** What it prevents. */
   against: string
-  programme: 'national' | 'self-paid'
+  /** On the schedule for every child (in China, free), or one the family may add. */
+  programme: 'routine' | 'optional'
   doses: readonly VaccineDose[]
   /** One of a choice: only the chosen one of a group is planned. */
   choice?: { group: string; label: string }
   /** Girls only (HPV). */
   sex?: BabySex
-  /** Self-paid: given in place of these national vaccines' doses (vaccine id: dose numbers). */
+  /** Optional: given in place of these routine vaccines' doses (vaccine id: dose numbers). */
   replaces?: Readonly<Record<string, readonly number[]>>
 }
 
-export const VACCINES: readonly Vaccine[] = [
-  {
-    id: 'hepb',
-    name: '乙肝疫苗',
-    against: '乙型肝炎',
-    programme: 'national',
-    doses: [{ months: 0, days: 1 }, { months: 1 }, { months: 6, by: 12 }],
-  },
-  {
-    id: 'bcg',
-    name: '卡介苗',
-    against: '结核病',
-    programme: 'national',
-    doses: [{ months: 0, by: 3 }],
-  },
-  {
-    id: 'ipv',
-    name: '脊灰灭活疫苗',
-    against: '脊髓灰质炎',
-    programme: 'national',
-    doses: [{ months: 2 }, { months: 3 }],
-  },
-  {
-    id: 'bopv',
-    name: '脊灰减毒活疫苗',
-    against: '脊髓灰质炎',
-    programme: 'national',
-    // Doses 3 and 4 of polio, after the two of IPV.
-    doses: [
-      { months: 4, by: 12 },
-      { months: 48, by: 60 },
-    ],
-  },
-  {
-    id: 'dtap',
-    name: '百白破疫苗',
-    against: '百日咳、白喉、破伤风',
-    programme: 'national',
-    doses: [
-      { months: 2 },
-      { months: 4 },
-      { months: 6, by: 12 },
-      { months: 18, by: 24 },
-      { months: 72, by: 84 },
-    ],
-  },
-  {
-    id: 'mmr',
-    name: '麻腮风疫苗',
-    against: '麻疹、风疹、流行性腮腺炎',
-    programme: 'national',
-    doses: [
-      { months: 8, by: 12 },
-      { months: 18, by: 24 },
-    ],
-  },
-  {
-    id: 'je-l',
-    name: '乙脑减毒活疫苗',
-    against: '流行性乙型脑炎',
-    programme: 'national',
-    choice: { group: 'je', label: '减毒活疫苗（2 剂）' },
-    doses: [
-      { months: 8, by: 12 },
-      { months: 24, by: 36 },
-    ],
-  },
-  {
-    id: 'je-i',
-    name: '乙脑灭活疫苗',
-    against: '流行性乙型脑炎',
-    programme: 'national',
-    choice: { group: 'je', label: '灭活疫苗（4 剂）' },
-    doses: [
-      { months: 8 },
-      // 7 to 10 days after the first.
-      { months: 8, days: 7, by: 12 },
-      { months: 24, by: 36 },
-      { months: 72, by: 84 },
-    ],
-  },
-  {
-    id: 'mpsv-a',
-    name: 'A 群流脑多糖疫苗',
-    against: '流行性脑脊髓膜炎',
-    programme: 'national',
-    doses: [
-      { months: 6, by: 12 },
-      { months: 9, by: 24 },
-    ],
-  },
-  {
-    id: 'mpsv-ac',
-    name: 'A 群 C 群流脑多糖疫苗',
-    against: '流行性脑脊髓膜炎',
-    programme: 'national',
-    // Doses 3 and 4 of meningococcal vaccine.
-    doses: [
-      { months: 36, by: 48 },
-      { months: 72, by: 84 },
-    ],
-  },
-  {
-    id: 'hepa-l',
-    name: '甲肝减毒活疫苗',
-    against: '甲型肝炎',
-    programme: 'national',
-    choice: { group: 'hepa', label: '减毒活疫苗（1 剂）' },
-    doses: [{ months: 18, by: 24 }],
-  },
-  {
-    id: 'hepa-i',
-    name: '甲肝灭活疫苗',
-    against: '甲型肝炎',
-    programme: 'national',
-    choice: { group: 'hepa', label: '灭活疫苗（2 剂）' },
-    doses: [
-      { months: 18, by: 24 },
-      { months: 24, by: 36 },
-    ],
-  },
-  {
-    id: 'hpv2',
-    name: '双价 HPV 疫苗',
-    against: '人乳头瘤病毒感染',
-    programme: 'national',
-    sex: 'female',
-    doses: [
-      { months: 156, by: 168 },
-      { months: 162, by: 168 },
-    ],
-  },
-  {
-    id: 'pcv13',
-    name: '13 价肺炎疫苗',
-    against: '肺炎球菌感染',
-    programme: 'self-paid',
-    doses: [{ months: 2 }, { months: 4 }, { months: 6 }, { months: 12 }],
-  },
-  {
-    id: 'dtap-ipv-hib',
-    name: '五联疫苗',
-    against: '百白破、脊灰、b 型流感嗜血杆菌',
-    programme: 'self-paid',
-    doses: [{ months: 2 }, { months: 3 }, { months: 4 }, { months: 18 }],
-    replaces: { dtap: [1, 2, 3, 4], ipv: [1, 2], bopv: [1], hib: [1, 2, 3, 4] },
-  },
-  {
-    id: 'hib',
-    name: 'Hib 疫苗',
-    against: 'b 型流感嗜血杆菌',
-    programme: 'self-paid',
-    doses: [{ months: 2 }, { months: 3 }, { months: 4 }, { months: 18 }],
-  },
-  {
-    id: 'rota',
-    name: '五价轮状病毒疫苗',
-    against: '轮状病毒腹泻',
-    programme: 'self-paid',
-    // From 6 weeks, 4 to 10 weeks apart, all by 32 weeks.
-    doses: [{ months: 2 }, { months: 3 }, { months: 4, by: 7 }],
-  },
-  {
-    id: 'ev71',
-    name: '手足口（EV71）疫苗',
-    against: '手足口病（EV71）',
-    programme: 'self-paid',
-    doses: [{ months: 6 }, { months: 7 }],
-  },
-  {
-    id: 'varicella',
-    name: '水痘疫苗',
-    against: '水痘',
-    programme: 'self-paid',
-    doses: [{ months: 12 }, { months: 48 }],
-  },
-  {
-    id: 'flu',
-    name: '流感疫苗',
-    against: '流行性感冒',
-    programme: 'self-paid',
-    // The first season two doses four weeks apart; after that one each autumn.
-    doses: [{ months: 6 }, { months: 7 }],
-  },
-]
+const SCHEDULES: Readonly<Record<VaccineRegion, readonly Vaccine[]>> = {
+  cn: CN,
+  us: US,
+  gb: GB,
+  ca: CA,
+  au: AU,
+  sg: SG,
+}
+
+/** The vaccines on a region's schedule, routine and optional. */
+export const vaccinesOf = (region: VaccineRegion): readonly Vaccine[] => SCHEDULES[region]
+
+/** Every vaccine of every region. */
+export const VACCINES: readonly Vaccine[] = VACCINE_REGIONS.flatMap((region) => SCHEDULES[region])
 
 export const vaccineById = (id: string) => VACCINES.find((vaccine) => vaccine.id === id)
 
-/** What a family has decided for a baby: which of each choice, which self-paid vaccines. */
+/**
+ * What a family has decided for a baby: whose schedule, which of each choice, which optional
+ * vaccines (`selfPaid`, as China calls them).
+ */
 export interface VaccineChoices {
+  region: VaccineRegion
   /** Choice group → the vaccine id picked (default: the first of the group). */
   picked: Readonly<Record<string, string>>
-  /** Self-paid vaccine ids planned. */
+  /** Optional vaccine ids planned. */
   selfPaid: readonly string[]
 }
 
-export const NO_CHOICES: VaccineChoices = { picked: {}, selfPaid: [] }
+export const noChoices = (region: VaccineRegion): VaccineChoices => ({
+  region,
+  picked: {},
+  selfPaid: [],
+})
 
 /** The day a dose falls due: months then days after birth, on the calendar. */
 export function dueDay(birthDate: string, dose: Pick<VaccineDose, 'months' | 'days'>): string {
@@ -254,7 +102,7 @@ export interface PlannedDose {
   state: DoseState
   /** The day it was given, when done. */
   givenDay: string | null
-  /** Given in place of it, when replaced (a self-paid vaccine's name). */
+  /** Given in place of it, when replaced (an optional vaccine's name). */
   replacedBy: string | null
 }
 
@@ -262,9 +110,9 @@ export interface PlannedDose {
 export const SOON_DAYS = 14
 
 /**
- * Every dose planned for a baby, in the order they fall due, each with where it stands on
- * `today`: given (`given` maps "vaccine id:dose" to the day), replaced by a self-paid
- * vaccine, overdue (past its finish-by age), due, soon, or later.
+ * Every dose planned for a baby on its region's schedule, in the order they fall due, each
+ * with where it stands on `today`: given (`given` maps "vaccine id:dose" to the day),
+ * replaced by an optional vaccine, overdue (past its finish-by age), due, soon, or later.
  */
 export function vaccinePlan(
   birthDate: string,
@@ -273,12 +121,13 @@ export function vaccinePlan(
   choices: VaccineChoices,
   given: ReadonlyMap<string, string>,
 ): PlannedDose[] {
-  const planned = VACCINES.filter((vaccine) => {
+  const schedule = vaccinesOf(choices.region)
+  const planned = schedule.filter((vaccine) => {
     if (vaccine.sex && sex !== vaccine.sex && sex !== 'unspecified') return false
-    if (vaccine.programme === 'self-paid') return choices.selfPaid.includes(vaccine.id)
+    if (vaccine.programme === 'optional') return choices.selfPaid.includes(vaccine.id)
     if (!vaccine.choice) return true
     const group = vaccine.choice.group
-    const first = VACCINES.find((other) => other.choice?.group === group)
+    const first = schedule.find((other) => other.choice?.group === group)
     return (choices.picked[group] ?? first?.id) === vaccine.id
   })
   const replacedBy = new Map<string, string>()

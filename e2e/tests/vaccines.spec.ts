@@ -67,3 +67,27 @@ test('the family’s plan picks the kind and the self-paid vaccines', async ({ p
     'true',
   )
 })
+
+test('a family living abroad follows that country’s schedule', async ({ page }) => {
+  await onboardBornInMay(page)
+  await openVaccines(page)
+  await page.getByRole('button', { name: '我自己记' }).click()
+
+  // China's by default here; the UK's, once chosen, with its own vaccines.
+  await expect(page.getByText(/^乙肝疫苗 第 \d 剂$/).first()).toBeAttached()
+  await page.getByRole('button', { name: '英国', exact: true }).click()
+  await expect(page.getByText('六联疫苗 第 4 剂')).toBeVisible()
+  await expect(page.getByText(/UKHSA/)).toBeVisible()
+  // Its clinic's name under each, as the booklet there writes it.
+  await expect(page.getByText('6-in-1').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: '卡介苗 BCG' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  )
+  // Kept for the baby.
+  await page.reload()
+  await expect(page.getByRole('button', { name: '英国', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+})

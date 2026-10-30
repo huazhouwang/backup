@@ -3,15 +3,18 @@ import {
   type Event,
   HOUR,
   type PlannedDose,
-  VACCINES,
+  VACCINE_REGIONS,
+  type Vaccine,
   type VaccinationEvent,
   type VaccineChoices,
   type VaccinePlanSettings,
   type VaccineReaction,
+  type VaccineRegion,
   localDateString,
   localMidnight,
   parseDay,
   vaccinePlan,
+  vaccinesOf,
 } from '@lullabo/shared'
 import { Badge } from '@lullabo/ui/badge'
 import { Button } from '@lullabo/ui/button'
@@ -36,6 +39,7 @@ import { EditEventSheet } from '../events/EditEventSheet'
 import { logVaccination } from '../events/records'
 import { useBabyEvents } from '../events/use-events'
 import { ReactionChips } from './ReactionChips'
+import { guessRegion, regionName, sourceOf } from './region'
 import { VaccineReminders } from './VaccineReminders'
 
 const dayNumber = (day: string) => {
@@ -43,6 +47,15 @@ const dayNumber = (day: string) => {
   return Date.UTC(year, month - 1, date) / 86_400_000
 }
 const daysUntil = (from: string, to: string) => dayNumber(to) - dayNumber(from)
+/** In a row's small print: 5月20日, with the year only when it isn't this year's. */
+const shortDay = (day: string, today: string) => {
+  const { year, month, day: date } = parseDay(day)
+  return formatDate(new Date(year, month - 1, date), {
+    ...(day.slice(0, 4) === today.slice(0, 4) ? {} : { year: 'numeric' }),
+    month: 'long',
+    day: 'numeric',
+  })
+}
 const showDay = (day: string) => {
   const { year, month, day: date } = parseDay(day)
   return formatDate(new Date(year, month - 1, date), {
@@ -52,17 +65,18 @@ const showDay = (day: string) => {
   })
 }
 
-/** The age a dose is for, as the booklet puts it: 出生, 8 月龄, 4 岁. */
+/** The age a dose is for, as the booklet puts it: 出生, 8 月龄, 4 岁, 3 岁 4 个月. */
 function ageLabel(dose: PlannedDose) {
   const { months } = dose.vaccine.doses[dose.dose - 1] ?? { months: 0 }
   if (months === 0) return m.vaccineAgeBirth()
-  if (months < 24 || months % 12 !== 0) return m.vaccineAgeMonths({ months })
+  if (months < 24) return m.vaccineAgeMonths({ months })
+  if (months % 12 !== 0) {
+    return m.vaccineAgeYearsMonths({ years: Math.floor(months / 12), months: months % 12 })
+  }
   return m.vaccineAgeYears({ years: months / 12 })
 }
 
 const key = (dose: PlannedDose) => `${dose.vaccine.id}:${dose.dose}`
-
-const DEFAULT_PLAN: VaccinePlanSettings = { region: 'cn', picked: {}, selfPaid: [] }
 
 const isVaccination = (event: Event): event is VaccinationEvent => event.type === 'vaccination'
 
@@ -107,13 +121,18 @@ export function VaccinesPage({ baby }: { baby: Baby }) {
     vaccinations.find(
       (event) => event.data.vaccineId === dose.vaccine.id && event.data.dose === dose.dose,
     )
-  const choices: VaccineChoices = baby.vaccinePlan ?? DEFAULT_PLAN
+  // A baby with no plan yet follows the schedule of where this device seems to be.
+  const choices: VaccineChoices = baby.vaccinePlan ?? {
+    region: guessRegion(),
+    picked: {},
+    selfPaid: [],
+  }
   const setChoices = (next: VaccineChoices) =>
     setVaccinePlan(store, baby.id, {
-      region: baby.vaccinePlan?.region ?? DEFAULT_PLAN.region,
+      region: next.region,
       picked: { ...next.picked },
       selfPaid: [...next.selfPaid],
-    })
+    } satisfies VaccinePlanSettings)
   const [recording, setRecording] = useState<PlannedDose | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
   const [showDone, setShowDone] = useState(false)
@@ -186,6 +205,7 @@ export function VaccinesPage({ baby }: { baby: Baby }) {
               <span className="text-title font-extrabold">
                 {next.vaccine.name} {m.vaccineDose({ dose: next.dose })}
               </span>
+              <LocalName vaccine={next.vaccine} />
             </div>
           </div>
           <p
@@ -255,7 +275,7 @@ export function VaccinesPage({ baby }: { baby: Baby }) {
 
       <Choices choices={choices} disabled={!canLog} onChange={setChoices} />
       <VaccineReminders baby={baby} />
-      <p className="m-0 text-caption text-muted-foreground">{m.vaccineSource()}</p>
+      <p className="m-0 text-caption text-muted-foreground">{sourceOf(choices.region)}</p>
 
       <RecordSheet
         dose={recording}
@@ -291,6 +311,19 @@ function Section({
   )
 }
 
+/**
+ * A vaccine's name where it is given (DTaP, 6-in-1), in the small print under its Chinese
+ * name, for matching it with the clinic and the booklet abroad. China's have none.
+ */
+function LocalName({ vaccine }: { vaccine: Vaccine }) {
+  if (!vaccine.local) return null
+  return (
+    <span lang="en" className="truncate text-caption font-normal text-muted-foreground">
+      {vaccine.local}
+    </span>
+  )
+}
+
 const STATE_DOT: Record<PlannedDose['state'], string> = {
   done: 'bg-primary text-primary-foreground',
   replaced: 'bg-muted text-muted-foreground',
@@ -321,10 +354,12 @@ function DoseRow({
     ) : null
   const detail =
     dose.state === 'done' && dose.givenDay
-      ? m.vaccineGivenOn({ date: showDay(dose.givenDay) })
+      ? m.vaccineGivenOn({ date: shortDay(dose.givenDay, today) })
       : dose.state === 'replaced' && dose.replacedBy
         ? m.vaccineReplacedBy({ name: dose.replacedBy })
-        : `${ageLabel(dose)} · ${showDay(dose.dueDay)}`
+        : `${ageLabel(dose)} · ${shortDay(dose.dueDay, today)}`
+  // The name abroad leads the small print, keeping the row to two lines.
+  const small = [dose.vaccine.local, detail].filter(Boolean).join(' · ')
   return (
     <button
       type="button"
@@ -349,14 +384,14 @@ function DoseRow({
         >
           {`${dose.vaccine.name} ${m.vaccineDose({ dose: dose.dose })}`}
         </span>
-        <span className="truncate text-caption text-muted-foreground">{detail}</span>
+        <span className="truncate text-caption text-muted-foreground">{small}</span>
       </span>
       {badge}
     </button>
   )
 }
 
-/** Which kind for the vaccines with a choice, and which self-paid ones to plan. */
+/** Whose schedule, which kind for the vaccines with a choice, and which optional ones. */
 function Choices({
   choices,
   disabled,
@@ -366,13 +401,35 @@ function Choices({
   disabled: boolean
   onChange: (choices: VaccineChoices) => void
 }) {
-  const groups = [...new Set(VACCINES.flatMap((vaccine) => vaccine.choice?.group ?? []))]
+  const schedule = vaccinesOf(choices.region)
+  const groups = [...new Set(schedule.flatMap((vaccine) => vaccine.choice?.group ?? []))]
+  const optional = schedule.filter((vaccine) => vaccine.programme === 'optional')
+  // Another region's vaccines are others: what was picked there no longer applies.
+  const moveTo = (region: VaccineRegion) => onChange({ region, picked: {}, selfPaid: [] })
   return (
     <section className="flex flex-col gap-3">
       <h2 className="m-0 px-1 text-body font-extrabold">{m.vaccineChoices()}</h2>
       <Card className="flex flex-col gap-4">
+        {VACCINE_REGIONS.length > 1 && (
+          <div className="flex flex-col gap-2">
+            <span className="font-bold">{m.vaccineRegion()}</span>
+            <div className="flex flex-wrap gap-2">
+              {VACCINE_REGIONS.map((region) => (
+                <ToggleChip
+                  key={region}
+                  pressed={region === choices.region}
+                  disabled={disabled}
+                  className="min-h-touch rounded-full px-4 font-extrabold"
+                  onClick={() => region !== choices.region && moveTo(region)}
+                >
+                  {regionName(region)}
+                </ToggleChip>
+              ))}
+            </div>
+          </div>
+        )}
         {groups.map((group) => {
-          const options = VACCINES.filter((vaccine) => vaccine.choice?.group === group)
+          const options = schedule.filter((vaccine) => vaccine.choice?.group === group)
           return (
             <SegmentedControl
               key={group}
@@ -389,32 +446,40 @@ function Choices({
             />
           )
         })}
-        <div className="flex flex-col gap-2">
-          <span className="font-bold">{m.vaccineSelfPaid()}</span>
-          <div className="flex flex-wrap gap-2">
-            {VACCINES.filter((vaccine) => vaccine.programme === 'self-paid').map((vaccine) => {
-              const on = choices.selfPaid.includes(vaccine.id)
-              return (
-                <ToggleChip
-                  key={vaccine.id}
-                  pressed={on}
-                  disabled={disabled}
-                  className="min-h-touch rounded-full px-4 font-extrabold"
-                  onClick={() =>
-                    onChange({
-                      ...choices,
-                      selfPaid: on
-                        ? choices.selfPaid.filter((id) => id !== vaccine.id)
-                        : [...choices.selfPaid, vaccine.id],
-                    })
-                  }
-                >
-                  {vaccine.name}
-                </ToggleChip>
-              )
-            })}
+        {optional.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className="font-bold">
+              {choices.region === 'cn' ? m.vaccineSelfPaid() : m.vaccineOptional()}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {optional.map((vaccine) => {
+                const on = choices.selfPaid.includes(vaccine.id)
+                return (
+                  <ToggleChip
+                    key={vaccine.id}
+                    pressed={on}
+                    disabled={disabled}
+                    className={cn(
+                      'flex min-h-touch flex-col justify-center px-4 font-extrabold',
+                      vaccine.local ? 'rounded-xl py-1.5' : 'rounded-full',
+                    )}
+                    onClick={() =>
+                      onChange({
+                        ...choices,
+                        selfPaid: on
+                          ? choices.selfPaid.filter((id) => id !== vaccine.id)
+                          : [...choices.selfPaid, vaccine.id],
+                      })
+                    }
+                  >
+                    {vaccine.name}
+                    <LocalName vaccine={vaccine} />
+                  </ToggleChip>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </Card>
     </section>
   )
@@ -445,7 +510,9 @@ function RecordSheet({
               <span className="text-title font-extrabold">
                 {`${dose.vaccine.name} ${m.vaccineDose({ dose: dose.dose })}`}
               </span>
-              <span className="text-caption text-muted-foreground">{dose.vaccine.against}</span>
+              <span className="text-caption text-muted-foreground">
+                {[dose.vaccine.local, dose.vaccine.against].filter(Boolean).join(' · ')}
+              </span>
             </span>
           </div>
           <label className="flex flex-col gap-1">
