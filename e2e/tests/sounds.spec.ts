@@ -31,6 +31,12 @@ async function watchMedia(page: Page) {
     count: () => page.evaluate(() => window.played.length),
     /** The file playing reaches its end. */
     end: () => page.evaluate(() => window.media.dispatchEvent(new Event('ended'))),
+    /** The sound is at `seconds` into its file, as a time update says. */
+    at: (seconds: number) =>
+      page.evaluate((time) => {
+        Object.defineProperty(window.media, 'currentTime', { configurable: true, get: () => time })
+        window.media.dispatchEvent(new Event('timeupdate'))
+      }, seconds),
   }
 }
 
@@ -79,17 +85,18 @@ test('a lullaby plays on into the sleep, and stops when the baby wakes', async (
   await onboard(page)
 
   await pick(page, '勃拉姆斯摇篮曲', '不定时')
-  expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: false })
+  // A tune loops too, never coming to an end: iOS goes silent after one, screen locked.
+  expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: true })
   const playing = page.locator('main').getByRole('button', { name: '换个声音或定时' })
   await expect(playing).toContainText('一直播放，宝宝醒了就停')
-  // A pass ends: it starts again.
-  await media.end()
-  expect(await media.count()).toBe(2)
-  expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: false })
+  // A pass ends and the next begins, in the same play.
+  await media.at(120)
+  await media.at(0.2)
+  expect(await media.count()).toBe(1)
 
   // The baby falls asleep: the sound plays on.
   await startSleep(page)
-  expect(await media.count()).toBe(2)
+  expect(await media.count()).toBe(1)
   await expect(playing).toBeVisible()
 
   // The player shows what plays; another sound takes over at once, on the same timer.
@@ -112,6 +119,25 @@ test('a lullaby plays on into the sleep, and stops when the baby wakes', async (
   await page.getByRole('button', { name: '醒了' }).click()
   await expect(page.getByRole('timer')).toHaveCount(0)
   await expect.poll(() => page.evaluate(() => window.media.src)).toBe('')
+  await expect(playing).toHaveCount(0)
+})
+
+test('a lullaby finishes its pass before its ending, while it still plays', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-27T20:00:00+08:00') })
+  const media = await watchMedia(page)
+  await onboard(page)
+  await pick(page, '勃拉姆斯摇篮曲', '15 分钟')
+  const playing = page.locator('main').getByRole('button', { name: '换个声音或定时' })
+
+  // The timer is nearly out mid-pass: the pass plays on.
+  await page.clock.fastForward('14:30')
+  await media.at(60)
+  expect(await media.last()).toEqual({ src: '/sounds/brahms.m4a', loop: true })
+  // Back at the start of the tune: its ending takes over, the sound never having stopped.
+  await media.at(0.3)
+  expect(await media.last()).toEqual({ src: '/sounds/brahms-end.m4a', loop: false })
+  await expect(playing).toContainText('渐渐变小声')
+  await media.end()
   await expect(playing).toHaveCount(0)
 })
 

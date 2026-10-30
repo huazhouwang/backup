@@ -22,10 +22,16 @@ export const isSoundPlaying = () => playing.get() !== null
 const SOUND_CACHE = 'sounds'
 
 // One element for the whole app, so the sound carries on across pages. A media element
-// rather than Web Audio: iOS keeps it playing with the screen locked.
+// rather than Web Audio: iOS keeps it playing with the screen locked. It never comes to an
+// end until the sound is over: with the screen locked, iOS closes the page's audio when a
+// file ends, and a play() after that stays silent (WebKit bug 221413). So a tune loops too,
+// a pass told by its time going back to the start, and the ending takes over while the
+// sound still plays.
 let audio: HTMLAudioElement | null = null
 // A tune finishes its pass before its ending starts.
 let endAfterPass = false
+// Where the sound was at the last time update, to tell a tune's pass ending.
+let lastTime = 0
 let ticker: number | undefined
 
 const update = (patch: Partial<Playing>) => {
@@ -37,8 +43,8 @@ function element() {
   if (audio) return audio
   const created = new Audio()
   created.preload = 'auto'
-  created.addEventListener('timeupdate', check)
-  created.addEventListener('ended', passEnded)
+  created.addEventListener('timeupdate', onTime)
+  created.addEventListener('ended', ended)
   // Reaching the end pauses it too; only a real pause shows as paused.
   created.addEventListener('pause', () => {
     if (!created.ended) update({ paused: true })
@@ -61,24 +67,32 @@ function check() {
   else endAfterPass = true
 }
 
+/** A tune that looped back to its start has finished a pass: its ending, if it is time. */
+function onTime() {
+  const time = audio?.currentTime ?? 0
+  const wrapped = time + 1 < lastTime
+  lastTime = time
+  if (wrapped && endAfterPass && !playing.get()?.ending) {
+    const current = playing.get()
+    if (current) playEnding(current.sound)
+    return
+  }
+  check()
+}
+
 function playEnding(sound: SoundId) {
   const media = element()
   media.loop = false
   media.src = soundUrl(sound, true)
+  endAfterPass = false
   update({ ending: true })
   start(media)
 }
 
-/** A tune came to its end: again, or its ending; an ending: done. */
-function passEnded() {
-  const current = playing.get()
-  if (!current || !audio) return
-  if (current.ending) stopSound()
-  else if (endAfterPass) playEnding(current.sound)
-  else {
-    audio.currentTime = 0
-    start(audio)
-  }
+/** Only the ending comes to an end: the sound is over. */
+function ended() {
+  if (playing.get()?.ending) stopSound()
+  else update({ paused: true })
 }
 
 const endsAt = (minutes: TimerMinutes) => (minutes === null ? null : Date.now() + minutes * 60_000)
@@ -87,7 +101,8 @@ const endsAt = (minutes: TimerMinutes) => (minutes === null ? null : Date.now() 
 function playMain(sound: SoundId) {
   const media = element()
   endAfterPass = false
-  media.loop = soundById(sound).kind === 'loop'
+  lastTime = 0
+  media.loop = true
   media.src = soundUrl(sound)
   start(media)
   showOnLockScreen(sound)
@@ -136,6 +151,17 @@ export function stopSound() {
     audio.load()
   }
   if ('mediaSession' in navigator) navigator.mediaSession.metadata = null
+}
+
+// Back on screen: if the sound stopped while away (iOS ended it), show it as paused rather
+// than playing; a tap plays it again.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    const current = playing.get()
+    if (document.visibilityState !== 'visible' || !current || !audio) return
+    if (current.endsAt !== null && Date.now() >= current.endsAt) stopSound()
+    else if (audio.paused && !current.paused) update({ paused: true })
+  })
 }
 
 export const pauseSound = () => audio?.pause()
