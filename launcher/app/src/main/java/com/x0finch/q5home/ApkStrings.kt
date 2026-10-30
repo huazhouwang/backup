@@ -19,8 +19,14 @@ object ApkStrings {
     /** 像广播 / Intent 动作的字符串：至少三段的点分名，最后一段全大写（如 com.wwc2.main.ACTION_X）。 */
     private val ACTION_LIKE = Regex("^[a-z][a-z0-9_]*(\\.[A-Za-z0-9_]+){2,}$")
 
+    /** 第三方库 / 编译器生成的字符串，和厂商逻辑无关，先排除（否则 kotlin 的 reversed 之类会刷屏）。 */
+    private val LIBRARY = Regex(
+        "^L?(kotlin|kotlinx|java|javax|androidx|android[./]support|com[./]google|okhttp3|okio|retrofit2|io[./]reactivex|org)[./]",
+    )
+
     fun interesting(s: String): Boolean {
         if (s.length !in 2..120 || s.any { it == ' ' || it == '\n' }) return false
+        if (s.startsWith("\$this\$") || LIBRARY.containsMatchIn(s)) return false
         if (KEYWORDS.containsMatchIn(s)) return true
         if (!ACTION_LIKE.matches(s)) return false
         val last = s.substringAfterLast('.')

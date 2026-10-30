@@ -70,6 +70,12 @@ class ApkStringsTest {
         assertFalse(ApkStrings.interesting("com.wwc2.main.MainActivity"))
         assertFalse(ApkStrings.interesting("android.permission.CAMERA"))
         assertFalse(ApkStrings.interesting("a long sentence with oem in it"))
+        // 库代码里碰巧含关键词的不要。
+        assertFalse(ApkStrings.interesting("\$this\$reversed"))
+        assertFalse(ApkStrings.interesting("Lkotlin/collections/ReversedList;"))
+        assertFalse(ApkStrings.interesting("Landroidx/camera/core/Origin;"))
+        assertFalse(ApkStrings.interesting("kotlin.collections.REVERSED"))
+        assertTrue(ApkStrings.interesting("Lcom/wwc2/main/OemSwitch;"))
     }
 
     @Test
