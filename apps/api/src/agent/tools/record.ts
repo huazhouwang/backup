@@ -17,9 +17,17 @@ export function record(ctx: ToolContext) {
     inputSchema: z.object({
       actions: z.array(voiceActionSchema).min(1),
       confirmed: confirmedSchema,
+      ask: z
+        .string()
+        .optional()
+        .meta({
+          description:
+            'One short question about something else the parent said that is not clear enough ' +
+            'to record yet, asked after what was recorded',
+        }),
     }),
     outputSchema: resultSchema,
-  }).server(async ({ actions, confirmed }) => {
+  }).server(async ({ actions, confirmed, ask }) => {
     const known = await babies()
     const running = await runningEvents(db, known)
     const plan = planActions(
@@ -40,6 +48,7 @@ export function record(ctx: ToolContext) {
     }
     const refused = await writeChanges(db, access, userId, log, plan.changes, now)
     if (refused) return { ok: false, message: REFUSED[refused] ?? refused }
+    if (ask?.trim()) ctx.state.ask = ask.trim()
     return saved(`已记录：${plan.lines.join('；')}`)
   })
 }

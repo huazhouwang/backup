@@ -372,4 +372,30 @@ describe('voice agent', () => {
       20 * 60_000,
     ])
   })
+
+  it('records what is clear and ends on its question about the rest', async () => {
+    // "睡前喝了奶，体温暖": the note is clear, the feed needs asking about.
+    const note = { ...diaper, type: 'note', text: '体温偏暖' }
+    fake.setResponses([
+      {
+        toolCalls: [
+          {
+            name: 'record',
+            input: { actions: [note], confirmed: false, ask: '睡前那次是母乳还是奶粉，喝了多少？' },
+          },
+        ],
+      },
+    ])
+    const turn = await runAgent(fake, scope, '睡之前喝了奶，体温暖', LATER + 6000)
+    expect(turn.reply).toMatch(
+      /^已记录：小米粒 \d\d:\d\d .*体温偏暖。睡前那次是母乳还是奶粉，喝了多少？$/,
+    )
+
+    // The next turn asks for more again.
+    fake.setResponses([
+      { toolCalls: [{ name: 'record', input: { actions: [diaper], confirmed: false } }] },
+    ])
+    const next = await runAgent(fake, scope, '换尿布了', LATER + 7000)
+    expect(next.reply).toMatch(/还有吗？$/)
+  })
 })

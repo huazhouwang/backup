@@ -115,7 +115,7 @@ export async function runAgent(
   now: number,
 ): Promise<AgentTurn> {
   const threadId = await currentThread(scope.db, scope, now)
-  const state = { done: false, saved: [] as string[] }
+  const state: AgentContext['state'] = { done: false, saved: [] }
   const context = (): AgentContext => ({
     ...scope,
     threadId,
@@ -168,7 +168,7 @@ export async function runAgent(
     // What was saved is the answer, even when the run ran out of time afterwards. No model
     // wrote it, so it joins the conversation here, for the chat box and the next message.
     if (state.saved.length > 0) {
-      const reply = `${state.saved.join('。')}。还有吗？`
+      const reply = `${state.saved.join('。')}。${state.ask ?? '还有吗？'}`
       const { messages } = persistence.stores
       const thread = await messages.loadThread(threadId)
       await messages.saveThread(threadId, [...thread, { role: 'assistant', content: reply }])

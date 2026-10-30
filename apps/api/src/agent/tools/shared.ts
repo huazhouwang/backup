@@ -23,6 +23,8 @@ export interface AgentContext {
     done: boolean
     /** What this turn saved, in a line each: the turn answers with them, no model call. */
     saved: string[]
+    /** A question the turn ends on after what it saved, instead of asking for more. */
+    ask?: string
   }
 }
 
