@@ -22,6 +22,20 @@ export function selectExisting(db: D1Database, table: 'babies' | 'events', ids: 
     .bind(JSON.stringify(ids))
 }
 
+/**
+ * SQL for the plan to store: the one sent, with each of `parts` it leaves out taken from the
+ * one stored, if that has it. None sent: the one stored.
+ */
+function keepPlanParts(sent: string, stored: string, parts: readonly string[]) {
+  const kept = parts.reduce(
+    (plan, part) =>
+      `iif(json_type(${sent}, '$.${part}') is null and json_type(${stored}, '$.${part}') is not null,
+        json_set(${plan}, '$.${part}', json(json_extract(${stored}, '$.${part}'))), ${plan})`,
+    sent,
+  )
+  return `case when ${sent} is null then ${stored} else ${kept} end`
+}
+
 export function upsertBabies(db: D1Database, babies: Baby[]) {
   return db
     .prepare(
@@ -38,8 +52,12 @@ export function upsertBabies(db: D1Database, babies: Baby[]) {
        on conflict (id) do update set
          name = excluded.name, birth_date = excluded.birth_date, sex = excluded.sex,
          avatar_color = excluded.avatar_color, archived_at = excluded.archived_at,
-         -- Apps from before the plan existed leave it out: keep what is there.
-         vaccine_plan = coalesce(excluded.vaccine_plan, babies.vaccine_plan),
+         -- Apps from before the plan existed leave it out, and apps from before a part of
+         -- it existed leave that part out: keep what is there.
+         vaccine_plan = ${keepPlanParts('excluded.vaccine_plan', 'babies.vaccine_plan', [
+           'appointments',
+           'custom',
+         ])},
          updated_at = excluded.updated_at, deleted_at = excluded.deleted_at, seq = excluded.seq
        where excluded.updated_at >= babies.updated_at and babies.family_id = excluded.family_id`,
     )

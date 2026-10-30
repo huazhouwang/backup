@@ -91,3 +91,81 @@ test('a family living abroad follows that country’s schedule', async ({ page }
     'true',
   )
 })
+
+/** A one-pixel PNG: the photo the page shrinks and sends. */
+const PHOTO = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+)
+
+test('a photo of the booklet is read, checked and saved', async ({ page }) => {
+  await onboardBornInMay(page)
+  await openVaccines(page)
+  await page.getByRole('button', { name: '我自己记' }).click()
+  // The family's AI reads the page (here, the server's answer stands in for it).
+  await page.route('**/api/vaccines/read', async (route) => {
+    await route.fulfill({
+      json: {
+        doses: [
+          { vaccineId: 'hepb', name: '乙肝', dose: 1, date: '2026-05-21' },
+          { vaccineId: 'bcg', name: '卡介苗', dose: 1, date: '2026-05-21' },
+          { vaccineId: null, name: '狂犬病疫苗', dose: 1, date: '2026-09-01' },
+        ],
+      },
+    })
+  })
+  const reading = page.waitForRequest('**/api/vaccines/read')
+  await page.getByLabel('拍接种本').setInputFiles({
+    name: 'booklet.png',
+    mimeType: 'image/png',
+    buffer: PHOTO,
+  })
+  const sent: unknown = (await reading).postDataJSON()
+  expect(sent).toMatchObject({
+    region: 'cn',
+    image: expect.stringMatching(/^data:image\/jpeg;base64,/),
+  })
+
+  // Checked first: a day put right, one left out.
+  await expect(sheet(page).getByText('狂犬病疫苗 第 1 剂')).toBeVisible()
+  await sheet(page).getByLabel('接种日期').first().fill('2026-05-20')
+  await sheet(page).getByRole('button', { name: '卡介苗 第 1 剂' }).click()
+  await sheet(page).getByRole('button', { name: '保存 2 剂' }).click()
+  await sheetClosed(page)
+
+  // The unknown one is the family's own vaccine now, its dose given.
+  await expect(page.getByRole('button', { name: '删除自定义疫苗 狂犬病疫苗' })).toBeVisible()
+  await expect(page.getByText(/已打 2 剂/)).toBeVisible()
+  await expect(page.getByText(/^卡介苗 第 1 剂$/).first()).toBeVisible()
+})
+
+test('a dose can be booked for another day, and a vaccine of the family’s own added', async ({
+  page,
+}) => {
+  await onboardBornInMay(page)
+  await openVaccines(page)
+  await page.getByRole('button', { name: '我自己记' }).click()
+
+  // The clinic booked the next dose for 25 November.
+  await page.getByRole('button', { name: '记录接种' }).click()
+  await sheet(page).getByText('改预约日期', { exact: true }).click()
+  await sheet(page).getByLabel('预约日期', { exact: true }).fill('2026-11-25')
+  await sheet(page).getByRole('button', { name: '保存' }).click()
+  await sheetClosed(page)
+  await expect(page.getByText(/已预约 · 11月25日/).first()).toBeVisible()
+
+  // A vaccine no schedule has, in two doses.
+  await page.getByRole('button', { name: '添加疫苗' }).click()
+  await sheet(page).getByLabel('疫苗名称').fill('狂犬病疫苗')
+  await sheet(page).getByText('2', { exact: true }).click()
+  await sheet(page).getByLabel('第 1 剂日期').fill('2026-11-01')
+  await sheet(page).getByLabel('第 2 剂日期').fill('2026-11-04')
+  await sheet(page).getByRole('button', { name: '保存' }).click()
+  await sheetClosed(page)
+  await expect(page.getByText('狂犬病疫苗 第 2 剂')).toBeVisible()
+
+  // Kept for the baby.
+  await page.reload()
+  await expect(page.getByText(/已预约 · 11月25日/).first()).toBeVisible()
+  await expect(page.getByText('狂犬病疫苗 第 2 剂')).toBeVisible()
+})

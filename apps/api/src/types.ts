@@ -1,6 +1,7 @@
 import type { AdapterFor } from './agent/budget'
 import type { Auth } from './auth'
 import type { Env } from './env'
+import type { BookletReader } from './vaccine-photo'
 
 type SessionData = NonNullable<Awaited<ReturnType<Auth['api']['getSession']>>>
 
@@ -11,6 +12,8 @@ export type AppEnv = {
     session: SessionData['session']
     /** The model behind a saved AI setting, for the routes that call one. */
     adapterFor: AdapterFor
+    /** Reads a vaccination booklet photo with a saved AI. */
+    bookletReader: BookletReader
   }
 }
 

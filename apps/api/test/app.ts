@@ -11,7 +11,7 @@ export const TEST_ORIGIN = 'http://localhost:8787'
 /** App wired to a fresh D1 and a Better Auth instance with test helpers. */
 export async function createTestApp(
   overrides: Partial<Env> = {},
-  appOptions: Pick<AppOptions, 'voiceAdapter'> = {},
+  appOptions: Pick<AppOptions, 'voiceAdapter' | 'bookletReader'> = {},
 ) {
   const { env: base, dispose } = await createTestEnv()
   // Counts D1 statements so tests can assert which requests touch the database.

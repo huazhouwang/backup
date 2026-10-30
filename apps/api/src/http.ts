@@ -13,6 +13,7 @@ const STATUS = {
   revoked: 410,
   used: 410,
   too_large: 413,
+  unreadable: 422,
   not_configured: 503,
 } as const
 

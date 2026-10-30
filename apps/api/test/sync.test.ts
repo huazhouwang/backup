@@ -88,6 +88,41 @@ describe('families and sync', () => {
     })
   })
 
+  it('keeps the appointments and own vaccines an older app leaves out of the plan', async () => {
+    const plan = {
+      region: 'cn' as const,
+      picked: {},
+      selfPaid: [],
+      appointments: { 'hepb:3': '2026-11-25', 'custom-abcd1234:1': '2026-12-01' },
+      custom: [{ id: 'custom-abcd1234', name: '狂犬病疫苗', doses: 1 }],
+    }
+    const b = { ...baby(familyId), vaccinePlan: plan }
+    await push({ babies: [b] })
+
+    // An app from before appointments picks a self-paid vaccine: its choice and the rest stay.
+    const { appointments: _a, custom: _c, ...older } = plan
+    const picked = {
+      ...b,
+      vaccinePlan: { ...older, selfPaid: ['pcv13'] },
+      updatedAt: b.updatedAt + 1,
+    }
+    await push({ babies: [picked] })
+    expect((await pull()).babies).toContainEqual({
+      ...picked,
+      vaccinePlan: { ...plan, selfPaid: ['pcv13'] },
+      createdBy: userId,
+    })
+
+    // A newer app clears them: cleared.
+    const cleared = {
+      ...b,
+      vaccinePlan: { ...plan, appointments: {}, custom: [] },
+      updatedAt: b.updatedAt + 2,
+    }
+    await push({ babies: [cleared] })
+    expect((await pull()).babies).toContainEqual({ ...cleared, createdBy: userId })
+  })
+
   it('resolves conflicts by last write wins and re-sends newer versions', async () => {
     const b = baby(familyId)
     await push({ babies: [b] })

@@ -150,7 +150,7 @@ function describeRecord(event: Event, before: Event | null): string {
     }
     case 'vaccination': {
       const { vaccineId, dose, reactions } = event.data
-      const name = vaccineById(vaccineId)?.name ?? vaccineId
+      const name = vaccineById(vaccineId)?.name ?? event.data.name ?? vaccineId
       const after =
         reactions.length > 0 ? `（${reactions.map((r) => REACTION[r]).join('、')}）` : ''
       return `打疫苗：${name} 第 ${dose} 剂${after}`

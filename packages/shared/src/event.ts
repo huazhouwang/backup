@@ -78,9 +78,13 @@ export const medicationDataSchema = z.object({
 /** Reactions noted after a vaccination; none noted is an empty list. */
 export const VACCINE_REACTIONS = ['fever', 'swelling', 'fussy'] as const
 
-/** One dose of a vaccine, by its id in VACCINES and its number as the booklet counts it. */
+/**
+ * One dose of a vaccine, by its id in VACCINES (or a custom vaccine's) and its number as the
+ * booklet counts it; `name` for one no schedule knows, as the family or the booklet calls it.
+ */
 export const vaccinationDataSchema = z.object({
   vaccineId: z.string().trim().min(1).max(40),
+  name: z.string().trim().min(1).max(40).optional(),
   dose: z.number().int().min(1).max(10),
   reactions: z.array(z.enum(VACCINE_REACTIONS)).max(VACCINE_REACTIONS.length),
 })

@@ -37,6 +37,8 @@ export interface Vaccine {
   doses: readonly VaccineDose[]
   /** One of a choice: only the chosen one of a group is planned. */
   choice?: { group: string; label: string }
+  /** Added by the family, not on any schedule: its doses fall on the days they set. */
+  custom?: boolean
   /** Girls only (HPV). */
   sex?: BabySex
   /** Optional: given in place of these routine vaccines' doses (vaccine id: dose numbers). */
@@ -70,7 +72,30 @@ export interface VaccineChoices {
   picked: Readonly<Record<string, string>>
   /** Optional vaccine ids planned. */
   selfPaid: readonly string[]
+  /** "vaccine id:dose" → the day the clinic booked it for, in place of the schedule's. */
+  appointments?: Readonly<Record<string, string>>
+  /** Vaccines the family added, each dose on its appointment. */
+  custom?: readonly CustomVaccine[]
 }
+
+export interface CustomVaccine {
+  id: string
+  name: string
+  doses: number
+}
+
+/** A custom vaccine's id: "custom-" and letters or digits. */
+export const CUSTOM_VACCINE_ID = /^custom-[a-z0-9]{4,24}$/
+
+/** A family's own vaccine as the plan treats it: routine, each dose on its appointment. */
+const customVaccine = ({ id, name, doses }: CustomVaccine): Vaccine => ({
+  id,
+  name,
+  against: '',
+  programme: 'routine',
+  custom: true,
+  doses: Array.from({ length: doses }, () => ({ months: 0 })),
+})
 
 export const noChoices = (region: VaccineRegion): VaccineChoices => ({
   region,
@@ -104,15 +129,19 @@ export interface PlannedDose {
   givenDay: string | null
   /** Given in place of it, when replaced (an optional vaccine's name). */
   replacedBy: string | null
+  /** Booked for a day of the family's choosing, not the schedule's. */
+  appointed: boolean
 }
 
 /** A dose comes up this many days ahead: "soon". */
 export const SOON_DAYS = 14
 
 /**
- * Every dose planned for a baby on its region's schedule, in the order they fall due, each
- * with where it stands on `today`: given (`given` maps "vaccine id:dose" to the day),
- * replaced by an optional vaccine, overdue (past its finish-by age), due, soon, or later.
+ * Every dose planned for a baby on its region's schedule, and the family's own vaccines, in
+ * the order they fall due, each with where it stands on `today`: given (`given` maps
+ * "vaccine id:dose" to the day), replaced by an optional vaccine, overdue (past its
+ * finish-by age, or its appointment), due, soon, or later. A dose booked for another day
+ * falls due on it.
  */
 export function vaccinePlan(
   birthDate: string,
@@ -130,6 +159,8 @@ export function vaccinePlan(
     const first = schedule.find((other) => other.choice?.group === group)
     return (choices.picked[group] ?? first?.id) === vaccine.id
   })
+  planned.push(...(choices.custom ?? []).map(customVaccine))
+  const appointments = choices.appointments ?? {}
   const replacedBy = new Map<string, string>()
   for (const vaccine of planned) {
     for (const [id, doses] of Object.entries(vaccine.replaces ?? {})) {
@@ -141,8 +172,15 @@ export function vaccinePlan(
     .flatMap((vaccine) =>
       vaccine.doses.map((dose, index): PlannedDose => {
         const key = `${vaccine.id}:${index + 1}`
-        const due = dueDay(birthDate, dose)
-        const byDay = dose.by === undefined ? null : dueDay(birthDate, { months: dose.by })
+        const appointment = appointments[key]
+        // A custom dose with no day set yet waits on the baby's birthday, as soon as can be.
+        const due = appointment ?? dueDay(birthDate, dose)
+        // Booked: due on the day, late after it, whatever the schedule's limit.
+        const byDay = appointment
+          ? shiftDay(appointment, 1)
+          : dose.by === undefined
+            ? null
+            : dueDay(birthDate, { months: dose.by })
         const givenDay = given.get(key) ?? null
         const replacer = givenDay ? null : (replacedBy.get(key) ?? null)
         const state: DoseState = givenDay
@@ -164,6 +202,7 @@ export function vaccinePlan(
           state,
           givenDay,
           replacedBy: replacer,
+          appointed: appointment !== undefined,
         }
       }),
     )

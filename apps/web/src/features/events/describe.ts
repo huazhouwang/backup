@@ -160,7 +160,7 @@ export function describeEvent(event: Event, now: number): { title: string; detai
       return { title: m.categoryGrowth(), detail: growthDetail(event.data) }
     case 'vaccination': {
       const { vaccineId, dose, reactions } = event.data
-      const name = vaccineById(vaccineId)?.name ?? vaccineId
+      const name = vaccineById(vaccineId)?.name ?? event.data.name ?? vaccineId
       return {
         title: m.categoryVaccination(),
         detail: [`${name} ${m.vaccineDose({ dose })}`, ...reactions.map(reactionLabel)].join(' · '),

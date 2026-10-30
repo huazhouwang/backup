@@ -20,8 +20,10 @@ import { pushRoutes, reminderRoutes } from './routes/notifications'
 import { siriRoutes } from './routes/siri'
 import { syncRoutes } from './routes/sync'
 import { tipsRoutes } from './routes/tips'
+import { vaccineRoutes } from './routes/vaccines'
 import { voiceRoutes } from './routes/voice'
 import type { AppEnv, AuthFor } from './types'
+import { type BookletReader, readBooklet } from './vaccine-photo'
 
 /** Request bodies above this are refused before they are read in full. */
 const MAX_BODY_BYTES = 1024 * 1024
@@ -30,6 +32,8 @@ export interface AppOptions {
   auth?: AuthFor
   /** The model behind voice logging; tests pass a fake instead of calling a provider. */
   voiceAdapter?: AdapterFor
+  /** Reads vaccination booklet photos; tests pass a fake. */
+  bookletReader?: BookletReader
 }
 
 /** A saved provider, model and key, as a model adapter. */
@@ -41,6 +45,7 @@ const defaultAdapter: AdapterFor = async (env, ai) => {
 export function createApp(options: AppOptions = {}) {
   const authFor = options.auth ?? getAuth
   const voiceAdapter = options.voiceAdapter ?? defaultAdapter
+  const bookletReader = options.bookletReader ?? readBooklet
   const app = new Hono<AppEnv>().basePath('/api')
 
   // The web app is same-origin; CORS only matters for the native shell (#45).
@@ -64,6 +69,7 @@ export function createApp(options: AppOptions = {}) {
 
   app.use('*', async (c, next) => {
     c.set('adapterFor', voiceAdapter)
+    c.set('bookletReader', bookletReader)
     await next()
   })
 
@@ -121,6 +127,7 @@ export function createApp(options: AppOptions = {}) {
   app.route('/tips', tipsRoutes)
   app.route('/voice/siri', siriRoutes)
   app.route('/voice', voiceRoutes)
+  app.route('/vaccines', vaccineRoutes)
 
   app.notFound(() => fail('not_found'))
   app.onError(errorResponse)
