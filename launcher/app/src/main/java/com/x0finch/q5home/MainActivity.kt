@@ -1,5 +1,6 @@
 package com.x0finch.q5home
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -115,6 +116,7 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.pillSettings).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        forwardSwipesToTiles()
 
         // 磁贴大小跟着安卓区域的高度走：车机分辨率和 WY 侧栏占位还没摸清，先做成自适应。
         root.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
@@ -405,6 +407,25 @@ class MainActivity : Activity() {
             false
         }
         return card
+    }
+
+    /**
+     * 在首页空白处（时钟、名称、壁纸）左右滑动，也滚动底部的磁贴列表：车上不用非得对准那一窄条。
+     * 按钮和磁贴自己处理触摸；落到空白处的触摸转给磁贴列表（坐标换算到列表里）。
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun forwardSwipesToTiles() {
+        val rootPos = IntArray(2)
+        val scrollPos = IntArray(2)
+        root.setOnTouchListener { _, event ->
+            root.getLocationInWindow(rootPos)
+            tileScroll.getLocationInWindow(scrollPos)
+            val forwarded = MotionEvent.obtain(event)
+            forwarded.offsetLocation((rootPos[0] - scrollPos[0]).toFloat(), (rootPos[1] - scrollPos[1]).toFloat())
+            tileScroll.onTouchEvent(forwarded)
+            forwarded.recycle()
+            true
+        }
     }
 
     /** 选中的磁贴（放大 5% 加描边）完整留在屏幕里，两边留出边距。 */

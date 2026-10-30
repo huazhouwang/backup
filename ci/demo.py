@@ -126,6 +126,20 @@ class Demo:
         shell(f"input swipe {x} {y} {x} {y} 1200")
         time.sleep(1.8)
 
+    def swipe(self, x1, y1, x2, y2, caption, ms=500):
+        self.caption(caption)
+        time.sleep(0.9)
+        self.last_touch = (x1, y1, "滑动")
+        if self.t0 is not None:
+            self.taps.append({"t": round(time.time() - self.t0, 2), "x": x1, "y": y1, "x2": x2, "y2": y2,
+                              "dur": ms / 1000, "kind": "swipe"})
+        shell(f"input swipe {x1} {y1} {x2} {y2} {ms}")
+        time.sleep(1.8)
+
+    def scroll_x(self, text):
+        """某个磁贴文字的横坐标（用来确认磁贴列表滚动了）。"""
+        return self.find(text)[1]
+
     def log_tap(self, x, y, kind):
         if self.t0 is not None:
             self.taps.append({"t": round(time.time() - self.t0, 2), "x": x, "y": y, "kind": kind})
@@ -196,7 +210,7 @@ def mark(path, x, y, label):
             font = ImageFont.truetype(f, 26)
             break
     if font is None:  # 没有中文字体就用英文标签
-        label = {"点击": "TAP", "长按": "HOLD"}.get(label, label)
+        label = {"点击": "TAP", "长按": "HOLD", "滑动": "SWIPE"}.get(label, label)
         font = ImageFont.load_default()
     im = Image.open(path).convert("RGB")
     d = ImageDraw.Draw(im)
@@ -252,7 +266,7 @@ def main():
     failed = None
     try:
         time.sleep(1)
-        demo.caption("① 首页：CarPlay、原车、文件、设置")
+        demo.caption("① 首页：CarPlay、原车、文件、系统设置")
         time.sleep(2)
         demo.shot("home")
 
@@ -266,7 +280,7 @@ def main():
         demo.shot("oem-opened")
         demo.home()
 
-        demo.long_press("设置", "④ 长按「设置」磁贴 → 弹出操作菜单")
+        demo.long_press("系统设置", "④ 长按「系统设置」磁贴 → 弹出操作菜单")
         demo.shot("tile-menu")
         demo.tap("更换图标", "⑤ 点「更换图标」→ 图标网格")
         demo.shot("icon-picker")
@@ -277,46 +291,54 @@ def main():
         demo.shot("library")
         demo.key("KEYCODE_BACK", "按键：返回")
 
-        demo.tap("设置", "⑧ 点右上角「设置」→ 整页设置", which="first")
+        # 首页空白处（时钟和名称之间）左右滑，也能滚动底部的磁贴。
+        before = demo.scroll_x("文件")
+        demo.swipe(1400, 250, 500, 250, "⑧ 在首页空白处往左滑 → 底部磁贴跟着滚（不用对准磁贴那一条）")
+        demo.shot("swipe-blank")
+        if before - demo.scroll_x("文件") < 200:
+            raise RuntimeError("在空白处滑动，磁贴没有滚动")
+        demo.swipe(500, 250, 1400, 250, "再往右滑回来")
+
+        demo.tap("桌面设置", "⑨ 点右上角「桌面设置」→ 整页设置（桌面自己的设置，不是安卓系统设置）")
         demo.shot("settings-wallpaper")
-        demo.tap("城市夜景", "⑨ 点缩略图「城市夜景」换壁纸")
+        demo.tap("城市夜景", "⑩ 点缩略图「城市夜景」换壁纸")
         demo.shot("settings-wallpaper-city")
-        demo.tap("CarPlay 与原车", "⑩ 左侧切到「CarPlay 与原车」")
+        demo.tap("CarPlay 与原车", "⑪ 左侧切到「CarPlay 与原车」")
         demo.shot("settings-carplay")
-        demo.tap("开机自动进入 CarPlay", "⑪ 打开「开机自动进入 CarPlay」开关")
+        demo.tap("开机自动进入 CarPlay", "⑫ 打开「开机自动进入 CarPlay」开关")
         demo.shot("settings-toggle")
-        demo.tap("高级", "⑫ 左侧切到「高级」")
+        demo.tap("高级", "⑬ 左侧切到「高级」")
         demo.shot("settings-advanced")
-        demo.tap("恢复默认布局", "⑬ 点「恢复默认布局」→ 确认卡片")
+        demo.tap("恢复默认布局", "⑭ 点「恢复默认布局」→ 确认卡片")
         demo.shot("confirm")
-        demo.tap("取消", "⑭ 点「取消」")
-        demo.tap("版本更新", "⑮ 左侧切到「版本更新」→ 检查 GitHub Release", prefix=True)
+        demo.tap("取消", "⑮ 点「取消」")
+        demo.tap("版本更新", "⑯ 左侧切到「版本更新」→ 检查 GitHub Release", prefix=True)
         time.sleep(3)  # 等检查结果
         demo.shot("settings-update")
-        demo.tap("车机摸底", "⑯ 左侧切到「车机摸底」→ 只读查系统、调试线索、原车 / CarPlay 组件")
+        demo.tap("车机摸底", "⑰ 左侧切到「车机摸底」→ 只读查系统、调试线索、原车 / CarPlay 组件")
         demo.find("要点")  # 摸底在后台跑，出现要点说明完成了
         demo.shot("settings-recon")
-        demo.tap("生成二维码", "⑰ 点「生成二维码」→ 车机开临时网页，手机扫码看报告、粘贴 GitHub 令牌")
+        demo.tap("生成二维码", "⑱ 点「生成二维码」→ 车机开临时网页，手机扫码看报告、粘贴 GitHub 令牌")
         demo.shot("settings-recon-qr")
         check_share(demo, args.out)
-        demo.tap("返回桌面", "⑱ 点「返回桌面」")
+        demo.tap("返回桌面", "⑲ 点「返回桌面」")
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "⑲ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
-        demo.key("KEYCODE_DPAD_RIGHT", "⑳ 方向键 →：焦点移到下一个磁贴", times=4)
+        demo.key("KEYCODE_DPAD_DOWN", "⑳ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
+        demo.key("KEYCODE_DPAD_RIGHT", "㉑ 方向键 →：焦点移到下一个磁贴", times=4)
         demo.shot("dpad-focus")
         demo.home()
 
         # 安全模式：让桌面故意连续崩溃 3 次（只有放了标记文件才会崩，见 MainActivity.maybeCrashForTest）
         marker = f"/sdcard/Android/data/{PKG}/files/crash-test"
         shell(f"touch {marker}")
-        demo.caption("㉑ 测试：让桌面故意连续崩溃 3 次")
+        demo.caption("㉒ 测试：让桌面故意连续崩溃 3 次")
         for _ in range(3):
             shell(f"am start -n {HOME} --ez crash_test true", check=False)
             time.sleep(2.5)
         shell(f"rm -f {marker}")
-        demo.caption("㉒ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
+        demo.caption("㉓ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
         time.sleep(2)
         # 默认桌面反复崩溃时，安卓自己会取消默认桌面、让用户重新选（车上也一样，这时也可以选原厂桌面）。
         if demo.exists("Select a Home app") or demo.exists("Q5 Home"):
@@ -328,7 +350,7 @@ def main():
         demo.find("安全模式")
         time.sleep(1)
         demo.shot("safe-mode")
-        demo.tap("再试一次正常启动", "㉓ 点「再试一次正常启动」→ 回到正常桌面")
+        demo.tap("再试一次正常启动", "㉔ 点「再试一次正常启动」→ 回到正常桌面")
         demo.find("CarPlay")
         demo.shot("home-after-safe-mode")
         demo.caption("演示结束")

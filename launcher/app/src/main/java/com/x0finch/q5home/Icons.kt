@@ -17,7 +17,7 @@ object Icons {
         Icon("carplay", "CarPlay", R.drawable.glyph_carplay, 0xFF5BE07A.toInt(), 0xFF1E9E55.toInt()),
         Icon("oem", "原车", R.drawable.glyph_oem, 0xFFB8BCC4.toInt(), 0xFF4A4E57.toInt()),
         Icon("files", "文件", R.drawable.glyph_files, 0xFFFFD60A.toInt(), 0xFFFF9500.toInt()),
-        Icon("settings", "设置", R.drawable.glyph_settings, 0xFFA1A1A8.toInt(), 0xFF4A4A50.toInt()),
+        Icon("settings", "系统设置", R.drawable.glyph_settings, 0xFFA1A1A8.toInt(), 0xFF4A4A50.toInt()),
         Icon("nav", "导航", R.drawable.glyph_nav, 0xFF40A9FF.toInt(), 0xFF5E5CE6.toInt()),
         Icon("phone", "电话", R.drawable.glyph_phone, 0xFF5BE07A.toInt(), 0xFF248A3D.toInt()),
         Icon("radio", "收音机", R.drawable.glyph_radio, 0xFFFFB340.toInt(), 0xFFFF453A.toInt()),

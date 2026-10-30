@@ -89,7 +89,7 @@ class ScreenshotTest {
     fun tileMenuAndIconPicker() {
         val home = homeActivity()
         shadowOf(Looper.getMainLooper()).idle()
-        clickableParent(findText(home.window.decorView, "设置")!!).performLongClick()
+        clickableParent(findText(home.window.decorView, "系统设置")!!).performLongClick()
         shadowOf(Looper.getMainLooper()).idle()
         shoot(home, "ui-tile-menu")
         clickableParent(findText(home.window.decorView, "更换图标")!!).performClick()

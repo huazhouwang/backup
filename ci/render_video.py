@@ -48,7 +48,8 @@ def main():
     ring(tap_png, (255, 255, 255, 255))
     ring(hold_png, (255, 159, 10, 255))
 
-    taps_short = [t for t in taps if t["kind"] == "tap"]
+    # 滑动用白色圆环从起点移到终点。
+    taps_short = [t for t in taps if t["kind"] in ("tap", "swipe")]
     taps_long = [t for t in taps if t["kind"] == "hold"]
     # screenrecord 是可变帧率（画面不动时不出帧），先转成固定 30fps，字幕和圆环的时间才对得上。
     parts = [f"[0:v]fps=30,pad=iw:ih+{STRIP}:0:0:color=black[v0]"]
@@ -65,6 +66,12 @@ def main():
             nxt = f"v{n}"
             x, y = t["x"] - RING // 2, t["y"] - RING // 2
             start, end = max(t["t"] - before, 0), t["t"] + after
+            if t["kind"] == "swipe":
+                dur = t["dur"]
+                p = f"clip((t-{t['t']:.2f})/{dur:.2f},0,1)"
+                x = f"'{x}+({t['x2'] - t['x']})*{p}'"
+                y = f"'{y}+({t['y2'] - t['y']})*{p}'"
+                end += dur
             parts.append(f"[{cur}][{label}{i}]overlay={x}:{y}:shortest=1:enable='between(t,{start:.2f},{end:.2f})'[{nxt}]")
             cur = nxt
     # 字幕的字号和边距按 288 行高的坐标算（libass 默认），换算成实际像素：字高约 52px，放在底部字幕栏中间。

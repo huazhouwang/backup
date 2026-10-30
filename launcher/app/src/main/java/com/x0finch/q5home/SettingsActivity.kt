@@ -102,7 +102,7 @@ class SettingsActivity : Activity() {
 
     private fun renderNav() {
         nav.removeAllViews()
-        nav.addView(Ui.text(this, "设置", 34f, Ui.TEXT, Ui.Font.LIGHT),
+        nav.addView(Ui.text(this, "桌面设置", 34f, Ui.TEXT, Ui.Font.LIGHT),
             LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(20); marginStart = dp(6) })
         navItem(SECTION_WALLPAPER, "壁纸", R.drawable.ui_wallpaper)
         navItem(SECTION_CARPLAY, "CarPlay 与原车", R.drawable.glyph_carplay)
