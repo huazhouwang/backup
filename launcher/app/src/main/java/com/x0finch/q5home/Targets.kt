@@ -93,6 +93,8 @@ object Targets {
             when {
                 intent?.component != null -> pm.getActivityIcon(intent.component!!)
                 packageOf(spec) != null -> pm.getApplicationIcon(packageOf(spec)!!)
+                // action: 写法（比如系统设置）：用响应它的那个应用的图标。
+                intent != null -> pm.resolveActivity(intent, 0)?.loadIcon(pm)
                 else -> null
             }
         } catch (e: PackageManager.NameNotFoundException) {

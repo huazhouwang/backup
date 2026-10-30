@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,6 +25,13 @@ class TargetsTest {
         assertNull(Targets.packageOf("broadcast:com.x.SWITCH"))
         assertNull(Targets.packageOf("action:android.settings.SETTINGS"))
         assertNull(Targets.packageOf(""))
+    }
+
+    /** action: 写法（系统设置）选「应用自带」图标时也要有图标。 */
+    @Test
+    fun actionTargetHasIcon() {
+        FakeApps.installCar(context)
+        assertNotNull(Targets.icon(context, Targets.SYSTEM_SETTINGS))
     }
 
     @Test
