@@ -6,6 +6,7 @@ import { Link } from '@tanstack/react-router'
 import { useId, useState } from 'react'
 
 import { MusicIcon } from '../../components/icons/MusicIcon'
+import { ReportIcon } from '../../components/icons/ReportIcon'
 import { VaccineIcon } from '../../components/icons/VaccineIcon'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
@@ -125,7 +126,7 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
               {CATEGORY_LOOK[category].title()}
             </Button>
           ))}
-          {/* Not records: the vaccination plan, and soothing sounds played on this device. */}
+          {/* Not records: the vaccination plan, soothing sounds on this device, the doctor's report. */}
           <Link
             to="/vaccines"
             onClick={close}
@@ -149,6 +150,19 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
             <MusicIcon className="size-9" />
             {m.soundOpen()}
           </Button>
+          <Link
+            to="/report"
+            onClick={close}
+            className={buttonVariants({
+              variant: 'soft',
+              tone: 'primary',
+              size: 'lg',
+              className: 'min-h-20 flex-col',
+            })}
+          >
+            <ReportIcon className="size-9" />
+            {m.reportOpen()}
+          </Link>
         </div>
       </Sheet>
       <SoundSheet open={open === 'sound'} onClose={close} />

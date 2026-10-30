@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ReportRouteImport } from './routes/report'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as UiRouteImport } from './routes/ui'
 import { Route as VaccinesRouteImport } from './routes/vaccines'
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatsRoute = StatsRouteImport.update({
@@ -122,6 +128,7 @@ const SettingsFamilyFamilyIdRoute = SettingsFamilyFamilyIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/report': typeof ReportRoute
   '/stats': typeof StatsRoute
   '/ui': typeof UiRoute
   '/vaccines': typeof VaccinesRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/report': typeof ReportRoute
   '/stats': typeof StatsRoute
   '/ui': typeof UiRoute
   '/vaccines': typeof VaccinesRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/report': typeof ReportRoute
   '/stats': typeof StatsRoute
   '/ui': typeof UiRoute
   '/vaccines': typeof VaccinesRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/chat'
+    | '/report'
     | '/stats'
     | '/ui'
     | '/vaccines'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/chat'
+    | '/report'
     | '/stats'
     | '/ui'
     | '/vaccines'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/chat'
+    | '/report'
     | '/stats'
     | '/ui'
     | '/vaccines'
@@ -246,6 +258,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
+  ReportRoute: typeof ReportRoute
   StatsRoute: typeof StatsRoute
   UiRoute: typeof UiRoute
   VaccinesRoute: typeof VaccinesRoute
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stats': {
@@ -398,6 +418,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
+  ReportRoute: ReportRoute,
   StatsRoute: StatsRoute,
   UiRoute: UiRoute,
   VaccinesRoute: VaccinesRoute,

@@ -115,7 +115,10 @@ function RootLayout() {
     <MotionProvider>
       {/* Clipped across: a page sliding in from the side doesn't widen the app. */}
       <div className="mx-auto flex min-h-dvh max-w-app flex-col overflow-x-clip">
-        <main ref={main} className="flex-1 pt-safe-4 pr-safe-4 pb-above-tab-bar pl-safe-4">
+        <main
+          ref={main}
+          className="flex-1 pt-safe-4 pr-safe-4 pb-above-tab-bar pl-safe-4 print:p-0"
+        >
           {/* Pages suspend while the local store opens (a few ms on startup). */}
           {hydrated && (
             <Suspense>

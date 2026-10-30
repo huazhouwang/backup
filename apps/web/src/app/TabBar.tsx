@@ -26,7 +26,7 @@ export function TabBar() {
   return (
     <nav
       key={hydrated ? 'client' : 'shell'}
-      className="fixed inset-x-0 bottom-0 z-10 mx-auto flex h-tab-bar-safe max-w-app border-t-2 border-border bg-background pr-safe-0 pb-safe-0 pl-safe-0"
+      className="fixed inset-x-0 bottom-0 z-10 mx-auto flex h-tab-bar-safe max-w-app border-t-2 border-border bg-background pr-safe-0 pb-safe-0 pl-safe-0 print:hidden"
     >
       {tabs.slice(0, 2).map((tab) => (
         <TabLink key={tab.to} tab={tab} pathname={pathname} />

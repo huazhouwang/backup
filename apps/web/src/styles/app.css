@@ -195,3 +195,10 @@
     animation: none;
   }
 }
+
+/* On paper (the doctor's report) only the page itself: no toasts over it. */
+@media print {
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+}
