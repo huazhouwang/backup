@@ -14,7 +14,6 @@ import {
 } from '@tanstack/react-router'
 import { type ReactNode, Suspense, useEffect, useRef } from 'react'
 
-import { KeyboardProbe } from '../app/KeyboardProbe'
 import { MovedNotice } from '../app/MovedNotice'
 import { TabBar } from '../app/TabBar'
 import { UpdatePrompt } from '../app/UpdatePrompt'
@@ -128,7 +127,6 @@ function RootLayout() {
         <KeyboardKeeper />
         <Toaster />
         {hydrated && <UpdatePrompt />}
-        {hydrated && <KeyboardProbe />}
         {hydrated && <MovedNotice />}
         {hydrated && <SoundKeeper />}
         {hydrated && (

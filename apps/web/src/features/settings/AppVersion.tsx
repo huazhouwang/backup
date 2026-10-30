@@ -1,9 +1,8 @@
 import { Button } from '@lullabo/ui/button'
 import { Card } from '@lullabo/ui/card'
 import { showToast } from '@lullabo/ui/toast'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
-import { toggleProbe } from '../../app/KeyboardProbe'
 import { showUpdateToast } from '../../app/UpdatePrompt'
 import { formatDate } from '../../lib/i18n'
 import {
@@ -36,8 +35,6 @@ const resultText: Record<Exclude<UpdateCheck, 'ready'>, () => string> = {
 /** The running version, with a button to look for a newer one; the result shows as a toast. */
 export function VersionCard() {
   const [checking, setChecking] = useState(false)
-  // Temporary: five taps on the version turn the keyboard probe on or off.
-  const taps = useRef(0)
 
   const check = async () => {
     setChecking(true)
@@ -56,16 +53,7 @@ export function VersionCard() {
 
   return (
     <Card className="flex flex-col gap-3">
-      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-      <p
-        className="m-0 font-bold"
-        onClick={() => {
-          taps.current += 1
-          if (taps.current === 5) toggleProbe()
-        }}
-      >
-        {versionLabel()}
-      </p>
+      <p className="m-0 font-bold">{versionLabel()}</p>
       {canUpdate() && (
         <Button
           variant="soft"
