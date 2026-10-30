@@ -5,6 +5,11 @@
 MCU CM_23.02.08_02.21，CAN A81xAQ5_00_0033_N2105）。左侧是原车 MMI 画面，右侧是安卓侧栏。
 CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
 
+**实测（车上摸底，见 `examples/wy20/recon-app-2026-10-30.md`）**：系统写着 12，实际是**安卓 8.1（API 27）**，
+MT6739、32 位 armeabi-v7a，平台是 WWC2（`com.wwc2.*`）。`user` 构建、不可调试、没有 su。
+**没有无线调试**；USB 调试已开（`sys.usb.state=adb`），adb 要先用 USB 线连一次，再 `adb tcpip 5555`。
+代码里不要依赖 API 28+ 的行为而不做兼容（minSdk 26 不变）。
+
 ## 安全规则（必须遵守）
 
 1. **默认只读**。`tools/recon.sh` 之外的任何会改变车机状态的命令
@@ -23,13 +28,15 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
 ## 绝对不能停用的类别
 
 找到对应包名后补充到这里：
-- 倒车影像 / 360 / 摄像头相关（行车安全）
-- CAN 协议盒、MCU 通讯、车辆信息服务
-- 原车 MMI 画面切换（左侧画面、"原车"入口）
-- 右侧侧栏（中控锁、安全带图标）和 SystemUI
-- 音频通道切换、蓝牙、收音机、方向盘按键、MMI 旋钮映射
-- ZLINK（以及试装的 DiPlay）
-- WY 原厂桌面、系统设置、工厂设置
+- 倒车影像 / 360 / 摄像头相关（行车安全）：`com.baony.avm360`
+- CAN 协议盒、MCU 通讯、车辆信息服务：`com.wwc2.canbusapk`、`com.wwc2.canmcusdk`、`com.wwc2.carmanager`、
+  `com.wwc2.main`（核心，含 ACC 上电广播）、`com.wwc2.poweroff`、`com.wwc2.mcuupdate`、`com.wwc2.canmcuupdate`
+- 原车 MMI 画面切换（左侧画面、"原车"入口）：具体组件未确认，候选 `com.wwc2.main`、`com.wwc2.mainui`、`com.wwc2.black`
+- 右侧侧栏（中控锁、安全带图标）和 SystemUI：`com.android.systemui`、`com.wwc2.mainui`
+- 音频通道切换、蓝牙、收音机、方向盘按键、MMI 旋钮映射：`com.wwc2.bluetooth`、`com.goodocom.gocsdk`（蓝牙协议栈）
+- ZLINK（以及试装的 DiPlay）：`com.zjinnova.zlink`
+- WY 原厂桌面、系统设置、工厂设置：`com.wwc2.launcher`、`com.wwc2.settings`、`com.android.settings`、`com.wwc2.pq`（显示）
+- 系统升级相关先不动：`com.wwc2.fota`、`com.wwc2.systemupdate_apk`、`com.wwc2.systempermission`
 - 所有 `android`、`com.android.*` 核心组件（除非用户逐个确认）
 
 ## 每次改动后的实车检查清单

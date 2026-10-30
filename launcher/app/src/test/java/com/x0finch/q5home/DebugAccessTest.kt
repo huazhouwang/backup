@@ -54,6 +54,26 @@ class DebugAccessTest {
     }
 
     @Test
+    fun realVersionFromApiLevel() {
+        // 这台 WY / WWC2 车机：系统写着 12，API 27。
+        assertEquals("8.1", DebugAccess.realAndroidVersion(27))
+        assertEquals("12", DebugAccess.realAndroidVersion(31))
+        assertTrue(!DebugAccess.hasWirelessDebugging(27))
+        assertTrue(DebugAccess.hasWirelessDebugging(30))
+    }
+
+    /** 安卓 8.1：没有无线调试，直接打开开发者选项，不带高亮参数，提示里说明原因。 */
+    @Test
+    fun oldAndroidOpensDeveloperOptionsAndExplains() {
+        register(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+        val msg = DebugAccess.openWirelessDebugging(app, sdk = 27)
+        val started = shadowOf(app).nextStartedActivity
+        assertEquals(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS, started.action)
+        assertTrue(msg.contains("安卓 8.1") && msg.contains("没有无线调试"))
+        assertEquals(null, started.getStringExtra(":settings:fragment_args_key"))
+    }
+
+    @Test
     fun readsDebugStatus() {
         Settings.Global.putInt(app.contentResolver, Settings.Global.ADB_ENABLED, 1)
         Settings.Global.putInt(app.contentResolver, "adb_wifi_enabled", 0)

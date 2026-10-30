@@ -3,6 +3,7 @@ package com.x0finch.q5home
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.os.Build
 import android.provider.Settings
 import java.net.Inet4Address
 
@@ -19,9 +20,30 @@ object DebugAccess {
     private const val EXTRA_HIGHLIGHT = ":settings:fragment_args_key"
     private const val KEY_WIRELESS = "toggle_adb_wireless"
 
+    /** 无线调试是安卓 11（API 30）才有的。 */
+    fun hasWirelessDebugging(sdk: Int = Build.VERSION.SDK_INT) = sdk >= 30
+
+    /**
+     * 按 API 级别算真实的安卓版本。有的车机固件把版本号改成"12"，实际是旧系统
+     * （比如这台 WY / WWC2 车机写着 12，API 是 27 = 安卓 8.1）。
+     */
+    fun realAndroidVersion(sdk: Int = Build.VERSION.SDK_INT): String = when (sdk) {
+        26 -> "8.0"; 27 -> "8.1"; 28 -> "9"; 29 -> "10"; 30 -> "11"; 31 -> "12"; 32 -> "12L"
+        33 -> "13"; 34 -> "14"; 35 -> "15"; 36 -> "16"
+        else -> "API $sdk"
+    }
+
     /** 打开最合适的页面，返回给用户看的提示。 */
-    fun openWirelessDebugging(context: Context): String {
+    fun openWirelessDebugging(context: Context, sdk: Int = Build.VERSION.SDK_INT): String {
         val pm = context.packageManager
+        if (!hasWirelessDebugging(sdk)) {
+            val dev = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+            if (dev.resolveActivity(pm) != null && start(context, dev)) {
+                return "这台车机实际是安卓 ${realAndroidVersion(sdk)}，没有无线调试；已打开开发者选项"
+            }
+            start(context, Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
+            return "这台车机实际是安卓 ${realAndroidVersion(sdk)}，没有无线调试；开发者选项没打开时连点 7 次「版本号」"
+        }
         val direct = Intent(DIRECT_ACTION)
         if (direct.resolveActivity(pm) != null && start(context, direct)) {
             return "已打开无线调试页面"

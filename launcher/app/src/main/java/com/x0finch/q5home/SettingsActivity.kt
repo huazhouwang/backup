@@ -665,14 +665,26 @@ class SettingsActivity : Activity() {
         subheader("调试与连接")
         val ip = DebugAccess.ipAddress(this)
         val usb = if (DebugAccess.usbDebuggingOn(this)) "开" else "关"
-        val wifi = if (DebugAccess.wirelessDebuggingOn(this)) "开" else "关"
-        group(
-            row(R.drawable.ui_wifi, "打开无线调试", "电脑通过 Wi-Fi 连车机用（adb）。打不开直达页面时，会打开开发者选项并高亮这一项",
-                Ui.pill(this, "打开") { overlay.snackbar(DebugAccess.openWirelessDebugging(this)) }),
-            info("本机 IP · USB 调试 · 无线调试", "${ip ?: "未联网"}  ·  $usb  ·  $wifi"),
-        )
-        hint("无线调试打开后，点进它的页面能看到 IP 和端口；第一次在电脑上用「使用配对码配对设备」配对：" +
-            "adb pair IP:配对端口，再 adb connect IP:端口。也可以在开发者选项 →「快捷设置开发者图块」里把「无线调试」加到下拉菜单。")
+        if (DebugAccess.hasWirelessDebugging()) {
+            val wifi = if (DebugAccess.wirelessDebuggingOn(this)) "开" else "关"
+            group(
+                row(R.drawable.ui_wifi, "打开无线调试", "电脑通过 Wi-Fi 连车机用（adb）。打不开直达页面时，会打开开发者选项并高亮这一项",
+                    Ui.pill(this, "打开") { overlay.snackbar(DebugAccess.openWirelessDebugging(this)) }),
+                info("本机 IP · USB 调试 · 无线调试", "${ip ?: "未联网"}  ·  $usb  ·  $wifi"),
+            )
+            hint("无线调试打开后，点进它的页面能看到 IP 和端口；第一次在电脑上用「使用配对码配对设备」配对：" +
+                "adb pair IP:配对端口，再 adb connect IP:端口。也可以在开发者选项 →「快捷设置开发者图块」里把「无线调试」加到下拉菜单。")
+        } else {
+            // 安卓 10 及以前没有无线调试：只能先用 USB 线连一次，再切到网络 adb。
+            group(
+                row(R.drawable.ui_wifi, "打开开发者选项",
+                    "这台车机实际是安卓 ${DebugAccess.realAndroidVersion()}，系统里没有「无线调试」，要先用 USB 线连电脑",
+                    Ui.pill(this, "打开") { overlay.snackbar(DebugAccess.openWirelessDebugging(this)) }),
+                info("本机 IP · USB 调试", "${ip ?: "未联网"}  ·  $usb"),
+            )
+            hint("USB 调试打开后，用 USB 线把车机背后引出的 USB 口（通常标 USB1 / OTG）接到电脑：adb devices 能看到车机后，" +
+                "执行 adb tcpip 5555，拔掉线，以后用 adb connect ${ip ?: "车机IP"}:5555 无线连接（车机重启后要再用线做一次）。")
+        }
 
         subheader("配置文件")
         val dir = getExternalFilesDir(null)?.absolutePath ?: "(不可用)"

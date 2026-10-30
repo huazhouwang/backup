@@ -72,7 +72,7 @@ object Recon {
             "厂商 / 型号" to "${Build.MANUFACTURER} / ${Build.MODEL}",
             "品牌 / 设备 / 产品" to "${Build.BRAND} / ${Build.DEVICE} / ${Build.PRODUCT}",
             "硬件 / 主板" to "${Build.HARDWARE} / ${Build.BOARD}",
-            "安卓" to "${Build.VERSION.RELEASE}（API ${Build.VERSION.SDK_INT}），安全补丁 ${Build.VERSION.SECURITY_PATCH}",
+            "安卓" to "${Build.VERSION.RELEASE}（API ${Build.VERSION.SDK_INT}${realVersionNote()}），安全补丁 ${Build.VERSION.SECURITY_PATCH}",
             "构建" to "${Build.DISPLAY} · ${Build.TYPE} · ${Build.TAGS}",
             "Fingerprint" to Build.FINGERPRINT,
         ).forEach { (k, v) -> md.appendLine("| $k | ${cell(v)} |") }
@@ -159,7 +159,7 @@ object Recon {
 
         val facts = listOf(
             "车机" to "${Build.MANUFACTURER} ${Build.MODEL} · ${Build.HARDWARE} · ${props["ro.board.platform"].orEmpty().ifEmpty { "?" }}",
-            "系统" to "Android ${Build.VERSION.RELEASE} · ${Build.TYPE} · ${Build.TAGS} · debuggable=${props["ro.debuggable"].orEmpty().ifEmpty { "?" }}",
+            "系统" to "Android ${Build.VERSION.RELEASE}${realVersionNote()} · ${Build.TYPE} · ${Build.TAGS} · debuggable=${props["ro.debuggable"].orEmpty().ifEmpty { "?" }}",
             "root 线索（su 文件）" to su.ifEmpty { listOf("没找到") }.joinToString(),
             "adb" to "USB 调试 ${onOff(usbDebug)} · 无线调试 ${onOff(wifiDebug)} · " +
                 portState.entries.joinToString { "端口 ${it.key} ${if (it.value) "在监听" else "没监听"}" },
@@ -190,6 +190,12 @@ object Recon {
     fun probe(port: Int, timeoutMs: Int = 300): Boolean = runCatching {
         Socket().use { it.connect(InetSocketAddress("127.0.0.1", port), timeoutMs) }
     }.isSuccess
+
+    /** 固件改过版本号时（比如写 12、实际 API 27）注明真实版本。 */
+    private fun realVersionNote(): String {
+        val real = DebugAccess.realAndroidVersion()
+        return if (Build.VERSION.RELEASE.substringBefore('.') == real.substringBefore('.')) "" else "，实际是安卓 $real"
+    }
 
     private fun onOff(on: Boolean) = if (on) "开" else "关"
 
