@@ -23,6 +23,15 @@ function untilSettled(run: () => void, ms = 1000) {
 }
 
 /**
+ * How far the visible area starts below the top of the window, for what is fixed to the
+ * window (a sheet). An app on the iPhone's home screen scrolls the page for the keyboard
+ * and counts that scroll in the visual viewport's offset, though it moves only the page.
+ */
+function panOf(viewport: VisualViewport) {
+  return Math.max(0, viewport.offsetTop - window.scrollY)
+}
+
+/**
  * iOS lays the keyboard over the page without resizing it, so whatever sits at the bottom
  * would end up behind it. While `active`, this keeps CSS variables on `ref`'s element with
  * the part of the screen still visible: `--visible-top` and `--visible` (its top and height)
@@ -34,10 +43,11 @@ export function useVisibleArea(ref: RefObject<HTMLElement | null>, active: boole
     const element = ref.current
     if (!active || !viewport || !element) return undefined
     const fit = () => {
-      const covered = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      const pan = panOf(viewport)
+      const covered = Math.max(0, window.innerHeight - viewport.height - pan)
       element.style.setProperty('--keyboard', `${covered}px`)
       element.style.setProperty('--visible', `${viewport.height}px`)
-      element.style.setProperty('--visible-top', `${viewport.offsetTop}px`)
+      element.style.setProperty('--visible-top', `${pan}px`)
     }
     fit()
     const settle = untilSettled(fit)
@@ -89,7 +99,7 @@ export function useFieldAboveKeyboard(ref: RefObject<HTMLElement | null>, active
       if (!typedIn(field) || !element.contains(field)) return
       // Whichever is higher: the keyboard's top or the sheet's own bottom.
       const bottom = Math.min(
-        viewport ? viewport.offsetTop + viewport.height : document.documentElement.clientHeight,
+        viewport ? panOf(viewport) + viewport.height : document.documentElement.clientHeight,
         element.getBoundingClientRect().bottom,
       )
       const over = field.getBoundingClientRect().bottom - (bottom - TOOLBAR_ROOM)

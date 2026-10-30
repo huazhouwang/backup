@@ -58,3 +58,32 @@ test('a field stays above the keyboard as it rises, though iOS says so only once
   }))
   expect(fieldBottom).toBeLessThanOrEqual(keyboardTop - 50)
 })
+
+test('a field stays above the keyboard of an installed iPhone app, which scrolls the page for it', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.locator('main').getByRole('button', { name: '喂养', exact: true }).click()
+  await sheet(page).getByText('瓶喂', { exact: true }).click()
+  const amount = sheet(page).getByLabel('奶量（毫升）')
+  await amount.focus()
+  // As an iPhone's home screen app reported it: the window itself shrinks by what it
+  // scrolls the page, and the visual viewport's offset counts that scroll, which moves
+  // the page but not the sheet over it.
+  const viewport = page.viewportSize()!
+  await page.setViewportSize({ width: viewport.width, height: viewport.height - 215 })
+  await page.evaluate(() => {
+    const visual = window.visualViewport!
+    const keyboardTop = window.innerHeight - 155
+    Object.defineProperty(visual, 'height', { configurable: true, get: () => keyboardTop })
+    Object.defineProperty(visual, 'offsetTop', { configurable: true, get: () => 215 })
+    Object.defineProperty(window, 'scrollY', { configurable: true, get: () => 215 })
+    visual.dispatchEvent(new Event('resize'))
+  })
+  await page.waitForTimeout(300)
+  const { fieldBottom, keyboardTop } = await amount.evaluate((field) => ({
+    fieldBottom: field.getBoundingClientRect().bottom,
+    keyboardTop: window.innerHeight - 155,
+  }))
+  expect(fieldBottom).toBeLessThanOrEqual(keyboardTop - 50)
+})
