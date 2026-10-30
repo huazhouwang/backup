@@ -1,6 +1,7 @@
 import {
   type PushSubscriptionInput,
   type Reminder,
+  type SummarySettings,
   type VaccineReminder,
   base64UrlDecode,
 } from '@lullabo/shared'
@@ -96,6 +97,12 @@ export const sendTestNotification = () =>
 export const reminderApi = {
   list: () => apiFetch<Reminder[]>('/api/reminders'),
   vaccines: () => apiFetch<VaccineReminder[]>('/api/reminders/vaccines'),
+  summaries: () => apiFetch<SummarySettings>('/api/reminders/summaries'),
+  saveSummaries: (settings: SummarySettings) =>
+    apiFetch<SummarySettings>('/api/reminders/summaries', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    }),
   saveVaccines: (reminder: VaccineReminder) =>
     apiFetch<VaccineReminder>('/api/reminders/vaccines', {
       method: 'PUT',

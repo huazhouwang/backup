@@ -5,13 +5,15 @@ import {
   base64UrlEncode,
   newId,
 } from '@lullabo/shared'
+import { fakeText } from '@tanstack/ai/testing'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { MAX_SENDS, dispatchReminders } from '../src/reminders'
+import { dispatchSummaries } from '../src/summaries'
 import { dispatchVaccineReminders } from '../src/vaccine-reminders'
 import { encryptPayload, generateVapidKeys, vapidAuthorization } from '../src/web-push'
 import { createTestApp } from './app'
-import { baby as fixtureBaby } from './fixtures'
+import { diaper, baby as fixtureBaby } from './fixtures'
 
 const HOUR = 3_600_000
 
@@ -409,6 +411,98 @@ describe('vaccination reminders', () => {
     expect((await t.send('PUT', '/api/reminders/vaccines', headers, off)).status).toBe(200)
     expect(await (await t.request('/api/reminders/vaccines', { headers })).json()).toEqual([off])
     expect(await dispatchVaccineReminders(t.env, morning + 24 * HOUR, pushService().fetcher)).toBe(
+      0,
+    )
+  })
+})
+
+describe('evening summaries', () => {
+  let t: Awaited<ReturnType<typeof createTestApp>>
+  let headers: Headers
+  let familyId: string
+  let babyId: string
+  const fake = fakeText()
+  // 21:05 in Shanghai on Thursday 22 October 2026, and on the Sunday after.
+  const thursday = Date.UTC(2026, 9, 22, 13, 5)
+  const sunday = Date.UTC(2026, 9, 25, 13, 5)
+  const DAY = 24 * HOUR
+  const adapterFor = async () => fake
+  let browser: Awaited<ReturnType<typeof fakeBrowser>>
+
+  beforeAll(async () => {
+    t = await createTestApp({ ENCRYPTION_SECRET: 'test-ai-key-secret-test-ai-key-secret' })
+    const me = await t.signIn()
+    headers = me.headers
+    const res = await t.send('POST', '/api/families', headers, { name: '我们家' })
+    const family: { id: string } = await res.json()
+    familyId = family.id
+    const b = fixtureBaby(familyId, { name: '小米粒', birthDate: '2026-08-01' })
+    babyId = b.id
+    // Two diapers a day, Monday to Thursday, one of them dirty; a bottle on Thursday.
+    const events: Event[] = [0, 1, 2, 3].flatMap((back) => [
+      diaper(babyId, familyId, { startAt: thursday - back * DAY - 2 * HOUR }),
+      diaper(babyId, familyId, {
+        startAt: thursday - back * DAY - 3 * HOUR,
+        data: { contents: 'dirty' },
+      }),
+    ])
+    events.push({
+      ...diaper(babyId, familyId, { startAt: thursday - HOUR }),
+      type: 'feeding',
+      data: { kind: 'bottle', amountMl: 120, milk: 'formula' },
+    })
+    await t.send('POST', '/api/sync/push', headers, { babies: [b], events })
+    browser = await fakeBrowser()
+    const subscribe = {
+      endpoint: `https://push.example.com/${newId()}`,
+      keys: browser.keys,
+      timeZone: 'Asia/Shanghai',
+    }
+    await t.send('PUT', '/api/push/subscription', headers, subscribe)
+  })
+  afterAll(() => t.dispose())
+
+  const message = async (sent: { body: Uint8Array }[]): Promise<PushMessage> =>
+    JSON.parse(await decrypt(browser, sent[0]?.body ?? new Uint8Array()))
+
+  it('sums up the day at nine in the evening on the device’s clock, once', async () => {
+    expect(await dispatchSummaries(t.env, thursday - HOUR, pushService().fetcher, adapterFor)).toBe(
+      0,
+    )
+    const due = pushService()
+    expect(await dispatchSummaries(t.env, thursday, due.fetcher, adapterFor)).toBe(1)
+    const daily = await message(due.sent)
+    expect(daily.title).toBe('小米粒今天')
+    expect(daily.body).toBe('喂养 1 次（瓶喂 120 毫升） · 尿布 2 片（便便 1 次）')
+    expect(daily.url).toBe('/stats')
+    expect(
+      await dispatchSummaries(t.env, thursday + 60_000, pushService().fetcher, adapterFor),
+    ).toBe(0)
+  })
+
+  it('on Sundays sums up the week instead, with the AI’s observation', async () => {
+    await t.saveAi(headers, 'sk-or-v1-0123456789')
+    fake.setResponses([{ text: '这周尿布很规律，奶量稳定。' }])
+    const due = pushService()
+    expect(await dispatchSummaries(t.env, sunday, due.fetcher, adapterFor)).toBe(1)
+    const weekly = await message(due.sent)
+    expect(weekly.title).toBe('小米粒这一周')
+    expect(weekly.body).toBe(
+      '4 天的记录，平均每天：喂养 0.3 次（瓶喂 30 毫升） · 尿布 2 片（便便 1 次）\n这周尿布很规律，奶量稳定。',
+    )
+    expect(weekly.url).toBe('/tips')
+    // The Tips tab shows the same observation that day, written once.
+    expect(fake.state.callCount).toBe(1)
+  })
+
+  it('sends none once turned off', async () => {
+    const off = { daily: false, weekly: false }
+    expect((await t.send('PUT', '/api/reminders/summaries', headers, off)).status).toBe(200)
+    expect(await (await t.request('/api/reminders/summaries', { headers })).json()).toEqual(off)
+    expect(
+      await dispatchSummaries(t.env, sunday + 7 * DAY, pushService().fetcher, adapterFor),
+    ).toBe(0)
+    expect(await dispatchSummaries(t.env, thursday + DAY, pushService().fetcher, adapterFor)).toBe(
       0,
     )
   })

@@ -10,6 +10,13 @@ export const SECRET = 'e2e-secret-e2e-secret-e2e-secret-1234'
  */
 export const SESSIONS = [
   {
+    key: 'summaries',
+    token: 'e2e-summaries',
+    userId: 'e2e-summaries',
+    name: '测试家长',
+    email: 'summaries@example.com',
+  },
+  {
     key: 'syncA',
     token: 'e2e-sync-a',
     userId: 'e2e-sync',

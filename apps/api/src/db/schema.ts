@@ -160,6 +160,18 @@ export const vaccineReminders = sqliteTable(
 )
 
 /**
+ * Whether a user gets the evening summaries (each on unless turned off), and the local day
+ * each was last sent, so a run never sends one twice.
+ */
+export const summarySettings = sqliteTable('summary_settings', {
+  userId: text('user_id').primaryKey(),
+  daily: integer('daily', { mode: 'boolean' }).notNull().default(true),
+  weekly: integer('weekly', { mode: 'boolean' }).notNull().default(true),
+  sentOn: text('sent_on').notNull().default(''),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+/**
  * "It's been a while" reminders a user set for a baby: notify when the latest event of the
  * kind started more than interval_minutes ago. Independent of how notifications are delivered.
  */

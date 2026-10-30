@@ -5,8 +5,7 @@ import { except } from 'hono/combine'
 import { cors } from 'hono/cors'
 
 import type { AdapterFor } from './agent/budget'
-import { decryptKey } from './ai/key-crypto'
-import { aiAdapter } from './ai/providers'
+import { savedAdapter } from './ai/saved-adapter'
 import { getAuth, trustedOrigins } from './auth'
 import { canSendEmail } from './email'
 import { errorResponse, fail } from './http'
@@ -36,15 +35,9 @@ export interface AppOptions {
   bookletReader?: BookletReader
 }
 
-/** A saved provider, model and key, as a model adapter. */
-const defaultAdapter: AdapterFor = async (env, ai) => {
-  if (!env.ENCRYPTION_SECRET) return null
-  return aiAdapter(ai.provider, ai.model, await decryptKey(env.ENCRYPTION_SECRET, ai.keyCipher))
-}
-
 export function createApp(options: AppOptions = {}) {
   const authFor = options.auth ?? getAuth
-  const voiceAdapter = options.voiceAdapter ?? defaultAdapter
+  const voiceAdapter = options.voiceAdapter ?? savedAdapter
   const bookletReader = options.bookletReader ?? readBooklet
   const app = new Hono<AppEnv>().basePath('/api')
 

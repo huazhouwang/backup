@@ -37,6 +37,16 @@ export const vaccineReminderSchema = z.object({
 })
 export type VaccineReminder = z.infer<typeof vaccineReminderSchema>
 
+/**
+ * A user's summaries, at 21:00 on each of their devices' clocks: the day's, every evening,
+ * and on Sundays the week's with the AI's observation instead. Both on until turned off.
+ */
+export const summarySettingsSchema = z.object({
+  daily: z.boolean(),
+  weekly: z.boolean(),
+})
+export type SummarySettings = z.infer<typeof summarySettingsSchema>
+
 /** A browser's PushSubscription as sent by the app (PushSubscription.toJSON()). */
 export const pushSubscriptionSchema = z.object({
   endpoint: z.url({ protocol: /^https$/ }).max(2048),

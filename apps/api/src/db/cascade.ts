@@ -80,6 +80,7 @@ export function deleteAccountStatements(db: D1Database, userId: string): D1Prepa
     db.prepare('delete from memberships where user_id = ?').bind(userId),
     db.prepare('delete from reminders where user_id = ?').bind(userId),
     db.prepare('delete from vaccine_reminders where user_id = ?').bind(userId),
+    db.prepare('delete from summary_settings where user_id = ?').bind(userId),
     db.prepare('delete from push_subscriptions where user_id = ?').bind(userId),
     db.prepare('delete from voice_tokens where user_id = ?').bind(userId),
     // Their conversations with the voice agent, current and earlier ones.

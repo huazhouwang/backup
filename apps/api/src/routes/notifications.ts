@@ -1,5 +1,7 @@
 import {
   type Reminder,
+  type SummarySettings,
+  summarySettingsSchema,
   type VaccineReminder,
   vaccineReminderSchema,
   pushSubscriptionSchema,
@@ -52,6 +54,28 @@ export const pushRoutes = new Hono<AppEnv>()
 /** The signed-in user's reminders; each user picks their own. */
 export const reminderRoutes = new Hono<AppEnv>()
   // Vaccination reminders are on for every baby until turned off.
+  .get('/summaries', async (c) => {
+    const row = await c.env.DB.prepare(
+      'select daily, weekly from summary_settings where user_id = ?',
+    )
+      .bind(c.get('user').id)
+      .first<{ daily: number; weekly: number }>()
+    return c.json({
+      daily: row ? row.daily === 1 : true,
+      weekly: row ? row.weekly === 1 : true,
+    } satisfies SummarySettings)
+  })
+  .put('/summaries', json(summarySettingsSchema), async (c) => {
+    const { daily, weekly } = c.req.valid('json')
+    await c.env.DB.prepare(
+      `insert into summary_settings (user_id, daily, weekly, updated_at) values (?, ?, ?, ?)
+       on conflict (user_id) do update set
+         daily = excluded.daily, weekly = excluded.weekly, updated_at = excluded.updated_at`,
+    )
+      .bind(c.get('user').id, daily ? 1 : 0, weekly ? 1 : 0, Date.now())
+      .run()
+    return c.json({ daily, weekly } satisfies SummarySettings)
+  })
   .get('/vaccines', async (c) => {
     const { results } = await c.env.DB.prepare(
       'select baby_id as babyId, enabled from vaccine_reminders where user_id = ?',
