@@ -387,6 +387,10 @@ def main():
         demo.shot("settings-signal")
         demo.swipe(1100, 620, 1100, 160, "往下翻到 4G：SIM 卡、网络类型、信号、现在上网走哪条路")
         demo.shot("settings-signal-4g")
+        for _ in range(3):  # 「测试」按钮在 4G 分组最下面，没露出来就再往下翻
+            if demo.exists("测试"):
+                break
+            demo.swipe(1100, 620, 1100, 160, "继续往下翻")
         demo.tap("测试", "㉑ 点「4G 上网测试」→ 临时只走移动网络访问一次测试地址")
         for _ in range(10):  # 最多等 20 秒出结果
             if not demo.exists("测试中…"):

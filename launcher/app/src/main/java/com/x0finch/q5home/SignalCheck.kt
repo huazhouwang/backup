@@ -261,7 +261,8 @@ class SignalCheck(private val context: Context) {
             val bars = level?.coerceIn(0, 4)
             val word = when (bars) { null -> ""; 0 -> "没信号"; 1 -> "很弱"; 2 -> "一般"; 3 -> "好"; else -> "很好" }
             return listOfNotNull(
-                bars?.let { "▮".repeat(it) + "▯".repeat(4 - it) + " $word" },
+                // 不用 ▮▯ 这类符号：车机字体里没有，会显示成方框。
+                bars?.let { "$it/4 格 · $word" },
                 dbm?.takeIf { it in -150..-20 }?.let { "$it dBm" },
             ).joinToString(" · ")
         }

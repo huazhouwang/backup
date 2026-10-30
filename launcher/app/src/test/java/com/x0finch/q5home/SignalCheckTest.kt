@@ -22,9 +22,9 @@ class SignalCheckTest {
         assertEquals("4G（LTE）", SignalCheck.networkTypeName(TelephonyManager.NETWORK_TYPE_LTE))
         assertEquals("3G", SignalCheck.networkTypeName(TelephonyManager.NETWORK_TYPE_HSPAP))
         assertEquals("没有移动网络", SignalCheck.networkTypeName(TelephonyManager.NETWORK_TYPE_UNKNOWN))
-        assertEquals("▮▮▮▯ 好 · -95 dBm", SignalCheck.signalText(3, -95))
+        assertEquals("3/4 格 · 好 · -95 dBm", SignalCheck.signalText(3, -95))
         assertEquals("未知", SignalCheck.signalText(null, null))
-        assertEquals("▯▯▯▯ 没信号", SignalCheck.signalText(0, Int.MAX_VALUE)) // 无效 dBm 不显示
+        assertEquals("0/4 格 · 没信号", SignalCheck.signalText(0, Int.MAX_VALUE)) // 无效 dBm 不显示
     }
 
     @Test
