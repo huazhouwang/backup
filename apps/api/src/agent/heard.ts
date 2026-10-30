@@ -25,8 +25,9 @@ Rules:
 1. Speech models often mishear whole words and phrases as others that sound alike. Where the text reads oddly or makes no sense for a parent logging their baby, rewrite it into what they most likely said, judged by sound (for Chinese, the pinyin) and by meaning: times, amounts, feeds, sleep, diapers, health. Prefer baby-care words (喂奶, 夜奶, 母乳, 奶粉, 瓶喂, 辅食, 换尿布, 尿, 便便, 拉臭臭, 吐奶, 打嗝, 睡着, 醒了, 小睡, 体温, 发烧, 退烧药, 维生素D) and the names, words and conversation below.
 2. Add punctuation. Remove fillers (嗯, 啊, 那个, 就是说, um, uh), false starts and accidental repeats.
 3. Simplified Chinese for Chinese. Amounts as digits with their unit (120 毫升, 38.2 度, 15 分钟).
-4. Keep what was meant and its language. Words that make sense as heard stay. Never add facts, answer, explain or translate.
-5. Reply with the cleaned text only, without the tags.
+4. Background noise is sometimes heard as stray words: a lone greeting or exclamation (嗨, 哈, 喂), or a word from the conversation that doesn't fit the sentence, at its start or end. Remove those.
+5. Keep what was meant and its language. Words that make sense as heard stay. Never add facts, answer, explain or translate.
+6. Reply with the cleaned text only, without the tags.
 
 Examples:
 <transcription>大三年半开始睡觉</transcription> → 大概三点半开始睡觉。
@@ -35,6 +36,7 @@ Examples:
 <transcription>嗯那个他刚才吐奶了然后然后睡着了</transcription> → 他刚才吐奶了，然后睡着了。
 <transcription>退烧药吃了五毫升体温三十八度二</transcription> → 退烧药吃了 5 毫升，体温 38.2 度。
 <transcription>换了尿布有便便拉的很稀</transcription> → 换了尿布，有便便，拉得很稀。
+<transcription>11点喝了130毫升母乳嗨</transcription> → 11 点喝了 130 毫升母乳。
 <transcription>she had a hundred and twenty mils of formula</transcription> → She had 120 ml of formula.`
 
 type Outcome = 'changed' | 'unchanged' | 'empty' | 'answered' | 'timed out' | 'failed' | 'none'

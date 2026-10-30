@@ -50,6 +50,37 @@ export function speechPrompt(language: string | undefined, hints: SpeechHints) {
   return prompt.slice(-PROMPT_CHARS)
 }
 
+type Segment = NonNullable<Ai_Cf_Openai_Whisper_Large_V3_Turbo_Output['segments']>[number]
+
+/**
+ * A stretch Whisper most likely made up from background noise, often out of the prompt's
+ * words (a lone "奶粉" after the answer, a "嗨!" at the end): it judged it probably not
+ * speech and was unsure of the words, or was very unsure of them.
+ */
+export function likelyNoise({ no_speech_prob: noSpeech = 0, avg_logprob: logprob = 0 }: Segment) {
+  return (noSpeech > 0.5 && logprob < -0.7) || logprob < -1.2
+}
+
+/** What a recording's segments say, without the ones that were likely noise. */
+export function heardText(output: Ai_Cf_Openai_Whisper_Large_V3_Turbo_Output) {
+  const { segments } = output
+  if (!segments?.length) return output.text.trim()
+  const kept = segments.filter((segment) => !likelyNoise(segment))
+  // How sure Whisper was, for tuning the above in the Worker's logs: never what was said.
+  console.log('Transcription', {
+    segments: segments.map((segment) => ({
+      noSpeech: Number((segment.no_speech_prob ?? 0).toFixed(2)),
+      logprob: Number((segment.avg_logprob ?? 0).toFixed(2)),
+      seconds: Number(((segment.end ?? 0) - (segment.start ?? 0)).toFixed(1)),
+      dropped: !kept.includes(segment),
+    })),
+  })
+  return kept
+    .map((segment) => segment.text ?? '')
+    .join('')
+    .trim()
+}
+
 /**
  * What was said in a recording (WAV, as the chat uploads it), or null when nothing was heard.
  * `locale` is the language the app is in, so the likeliest spoken: its vocabulary goes in the
@@ -69,7 +100,9 @@ export async function transcribe(
     task: 'transcribe',
     ...(prompt ? { initial_prompt: prompt } : {}),
     vad_filter: true,
+    // Skips what it would make up over a pause, as it does at a recording's noisy end.
+    hallucination_silence_threshold: 1.5,
   })
-  const text = result.text?.trim()
+  const text = heardText(result)
   return text ? text : null
 }
