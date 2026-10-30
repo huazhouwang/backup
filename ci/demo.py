@@ -294,7 +294,7 @@ def main():
         time.sleep(3)  # 等检查结果
         demo.shot("settings-update")
         demo.tap("车机摸底", "⑯ 左侧切到「车机摸底」→ 只读查系统、调试线索、原车 / CarPlay 组件")
-        demo.find("可能的入口（点「打开」试试）")
+        demo.find("要点")  # 摸底在后台跑，出现要点说明完成了
         demo.shot("settings-recon")
         demo.tap("生成二维码", "⑰ 点「生成二维码」→ 车机开临时网页，手机扫码看报告、粘贴 GitHub 令牌")
         demo.shot("settings-recon-qr")
