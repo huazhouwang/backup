@@ -38,6 +38,8 @@ class Config(private val context: Context) {
     var dock: List<DockItem> = emptyList(); private set
     var autoCarplay = false; private set
     var wallpaper = Wallpapers.DAILY; private set
+    /** 自动轮换的频率（分钟）。 */
+    var wallpaperInterval = Wallpapers.DEFAULT_INTERVAL; private set
     /** 连 Wi-Fi 时自动下载新壁纸。 */
     var onlineWallpapers = true; private set
     /** 填了就用 Unsplash API 随机取图；不填用仓库里的精选清单。只能通过 config.json 设置。 */
@@ -55,6 +57,7 @@ class Config(private val context: Context) {
         dock = prefs.getString(KEY_DOCK, null)?.let(::parseDock) ?: defaultDock()
         autoCarplay = prefs.getBoolean(KEY_AUTO_CARPLAY, false)
         wallpaper = prefs.getString(KEY_WALLPAPER, Wallpapers.DAILY)!!
+        wallpaperInterval = prefs.getInt(KEY_INTERVAL, Wallpapers.DEFAULT_INTERVAL).coerceIn(5, 1440)
         onlineWallpapers = prefs.getBoolean(KEY_ONLINE, true)
         unsplashKey = prefs.getString(KEY_UNSPLASH_KEY, null)?.ifBlank { null }
         wallpaperQuery = prefs.getString(KEY_QUERY, null)?.ifBlank { null } ?: OnlineWallpapers.DEFAULT_QUERY
@@ -74,6 +77,7 @@ class Config(private val context: Context) {
     fun setOem(spec: String) = edit { putString(KEY_OEM, spec) }
     fun setAutoCarplay(on: Boolean) = edit { putBoolean(KEY_AUTO_CARPLAY, on) }
     fun setWallpaper(key: String) = edit { putString(KEY_WALLPAPER, key) }
+    fun setWallpaperInterval(minutes: Int) = edit { putInt(KEY_INTERVAL, minutes) }
     fun setOnlineWallpapers(on: Boolean) = edit { putBoolean(KEY_ONLINE, on) }
 
     fun setDock(items: List<DockItem>) =
@@ -120,6 +124,7 @@ class Config(private val context: Context) {
             if (json.has("oem")) e.putString(KEY_OEM, json.getString("oem"))
             if (json.has("title")) e.putString(KEY_TITLE, json.getString("title"))
             if (json.has("wallpaper")) e.putString(KEY_WALLPAPER, json.getString("wallpaper"))
+            if (json.has("wallpaperInterval")) e.putInt(KEY_INTERVAL, json.getInt("wallpaperInterval"))
             if (json.has("onlineWallpapers")) e.putBoolean(KEY_ONLINE, json.getBoolean("onlineWallpapers"))
             if (json.has("unsplashKey")) e.putString(KEY_UNSPLASH_KEY, json.getString("unsplashKey"))
             if (json.has("wallpaperQuery")) e.putString(KEY_QUERY, json.getString("wallpaperQuery"))
@@ -147,6 +152,7 @@ class Config(private val context: Context) {
             .put("dock", JSONArray(dock.map { it.toJson() }))
             .put("autoCarplay", autoCarplay)
             .put("wallpaper", wallpaper)
+            .put("wallpaperInterval", wallpaperInterval)
             .put("onlineWallpapers", onlineWallpapers)
             // 不把 key 原文写出来，只说明有没有配置。
             .put("unsplashKey", if (unsplashKey != null) "(已配置)" else JSONObject.NULL)
@@ -165,6 +171,7 @@ class Config(private val context: Context) {
         private const val KEY_DOCK = "dock_v2"
         private const val KEY_AUTO_CARPLAY = "auto_carplay"
         private const val KEY_WALLPAPER = "wallpaper"
+        private const val KEY_INTERVAL = "wallpaper_interval_min"
         private const val KEY_TITLE = "title"
         private const val KEY_ONLINE = "online_wallpapers"
         private const val KEY_UNSPLASH_KEY = "unsplash_key"

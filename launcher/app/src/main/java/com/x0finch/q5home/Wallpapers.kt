@@ -18,8 +18,15 @@ object Wallpapers {
         val author: String? = null,
     )
 
+    /** 自动轮换（key 沿用旧名 daily，轮换频率见 [INTERVALS]）。 */
     const val DAILY = "daily"
     const val NONE = "none"
+
+    /** 可选的轮换频率（分钟）和名称；默认每天。 */
+    val INTERVALS = listOf(30 to "30 分钟", 60 to "每小时", 180 to "3 小时", 1440 to "每天")
+    const val DEFAULT_INTERVAL = 1440
+
+    fun intervalName(minutes: Int) = INTERVALS.firstOrNull { it.first == minutes }?.second ?: "每 $minutes 分钟"
 
     val BUILTIN = listOf(
         Wallpaper("stars", "星空雪山", R.drawable.wall_stars),
@@ -39,19 +46,30 @@ object Wallpapers {
         return online + BUILTIN
     }
 
-    fun label(context: Context, setting: String): String = when (setting) {
-        DAILY -> "每日轮换"
+    fun label(context: Context, setting: String, intervalMinutes: Int = DEFAULT_INTERVAL): String = when (setting) {
+        DAILY -> "自动轮换 · ${intervalName(intervalMinutes)}"
         NONE -> "纯黑"
-        else -> available(context).firstOrNull { it.key == setting }?.name ?: "每日轮换"
+        else -> available(context).firstOrNull { it.key == setting }?.name ?: "自动轮换 · ${intervalName(intervalMinutes)}"
     }
 
-    /** 当前设置对应的壁纸；纯黑返回 null。每日轮换按一年中的第几天在全部壁纸里取。 */
-    fun current(context: Context, setting: String, calendar: Calendar = Calendar.getInstance()): Wallpaper? {
+    /**
+     * 当前设置对应的壁纸；纯黑返回 null。自动轮换按时间段在全部壁纸里取：
+     * 每天 = 一年中的第几天（和旧版本一样）；更短的频率 = 今年过去的分钟数 ÷ 频率。
+     */
+    fun current(context: Context, setting: String, calendar: Calendar = Calendar.getInstance(),
+                intervalMinutes: Int = DEFAULT_INTERVAL): Wallpaper? {
         if (setting == NONE) return null
         val all = available(context)
         all.firstOrNull { it.key == setting }?.let { return it }
-        // 每日轮换，或者指定的在线壁纸已被清理掉。
-        return all[calendar.get(Calendar.DAY_OF_YEAR) % all.size]
+        // 自动轮换，或者指定的在线壁纸已被清理掉。
+        return all[slot(calendar, intervalMinutes) % all.size]
+    }
+
+    fun slot(calendar: Calendar, intervalMinutes: Int): Int {
+        val day = calendar.get(Calendar.DAY_OF_YEAR)
+        if (intervalMinutes >= 1440) return day
+        val minutes = (day - 1) * 1440 + calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+        return minutes / intervalMinutes.coerceAtLeast(1)
     }
 
     /** 按屏幕宽度缩小解码，16 位色，一张 1920×720 约 2.7 MB 内存。 */

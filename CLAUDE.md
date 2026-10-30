@@ -52,6 +52,8 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
   - 壁纸在 `res/drawable-nodpi/wall_*.webp`，来源记在 `CREDITS.md`，新增壁纸要同步更新。
   - 在线壁纸：`OnlineWallpapers.kt` + `WallpaperJob.kt`（仅 Wi-Fi、每天一次）；存储上限 8 张 / 6 MB，
     剩余空间 < 300 MB 不下载。改动时不要放宽这些上限，除非用户同意。清单在仓库根目录 `wallpapers/feed.json`。
+    清单由工作流 `wallpapers.yml` + `wallpapers/update_feed.py` 每天自动追加（Secret `UNSPLASH_ACCESS_KEY`，最多 60 张）。
+    自动轮换的 key 仍是 `daily`（向后兼容），频率存 `wallpaper_interval_min`（分钟，默认 1440）。
   - 界面组件在 `ui/`（`Ui` 风格常量、`Overlay` 弹出层、`Menus` 菜单/确认/图标网格、`Toggle` 开关），
     设置是整页 `SettingsActivity`。不要再用系统 AlertDialog / Toast。
   - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。

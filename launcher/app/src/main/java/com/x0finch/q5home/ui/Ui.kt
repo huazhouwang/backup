@@ -121,7 +121,7 @@ object Ui {
     fun refreshPageWallpaper(activity: Activity, root: FrameLayout) {
         val image = root.getChildAt(0) as? ImageView ?: return
         val config = Config(activity).also { it.reload() }
-        val bmp = Wallpapers.current(activity, config.wallpaper)
+        val bmp = Wallpapers.current(activity, config.wallpaper, intervalMinutes = config.wallpaperInterval)
             ?.let { Wallpapers.decode(activity, it, activity.resources.displayMetrics.widthPixels / 2) }
         image.setImageBitmap(bmp)
     }

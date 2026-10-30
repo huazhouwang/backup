@@ -142,11 +142,11 @@ class SettingsActivity : Activity() {
     // ---- 壁纸 ----
 
     private fun renderWallpaper() {
-        header("壁纸", "当前：${Wallpapers.label(this, config.wallpaper)}")
+        header("壁纸", "当前：${Wallpapers.label(this, config.wallpaper, config.wallpaperInterval)}")
 
         val all = Wallpapers.available(this)
         val strip = LinearLayout(this).apply { setPadding(0, dp(4), 0, dp(4)) }
-        strip.addView(thumb(Wallpapers.DAILY, "每日轮换", null, collage = all.take(3)))
+        strip.addView(thumb(Wallpapers.DAILY, "自动轮换", null, collage = all.take(3)))
         all.forEach { strip.addView(thumb(it.key, it.name, it)) }
         strip.addView(thumb(Wallpapers.NONE, "纯黑", null))
         content.addView(HorizontalScrollView(this).apply {
@@ -155,12 +155,15 @@ class SettingsActivity : Activity() {
             addView(strip)
         })
 
+        content.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
+        group(intervalRow())
+
         subheader("在线壁纸")
         val store = OnlineWallpapers(this)
         val photos = store.list()
         val bytes = store.dir.listFiles()?.sumOf { it.length() } ?: 0L
         group(
-            toggleRow(R.drawable.ui_wifi, "连 Wi-Fi 自动更新", "每天最多 ${OnlineWallpapers.PER_RUN} 张，只用 Wi-Fi，新图加入每日轮换",
+            toggleRow(R.drawable.ui_wifi, "连 Wi-Fi 自动更新", "每天最多 ${OnlineWallpapers.PER_RUN} 张，只用 Wi-Fi，新图加入自动轮换",
                 config.onlineWallpapers) { on ->
                 config.setOnlineWallpapers(on)
                 if (on) WallpaperJob.schedule(this) else WallpaperJob.cancel(this)
@@ -206,7 +209,7 @@ class SettingsActivity : Activity() {
                 }, FrameLayout.LayoutParams(-1, -1))
             }
         }
-        // 每日轮换：几张壁纸拼在一起，中间一个轮换图标，和单张壁纸区分开。
+        // 自动轮换：几张壁纸拼在一起，中间一个轮换图标，和单张壁纸区分开。
         if (collage.isNotEmpty()) {
             val strips = LinearLayout(this)
             collage.forEach { wp ->
@@ -236,6 +239,23 @@ class SettingsActivity : Activity() {
             LinearLayout.LayoutParams(w, -2).apply { topMargin = dp(8); bottomMargin = dp(2) })
         cell.layoutParams = LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(6) }
         return cell
+    }
+
+    /** 自动轮换的频率：一排胶囊，当前的高亮。选了就切到自动轮换。 */
+    private fun intervalRow(): View {
+        val auto = config.wallpaper == Wallpapers.DAILY
+        val chips = LinearLayout(this)
+        Wallpapers.INTERVALS.forEach { (minutes, name) ->
+            val selected = auto && minutes == config.wallpaperInterval
+            chips.addView(Ui.pill(this, name, if (selected) Ui.PillStyle.PRIMARY else Ui.PillStyle.SECONDARY) {
+                config.setWallpaperInterval(minutes)
+                if (!auto) config.setWallpaper(Wallpapers.DAILY)
+                Ui.refreshPageWallpaper(this, root)
+                render()
+            }.apply { (layoutParams as LinearLayout.LayoutParams).marginStart = dp(8) })
+        }
+        return row(R.drawable.ui_refresh, "轮换频率",
+            if (auto) "到点自动换下一张（内置 + 在线下载的）" else "现在用的是固定壁纸，选一个频率就改成自动轮换", chips)
     }
 
     private fun storageRow(count: Int, bytes: Long): View {

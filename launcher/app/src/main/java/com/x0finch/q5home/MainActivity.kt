@@ -242,9 +242,9 @@ class MainActivity : Activity() {
         date.text = SimpleDateFormat("M月d日 EEEE", Locale.CHINA).format(Date())
     }
 
-    /** 壁纸只在变化时重新解码（每日轮换在跨天后的下一分钟切换；新下载的在线壁纸也会进轮换）。 */
+    /** 壁纸只在变化时重新解码（每分钟检查一次，自动轮换到点就换；新下载的在线壁纸也会进轮换）。 */
     private fun updateWallpaper() {
-        val wallpaper = Wallpapers.current(this, config.wallpaper)
+        val wallpaper = Wallpapers.current(this, config.wallpaper, intervalMinutes = config.wallpaperInterval)
         if (wallpaper?.key == shownWallpaper && (wallpaper != null || wallpaperView.drawable == null)) return
         shownWallpaper = wallpaper?.key
         val bitmap = wallpaper?.let { Wallpapers.decode(this, it, resources.displayMetrics.widthPixels) }

@@ -34,6 +34,7 @@ class ConfigTest {
         assertEquals(FakeApps.OEM, config.oem)
         assertEquals(listOf("files", "settings"), config.dock.map { it.icon })
         assertEquals(Wallpapers.DAILY, config.wallpaper)
+        assertEquals(Wallpapers.DEFAULT_INTERVAL, config.wallpaperInterval)
     }
 
     @Test
@@ -41,7 +42,7 @@ class ConfigTest {
         writeConfig(
             """{"oem": "broadcast:com.wy.SWITCH_OEM@com.wy.oem",
                 "dock": [{"icon": "nav", "target": "com.autonavi.amapauto"}, "com.android.documentsui"],
-                "wallpaper": "city", "autoCarplay": true}"""
+                "wallpaper": "city", "wallpaperInterval": 60, "autoCarplay": true}"""
         )
         val config = Config(context)
         assertNull(config.reload())
@@ -49,6 +50,7 @@ class ConfigTest {
         assertEquals(DockItem("nav", "com.autonavi.amapauto"), config.dock[0])
         assertEquals(DockItem(null, "com.android.documentsui"), config.dock[1])
         assertEquals("city", config.wallpaper)
+        assertEquals(60, config.wallpaperInterval)
         assertEquals(true, config.autoCarplay)
         // current.json 写出了生效的配置。
         assertNotNull(File(context.getExternalFilesDir(null), Config.CURRENT_FILE).readText())
