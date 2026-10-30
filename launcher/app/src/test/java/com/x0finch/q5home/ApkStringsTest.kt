@@ -76,6 +76,11 @@ class ApkStringsTest {
         assertFalse(ApkStrings.interesting("Landroidx/camera/core/Origin;"))
         assertFalse(ApkStrings.interesting("kotlin.collections.REVERSED"))
         assertTrue(ApkStrings.interesting("Lcom/wwc2/main/OemSwitch;"))
+        assertFalse(ApkStrings.interesting("asReversed"))
+        assertFalse(ApkStrings.interesting("origin1"))
+        assertTrue(ApkStrings.interesting("ACTION_REVERSE_CAR"))
+        assertFalse(ApkStrings.interestingDeep("DEFAULT_SOURCE"))
+        assertFalse(ApkStrings.interestingDeep("DEFAULT_TARGET"))
     }
 
     @Test

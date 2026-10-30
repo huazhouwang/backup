@@ -13,7 +13,8 @@ object ApkStrings {
 
     /** 和原车切换可能有关的词（类名、常量里出现就保留）。 */
     private val KEYWORDS = Regex(
-        "oem|origin|yuanche|原车|原厂|avin|aux_?in|cvbs|lvds|canbus|carinfo|video_?source|source_?switch|backcar|reverse",
+        // 只用车机行业里的专门词；reverse / origin / source 这类通用词在库代码里到处都是，会刷屏。
+        "oem|yuanche|原车|原厂|avin|aux_?in|cvbs|lvds|canbus|carinfo|video_?source|source_?switch|backcar|reverse_?car|org_?car|ori_?car",
         RegexOption.IGNORE_CASE,
     )
     /** 像广播 / Intent 动作的字符串：至少三段的点分名，最后一段全大写（如 com.wwc2.main.ACTION_X）。 */
@@ -38,7 +39,7 @@ object ApkStrings {
     private val EXTRA_LIKE = Regex(
         "^[a-zA-Z][a-zA-Z0-9_]{2,40}$",
     )
-    private val EXTRA_WORDS = Regex("page|jump|start_?type|open_?type|launch_?type|tab_?index|target|enter|mode_?type|media_?type|source", RegexOption.IGNORE_CASE)
+    private val EXTRA_WORDS = Regex("page|jump|start_?type|open_?type|launch_?type|tab_?index|mode_?type|media_?type|enter_?mode", RegexOption.IGNORE_CASE)
 
     /** 关键应用用的宽一点的筛选：再加上像跳转参数的字段名。 */
     fun interestingDeep(s: String): Boolean =
