@@ -28,6 +28,16 @@ object ApkStrings {
             !s.startsWith("android.permission.") && !s.startsWith("java.") && !s.startsWith("javax.")
     }
 
+    /** 像 Intent 参数名的字符串（打开页面时带的 extra，比如 start_page、jump_type）。 */
+    private val EXTRA_LIKE = Regex(
+        "^[a-zA-Z][a-zA-Z0-9_]{2,40}$",
+    )
+    private val EXTRA_WORDS = Regex("page|jump|start_?type|open_?type|launch_?type|tab_?index|target|enter|mode_?type|media_?type|source", RegexOption.IGNORE_CASE)
+
+    /** 关键应用用的宽一点的筛选：再加上像跳转参数的字段名。 */
+    fun interestingDeep(s: String): Boolean =
+        interesting(s) || (EXTRA_LIKE.matches(s) && EXTRA_WORDS.containsMatchIn(s) && s.contains('_'))
+
     /** APK 里所有 dex 的字符串，按 [filter] 筛选、去重、排序，最多 [limit] 条。读不了返回空。 */
     fun fromApk(apk: File, limit: Int = 200, filter: (String) -> Boolean = ::interesting): List<String> {
         val found = sortedSetOf<String>()

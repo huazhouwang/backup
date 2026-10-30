@@ -73,6 +73,14 @@ class ApkStringsTest {
     }
 
     @Test
+    fun deepFilterAlsoKeepsExtraKeys() {
+        assertTrue(ApkStrings.interestingDeep("start_page"))
+        assertTrue(ApkStrings.interestingDeep("KEY_JUMP_TYPE"))
+        assertFalse(ApkStrings.interestingDeep("startPage"))   // 驼峰多半是方法名，不要
+        assertFalse(ApkStrings.interestingDeep("hello_world"))
+    }
+
+    @Test
     fun readsAllDexesInApk() {
         val apk = fakeApk(File.createTempFile("fake", ".apk"),
             listOf("noise", "com.wwc2.mainui.ACTION_OEM"), listOf("com.wwc2.main.SWITCH_AVIN", "noise2"))

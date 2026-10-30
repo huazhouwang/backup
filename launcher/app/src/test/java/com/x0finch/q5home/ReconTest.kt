@@ -66,7 +66,8 @@ class ReconTest {
         assertTrue(md.contains("## 调试 / root 线索"))
         // 关键厂商应用的 APK 字符串（com.wwc2.main 在挖掘名单里）。
         assertTrue(md.contains("### `com.wwc2.main`"))
-        assertTrue(md.contains("- `com.wwc2.main.ACTION_ENTER_OEM`"))
+        assertTrue(md.contains("  - `com.wwc2.main.ACTION_ENTER_OEM`"))
+        assertTrue(md.contains("- 页面：`com.wwc2.main.MainActivity`"))
         assertTrue(!md.contains("boring"))
         assertTrue(report.facts.any { it.first == "adb" })
     }

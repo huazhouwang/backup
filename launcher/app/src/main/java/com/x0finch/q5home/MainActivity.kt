@@ -267,7 +267,12 @@ class MainActivity : Activity() {
         )
         list += Tile(
             Slot.OEM, 0, config.oem, Icons.byKey("oem"), getString(R.string.oem),
-            if (Targets.isAvailable(this, config.oem)) getString(R.string.oem_sub) else getString(R.string.not_set),
+            when {
+                !Targets.isAvailable(this, config.oem) -> getString(R.string.not_set)
+                // WWC2 的 main 只能到"安卓盒子"应用列表，提示下一步。
+                Targets.packageOf(config.oem) == Targets.WWC2_MAIN -> getString(R.string.oem_sub_wwc2)
+                else -> getString(R.string.oem_sub)
+            },
             wide = false,
         )
         config.dock.forEachIndexed { i, item ->

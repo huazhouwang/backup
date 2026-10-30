@@ -34,6 +34,15 @@ class TargetsTest {
         assertNotNull(Targets.icon(context, Targets.SYSTEM_SETTINGS))
     }
 
+    /** 没有名字像"原车"的应用时，WWC2 车机退到 main（安卓盒子），总比空着强。 */
+    @Test
+    fun oemFallsBackToWwc2Main() {
+        FakeApps.install(context, "com.wwc2.main/com.wwc2.main.MainActivity" to "main")
+        assertEquals("com.wwc2.main/com.wwc2.main.MainActivity", Targets.findOem(context))
+        FakeApps.install(context, FakeApps.OEM to "原车")
+        assertEquals(FakeApps.OEM, Targets.findOem(context))
+    }
+
     @Test
     fun shortClassNameIsExpanded() {
         val intent = Targets.intentFor(context, "com.a/.ui.Main")!!

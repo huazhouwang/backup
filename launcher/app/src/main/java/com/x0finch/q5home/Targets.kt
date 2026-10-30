@@ -136,8 +136,16 @@ object Targets {
         return findByKeywords(context, CARPLAY_KEYWORDS)
     }
 
-    /** 自动找原车应用：按名称关键词。找不到时由用户长按指定，或用 config.json 配置。 */
-    fun findOem(context: Context): String? = findByKeywords(context, OEM_KEYWORDS)
+    /**
+     * WWC2 平台（WY 固件）的 main：打开是"安卓盒子"应用列表，按返回到盒子主页，里面有「原车媒体」。
+     * 盒子主页是 main 的内部页面，外部打不开，所以找不到直达方式时先打开 main。
+     */
+    const val WWC2_MAIN = "com.wwc2.main"
+
+    /** 自动找原车应用：先按名称关键词，再退到 WWC2 的 main。找不到时由用户长按指定，或用 config.json 配置。 */
+    fun findOem(context: Context): String? =
+        findByKeywords(context, OEM_KEYWORDS)
+            ?: launchableApps(context).firstOrNull { it.activityInfo.packageName == WWC2_MAIN }?.let { specOf(it) }
 
     /** 自动找文件管理器。 */
     fun findFiles(context: Context): String? {

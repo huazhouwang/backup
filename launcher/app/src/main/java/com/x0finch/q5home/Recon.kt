@@ -53,7 +53,7 @@ object Recon {
     private const val PER_PACKAGE_LIMIT = 40
     /** 要读 APK 字符串的厂商应用（除了所有桌面应用）。 */
     private val DIG_PACKAGES = Regex("\\.main$|mainui|black|carmanager|canbus|\\.oem|avin")
-    private const val DIG_LIMIT = 250
+    private const val DIG_LIMIT = 400
 
     fun collect(context: Context, ports: List<Int> = listOf(5555)): Report {
         val pm = context.packageManager
@@ -151,15 +151,30 @@ object Recon {
             p.packageName != context.packageName && p.applicationInfo?.sourceDir != null &&
                 (p.packageName in homePackages || DIG_PACKAGES.containsMatchIn(p.packageName))
         }.sortedBy { it.packageName }
-        md.appendLine("## 关键厂商应用里的字符串（找原车切换方式，${dig.size} 个应用）")
-        md.appendLine("从 APK 代码里挑出像广播动作、或含 原车 / oem / avin / canbus 等字样的常量。")
+        md.appendLine("## 关键厂商应用的内部组件和字符串（找原车切换方式，${dig.size} 个应用）")
+        md.appendLine("全部页面 / 服务 / 广播接收器（含不对外的，标 🔒），以及 APK 代码里像广播动作、跳转参数、" +
+            "或含 原车 / oem / avin / canbus 等字样的常量。")
         md.appendLine()
         for (p in dig) {
             val apk = File(p.applicationInfo!!.sourceDir)
-            val strings = ApkStrings.fromApk(apk, limit = DIG_LIMIT)
-            md.appendLine("### `${p.packageName}`（${apk.length() / 1024} KB，${strings.size} 条）")
-            if (strings.isEmpty()) md.appendLine("（没读到，或没有匹配的字符串）")
-            else md.appendLine(strings.joinToString("\n") { "- `$it`" })
+            md.appendLine("### `${p.packageName}`（${apk.length() / 1024} KB）")
+            val full = runCatching {
+                pm.getPackageInfo(p.packageName, PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
+                    PackageManager.GET_RECEIVERS or PackageManager.MATCH_DISABLED_COMPONENTS)
+            }.getOrNull()
+            fun list(kind: String, items: List<android.content.pm.ComponentInfo>) {
+                items.take(PER_PACKAGE_LIMIT * 2).forEach {
+                    md.appendLine("- $kind：`${it.name}`${if (it.exported) "" else " 🔒"}")
+                }
+                if (items.size > PER_PACKAGE_LIMIT * 2) md.appendLine("- …还有 ${items.size - PER_PACKAGE_LIMIT * 2} 个$kind")
+            }
+            list("页面", full?.activities.orEmpty().toList())
+            list("服务", full?.services.orEmpty().toList())
+            list("广播", full?.receivers.orEmpty().toList())
+            val strings = ApkStrings.fromApk(apk, limit = DIG_LIMIT, filter = ApkStrings::interestingDeep)
+            md.appendLine("- 字符串 ${strings.size} 条：")
+            if (strings.isEmpty()) md.appendLine("  （没读到，或没有匹配的字符串）")
+            else md.appendLine(strings.joinToString("\n") { "  - `$it`" })
             md.appendLine()
         }
 
