@@ -17,7 +17,7 @@ import { roofKey } from '@/canvas/hop';
 import { TintColors, useFeedback } from './feedback';
 import { useHovered } from '../hover';
 import { useFloorTexture } from '@/graphics/three/floor-textures';
-import { mapProps, useSurfaceMaps } from '@/graphics/three/textures';
+import { LiteSurfaces, mapProps, useSurfaceMaps } from '@/graphics/three/textures';
 import { partsGeometry, useBuild } from '@/graphics/three/looks';
 import { disposePlants, plantGroup } from '@/graphics/three/plants';
 import { castsShadow, elementExtent, M, railingPieces, slabGeometry, solidGeometry, standardMaterialProps, wallGeometry } from '@/graphics/three/scene';
@@ -264,12 +264,13 @@ function useLookGeometry(recipe: Recipe | null, w: number, d: number, h: number,
   const parts = useMemo(() => (built ? partsGeometry(built.parts) : []), [built]);
   useEffect(() => () => parts.forEach(([, g]) => g.dispose()), [parts]);
   // Its image plants (issue 214), once their cut-outs have loaded
+  const lite = useContext(LiteSurfaces);
   const [plants, setPlants] = useState<THREE.Group | null>(null);
   const invalidate = useThree(s => s.invalidate);
   useEffect(() => {
     let live = true,
       got: THREE.Group | null = null;
-    void plantGroup(built?.parts ?? []).then(g => {
+    void plantGroup(built?.parts ?? [], lite).then(g => {
       got = g;
       if (live) {
         setPlants(g);
@@ -280,7 +281,7 @@ function useLookGeometry(recipe: Recipe | null, w: number, d: number, h: number,
       live = false;
       disposePlants(got);
     };
-  }, [built]);
+  }, [built, lite]);
   return { parts, plants };
 }
 type LookGeometry = { parts: [RecipeMaterial, THREE.BufferGeometry][]; plants: THREE.Group | null };

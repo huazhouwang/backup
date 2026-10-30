@@ -102,6 +102,13 @@ export function Model3D() {
   const [quality, setQuality] = useState<Quality | null>(null);
   const touch = useMemo(() => isTouchDevice(doc.defaultView!), [doc]);
   const q: Quality = quality ?? 'high';
+  /**
+   * Phones and tablets hold less memory than their GPUs suggest, and iOS reports none: WebKit closes a page that takes too much.
+   * On touch devices the look stays but its memory is budgeted: texture sets bring their colour map only, the plan drawings that
+   * fade into 3D use the smaller textures, the shadow map is smaller, the view draws at 1.5 pixels per point and ambient occlusion
+   * runs at half resolution
+   */
+  const budget: Quality = touch ? 'low' : q;
   const draw = useRef<(() => void) | null>(null);
 
   // Redraw element materials and extras when their builds finish
@@ -179,12 +186,13 @@ export function Model3D() {
     <div className="relative size-full">
       <TintColors.Provider value={tints}>
         {/* Texture sets bring every map only once the full setup is known to be affordable; the colour maps come first */}
-        <LiteSurfaces.Provider value={quality !== 'high'}>
+        <LiteSurfaces.Provider value={quality !== 'high' || touch}>
           <Canvas
             shadows="percentage"
             frameloop="demand"
-            // Full resolution for crisp edges; low-end phones a little less
-            dpr={q === 'high' ? [1, 2] : [1, 1.5]}
+            // Full resolution for crisp edges; touch devices and low-end setups a little less (memory: the post-processing buffers
+            // grow with the square of it)
+            dpr={q === 'high' && !touch ? [1, 2] : [1, 1.5]}
             gl={{ preserveDrawingBuffer: true, antialias: true }}
             camera={{ position: [cx + span * 0.9, span * 0.8, cz + span * 1.1], fov: FOV, near: 0.1, far: 2000 }}
             // White like the plan's page until the first frame: switching from the plan shows no gray flash
@@ -203,7 +211,17 @@ export function Model3D() {
             {/* The light, the sky environment and the post-processing wait for the quality: building the full setup only to drop it costs
               seconds on a slow device */}
             {quality && (
-              <HouseStage project={project} center={center} radius={radius} span={span} quality={q} colors={c} toward={sunToward} strength={sunStrength} />
+              <HouseStage
+                project={project}
+                center={center}
+                radius={radius}
+                span={span}
+                quality={q}
+                shadows={budget}
+                colors={c}
+                toward={sunToward}
+                strength={sunStrength}
+              />
             )}
 
             {/* The plan's page around the drawing at the current floor, while the house lies flat */}
@@ -211,7 +229,7 @@ export function Model3D() {
               <PlanSheet center={sheet.center} size={Math.max(span, radius) * 40} color={c.page} growth={growth} />
             </group>
             {/* The current floor's dimensions, on the ground */}
-            {view.layers.dimensions && current && <GroundDimensions project={project} level={current.id} quality={q} growth={growth} />}
+            {view.layers.dimensions && current && <GroundDimensions project={project} level={current.id} quality={budget} growth={growth} />}
             <group>
               {levels.map(l => {
                 const base = elev.get(l.id) ?? 0;
@@ -307,7 +325,7 @@ export function Model3D() {
                         furniture={view.layers.furniture}
                         labels={view.layers.labels}
                         dimensions={view.layers.dimensions}
-                        quality={q}
+                        quality={budget}
                         growth={growth}
                       />
                     </group>
@@ -328,7 +346,7 @@ export function Model3D() {
             <Picker />
             <Sun3D toward={sunSky.toward} up={sunSky.up} />
             {view.layers.dimensions && current && !camera3d.walking && !camera3d.section && (
-              <HeightDims3D project={project} level={current.id} shown={levels.map(l => l.id)} quality={q} growth={growth} />
+              <HeightDims3D project={project} level={current.id} shown={levels.map(l => l.id)} quality={budget} growth={growth} />
             )}
             {current && !camera3d.walking && <Widgets3D project={project} current={current.id} editable={canEdit} />}
             {current && <Effects3D project={project} current={current.id} />}
@@ -342,6 +360,7 @@ export function Model3D() {
                 edgeColor={c.edge}
                 growth={growth}
                 quality={q}
+                halfAo={touch}
               />
             )}
             {/* A phone that wasn't recognized as low-end but can't keep up drops to the light setup, for good */}

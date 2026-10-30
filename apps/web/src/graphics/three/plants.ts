@@ -15,16 +15,36 @@ export const plantImageUrl = (path: string) => URLS[`../../../../../libraries/pl
 const ALPHA_TEST = 0.5;
 const DEG = Math.PI / 180;
 
+/** The light setup's cut-outs: a quarter of the pixels (phones, software GL) */
+const LITE_PX = 512;
+
 const images = new Map<string, Promise<THREE.Texture>>();
-function image(path: string) {
-  let t = images.get(path);
+/** A cut-out, loaded once; `small` scaled down to LITE_PX along its longer side */
+function image(path: string, small = false) {
+  const key = small ? `${path}@${LITE_PX}` : path;
+  let t = images.get(key);
   if (!t) {
-    t = new THREE.TextureLoader().loadAsync(plantImageUrl(path)).then(tex => {
+    t = new THREE.TextureLoader().loadAsync(plantImageUrl(path)).then(full => {
+      let tex: THREE.Texture = full;
+      const img = full.image as HTMLImageElement;
+      const k = LITE_PX / Math.max(img.width, img.height);
+      if (small && k < 1) {
+        const c = img.ownerDocument.createElement('canvas');
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+        tex = new THREE.CanvasTexture(c);
+        full.dispose();
+        // Once uploaded the canvas is not needed (iOS caps canvas memory per page)
+        tex.onUpdate = () => {
+          c.width = c.height = 1;
+        };
+      }
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.anisotropy = 4;
       return tex;
     });
-    images.set(path, t);
+    images.set(key, t);
   }
   return t;
 }
@@ -67,8 +87,8 @@ function figure(tex: THREE.Texture) {
 
 type PlantPart = Extract<BuiltPart, { kind: 'plant' }>;
 
-/** A built look's image plants as one group in metres, in the look's frame; null when it has none */
-export async function plantGroup(parts: BuiltPart[]): Promise<THREE.Group | null> {
+/** A built look's image plants as one group in metres, in the look's frame; null when it has none. `lite`: smaller cut-outs */
+export async function plantGroup(parts: BuiltPart[], lite = false): Promise<THREE.Group | null> {
   const plants = parts.filter((p): p is PlantPart => p.kind === 'plant' && !!PLANTS[p.plant]);
   if (!plants.length) return null;
   const g = new THREE.Group();
@@ -77,12 +97,12 @@ export async function plantGroup(parts: BuiltPart[]): Promise<THREE.Group | null
     const { w, d } = p;
     const one = new THREE.Group();
     if (plant.kind === 'person') {
-      one.add(faceMe(figure(await image(plant.views.front)), w, p.h));
+      one.add(faceMe(figure(await image(plant.views.front, lite)), w, p.h));
       one.position.set(p.at[0] * M, p.at[1] * M, p.at[2] * M);
       g.add(one);
       continue;
     }
-    const [front, side] = await Promise.all([image(plant.views.front), image(plant.views.side)]);
+    const [front, side] = await Promise.all([image(plant.views.front, lite), image(plant.views.side, lite)]);
     // The front view faces south (+z), across the plant's width; the side view faces east (+x), across its depth
     for (const [tex, width, turn] of [
       [front, w, 0],

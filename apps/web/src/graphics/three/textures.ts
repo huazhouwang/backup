@@ -24,18 +24,35 @@ export interface SurfaceMaps {
 
 const NORMAL_SCALE = new THREE.Vector2(0.6, 0.6);
 
+/** The light setup's colour maps: a quarter of the pixels (phones, software GL), plenty at the distances a house is seen from */
+const LITE_PX = 512;
+
 const images = new Map<string, Promise<THREE.Texture>>();
-/** An image of the catalog, loaded once (`color`: in sRGB; the other maps are data) */
-function image(path: string, color: boolean) {
-  let t = images.get(path);
+/** An image of the catalog, loaded once (`color`: in sRGB; the other maps are data); `small` scaled down to LITE_PX */
+function image(path: string, color: boolean, small = false) {
+  const key = small ? `${path}@${LITE_PX}` : path;
+  let t = images.get(key);
   if (!t) {
-    t = new THREE.TextureLoader().loadAsync(urlOf(path)).then(tex => {
+    t = new THREE.TextureLoader().loadAsync(urlOf(path)).then(full => {
+      let tex: THREE.Texture = full;
+      const img = full.image as HTMLImageElement;
+      if (small && img.width > LITE_PX) {
+        const c = img.ownerDocument.createElement('canvas');
+        c.width = c.height = LITE_PX;
+        c.getContext('2d')!.drawImage(img, 0, 0, LITE_PX, LITE_PX);
+        tex = new THREE.CanvasTexture(c);
+        full.dispose();
+        // Once uploaded the canvas is not needed (iOS caps canvas memory per page)
+        tex.onUpdate = () => {
+          c.width = c.height = 1;
+        };
+      }
       tex.colorSpace = color ? THREE.SRGBColorSpace : THREE.NoColorSpace;
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
       tex.anisotropy = 8;
       return tex;
     });
-    images.set(path, t);
+    images.set(key, t);
   }
   return t;
 }
@@ -62,7 +79,7 @@ export function surfaceMaps(m: Material | undefined, lite = false): Promise<Surf
     const [r, g, b] = m.pbrMetallicRoughness.baseColorFactor;
     const tint = new THREE.Color().setRGB(r / set.average[0], g / set.average[1], b / set.average[2], THREE.LinearSRGBColorSpace);
     p = Promise.all([
-      image(set.maps.color, true),
+      image(set.maps.color, true, lite),
       !lite && set.maps.normal ? image(set.maps.normal, false) : null,
       !lite && set.maps.arm ? image(set.maps.arm, false) : null,
     ]).then(([color, normal, arm]) => ({

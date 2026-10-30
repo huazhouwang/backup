@@ -1,6 +1,6 @@
 /** What the house stands in, in the 3D view: sky light, the sun, and a ground that only catches shadows (see scene/lighting.ts) */
 import type { Project } from '@opensu/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { hops } from '@/canvas/hop';
@@ -21,6 +21,7 @@ import {
   type ShadowQuality,
 } from '@/graphics/three/scene';
 import { disposePlants } from '@/graphics/three/plants';
+import { LiteSurfaces } from '@/graphics/three/textures';
 import { hazeRange, lawn, treeLine } from '@/graphics/three/setting';
 
 export function HouseStage({
@@ -29,6 +30,7 @@ export function HouseStage({
   radius,
   span,
   quality,
+  shadows = quality,
   colors,
   toward,
   strength = 1,
@@ -39,13 +41,15 @@ export function HouseStage({
   /** The site's larger side in metres: the ground reaches well beyond it and the house */
   span: number;
   quality: ShadowQuality;
+  /** The shadow map's size, when it differs from the quality (touch devices: memory) */
+  shadows?: ShadowQuality;
   colors: { skylight: string; wall: string; sun: string; sunLow: string; shadow: string; sky: string; skyLight: string; ground: string; backdrop: string };
   /** Toward the sun (see lib/solar.ts), and how strong it shines (0–1, low near the horizon) */
   toward?: THREE.Vector3;
   strength?: number;
 }) {
   // A shadow map keeps its size once created: a new sun when the quality changes
-  const sun = useMemo(() => sunLight(colors.sun, center, radius, quality), [colors.sun, center.x, center.y, center.z, radius, quality]);
+  const sun = useMemo(() => sunLight(colors.sun, center, radius, shadows), [colors.sun, center.x, center.y, center.z, radius, shadows]);
   useEffect(() => () => sun.shadow.map?.dispose(), [sun]);
   // While a house just built goes up (issue 188) the sun casts no shadows: they come back once it stands
   const casts = useMemo(() => sun.castShadow, [sun]);
@@ -60,7 +64,7 @@ export function HouseStage({
   const invalidate = useThree(s => s.invalidate);
   const mood = useSkyMood();
   useEffect(() => {
-    sun.position.copy(sunSetup(center, radius, quality, toward).position);
+    sun.position.copy(sunSetup(center, radius, shadows, toward).position);
     sun.color.copy(sunColor(colors.sun, colors.sunLow, toward ?? DEFAULT_SUN));
     sun.intensity = SUN_INTENSITY * strength * mood.sun;
     invalidate();
@@ -99,11 +103,13 @@ export function HouseStage({
   );
   // In a landscape (issue 220): a tree line on the horizon, fading into a haze that starts just past the house from wherever the
   // camera stands. An effect's fog (Effects3D) replaces the haze while it is on
+  // Smaller images in the light setup and on touch devices (Model3D's memory budget)
+  const lite = useContext(LiteSurfaces);
   const [setting, setSetting] = useState<THREE.Group | null>(null);
   useEffect(() => {
     let live = true,
       got: THREE.Group | null = null;
-    void treeLine(center, radius).then(g => {
+    void treeLine(center, radius, lite).then(g => {
       got = g;
       if (live) {
         setSetting(g);
@@ -114,12 +120,12 @@ export function HouseStage({
       live = false;
       disposePlants(got);
     };
-  }, [center.x, center.z, radius]);
+  }, [center.x, center.z, radius, lite]);
   const [grass, setGrass] = useState<THREE.Mesh | null>(null);
   useEffect(() => {
     let live = true,
       got: THREE.Mesh | null = null;
-    void lawn(center, radius, colors.backdrop, !lit).then(m => {
+    void lawn(center, radius, colors.backdrop, lite).then(m => {
       got = m;
       if (live) {
         setGrass(m);
@@ -131,7 +137,7 @@ export function HouseStage({
       got?.geometry.dispose();
       (got?.material as THREE.Material | undefined)?.dispose();
     };
-  }, [center.x, center.z, radius, lit, colors.backdrop]);
+  }, [center.x, center.z, radius, lite, colors.backdrop]);
   const haze = useMemo(() => new THREE.Fog(colors.backdrop, 1, 2), [colors.backdrop]);
   useEffect(() => {
     if (!scene.fog) scene.fog = haze;

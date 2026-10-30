@@ -45,6 +45,7 @@ export function Renderer({
   edgeColor,
   growth,
   quality,
+  halfAo = false,
 }: {
   draw: React.RefObject<(() => void) | null>;
   edges: boolean;
@@ -53,13 +54,15 @@ export function Renderer({
   edgeColor: string;
   growth: React.RefObject<{ g: number }>;
   quality: Quality;
+  /** Ambient occlusion at half resolution (touch devices: memory) */
+  halfAo?: boolean;
 }) {
   const { gl, scene, camera, size } = useThree();
   const { composer, edges } = useMemo(() => {
     const e = withEdges ? new EdgePass(scene, camera, size.width, size.height) : null;
-    const c = beautyComposer(gl, scene, camera, size.width, size.height, { ao: quality === 'high', extra: { addPass: c => e && c.addPass(e) } });
+    const c = beautyComposer(gl, scene, camera, size.width, size.height, { ao: quality === 'high', halfAo, extra: { addPass: c => e && c.addPass(e) } });
     return { composer: c, edges: e };
-  }, [gl, scene, camera, withEdges, quality]);
+  }, [gl, scene, camera, withEdges, quality, halfAo]);
   useEffect(() => () => composer.dispose(), [composer]);
   useEffect(() => {
     composer.setPixelRatio(gl.getPixelRatio());

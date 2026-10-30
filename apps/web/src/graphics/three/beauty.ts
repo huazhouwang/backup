@@ -79,7 +79,7 @@ export function toneMap(renderer: THREE.WebGLRenderer, look: Look = LOOK) {
 }
 
 /** Ambient occlusion in corners, where walls meet floors and under furniture, about an arm's reach; glass is left out */
-export function aoPass(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, look: Look = LOOK) {
+export function aoPass(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, look: Look = LOOK, halfRes = false) {
   const ao = new N8AOPass(scene, camera, width, height);
   Object.assign(ao.configuration, {
     aoRadius: look.aoRadius,
@@ -91,6 +91,8 @@ export function aoPass(scene: THREE.Scene, camera: THREE.Camera, width: number, 
     transparencyAware: true,
     gammaCorrection: false,
     screenSpaceRadius: false,
+    // Its buffers at half size, a quarter of the memory (phones)
+    halfRes,
   });
   // The scene drawn multisampled (three resolves colour and depth), so edges are smooth without a screen-space filter that would
   // also blur the selection's one-pixel stipple
@@ -113,11 +115,11 @@ export function beautyComposer(
   camera: THREE.Camera,
   width: number,
   height: number,
-  opts: { ao?: boolean; look?: Look; edges?: THREE.ColorRepresentation; extra?: { addPass(c: EffectComposer): void } } = {},
+  opts: { ao?: boolean; halfAo?: boolean; look?: Look; edges?: THREE.ColorRepresentation; extra?: { addPass(c: EffectComposer): void } } = {},
 ) {
   const ao = opts.ao ?? !isSoftwareGL(renderer.getContext());
   const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType, samples: ao ? 0 : 4 }));
-  composer.addPass(ao ? aoPass(scene, camera, width, height, opts.look) : new RenderPass(scene, camera));
+  composer.addPass(ao ? aoPass(scene, camera, width, height, opts.look, opts.halfAo) : new RenderPass(scene, camera));
   if (opts.edges !== undefined) {
     const edges = new EdgePass(scene, camera, width, height);
     edges.uniforms.edgeColor.value.set(opts.edges);

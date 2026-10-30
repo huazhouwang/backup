@@ -44,6 +44,10 @@ export async function rasterize(svg: string, width: number, height: number, doc:
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
+  // Once on the GPU the canvas is not needed: its pixels go, so the drawing isn't held twice (iOS caps canvas memory per page)
+  tex.onUpdate = () => {
+    c.width = c.height = 1;
+  };
   return tex;
 }
 

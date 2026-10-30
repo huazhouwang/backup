@@ -124,7 +124,7 @@ export async function houseScene(
       mesh.castShadow = castsShadow(style);
       mesh.receiveShadow = true;
     }
-    const plants = await plantGroup(built.parts);
+    const plants = await plantGroup(built.parts, !lit);
     if (plants) {
       plants.traverse(o => (o as THREE.Mesh).isMesh && ((o.userData.part = part), keep((o as THREE.Mesh).geometry)));
       g.add(plants);
@@ -235,7 +235,7 @@ export async function houseScene(
   ground.position.set(center.x, p.site.groundLevel * M - 0.001, center.z);
   scene.add(ground);
   // In a landscape: a tree line on the horizon (setting.ts)
-  const setting = await treeLine(center, radius);
+  const setting = await treeLine(center, radius, !lit);
   setting.position.y = p.site.groundLevel * M;
   setting.traverse(o => (o as THREE.Mesh).isMesh && keep((o as THREE.Mesh).geometry));
   scene.add(setting);

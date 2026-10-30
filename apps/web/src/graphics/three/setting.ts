@@ -25,7 +25,7 @@ export function hazeRange(view: number, radius: number): [number, number] {
 }
 
 /** A tree line around `center` (metres), beyond `radius`; resolves to a group to add to the scene */
-export async function treeLine(center: THREE.Vector3, radius: number): Promise<THREE.Group> {
+export async function treeLine(center: THREE.Vector3, radius: number, lite = false): Promise<THREE.Group> {
   let seed = 11;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
   // Beyond the orbit's reach (CameraRig: 6 radii), with a minimum for small houses
@@ -54,7 +54,7 @@ export async function treeLine(center: THREE.Vector3, radius: number): Promise<T
       });
     }
   }
-  const g = (await plantGroup(parts)) ?? new THREE.Group();
+  const g = (await plantGroup(parts, lite)) ?? new THREE.Group();
   g.position.set(center.x, 0, center.z);
   // Far scenery: no shadows to cast into the house's shadow map, nothing to pick
   g.traverse(o => {
