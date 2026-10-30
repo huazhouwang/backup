@@ -9,6 +9,11 @@ export function deleteFamilyStatements(db: D1Database, familyId: string): D1Prep
     db
       .prepare('delete from reminders where baby_id in (select id from babies where family_id = ?)')
       .bind(familyId),
+    db
+      .prepare(
+        'delete from vaccine_reminders where baby_id in (select id from babies where family_id = ?)',
+      )
+      .bind(familyId),
     // Keyed by baby with no foreign key, so nothing else removes them.
     db
       .prepare(
@@ -74,6 +79,7 @@ export function deleteAccountStatements(db: D1Database, userId: string): D1Prepa
       .bind(userId, Date.now()),
     db.prepare('delete from memberships where user_id = ?').bind(userId),
     db.prepare('delete from reminders where user_id = ?').bind(userId),
+    db.prepare('delete from vaccine_reminders where user_id = ?').bind(userId),
     db.prepare('delete from push_subscriptions where user_id = ?').bind(userId),
     db.prepare('delete from voice_tokens where user_id = ?').bind(userId),
     // Their conversations with the voice agent, current and earlier ones.

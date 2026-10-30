@@ -1,10 +1,12 @@
 import type { Baby, Event } from '@lullabo/shared'
-import { Button } from '@lullabo/ui/button'
+import { Button, buttonVariants } from '@lullabo/ui/button'
 import { RollingText } from '@lullabo/ui/rolling-text'
 import { Sheet } from '@lullabo/ui/sheet'
+import { Link } from '@tanstack/react-router'
 import { useId, useState } from 'react'
 
 import { MusicIcon } from '../../components/icons/MusicIcon'
+import { VaccineIcon } from '../../components/icons/VaccineIcon'
 import { useNow } from '../../lib/use-now'
 import { m } from '../../paraglide/messages.js'
 import { useAccess } from '../../sync/use-access'
@@ -123,7 +125,20 @@ export function QuickActions({ baby, events }: { baby: Baby; events: readonly Ev
               {CATEGORY_LOOK[category].title()}
             </Button>
           ))}
-          {/* Not a record: soothing sounds, played on this device (SoundPlayer). */}
+          {/* Not records: the vaccination plan, and soothing sounds played on this device. */}
+          <Link
+            to="/vaccines"
+            onClick={close}
+            className={buttonVariants({
+              variant: 'soft',
+              tone: 'primary',
+              size: 'lg',
+              className: 'min-h-20 flex-col',
+            })}
+          >
+            <VaccineIcon className="size-9" />
+            {m.vaccineOpen()}
+          </Link>
           <Button
             variant="soft"
             tone="sleep"

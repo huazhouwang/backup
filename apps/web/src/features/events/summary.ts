@@ -97,7 +97,8 @@ export function summarizeDay(
         summary.notes += 1
         continue
       case 'growth':
-        // Shown on the growth view, not in daily totals.
+      case 'vaccination':
+        // Shown on their own pages (growth, vaccines), not in daily totals.
         continue
       case 'feeding':
         break

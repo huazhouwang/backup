@@ -8,6 +8,7 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { MAX_SENDS, dispatchReminders } from '../src/reminders'
+import { dispatchVaccineReminders } from '../src/vaccine-reminders'
 import { encryptPayload, generateVapidKeys, vapidAuthorization } from '../src/web-push'
 import { createTestApp } from './app'
 import { baby as fixtureBaby } from './fixtures'
@@ -356,5 +357,59 @@ describe('reminders', () => {
     expect(await dispatchReminders(t.env, now + HOUR, service.fetcher)).toBe(1)
     // Marked as sent: the next run doesn't repeat it.
     expect(await dispatchReminders(t.env, now + HOUR + 60_000, pushService().fetcher)).toBe(0)
+  })
+})
+
+describe('vaccination reminders', () => {
+  let t: Awaited<ReturnType<typeof createTestApp>>
+  let headers: Headers
+  let familyId: string
+  // 09:05 in Shanghai on 28 May 2026: three days before a baby born 31 March turns two months.
+  const morning = Date.UTC(2026, 4, 28, 1, 5)
+
+  beforeAll(async () => {
+    t = await createTestApp()
+    const me = await t.signIn()
+    headers = me.headers
+    const res = await t.send('POST', '/api/families', headers, { name: '我们家' })
+    const family: { id: string } = await res.json()
+    familyId = family.id
+  })
+  afterAll(() => t.dispose())
+
+  it('reminds at nine in the device’s time zone, once a day, unless turned off', async () => {
+    const b = fixtureBaby(familyId, {
+      name: '小米粒',
+      birthDate: '2026-03-31',
+      createdAt: morning - 60 * 24 * HOUR,
+      updatedAt: morning - 60 * 24 * HOUR,
+    })
+    await t.send('POST', '/api/sync/push', headers, { babies: [b], events: [] })
+    const browser = await fakeBrowser()
+    const endpoint = `https://push.example.com/${newId()}`
+    const subscribe = { endpoint, keys: browser.keys, timeZone: 'Asia/Shanghai' }
+    expect((await t.send('PUT', '/api/push/subscription', headers, subscribe)).status).toBe(204)
+
+    // An hour before nine there: nothing yet.
+    expect(await dispatchVaccineReminders(t.env, morning - HOUR, pushService().fetcher)).toBe(0)
+
+    const due = pushService()
+    expect(await dispatchVaccineReminders(t.env, morning, due.fetcher)).toBe(1)
+    const message: PushMessage = JSON.parse(
+      await decrypt(browser, due.sent[0]?.body ?? new Uint8Array()),
+    )
+    expect(message.title).toBe('小米粒的疫苗提醒')
+    expect(message.body).toContain('3 天后该打：脊灰灭活疫苗 第 1 剂、百白破疫苗 第 1 剂')
+    expect(message.url).toBe('/vaccines')
+    // Once a day, even if the cron comes round again in the same quarter hour.
+    expect(await dispatchVaccineReminders(t.env, morning + 60_000, pushService().fetcher)).toBe(0)
+
+    // Turned off: the next morning brings nothing.
+    const off = { babyId: b.id, enabled: false }
+    expect((await t.send('PUT', '/api/reminders/vaccines', headers, off)).status).toBe(200)
+    expect(await (await t.request('/api/reminders/vaccines', { headers })).json()).toEqual([off])
+    expect(await dispatchVaccineReminders(t.env, morning + 24 * HOUR, pushService().fetcher)).toBe(
+      0,
+    )
   })
 })

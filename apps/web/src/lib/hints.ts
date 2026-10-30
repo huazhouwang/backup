@@ -1,7 +1,7 @@
 import { createStoredValue, jsonCodec, stringList } from './store'
 
 /** Explanations a person can choose not to see again, on this device. */
-export type Hint = 'micPermission'
+export type Hint = 'micPermission' | 'vaccineCatchUp'
 
 const hidden = createStoredValue('lullabo.hiddenHints', jsonCodec(stringList), [] as string[])
 

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as UiRouteImport } from './routes/ui'
+import { Route as VaccinesRouteImport } from './routes/vaccines'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as SettingsAboutRouteImport } from './routes/settings.about'
@@ -45,6 +46,11 @@ const StatsRoute = StatsRouteImport.update({
 const UiRoute = UiRouteImport.update({
   id: '/ui',
   path: '/ui',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VaccinesRoute = VaccinesRouteImport.update({
+  id: '/vaccines',
+  path: '/vaccines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinCodeRoute = JoinCodeRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/stats': typeof StatsRoute
   '/ui': typeof UiRoute
+  '/vaccines': typeof VaccinesRoute
   '/join/$code': typeof JoinCodeRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/account': typeof SettingsAccountRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/stats': typeof StatsRoute
   '/ui': typeof UiRoute
+  '/vaccines': typeof VaccinesRoute
   '/join/$code': typeof JoinCodeRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/account': typeof SettingsAccountRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/stats': typeof StatsRoute
   '/ui': typeof UiRoute
+  '/vaccines': typeof VaccinesRoute
   '/join/$code': typeof JoinCodeRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/account': typeof SettingsAccountRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/stats'
     | '/ui'
+    | '/vaccines'
     | '/join/$code'
     | '/settings/about'
     | '/settings/account'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/stats'
     | '/ui'
+    | '/vaccines'
     | '/join/$code'
     | '/settings/about'
     | '/settings/account'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/stats'
     | '/ui'
+    | '/vaccines'
     | '/join/$code'
     | '/settings/about'
     | '/settings/account'
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   StatsRoute: typeof StatsRoute
   UiRoute: typeof UiRoute
+  VaccinesRoute: typeof VaccinesRoute
   JoinCodeRoute: typeof JoinCodeRoute
   SettingsAboutRoute: typeof SettingsAboutRoute
   SettingsAccountRoute: typeof SettingsAccountRoute
@@ -279,6 +292,13 @@ declare module '@tanstack/react-router' {
       path: '/ui'
       fullPath: '/ui'
       preLoaderRoute: typeof UiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vaccines': {
+      id: '/vaccines'
+      path: '/vaccines'
+      fullPath: '/vaccines'
+      preLoaderRoute: typeof VaccinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join/$code': {
@@ -380,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   StatsRoute: StatsRoute,
   UiRoute: UiRoute,
+  VaccinesRoute: VaccinesRoute,
   JoinCodeRoute: JoinCodeRoute,
   SettingsAboutRoute: SettingsAboutRoute,
   SettingsAccountRoute: SettingsAccountRoute,

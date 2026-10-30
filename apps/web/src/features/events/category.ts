@@ -23,6 +23,7 @@ export const CATEGORY_LOOK: Record<Category, CategoryLook> = {
   medication: { title: m.categoryMedication, tone: 'medication', dot: 'bg-medication' },
   note: { title: m.categoryNote, tone: 'note', dot: 'bg-note' },
   growth: { title: m.categoryGrowth, tone: 'primary', dot: 'bg-primary' },
+  vaccination: { title: m.categoryVaccination, tone: 'primary', dot: 'bg-primary' },
 }
 
 /** Event types logged from the "more" sheet rather than the three big buttons. */

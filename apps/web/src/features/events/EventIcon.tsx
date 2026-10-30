@@ -21,6 +21,7 @@ export type IconKind =
   | 'medication'
   | 'note'
   | 'growth'
+  | 'vaccination'
 
 const DIAPER_KIND = { wet: 'diaperWet', dirty: 'diaperDirty', mixed: 'diaperMixed' } as const
 
@@ -33,6 +34,7 @@ const CATEGORY_KIND: Record<Category, IconKind> = {
   medication: 'medication',
   note: 'note',
   growth: 'growth',
+  vaccination: 'vaccination',
 }
 
 function iconKindOf(event: Event): IconKind {
@@ -68,6 +70,7 @@ const TONE: Record<IconKind, string> = {
   medication: 'fill-medication',
   note: 'fill-note',
   growth: 'fill-primary',
+  vaccination: 'fill-primary',
 }
 
 const W = '#ffffff'
@@ -202,6 +205,17 @@ function glyph(kind: IconKind, tone: string, poop: PoopColor): ReactNode {
             />
           ))}
         </>
+      )
+    case 'vaccination':
+      // A syringe on a slant: barrel with its dose marked, plunger and needle.
+      return (
+        <g transform="rotate(45 24 24)">
+          <rect x="18" y="12" width="12" height="22" rx="3" fill={W} />
+          <rect x="21" y="22" width="6" height="9" rx="1.5" className={tone} opacity="0.5" />
+          <rect x="22.5" y="5" width="3" height="8" rx="1.5" fill={W} />
+          <rect x="17" y="4" width="14" height="3" rx="1.5" fill={W} />
+          <rect x="22.8" y="33" width="2.4" height="10" rx="1.2" fill={W} />
+        </g>
       )
     default:
       return kind satisfies never

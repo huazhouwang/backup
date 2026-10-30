@@ -30,6 +30,13 @@ const base64UrlBytes = (length: number) =>
       }
     })
 
+/** Whether a user is reminded of a baby's vaccinations. */
+export const vaccineReminderSchema = z.object({
+  babyId: z.string().min(1).max(64),
+  enabled: z.boolean(),
+})
+export type VaccineReminder = z.infer<typeof vaccineReminderSchema>
+
 /** A browser's PushSubscription as sent by the app (PushSubscription.toJSON()). */
 export const pushSubscriptionSchema = z.object({
   endpoint: z.url({ protocol: /^https$/ }).max(2048),
@@ -38,6 +45,8 @@ export const pushSubscriptionSchema = z.object({
     p256dh: base64UrlBytes(65),
     auth: base64UrlBytes(16),
   }),
+  /** The device's time zone (IANA), for reminders at a time of day. */
+  timeZone: z.string().max(64).optional(),
 })
 export type PushSubscriptionInput = z.infer<typeof pushSubscriptionSchema>
 

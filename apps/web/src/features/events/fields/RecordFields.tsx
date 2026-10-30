@@ -1,6 +1,7 @@
 import type { RecordKind } from '@lullabo/shared'
 import type { Dispatch, SetStateAction } from 'react'
 
+import { ReactionChips } from '../../vaccines/ReactionChips'
 import { DiaperFields } from './DiaperFields'
 import type { DraftErrors, RecordDrafts } from './drafts'
 import {
@@ -64,6 +65,14 @@ export function RecordFields({
           value={drafts.medication}
           onChange={set('medication')}
           error={errors.name}
+        />
+      )
+    case 'vaccination':
+      // Which vaccine and dose is the record itself; how the baby took it can change.
+      return (
+        <ReactionChips
+          value={drafts.vaccination.reactions}
+          onChange={(reactions) => set('vaccination')({ ...drafts.vaccination, reactions })}
         />
       )
     case 'breast':

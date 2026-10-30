@@ -15,6 +15,7 @@ export type RecordKind =
   | 'medication'
   | 'growth'
   | 'note'
+  | 'vaccination'
 
 export type Side = 'left' | 'right' | 'both'
 
@@ -66,6 +67,7 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindDefinition> = {
   medication: instant,
   growth: instant,
   note: instant,
+  vaccination: instant,
 }
 
 /**

@@ -75,6 +75,16 @@ export const medicationDataSchema = z.object({
   dose: z.string().trim().max(50).nullable(),
 })
 
+/** Reactions noted after a vaccination; none noted is an empty list. */
+export const VACCINE_REACTIONS = ['fever', 'swelling', 'fussy'] as const
+
+/** One dose of a vaccine, by its id in VACCINES and its number as the booklet counts it. */
+export const vaccinationDataSchema = z.object({
+  vaccineId: z.string().trim().min(1).max(40),
+  dose: z.number().int().min(1).max(10),
+  reactions: z.array(z.enum(VACCINE_REACTIONS)).max(VACCINE_REACTIONS.length),
+})
+
 /** Growth measurements; at least one is present. Canonical units are kg and cm. */
 export const growthDataSchema = z
   .object({
@@ -113,6 +123,7 @@ export const eventSchema = z
     z.object({ ...eventBase, type: z.literal('medication'), data: medicationDataSchema }),
     z.object({ ...eventBase, type: z.literal('note'), data: noteDataSchema }),
     z.object({ ...eventBase, type: z.literal('growth'), data: growthDataSchema }),
+    z.object({ ...eventBase, type: z.literal('vaccination'), data: vaccinationDataSchema }),
   ])
   .superRefine((event, ctx) => {
     checkTimestamps(event, ctx)
@@ -155,6 +166,7 @@ export const EVENT_TYPES = [
   'medication',
   'note',
   'growth',
+  'vaccination',
 ] as const satisfies readonly EventType[]
 export type FeedingEvent = Extract<Event, { type: 'feeding' }>
 export type SleepEvent = Extract<Event, { type: 'sleep' }>
@@ -164,6 +176,8 @@ export type TemperatureEvent = Extract<Event, { type: 'temperature' }>
 export type MedicationEvent = Extract<Event, { type: 'medication' }>
 export type NoteEvent = Extract<Event, { type: 'note' }>
 export type GrowthEvent = Extract<Event, { type: 'growth' }>
+export type VaccinationEvent = Extract<Event, { type: 'vaccination' }>
+export type VaccineReaction = (typeof VACCINE_REACTIONS)[number]
 export type FeedingData = z.infer<typeof feedingDataSchema>
 export type BreastSide = z.infer<typeof breastSideSchema>
 export type BreastSegment = z.infer<typeof breastSegmentSchema>

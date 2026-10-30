@@ -1,3 +1,5 @@
+import type { VaccinePlanSettings } from '@lullabo/shared'
+
 import type { LocalStore } from '../../db'
 import { currentFamilyId, markDirty, purgeBabyEvents, writeLocal } from '../../sync/local'
 import { type BabyInput, buildBaby } from './records'
@@ -30,6 +32,16 @@ export function updateBaby(store: LocalStore, id: string, input: BabyInput) {
   return writeLocal(store, () =>
     updateAndMark(store, id, (draft) => {
       Object.assign(draft, input)
+      draft.updatedAt = Date.now()
+    }),
+  )
+}
+
+/** Sets the family's vaccination plan for a baby (which kinds, which self-paid vaccines). */
+export function setVaccinePlan(store: LocalStore, id: string, plan: VaccinePlanSettings) {
+  return writeLocal(store, () =>
+    updateAndMark(store, id, (draft) => {
+      Object.assign(draft, { vaccinePlan: plan })
       draft.updatedAt = Date.now()
     }),
   )

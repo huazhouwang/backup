@@ -9,6 +9,7 @@ import {
   SYNC_PULL_LIMIT,
   SYNC_PUSH_LIMIT,
   pushRequestSchema,
+  vaccinePlanSchema,
 } from '@lullabo/shared'
 import { Hono } from 'hono'
 
@@ -38,7 +39,7 @@ import {
 } from '../sync/sql'
 import type { AppEnv } from '../types'
 
-type BabyRow = Baby & { seq: number }
+type BabyRow = Omit<Baby, 'vaccinePlan'> & { vaccinePlan: string | null; seq: number }
 
 const toMap = (rows: ExistingRow[]) => new Map(rows.map((row) => [row.id, row]))
 
@@ -47,8 +48,19 @@ function lastOf(rows: readonly { seq: number; id: string }[], fallback: TableCur
   return last ? [last.seq, last.id] : fallback
 }
 
-function toBaby({ seq: _seq, ...baby }: BabyRow): Baby {
-  return baby
+function toBaby({ seq: _seq, vaccinePlan, ...baby }: BabyRow): Baby {
+  // Left out until someone sets it, as apps send it.
+  return vaccinePlan === null ? baby : { ...baby, vaccinePlan: parsePlan(vaccinePlan) }
+}
+
+/** A stored plan, or none if it no longer reads as one. */
+function parsePlan(text: string): Baby['vaccinePlan'] {
+  try {
+    const parsed = vaccinePlanSchema.safeParse(JSON.parse(text))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
 }
 
 export const syncRoutes = new Hono<AppEnv>()

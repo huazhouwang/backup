@@ -1,0 +1,1 @@
+ALTER TABLE `babies` ADD `vaccine_plan` text;

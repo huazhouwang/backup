@@ -5,6 +5,7 @@ import {
   type FeedingEvent,
   type GrowthEvent,
   type MedicationEvent,
+  type VaccinationEvent,
   type NoteEvent,
   type PumpingEvent,
   type SleepEvent,
@@ -246,6 +247,16 @@ export function logTemperature(
     endAt: null,
     data: { celsius: Math.round(celsius * 10) / 10 },
   }
+}
+
+/** A dose of a vaccine given at `at`. */
+export function logVaccination(
+  babyId: string,
+  at: number,
+  data: VaccinationEvent['data'],
+  now: number = at,
+): VaccinationEvent {
+  return { ...base(babyId, now), type: 'vaccination', startAt: at, endAt: null, data }
 }
 
 export function logMedication(

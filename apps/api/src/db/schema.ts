@@ -23,6 +23,8 @@ export const babies = sqliteTable(
     sex: text('sex', { enum: ['female', 'male', 'unspecified'] }).notNull(),
     avatarColor: text('avatar_color').notNull(),
     archivedAt: integer('archived_at'),
+    /** The family's vaccination plan for the baby (vaccinePlanSchema), as JSON. */
+    vaccinePlan: text('vaccine_plan'),
     ...syncColumns,
   },
   (table) => [index('babies_family_seq_idx').on(table.familyId, table.seq, table.id)],
@@ -134,9 +136,27 @@ export const pushSubscriptions = sqliteTable(
     userId: text('user_id').notNull(),
     p256dh: text('p256dh').notNull(),
     auth: text('auth').notNull(),
+    /** The device's time zone, for reminders at a time of day (vaccinations at 9:00). */
+    timeZone: text('time_zone'),
     createdAt: integer('created_at').notNull(),
   },
   (table) => [index('push_subscriptions_user_idx').on(table.userId)],
+)
+
+/**
+ * Vaccination reminders for a baby, per user: on unless turned off, and the local day they
+ * last went out, so a day notifies once.
+ */
+export const vaccineReminders = sqliteTable(
+  'vaccine_reminders',
+  {
+    userId: text('user_id').notNull(),
+    babyId: text('baby_id').notNull(),
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+    sentOn: text('sent_on').notNull().default(''),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.babyId] })],
 )
 
 /**

@@ -35,7 +35,8 @@ describe('cron', () => {
     })
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const results = await runScheduled({ ...env, DB: failing }, ON_THE_HOUR)
-    expect(results.map((result) => result.status)).toEqual(['rejected', 'fulfilled'])
+    // Reminders fail; vaccination reminders and retention still run.
+    expect(results.map((result) => result.status)).toEqual(['rejected', 'fulfilled', 'fulfilled'])
     const left = await env.DB.prepare('select count(*) as n from chat_threads').first<{
       n: number
     }>()

@@ -26,17 +26,20 @@ export function upsertBabies(db: D1Database, babies: Baby[]) {
   return db
     .prepare(
       `insert into babies (id, family_id, name, birth_date, sex, avatar_color, archived_at,
-         created_at, updated_at, deleted_at, created_by, seq)
+         vaccine_plan, created_at, updated_at, deleted_at, created_by, seq)
        select json_extract(j.value, '$.id'), json_extract(j.value, '$.familyId'),
          json_extract(j.value, '$.name'), json_extract(j.value, '$.birthDate'),
          json_extract(j.value, '$.sex'), json_extract(j.value, '$.avatarColor'),
-         json_extract(j.value, '$.archivedAt'), json_extract(j.value, '$.createdAt'),
+         json_extract(j.value, '$.archivedAt'), json_extract(j.value, '$.vaccinePlan'),
+         json_extract(j.value, '$.createdAt'),
          json_extract(j.value, '$.updatedAt'), json_extract(j.value, '$.deletedAt'),
          json_extract(j.value, '$.createdBy'), ${NEXT_SEQ}
        from json_each(?) j where true
        on conflict (id) do update set
          name = excluded.name, birth_date = excluded.birth_date, sex = excluded.sex,
          avatar_color = excluded.avatar_color, archived_at = excluded.archived_at,
+         -- Apps from before the plan existed leave it out: keep what is there.
+         vaccine_plan = coalesce(excluded.vaccine_plan, babies.vaccine_plan),
          updated_at = excluded.updated_at, deleted_at = excluded.deleted_at, seq = excluded.seq
        where excluded.updated_at >= babies.updated_at and babies.family_id = excluded.family_id`,
     )
@@ -83,7 +86,8 @@ export function selectBabiesPage(
   return db
     .prepare(
       `select id, family_id as familyId, name, birth_date as birthDate, sex,
-         avatar_color as avatarColor, archived_at as archivedAt, created_at as createdAt,
+         avatar_color as avatarColor, archived_at as archivedAt, vaccine_plan as vaccinePlan,
+         created_at as createdAt,
          updated_at as updatedAt, deleted_at as deletedAt, created_by as createdBy, seq
        from babies
        where (family_id in (select value from json_each(?)) or id in (select value from json_each(?)))
@@ -116,5 +120,8 @@ export function deleteBabyData(db: D1Database, babyIds: readonly string[]) {
   return [
     db.prepare('delete from events where baby_id in (select value from json_each(?))').bind(ids),
     db.prepare('delete from reminders where baby_id in (select value from json_each(?))').bind(ids),
+    db
+      .prepare('delete from vaccine_reminders where baby_id in (select value from json_each(?))')
+      .bind(ids),
   ]
 }

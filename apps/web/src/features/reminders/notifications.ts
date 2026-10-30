@@ -1,4 +1,9 @@
-import { type PushSubscriptionInput, type Reminder, base64UrlDecode } from '@lullabo/shared'
+import {
+  type PushSubscriptionInput,
+  type Reminder,
+  type VaccineReminder,
+  base64UrlDecode,
+} from '@lullabo/shared'
 
 import { apiFetch } from '../../lib/api'
 import { isIos, isStandalone } from '../../lib/pwa'
@@ -34,6 +39,8 @@ function toInput(subscription: PushSubscription): PushSubscriptionInput {
   return {
     endpoint: subscription.endpoint,
     keys: { p256dh: json.keys?.p256dh ?? '', auth: json.keys?.auth ?? '' },
+    // For reminders at a time of day, on this device's clock.
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }
 }
 
@@ -88,6 +95,12 @@ export const sendTestNotification = () =>
 
 export const reminderApi = {
   list: () => apiFetch<Reminder[]>('/api/reminders'),
+  vaccines: () => apiFetch<VaccineReminder[]>('/api/reminders/vaccines'),
+  saveVaccines: (reminder: VaccineReminder) =>
+    apiFetch<VaccineReminder>('/api/reminders/vaccines', {
+      method: 'PUT',
+      body: JSON.stringify(reminder),
+    }),
   save: (reminder: Reminder) =>
     apiFetch<Reminder>('/api/reminders', { method: 'PUT', body: JSON.stringify(reminder) }),
 }

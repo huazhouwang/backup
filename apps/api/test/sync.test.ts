@@ -71,6 +71,23 @@ describe('families and sync', () => {
     expect(next.events).toEqual([])
   })
 
+  it('keeps a baby’s vaccination plan when an older app saves the baby without it', async () => {
+    const plan = { region: 'cn' as const, picked: { je: 'je-i' }, selfPaid: ['pcv13'] }
+    const b = { ...baby(familyId), vaccinePlan: plan }
+    await push({ babies: [b] })
+    expect((await pull()).babies).toContainEqual({ ...b, createdBy: userId })
+
+    // Renamed by an app from before the plan: the plan stays.
+    const { vaccinePlan: _plan, ...older } = b
+    const renamed = { ...older, name: '大米粒', updatedAt: b.updatedAt + 1 }
+    expect((await push({ babies: [renamed] })).babies).toEqual([{ id: b.id, status: 'accepted' }])
+    expect((await pull()).babies).toContainEqual({
+      ...renamed,
+      vaccinePlan: plan,
+      createdBy: userId,
+    })
+  })
+
   it('resolves conflicts by last write wins and re-sends newer versions', async () => {
     const b = baby(familyId)
     await push({ babies: [b] })

@@ -3,6 +3,7 @@ import type {
   Event,
   FeedingData,
   MedicationEvent,
+  VaccinationEvent,
   PumpingEvent,
 } from '@lullabo/shared'
 
@@ -117,6 +118,7 @@ export interface RecordDrafts {
   medication: MedicationDraft
   growth: GrowthDraft
   diaper: DiaperEvent['data']
+  vaccination: VaccinationEvent['data']
 }
 
 export const emptyDrafts: RecordDrafts = {
@@ -127,6 +129,7 @@ export const emptyDrafts: RecordDrafts = {
   medication: emptyMedication,
   growth: emptyGrowth,
   diaper: { contents: 'wet' },
+  vaccination: { vaccineId: '', dose: 1, reactions: [] },
 }
 
 export type DraftErrors = Partial<Record<'amount' | 'food' | 'celsius' | 'name', string>> &
@@ -150,6 +153,8 @@ export function draftsFrom(event: Event): RecordDrafts {
       return { ...emptyDrafts, growth: draftFromGrowth(event.data) }
     case 'diaper':
       return { ...emptyDrafts, diaper: event.data }
+    case 'vaccination':
+      return { ...emptyDrafts, vaccination: event.data }
     default:
       return emptyDrafts
   }
@@ -190,6 +195,8 @@ export function withDrafts(
       return result(parseMedication(drafts.medication), (data) => ({ ...event, data }))
     case 'growth':
       return result(parseGrowth(drafts.growth), (data) => ({ ...event, data }))
+    case 'vaccination':
+      return { event: { ...event, data: drafts.vaccination } }
     default:
       return { event }
   }

@@ -92,6 +92,20 @@
       "when": 1792962705613,
       "tag": "0012_observations",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1793285984231,
+      "tag": "0013_vaccine_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1793286249376,
+      "tag": "0014_vaccine_reminders",
+      "breakpoints": true
     }
   ]
 }

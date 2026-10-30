@@ -1,4 +1,5 @@
 import {
+  vaccineById,
   DURATION_KINDS,
   type DurationKind,
   type Event,
@@ -77,6 +78,7 @@ const refuse = (reply: string): never => {
 const DIAPER = { wet: '尿尿', dirty: '便便', mixed: '尿便' } as const
 const MILK = { breast: '母乳', formula: '配方奶', mixed: '混合' } as const
 const SIDE = { left: '左侧', right: '右侧', both: '双侧' } as const
+const REACTION = { fever: '发烧', swelling: '红肿', fussy: '哭闹' } as const
 
 const minutesOf = (ms: number) => Math.max(1, Math.round(ms / MINUTE))
 
@@ -145,6 +147,13 @@ function describeRecord(event: Event, before: Event | null): string {
         headCm !== null && `头围 ${headCm} 厘米`,
       ].filter(Boolean)
       return `生长记录：${parts.join('，')}`
+    }
+    case 'vaccination': {
+      const { vaccineId, dose, reactions } = event.data
+      const name = vaccineById(vaccineId)?.name ?? vaccineId
+      const after =
+        reactions.length > 0 ? `（${reactions.map((r) => REACTION[r]).join('、')}）` : ''
+      return `打疫苗：${name} 第 ${dose} 剂${after}`
     }
     default:
       return event satisfies never

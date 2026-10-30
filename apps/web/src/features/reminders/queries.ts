@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 
-import { getPushState } from './notifications'
+import { getPushState, reminderApi } from './notifications'
 
 export const reminderKeys = {
   /**
@@ -9,9 +9,13 @@ export const reminderKeys = {
    */
   list: (userId: string) => ['reminders', userId] as const,
   pushState: ['reminders', 'push-state'] as const,
+  vaccines: (userId: string) => ['reminders', userId, 'vaccines'] as const,
 }
 
 export const reminderQueries = {
   /** Whether this device can and does receive notifications. */
   pushState: () => queryOptions({ queryKey: reminderKeys.pushState, queryFn: getPushState }),
+  /** Babies whose vaccination reminders the user turned off (on otherwise). */
+  vaccines: (userId: string) =>
+    queryOptions({ queryKey: reminderKeys.vaccines(userId), queryFn: reminderApi.vaccines }),
 }

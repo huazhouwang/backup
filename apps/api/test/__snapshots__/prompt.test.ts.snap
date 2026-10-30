@@ -241,6 +241,7 @@ exports[`the tool definitions > keep their names, descriptions and schemas 1`] =
                 "medication",
                 "note",
                 "growth",
+                "vaccination",
               ],
               "type": "string",
             },

@@ -1,4 +1,5 @@
 import {
+  vaccineById,
   type Event,
   breastSideDurations,
   eventDurationMs,
@@ -8,6 +9,7 @@ import {
 
 import { formatQuantity, unitLabel } from '../../lib/units'
 import { m } from '../../paraglide/messages.js'
+import { reactionLabel } from '../vaccines/ReactionChips'
 import { durationLabel } from './duration-label'
 import {
   amountLabel,
@@ -156,6 +158,14 @@ export function describeEvent(event: Event, now: number): { title: string; detai
       return { title: m.categoryNote(), detail: event.note ?? '' }
     case 'growth':
       return { title: m.categoryGrowth(), detail: growthDetail(event.data) }
+    case 'vaccination': {
+      const { vaccineId, dose, reactions } = event.data
+      const name = vaccineById(vaccineId)?.name ?? vaccineId
+      return {
+        title: m.categoryVaccination(),
+        detail: [`${name} ${m.vaccineDose({ dose })}`, ...reactions.map(reactionLabel)].join(' · '),
+      }
+    }
     default:
       return event satisfies never
   }
