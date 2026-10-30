@@ -11,6 +11,12 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- 应用内更新：安装从 GitHub Release 下载的新版本（会弹出系统确认）。 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- 桌面设置 →「GPS 与 4G」：看卫星和定位（位置），看 SIM / 网络类型（电话状态）；
+         只在用户点「开始检查」时才弹系统授权。4G 上网测试临时请求一次移动网络。 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
     <application
         android:name=".Q5App"

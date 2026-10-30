@@ -1,5 +1,6 @@
 package com.x0finch.q5home
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Canvas
@@ -45,6 +46,17 @@ class SettingsActivity : Activity() {
     private var share: LocalShare? = null
     private var submitting = false
     private var submitError: String? = null
+    // GPS 与 4G
+    private val signal by lazy { SignalCheck(this) }
+    private val signalViews = mutableMapOf<String, TextView>()
+    private var probeResult: String? = null
+    private var probing = false
+    private val signalTicker = object : Runnable {
+        override fun run() {
+            refreshSignal()
+            if (section == SECTION_SIGNAL && signal.listening) root.postDelayed(this, 2000)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +91,17 @@ class SettingsActivity : Activity() {
     override fun onStop() {
         super.onStop()
         stopShare()
+        stopSignal()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_SIGNAL_PERMS && section == SECTION_SIGNAL) {
+            if (!signal.hasLocationPermission()) overlay.snackbar("没有位置权限就看不到卫星；可以在安卓设置 → 应用 → Q5 Home 里打开")
+            stopSignal()
+            render()
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -94,6 +117,7 @@ class SettingsActivity : Activity() {
             SECTION_ADVANCED -> renderAdvanced()
             SECTION_UPDATE -> renderUpdate()
             SECTION_RECON -> renderRecon()
+            SECTION_SIGNAL -> renderSignal()
             else -> renderWallpaper()
         }
     }
@@ -101,26 +125,38 @@ class SettingsActivity : Activity() {
     // ---- 左侧分类 ----
 
     private fun renderNav() {
+        // 记住分类列表滚到哪了，重建后滚回去。
+        val oldScroll = (nav.getChildAt(1) as? ScrollView)?.scrollY ?: 0
         nav.removeAllViews()
         nav.addView(Ui.text(this, "桌面设置", 34f, Ui.TEXT, Ui.Font.LIGHT),
-            LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(20); marginStart = dp(6) })
-        navItem(SECTION_WALLPAPER, "壁纸", R.drawable.ui_wallpaper)
-        navItem(SECTION_CARPLAY, "CarPlay 与原车", R.drawable.glyph_carplay)
+            LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(16); marginStart = dp(6) })
+        // 分类多了矮屏放不下：分类列表可以滚动，「返回桌面」固定在底部。
+        val items = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        navItem(items, SECTION_WALLPAPER, "壁纸", R.drawable.ui_wallpaper)
+        navItem(items, SECTION_CARPLAY, "CarPlay 与原车", R.drawable.glyph_carplay)
         val badge = if (Updates(this).hasUpdate) "  ●" else ""
-        navItem(SECTION_UPDATE, "版本更新$badge", R.drawable.ui_update)
-        navItem(SECTION_RECON, "车机摸底", R.drawable.ui_info)
-        navItem(SECTION_ADVANCED, "高级", R.drawable.ui_tune)
-        nav.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
+        navItem(items, SECTION_UPDATE, "版本更新$badge", R.drawable.ui_update)
+        navItem(items, SECTION_SIGNAL, "GPS 与 4G", R.drawable.ui_signal)
+        navItem(items, SECTION_RECON, "车机摸底", R.drawable.ui_info)
+        navItem(items, SECTION_ADVANCED, "高级", R.drawable.ui_tune)
+        val itemScroll = ScrollView(this).apply {
+            isVerticalScrollBarEnabled = false
+            isVerticalFadingEdgeEnabled = true
+            setFadingEdgeLength(dp(24))
+            addView(items)
+        }
+        nav.addView(itemScroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        itemScroll.post { itemScroll.scrollTo(0, oldScroll) }
         nav.addView(Ui.pill(this, "返回桌面") { finish() },
-            LinearLayout.LayoutParams(-2, dp(48)).apply { bottomMargin = dp(24) })
+            LinearLayout.LayoutParams(-2, dp(48)).apply { topMargin = dp(10); bottomMargin = dp(20) })
     }
 
-    private fun navItem(key: String, label: String, icon: Int) {
+    private fun navItem(parent: LinearLayout, key: String, label: String, icon: Int) {
         val selected = key == section
         val color = if (selected) Ui.ACCENT else Ui.TEXT_DIM
-        nav.addView(LinearLayout(this).apply {
+        parent.addView(LinearLayout(this).apply {
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = dp(56)
+            minimumHeight = dp(52)
             setPadding(dp(14), 0, dp(14), 0)
             background = Ui.rowBackground(this@SettingsActivity, 16, selected)
             isFocusable = true
@@ -132,6 +168,7 @@ class SettingsActivity : Activity() {
                 if (selected) Ui.Font.MEDIUM else Ui.Font.REGULAR))
             setOnClickListener {
                 if (section == SECTION_RECON && key != SECTION_RECON) stopShare()
+                if (section == SECTION_SIGNAL && key != SECTION_SIGNAL) stopSignal()
                 section = key
                 scroll.scrollTo(0, 0)
                 render()
@@ -458,6 +495,71 @@ class SettingsActivity : Activity() {
         }.start()
     }
 
+    // ---- GPS 与 4G ----
+
+    private fun renderSignal() {
+        header("GPS 与 4G", "只读：看能不能收到卫星、有没有 4G 信号，不改车机设置")
+        val granted = signal.hasLocationPermission() && signal.hasPhonePermission()
+        if (!granted) {
+            group(row(R.drawable.ui_signal, "开始检查",
+                "第一次会弹系统授权：位置信息（看卫星和定位）、电话状态（看 SIM 卡和网络类型）",
+                Ui.pill(this, "开始检查", Ui.PillStyle.PRIMARY) {
+                    requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.READ_PHONE_STATE), REQ_SIGNAL_PERMS)
+                }))
+        }
+        if (!signal.listening) signal.start { refreshSignal() }
+        root.removeCallbacks(signalTicker)
+        root.postDelayed(signalTicker, 2000)
+
+        signalViews.clear()
+        subheader("GPS")
+        group(*signal.gpsLines().map { (title, value) -> liveInfo(title, value) }.toTypedArray())
+        hint("GPS 天线一般接在车机背后；在地库、隧道里收不到。车机熄火久了第一次定位会慢一些。")
+
+        subheader("4G")
+        group(*signal.cellLines().map { (title, value) -> liveInfo(title, value) }.toTypedArray(),
+            row(R.drawable.ui_refresh, "4G 上网测试", probeResult ?: "只走移动网络访问一次 Google 测试地址，流量很小；不受 Wi-Fi / 手机热点影响",
+                Ui.pill(this, if (probing) "测试中…" else "测试") { startProbe() }.apply {
+                    isEnabled = !probing
+                    alpha = if (probing) 0.5f else 1f
+                }))
+        hint("「现在上网走」是 Wi-Fi 时，平时上网用的是热点，4G 只是备用；上网测试能单独看 4G 通不通。")
+    }
+
+    /** 带可更新数值的一行：数值 TextView 记在 [signalViews] 里，[refreshSignal] 只改文字，不重建界面（旋钮焦点不会跳）。 */
+    private fun liveInfo(title: String, value: String): View {
+        val (row, valueView) = infoRow(title, value)
+        signalViews[title] = valueView
+        return row
+    }
+
+    private fun refreshSignal() {
+        if (section != SECTION_SIGNAL) return
+        (signal.gpsLines() + signal.cellLines()).forEach { (title, value) ->
+            signalViews[title]?.let { if (it.text != value) it.text = value }
+        }
+    }
+
+    private fun startProbe() {
+        if (probing) return
+        probing = true
+        probeResult = "正在连接移动网络…"
+        render()
+        signal.probeCellular { msg ->
+            runOnUiThread {
+                probing = false
+                probeResult = msg
+                if (section == SECTION_SIGNAL) render()
+            }
+        }
+    }
+
+    private fun stopSignal() {
+        root.removeCallbacks(signalTicker)
+        signal.stop()
+    }
+
     // ---- 车机摸底 ----
 
     private fun renderRecon() {
@@ -779,12 +881,15 @@ class SettingsActivity : Activity() {
         }
     }
 
-    private fun info(title: String, value: String): View {
+    private fun info(title: String, value: String): View = infoRow(title, value).first
+
+    /** 信息行和它的数值 TextView（要实时更新数值时用）。 */
+    private fun infoRow(title: String, value: String): Pair<View, TextView> {
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         texts.addView(Ui.text(this, title, 13f, Ui.TEXT_DIM))
-        texts.addView(Ui.text(this, value, 15f, Ui.TEXT, singleLine = false).apply { setTextIsSelectable(true) },
-            LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(4) })
-        return rowWith(null, texts, null).apply { minimumHeight = dp(56) }
+        val valueView = Ui.text(this, value, 15f, Ui.TEXT, singleLine = false).apply { setTextIsSelectable(true) }
+        texts.addView(valueView, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(4) })
+        return rowWith(null, texts, null).apply { minimumHeight = dp(56) } to valueView
     }
 
     private fun chevron(): View = Ui.glyph(this, R.drawable.ui_chevron, 24, Ui.TEXT_FAINT)
@@ -798,6 +903,8 @@ class SettingsActivity : Activity() {
         const val SECTION_ADVANCED = "advanced"
         const val SECTION_UPDATE = "update"
         const val SECTION_RECON = "recon"
+        const val SECTION_SIGNAL = "signal"
+        private const val REQ_SIGNAL_PERMS = 10
         private const val REQ_CARPLAY = 1
         private const val REQ_OEM = 2
         private const val REQ_HOME = 3

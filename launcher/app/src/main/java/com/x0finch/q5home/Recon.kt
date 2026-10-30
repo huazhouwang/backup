@@ -144,6 +144,12 @@ object Recon {
             }
         }
 
+        // GPS 与 4G 的快照（不含坐标）。实时情况在「GPS 与 4G」页看。
+        val sig = SignalCheck(context)
+        md.appendLine("## GPS 与 4G（摸底时的快照）")
+        (sig.gpsLines() + sig.cellLines()).forEach { (k, v) -> md.appendLine("- $k：$v") }
+        md.appendLine()
+
         // 关键厂商应用（原厂桌面、main / mainui / black / carmanager / canbus）APK 里的字符串常量：
         // 切原车画面多半是发广播或给 MCU 发指令，名字就在代码常量里。只读 APK 文件，不运行任何东西。
         val homePackages = homes.map { it.activityInfo.packageName }.toSet()

@@ -108,6 +108,7 @@ class ScreenshotTest {
     @Test fun settingsWallpaper() = settings(SettingsActivity.SECTION_WALLPAPER, "ui-settings-wallpaper")
     @Test fun settingsCarPlay() = settings(SettingsActivity.SECTION_CARPLAY, "ui-settings-carplay")
     @Test fun settingsAdvanced() = settings(SettingsActivity.SECTION_ADVANCED, "ui-settings-advanced")
+    @Test fun settingsSignal() = settings(SettingsActivity.SECTION_SIGNAL, "ui-settings-signal")
 
     @Test
     fun confirmCard() {

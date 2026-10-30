@@ -246,6 +246,10 @@ def main():
     # 安全模式演示里会故意崩溃，隐藏系统的"应用停止运行"弹窗。
     shell("settings put global hide_error_dialogs 1", check=False)
     # 设为默认桌面：安卓 10+ 用"桌面"角色，旧方法兜底；否则按 HOME 会弹系统的选择框。
+    # 「GPS 与 4G」页要的两个权限先授好，录屏里不出现系统授权弹窗；模拟器给一个 GPS 位置（多伦多）。
+    for perm in ("ACCESS_FINE_LOCATION", "READ_PHONE_STATE"):
+        shell(f"pm grant {PKG} android.permission.{perm}", check=False)
+    adb("emu", "geo", "fix", "-79.3832", "43.6532", "76", "9", check=False)
     shell(f"cmd role add-role-holder --user 0 android.app.role.HOME {PKG}", check=False)
     shell(f"cmd package set-home-activity {HOME}", check=False)
     shell("input keyevent KEYCODE_WAKEUP")
@@ -297,7 +301,6 @@ def main():
         demo.shot("swipe-blank")
         if before - demo.scroll_x("文件") < 200:
             raise RuntimeError("在空白处滑动，磁贴没有滚动")
-        demo.swipe(500, 250, 1400, 250, "再往右滑回来")
 
         demo.tap("桌面设置", "⑨ 点右上角「桌面设置」→ 整页设置（桌面自己的设置，不是安卓系统设置）")
         demo.shot("settings-wallpaper")
@@ -324,24 +327,36 @@ def main():
         demo.tap("生成二维码", "⑲ 点「生成二维码」→ 车机开临时网页，手机扫码看报告、粘贴 GitHub 令牌")
         demo.shot("settings-recon-qr")
         check_share(demo, args.out)
-        demo.tap("返回桌面", "⑳ 点「返回桌面」")
+        demo.tap("GPS 与 4G", "⑳ 左侧切到「GPS 与 4G」→ 卫星、定位、SIM 卡、4G 信号（只读）")
+        demo.find("卫星")
+        time.sleep(2)  # 等卫星 / 定位回调刷新
+        demo.shot("settings-signal")
+        demo.swipe(1100, 620, 1100, 160, "往下翻到 4G：SIM 卡、网络类型、信号、现在上网走哪条路")
+        demo.shot("settings-signal-4g")
+        demo.tap("测试", "㉑ 点「4G 上网测试」→ 临时只走移动网络访问一次测试地址")
+        for _ in range(10):  # 最多等 20 秒出结果
+            if not demo.exists("测试中…"):
+                break
+            time.sleep(2)
+        demo.shot("settings-signal-probe")
+        demo.tap("返回桌面", "㉒ 点「返回桌面」")
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "㉑ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
-        demo.key("KEYCODE_DPAD_RIGHT", "㉒ 方向键 →：焦点移到下一个磁贴", times=4)
+        demo.key("KEYCODE_DPAD_DOWN", "㉓ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
+        demo.key("KEYCODE_DPAD_RIGHT", "㉔ 方向键 →：焦点移到下一个磁贴", times=4)
         demo.shot("dpad-focus")
         demo.home()
 
         # 安全模式：让桌面故意连续崩溃 3 次（只有放了标记文件才会崩，见 MainActivity.maybeCrashForTest）
         marker = f"/sdcard/Android/data/{PKG}/files/crash-test"
         shell(f"touch {marker}")
-        demo.caption("㉓ 测试：让桌面故意连续崩溃 3 次")
+        demo.caption("㉕ 测试：让桌面故意连续崩溃 3 次")
         for _ in range(3):
             shell(f"am start -n {HOME} --ez crash_test true", check=False)
             time.sleep(2.5)
         shell(f"rm -f {marker}")
-        demo.caption("㉔ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
+        demo.caption("㉖ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
         time.sleep(2)
         # 默认桌面反复崩溃时，安卓自己会取消默认桌面、让用户重新选（车上也一样，这时也可以选原厂桌面）。
         if demo.exists("Select a Home app") or demo.exists("Q5 Home"):
@@ -353,7 +368,7 @@ def main():
         demo.find("安全模式")
         time.sleep(1)
         demo.shot("safe-mode")
-        demo.tap("再试一次正常启动", "㉕ 点「再试一次正常启动」→ 回到正常桌面")
+        demo.tap("再试一次正常启动", "㉗ 点「再试一次正常启动」→ 回到正常桌面")
         demo.find("CarPlay")
         demo.shot("home-after-safe-mode")
         demo.caption("演示结束")
