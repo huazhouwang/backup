@@ -146,6 +146,38 @@ class Demo:
         self.key("KEYCODE_HOME", "按键：HOME，回到桌面")
 
 
+def check_share(demo, out):
+    """从截图里识别二维码，经 adb forward 打开车机上的临时网页，确认网页和报告能访问（报告存下来当样例）。"""
+    import urllib.request
+    import urllib.parse
+    try:
+        import cv2
+    except ImportError:
+        print("没有 OpenCV，跳过二维码识别")
+        return
+    shot = sorted(f for f in os.listdir(out) if f.endswith("settings-recon-qr.png"))[-1]
+    url = ""
+    for detector in (cv2.QRCodeDetector(), getattr(cv2, "QRCodeDetectorAruco", cv2.QRCodeDetector)()):
+        url = detector.detectAndDecode(cv2.imread(os.path.join(out, shot)))[0]
+        if url:
+            break
+    if not url:
+        raise RuntimeError("截图里识别不出二维码")
+    print(f"  二维码：{url}")
+    parsed = urllib.parse.urlparse(url)
+    adb("forward", "tcp:18765", f"tcp:{parsed.port}")
+    local = f"http://127.0.0.1:18765{parsed.path}"
+    page = urllib.request.urlopen(local, timeout=10).read().decode("utf-8")
+    report = urllib.request.urlopen(local + "report.md", timeout=10).read().decode("utf-8")
+    if "车机摸底" not in page or "## 系统" not in report:
+        raise RuntimeError("临时网页内容不对")
+    with open(os.path.join(out, "recon-page.html"), "w", encoding="utf-8") as f:
+        f.write(page)
+    with open(os.path.join(out, "recon-report.md"), "w", encoding="utf-8") as f:
+        f.write(report)
+    print(f"  临时网页正常，报告 {len(report)} 字符")
+
+
 CJK_FONTS = [
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
@@ -261,24 +293,30 @@ def main():
         demo.tap("版本更新", "⑮ 左侧切到「版本更新」→ 检查 GitHub Release", prefix=True)
         time.sleep(3)  # 等检查结果
         demo.shot("settings-update")
-        demo.tap("返回桌面", "⑯ 点「返回桌面」")
+        demo.tap("车机摸底", "⑯ 左侧切到「车机摸底」→ 只读查系统、调试线索、原车 / CarPlay 组件")
+        demo.find("可能的入口（点「打开」试试）")
+        demo.shot("settings-recon")
+        demo.tap("生成二维码", "⑰ 点「生成二维码」→ 车机开临时网页，手机扫码看报告、粘贴 GitHub 令牌")
+        demo.shot("settings-recon-qr")
+        check_share(demo, args.out)
+        demo.tap("返回桌面", "⑱ 点「返回桌面」")
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "⑰ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
-        demo.key("KEYCODE_DPAD_RIGHT", "⑱ 方向键 →：焦点移到下一个磁贴", times=4)
+        demo.key("KEYCODE_DPAD_DOWN", "⑲ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
+        demo.key("KEYCODE_DPAD_RIGHT", "⑳ 方向键 →：焦点移到下一个磁贴", times=4)
         demo.shot("dpad-focus")
         demo.home()
 
         # 安全模式：让桌面故意连续崩溃 3 次（只有放了标记文件才会崩，见 MainActivity.maybeCrashForTest）
         marker = f"/sdcard/Android/data/{PKG}/files/crash-test"
         shell(f"touch {marker}")
-        demo.caption("⑲ 测试：让桌面故意连续崩溃 3 次")
+        demo.caption("㉑ 测试：让桌面故意连续崩溃 3 次")
         for _ in range(3):
             shell(f"am start -n {HOME} --ez crash_test true", check=False)
             time.sleep(2.5)
         shell(f"rm -f {marker}")
-        demo.caption("⑳ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
+        demo.caption("㉒ 第 3 次崩溃后，桌面自动进入安全模式（不会卡在反复崩溃里）")
         time.sleep(2)
         # 默认桌面反复崩溃时，安卓自己会取消默认桌面、让用户重新选（车上也一样，这时也可以选原厂桌面）。
         if demo.exists("Select a Home app") or demo.exists("Q5 Home"):
@@ -290,7 +328,7 @@ def main():
         demo.find("安全模式")
         time.sleep(1)
         demo.shot("safe-mode")
-        demo.tap("再试一次正常启动", "㉑ 点「再试一次正常启动」→ 回到正常桌面")
+        demo.tap("再试一次正常启动", "㉓ 点「再试一次正常启动」→ 回到正常桌面")
         demo.find("CarPlay")
         demo.shot("home-after-safe-mode")
         demo.caption("演示结束")

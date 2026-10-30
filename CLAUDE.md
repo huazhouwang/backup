@@ -58,6 +58,9 @@ CarPlay 目前用 ZLINK。用户用 Mac 通过 adb 连车机。
   - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。
   - 应用内更新：`Updates.kt`（GitHub Release 检查 / 下载 / 校验 / PackageInstaller 安装）、`UpdateJob.kt`（每天检查）。
     版本号 = 提交数（`app/build.gradle`），推送到 main 自动发 Release（工作流 `release` job）。
+  - 车机摸底（不用 adb）：`Recon.kt`（只读收集）、`ReconUpload.kt`（发成 GitHub Issue，令牌只存车机私有存储）、
+    `LocalShare.kt`（手机扫码打开的临时网页，路径带随机串、15 分钟关闭）、`QrCode.kt`（自写二维码，测试里有固定哈希）。
+    摸底页面只能读，不要在里面加任何改变车机状态的操作（停用、改设置等）。用户提交的摸底 Issue 用 GitHub 工具读。
   - 默认桌面：`HomeRole.kt`（RoleManager 请求 HOME 角色；恢复走系统主屏幕应用设置）。原厂桌面始终不停用。
   - 崩溃保护：`CrashGuard.kt`（同版本 10 分钟内崩 3 次）→ `SafeModeActivity.kt`（极简，只用系统控件，别给它加依赖）。
     回退：`.github/workflows/rollback.yml`（旧代码 + 更高版本号重新发布）。发布要等模拟器演示通过。

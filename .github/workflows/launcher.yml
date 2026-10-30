@@ -106,10 +106,10 @@ jobs:
           name: fakeapps-apk
           path: fakeapps
 
-      # Pillow：截图标点击位置、画圆环；ffmpeg + 中文字体：加工视频。
+      # Pillow：截图标点击位置、画圆环；OpenCV：识别摸底页的二维码；ffmpeg + 中文字体：加工视频。
       - name: Install Pillow, ffmpeg, CJK font
         run: |
-          pip install --quiet pillow
+          pip install --quiet pillow opencv-python-headless
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg fonts-noto-cjk > /dev/null
 

@@ -142,6 +142,33 @@ class ScreenshotTest {
         home("w1280dp-h480dp-land-mdpi", "home-update-badge")
     }
 
+    /** 车机摸底：等后台摸底完成；假装已经提交过，显示 Issue 链接的二维码。 */
+    @Test
+    fun settingsRecon() {
+        RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
+        FakeApps.installCar(context)
+        context.getSharedPreferences("secrets", Context.MODE_PRIVATE).edit()
+            .putString("github_token", "x").putString("recon_issue_url", "https://github.com/${Updates.REPO}/issues/1").commit()
+        val intent = Intent(context, SettingsActivity::class.java)
+            .putExtra(SettingsActivity.EXTRA_SECTION, SettingsActivity.SECTION_RECON)
+        val activity = Robolectric.buildActivity(SettingsActivity::class.java, intent).setup().get()
+        repeat(50) {
+            shadowOf(Looper.getMainLooper()).idle()
+            if (findText(activity.window.decorView, "正在摸底…") == null) return@repeat
+            Thread.sleep(100)
+        }
+        shoot(activity, "ui-settings-recon")
+        // 整页内容（ScrollView 里）也存一张长图，看下面的二维码。
+        val scroll = generateSequence(listOf<View>(activity.window.decorView)) { level ->
+            level.flatMap { v -> if (v is ViewGroup) (0 until v.childCount).map { v.getChildAt(it) } else emptyList() }.ifEmpty { null }
+        }.flatten().first { it is android.widget.ScrollView } as ViewGroup
+        val content = scroll.getChildAt(0)
+        val bmp = Bitmap.createBitmap(content.width, content.height, Bitmap.Config.ARGB_8888)
+        bmp.eraseColor(Color.BLACK)
+        content.draw(Canvas(bmp))
+        File(outDir, "ui-settings-recon-full.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     @Test
     fun safeMode() {
         RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")

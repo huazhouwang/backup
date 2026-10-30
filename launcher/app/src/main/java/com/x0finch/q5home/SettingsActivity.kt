@@ -39,6 +39,12 @@ class SettingsActivity : Activity() {
     private var checking = false
     /** 下载进度 0–100；null 表示没在下载。 */
     private var downloadProgress: Int? = null
+    // 车机摸底
+    @Volatile private var report: Recon.Report? = null
+    private var reconRunning = false
+    private var share: LocalShare? = null
+    private var submitting = false
+    private var submitError: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +76,11 @@ class SettingsActivity : Activity() {
         render()
     }
 
+    override fun onStop() {
+        super.onStop()
+        stopShare()
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (overlay.isShowing) overlay.dismiss() else super.onBackPressed()
@@ -82,6 +93,7 @@ class SettingsActivity : Activity() {
             SECTION_CARPLAY -> renderCarPlay()
             SECTION_ADVANCED -> renderAdvanced()
             SECTION_UPDATE -> renderUpdate()
+            SECTION_RECON -> renderRecon()
             else -> renderWallpaper()
         }
     }
@@ -96,6 +108,7 @@ class SettingsActivity : Activity() {
         navItem(SECTION_CARPLAY, "CarPlay 与原车", R.drawable.glyph_carplay)
         val badge = if (Updates(this).hasUpdate) "  ●" else ""
         navItem(SECTION_UPDATE, "版本更新$badge", R.drawable.ui_update)
+        navItem(SECTION_RECON, "车机摸底", R.drawable.ui_info)
         navItem(SECTION_ADVANCED, "高级", R.drawable.ui_tune)
         nav.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         nav.addView(Ui.pill(this, "返回桌面") { finish() },
@@ -118,6 +131,7 @@ class SettingsActivity : Activity() {
             addView(Ui.text(this@SettingsActivity, label, 17f, if (selected) Ui.TEXT else Ui.TEXT_DIM,
                 if (selected) Ui.Font.MEDIUM else Ui.Font.REGULAR))
             setOnClickListener {
+                if (section == SECTION_RECON && key != SECTION_RECON) stopShare()
                 section = key
                 scroll.scrollTo(0, 0)
                 render()
@@ -424,6 +438,177 @@ class SettingsActivity : Activity() {
         }.start()
     }
 
+    // ---- 车机摸底 ----
+
+    private fun renderRecon() {
+        header("车机摸底", "只读：查系统、调试线索和原车 / CarPlay 组件，不会改动车机")
+        val r = report
+        if (r == null) {
+            if (!reconRunning) {
+                reconRunning = true
+                Thread {
+                    val result = runCatching { Recon.collect(this) }
+                    runOnUiThread {
+                        reconRunning = false
+                        report = result.getOrNull()
+                        if (result.isFailure) overlay.snackbar("摸底出错：${result.exceptionOrNull()?.message}")
+                        if (section == SECTION_RECON) render()
+                    }
+                }.start()
+            }
+            group(row(R.drawable.ui_refresh, "正在摸底…", "读取系统信息和所有应用，几秒钟", null))
+            return
+        }
+
+        val upload = ReconUpload(this)
+        val status = when {
+            submitting -> "正在提交…"
+            submitError != null -> "失败：$submitError"
+            upload.lastIssueUrl != null -> "已提交：${upload.lastIssueUrl}"
+            upload.hasToken -> "令牌已保存，点右边提交"
+            else -> "需要 GitHub 令牌：点下面「生成二维码」，手机扫码后在网页里粘贴"
+        }
+        val submitLabel = when {
+            submitting -> "提交中…"
+            upload.lastIssueUrl != null -> "重新提交"
+            else -> "提交"
+        }
+        group(
+            row(R.drawable.ui_update, "提交到 GitHub Issue（${Updates.REPO}）", status,
+                Ui.pill(this, submitLabel, Ui.PillStyle.PRIMARY) { submitReport() }.apply {
+                    isEnabled = upload.hasToken && !submitting
+                    alpha = if (isEnabled) 1f else 0.4f
+                }),
+            shareRow(),
+            *listOfNotNull(if (upload.hasToken) row(R.drawable.ui_delete, "清除令牌", "删除车机上保存的 GitHub 令牌",
+                Ui.pill(this, "清除", Ui.PillStyle.DANGER) {
+                    upload.clearToken()
+                    overlay.snackbar("已清除令牌")
+                    render()
+                }) else null).toTypedArray(),
+        )
+        upload.lastIssueUrl?.let { url ->
+            subheader("Issue 链接（手机扫码打开）")
+            group(qrRow(url, "已提交到 GitHub", url, null))
+        }
+        subheader("要点")
+        group(*r.facts.map { (title, value) -> info(title, value) }.toTypedArray())
+
+        subheader("可能的入口（点「打开」试试）")
+        val shown = r.candidates.take(12)
+        if (shown.isEmpty()) {
+            group(row(R.drawable.ui_info, "没找到明显的候选", "完整列表在报告里", null))
+        } else {
+            group(*shown.map { candidateRow(it) }.toTypedArray())
+            if (r.candidates.size > shown.size) hint("还有 ${r.candidates.size - shown.size} 个，见完整报告。")
+        }
+
+        hint("令牌只授权这个仓库的 Issues，存在车机上的 Q5 Home 里，不进仓库。临时网页只在这一页开着时运行，15 分钟后自动关闭。")
+    }
+
+    private fun candidateRow(c: Recon.Candidate): View {
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        texts.addView(Ui.text(this, "${c.kind} · ${c.label}", 17f))
+        texts.addView(Ui.text(this, c.spec, 13f, Ui.TEXT_DIM), LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(4) })
+        val buttons = LinearLayout(this)
+        buttons.addView(Ui.pill(this, "打开") {
+            if (!Targets.launch(this, c.spec)) overlay.snackbar("打不开：${c.spec}")
+        })
+        val setAs: (() -> Unit)? = when (c.kind) {
+            "原车" -> { { config.setOem(c.spec); overlay.snackbar("原车入口已改为 ${c.label}") } }
+            "CarPlay" -> { { config.setCarplay(c.spec); overlay.snackbar("CarPlay 已改为 ${c.label}") } }
+            else -> null
+        }
+        setAs?.let { action ->
+            buttons.addView(Ui.pill(this, "设为${c.kind}") { action(); render() }.apply {
+                (layoutParams as LinearLayout.LayoutParams).marginStart = dp(10)
+            })
+        }
+        return rowWith(null, texts, buttons)
+    }
+
+    private fun shareRow(): View {
+        val s = share?.takeUnless { it.closed }
+        val ip = DebugAccess.ipAddress(this)
+        if (s == null || ip == null) {
+            return row(R.drawable.ui_wifi, "手机扫码", if (ip == null) "车机没联网，手机打不开" else "车机开一个临时网页：看完整报告、粘贴令牌",
+                Ui.pill(this, "生成二维码") {
+                    if (ip == null) { overlay.snackbar("车机没联网"); return@pill }
+                    startShare()
+                })
+        }
+        return qrRow(s.url(ip), "手机扫码打开", s.url(ip), Ui.pill(this, "关闭") { stopShare(); render() },
+            "手机要和车机在同一网络（比如车机连的就是手机热点）")
+    }
+
+    /** 左边二维码，右边说明。 */
+    private fun qrRow(content: String, title: String, sub: String, trailing: View?, note: String? = null): View {
+        val qr = QrCode.encode(content, QrCode.Ecc.M)
+        val sizePx = dp(200)
+        val image = ImageView(this).apply {
+            qr?.let { code ->
+                val bmp = code.toBitmap(scale = (sizePx / (code.size + 8)).coerceAtLeast(1))
+                setImageDrawable(android.graphics.drawable.BitmapDrawable(resources, bmp).apply { isFilterBitmap = false })
+            }
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            background = Ui.rounded(this@SettingsActivity, Color.WHITE, 12)
+            clipToOutline = true
+            layoutParams = LinearLayout.LayoutParams(sizePx, sizePx)
+        }
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        texts.addView(Ui.text(this, title, 17f))
+        texts.addView(Ui.text(this, sub, 15f, Ui.ACCENT, singleLine = false).apply { setTextIsSelectable(true) },
+            LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(6) })
+        note?.let {
+            texts.addView(Ui.text(this, it, 13f, Ui.TEXT_DIM, singleLine = false),
+                LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(8) })
+        }
+        return rowWith(null, texts, trailing, leading = image).apply { setPadding(dp(14), dp(14), dp(14), dp(14)) }
+    }
+
+    private fun startShare() {
+        stopShare()
+        share = runCatching {
+            LocalShare(report = { report?.markdown }, onToken = { token ->
+                ReconUpload(this).saveToken(token)
+                val r = report ?: return@LocalShare "令牌已保存；报告还在生成，稍后在车机上点「提交」"
+                val result = runCatching { ReconUpload(this).submit(r.title, r.markdown) }
+                runOnUiThread {
+                    submitError = result.exceptionOrNull()?.let { it.message ?: it.toString() }
+                    if (section == SECTION_RECON) render()
+                }
+                result.fold({ "已提交：$it" }, { "令牌已保存，但提交失败：${it.message}" })
+            })
+        }.onFailure { overlay.snackbar("开不了临时网页：${it.message}") }.getOrNull()
+        // 到时间自动关闭（网页那边也会拒绝超时后的请求）。
+        val started = share
+        root.postDelayed({
+            if (started != null && share === started) { stopShare(); if (section == SECTION_RECON) render() }
+        }, LocalShare.TIMEOUT_MS)
+        render()
+    }
+
+    private fun stopShare() {
+        share?.close()
+        share = null
+    }
+
+    private fun submitReport() {
+        val r = report ?: return
+        submitting = true
+        submitError = null
+        render()
+        Thread {
+            val result = runCatching { ReconUpload(this).submit(r.title, r.markdown) }
+            runOnUiThread {
+                submitting = false
+                submitError = result.exceptionOrNull()?.let { it.message ?: it.toString() }
+                overlay.snackbar(if (result.isSuccess) "已提交到 GitHub" else "提交失败：$submitError")
+                if (section == SECTION_RECON) render()
+            }
+        }.start()
+    }
+
     // ---- 高级 ----
 
     private fun renderAdvanced() {
@@ -580,6 +765,7 @@ class SettingsActivity : Activity() {
         const val SECTION_CARPLAY = "carplay"
         const val SECTION_ADVANCED = "advanced"
         const val SECTION_UPDATE = "update"
+        const val SECTION_RECON = "recon"
         private const val REQ_CARPLAY = 1
         private const val REQ_OEM = 2
         private const val REQ_HOME = 3
