@@ -284,7 +284,7 @@ def main():
         demo.shot("tile-menu")
         demo.tap("更换图标", "⑤ 点「更换图标」→ 图标网格")
         demo.shot("icon-picker")
-        demo.tap("导航", "⑥ 选「导航」图标：只换图标，打开的应用不变")
+        demo.tap("应用自带", "⑥ 选「应用自带」图标：只换图标，打开的还是系统设置")
         demo.shot("icon-changed")
 
         demo.tap("应用", "⑦ 点右上角「应用」→ 全部应用", which="first")

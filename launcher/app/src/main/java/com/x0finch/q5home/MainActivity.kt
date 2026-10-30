@@ -273,10 +273,13 @@ class MainActivity : Activity() {
         config.dock.forEachIndexed { i, item ->
             val icon = Icons.byKey(item.icon)
             val label = Targets.label(this, item.target)
-            val title = icon?.name ?: label ?: item.target.substringBefore('/')
+            // 图标和应用对得上（比如设置用齿轮）时用统一的中文名；换成不相干的图标时名称仍按应用来，
+            // 免得"导航"图标的磁贴其实打开的是设置。
+            val iconFits = icon != null && Icons.guess(Targets.packageOf(item.target), label) == icon.key
+            val title = (if (iconFits) icon?.name else label) ?: icon?.name ?: item.target.substringBefore('/')
             val sub = when {
                 !Targets.isAvailable(this, item.target) -> "未安装 · 长按更换"
-                icon != null && label != null && label != icon.name -> label
+                iconFits && label != null && label != icon?.name -> label
                 else -> ""
             }
             list += Tile(Slot.DOCK, i, item.target, icon, title, sub, wide = false)
