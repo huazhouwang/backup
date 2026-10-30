@@ -23,9 +23,10 @@ class ReconTest {
 
     /** 装一个带导出 Activity / 广播接收器的假厂商应用。 */
     private fun installPackage(pkg: String, label: String, activities: List<String>, receivers: List<String> = emptyList(),
-                               enabled: Boolean = true) {
+                               enabled: Boolean = true, apk: java.io.File? = null) {
         val appInfo = ApplicationInfo().apply {
             packageName = pkg; nonLocalizedLabel = label; flags = ApplicationInfo.FLAG_SYSTEM; this.enabled = enabled
+            sourceDir = apk?.path
         }
         fun comp(name: String) = ActivityInfo().apply {
             packageName = pkg; this.name = name; exported = true; applicationInfo = appInfo
@@ -43,6 +44,9 @@ class ReconTest {
         installPackage("com.zjinnova.zlink", "ZLINK", listOf("com.zjinnova.zlink.MainActivity"))
         installPackage("com.wy.oem", "原车", listOf("com.wy.oem.MainActivity"), listOf("com.wy.oem.SwitchReceiver"))
         installPackage("com.wy.factory", "工厂设置", listOf("com.wy.factory.Main", "com.wy.factory.UsbModeActivity"))
+        val mainApk = ApkStringsTest.fakeApk(java.io.File.createTempFile("main", ".apk"),
+            listOf("com.wwc2.main.ACTION_ENTER_OEM", "boring"))
+        installPackage("com.wwc2.main", "main", listOf("com.wwc2.main.MainActivity"), apk = mainApk)
         installPackage("com.wy.junk", "广告", listOf("com.wy.junk.AdActivity"), enabled = false)
         installPackage("com.android.settings", "设置", listOf(
             "com.android.settings.Settings\$DevelopmentSettingsDashboardActivity", "com.android.settings.Settings\$WifiSettingsActivity"))
@@ -60,6 +64,10 @@ class ReconTest {
         assertTrue(md.contains("- 广播：`com.wy.oem.SwitchReceiver`"))
         assertTrue(md.contains("广告 `com.wy.junk`") && md.contains("已停用"))
         assertTrue(md.contains("## 调试 / root 线索"))
+        // 关键厂商应用的 APK 字符串（com.wwc2.main 在挖掘名单里）。
+        assertTrue(md.contains("### `com.wwc2.main`"))
+        assertTrue(md.contains("- `com.wwc2.main.ACTION_ENTER_OEM`"))
+        assertTrue(!md.contains("boring"))
         assertTrue(report.facts.any { it.first == "adb" })
     }
 

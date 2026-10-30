@@ -51,6 +51,9 @@ object Recon {
     private val OEM_WORDS = Regex("原车|原厂|oem|origin|mmi|canbus|can_|carinfo|avm|camera|reverse|aux", RegexOption.IGNORE_CASE)
     private val CARPLAY_WORDS = Regex("zlink|carplay|diplay|autokit|carlink|androidauto", RegexOption.IGNORE_CASE)
     private const val PER_PACKAGE_LIMIT = 40
+    /** 要读 APK 字符串的厂商应用（除了所有桌面应用）。 */
+    private val DIG_PACKAGES = Regex("\\.main$|mainui|black|carmanager|canbus|\\.oem|avin")
+    private const val DIG_LIMIT = 250
 
     fun collect(context: Context, ports: List<Int> = listOf(5555)): Report {
         val pm = context.packageManager
@@ -139,6 +142,25 @@ object Recon {
                     candidates += Candidate("调试", label, "${p.packageName}/${it.name}")
                 }
             }
+        }
+
+        // 关键厂商应用（原厂桌面、main / mainui / black / carmanager / canbus）APK 里的字符串常量：
+        // 切原车画面多半是发广播或给 MCU 发指令，名字就在代码常量里。只读 APK 文件，不运行任何东西。
+        val homePackages = homes.map { it.activityInfo.packageName }.toSet()
+        val dig = vendor.filter { p ->
+            p.packageName != context.packageName && p.applicationInfo?.sourceDir != null &&
+                (p.packageName in homePackages || DIG_PACKAGES.containsMatchIn(p.packageName))
+        }.sortedBy { it.packageName }
+        md.appendLine("## 关键厂商应用里的字符串（找原车切换方式，${dig.size} 个应用）")
+        md.appendLine("从 APK 代码里挑出像广播动作、或含 原车 / oem / avin / canbus 等字样的常量。")
+        md.appendLine()
+        for (p in dig) {
+            val apk = File(p.applicationInfo!!.sourceDir)
+            val strings = ApkStrings.fromApk(apk, limit = DIG_LIMIT)
+            md.appendLine("### `${p.packageName}`（${apk.length() / 1024} KB，${strings.size} 条）")
+            if (strings.isEmpty()) md.appendLine("（没读到，或没有匹配的字符串）")
+            else md.appendLine(strings.joinToString("\n") { "- `$it`" })
+            md.appendLine()
         }
 
         // 系统设置里名字和 USB / adb / 开发者有关的页面（WY 可能只是把入口藏了）。
