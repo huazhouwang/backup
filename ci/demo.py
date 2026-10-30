@@ -160,6 +160,60 @@ class Demo:
         self.key("KEYCODE_HOME", "按键：HOME，回到桌面")
 
 
+class Recorder:
+    """screenrecord 每段最长 180 秒：一段录完马上接着录下一段，结束后用 ffmpeg 拼成一个文件。"""
+
+    SEGMENT = 170
+
+    def __init__(self):
+        self.parts = []
+        self.stopping = False
+        self.proc = None
+        self.thread = None
+
+    def start(self):
+        import threading
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+        self.thread.start()
+
+    def _loop(self):
+        while not self.stopping:
+            path = f"/sdcard/demo-{len(self.parts)}.mp4"
+            self.parts.append(path)
+            self.proc = subprocess.Popen(["adb", "shell", "screenrecord", "--time-limit", str(self.SEGMENT),
+                                          "--bit-rate", "8000000", path])
+            self.proc.wait()
+
+    def stop(self):
+        self.stopping = True
+        shell("pkill -INT screenrecord", check=False)
+        if self.thread:
+            self.thread.join(timeout=20)
+        # 万一正好在两段之间停：刚起的下一段也停掉（INT 能让 mp4 正常收尾）。
+        shell("pkill -INT screenrecord", check=False)
+        time.sleep(2)
+
+    def pull(self, target):
+        out_dir = os.path.dirname(target)
+        local = []
+        for i, part in enumerate(self.parts):
+            dst = os.path.join(out_dir, f".part-{i}.mp4")
+            adb("pull", part, dst, check=False)
+            if os.path.exists(dst) and os.path.getsize(dst) > 0:
+                local.append(dst)
+        if len(local) == 1:
+            os.replace(local[0], target)
+        elif local:
+            lst = os.path.join(out_dir, ".parts.txt")
+            with open(lst, "w") as f:
+                f.writelines(f"file '{os.path.abspath(p)}'\n" for p in local)
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst,
+                            "-c", "copy", target], check=False)
+            for p in local + [lst]:
+                os.remove(p)
+        print(f"录屏 {len(local)} 段")
+
+
 def check_share(demo, out):
     """从截图里识别二维码，经 adb forward 打开车机上的临时网页，确认网页和报告能访问（报告存下来当样例）。"""
     import urllib.request
@@ -264,8 +318,8 @@ def main():
     time.sleep(2)
 
     demo = Demo(args.out)
-    recorder = subprocess.Popen(
-        ["adb", "shell", "screenrecord", "--time-limit", "180", "--bit-rate", "8000000", "/sdcard/demo.mp4"])
+    recorder = Recorder()
+    recorder.start()
     demo.t0 = time.time()  # 录屏大约在这之后零点几秒开始，字幕会比动作稍早一点出现
     failed = None
     try:
@@ -379,13 +433,8 @@ def main():
         demo.shot("failure")
     finally:
         end = time.time() - demo.t0
-        shell("pkill -INT screenrecord", check=False)
-        try:
-            recorder.wait(timeout=20)
-        except subprocess.TimeoutExpired:
-            recorder.kill()
-        time.sleep(2)
-        adb("pull", "/sdcard/demo.mp4", os.path.join(args.out, "demo-raw.mp4"), check=False)
+        recorder.stop()
+        recorder.pull(os.path.join(args.out, "demo-raw.mp4"))
         demo.write_srt(end)
         demo.write_taps()
 

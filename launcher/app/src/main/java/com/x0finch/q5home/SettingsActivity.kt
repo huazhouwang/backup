@@ -508,7 +508,8 @@ class SettingsActivity : Activity() {
                         Manifest.permission.READ_PHONE_STATE), REQ_SIGNAL_PERMS)
                 }))
         }
-        if (!signal.listening) signal.start { refreshSignal() }
+        // 卫星回调大约每秒一次：只记数据，界面由 signalTicker 每 2 秒刷新一次，车机 CPU 弱，别一直重绘。
+        if (!signal.listening) signal.start {}
         root.removeCallbacks(signalTicker)
         root.postDelayed(signalTicker, 2000)
 

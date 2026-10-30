@@ -126,7 +126,8 @@ class SignalCheck(private val context: Context) {
             !gpsEnabled() -> "定位开关是关的（安卓设置 → 位置信息 → 打开）"
             !hasLocationPermission() -> "还没授权位置信息"
             !listening -> "GPS 已打开，还没开始检查"
-            else -> "正在搜星 · 已 ${(now - startedAt) / 1000} 秒"
+            // 按 10 秒一档显示，免得文字每秒都变（界面一直在重绘）。
+            else -> "正在搜星 · 已 ${(now - startedAt) / 10_000 * 10} 秒"
         }
         return listOf("GPS" to state, "卫星" to satellitesText(satellites),
             "定位" to fixText(location ?: lastKnown(), firstFixMs))
