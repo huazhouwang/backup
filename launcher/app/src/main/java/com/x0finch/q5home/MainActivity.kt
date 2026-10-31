@@ -375,16 +375,17 @@ class MainActivity : Activity() {
     private fun updateWallpaper() {
         val wallpaper = Wallpapers.current(this, config.wallpaper, intervalMinutes = config.wallpaperInterval,
             daylight = if (config.wallpaperSun) Sun.isDaylight(this) else null)
-        if (wallpaper?.key == shownWallpaper && (wallpaper != null || wallpaperView.drawable == null)) return
-        shownWallpaper = wallpaper?.key
+        val key = wallpaper?.key ?: Wallpapers.NONE
+        if (key == shownWallpaper) return
+        shownWallpaper = key
         // 画框只占三分之一宽，按一半屏宽解码就够清楚。
         val bitmap = wallpaper?.let { Wallpapers.decode(this, it, resources.displayMetrics.widthPixels / 2) }
         wallpaperView.setImageBitmap(bitmap)
         findViewById<View>(R.id.scrim).visibility = if (bitmap != null) View.VISIBLE else View.GONE
-        wallName.text = if (bitmap != null) wallpaper.name else "纯黑"
+        wallName.text = if (bitmap != null) wallpaper.name else "纯色壁纸"
         val author = wallpaper?.author
         credit.text = when {
-            bitmap == null -> "设置 → 壁纸 里可以换"
+            bitmap == null -> "桌面设置 → 壁纸 可以换成图片"
             !author.isNullOrBlank() -> "Photo · $author / Unsplash"
             config.wallpaper == Wallpapers.DAILY -> Wallpapers.label(this, config.wallpaper, config.wallpaperInterval)
             else -> "壁纸"
