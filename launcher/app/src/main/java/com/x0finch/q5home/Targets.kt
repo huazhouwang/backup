@@ -137,15 +137,15 @@ object Targets {
     }
 
     /**
-     * WWC2 平台（WY 固件）的 main：打开是"安卓盒子"应用列表，按返回到盒子主页，里面有「原车媒体」。
-     * 盒子主页是 main 的内部页面，外部打不开，所以找不到直达方式时先打开 main。
+     * WWC2 平台（WY 固件）的原厂桌面「主页」：打开就是"安卓盒子"桌面，里面有「原车媒体」入口
+     * （车主实测：点「主页」进去，不是 main）。还没找到直达原车画面的方式时，原车磁贴先打开它。
      */
-    const val WWC2_MAIN = "com.wwc2.main"
+    const val WWC2_HOME = "com.wwc2.launcher"
 
-    /** 自动找原车应用：先按名称关键词，再退到 WWC2 的 main。找不到时由用户长按指定，或用 config.json 配置。 */
+    /** 自动找原车应用：先按名称关键词，再退到 WWC2 的原厂主页。找不到时由用户长按指定，或用 config.json 配置。 */
     fun findOem(context: Context): String? =
         findByKeywords(context, OEM_KEYWORDS)
-            ?: launchableApps(context).firstOrNull { it.activityInfo.packageName == WWC2_MAIN }?.let { specOf(it) }
+            ?: launchableApps(context).firstOrNull { it.activityInfo.packageName == WWC2_HOME }?.let { specOf(it) }
 
     /** 自动找文件管理器。 */
     fun findFiles(context: Context): String? {

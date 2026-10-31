@@ -34,11 +34,12 @@ class TargetsTest {
         assertNotNull(Targets.icon(context, Targets.SYSTEM_SETTINGS))
     }
 
-    /** 没有名字像"原车"的应用时，WWC2 车机退到 main（安卓盒子），总比空着强。 */
+    /** 没有名字像"原车"的应用时，WWC2 车机退到原厂「主页」（安卓盒子桌面，里面有原车媒体）。 */
     @Test
-    fun oemFallsBackToWwc2Main() {
-        FakeApps.install(context, "com.wwc2.main/com.wwc2.main.MainActivity" to "main")
-        assertEquals("com.wwc2.main/com.wwc2.main.MainActivity", Targets.findOem(context))
+    fun oemFallsBackToWwc2Home() {
+        FakeApps.install(context, "com.wwc2.main/com.wwc2.main.MainActivity" to "main",
+            "com.wwc2.launcher/com.wwc2.launcher.entry.MainActivity" to "主页")
+        assertEquals("com.wwc2.launcher/com.wwc2.launcher.entry.MainActivity", Targets.findOem(context))
         FakeApps.install(context, FakeApps.OEM to "原车")
         assertEquals(FakeApps.OEM, Targets.findOem(context))
     }

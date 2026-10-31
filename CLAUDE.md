@@ -31,7 +31,9 @@ MT6739、32 位 armeabi-v7a，平台是 WWC2（`com.wwc2.*`）。`user` 构建�
 - 倒车影像 / 360 / 摄像头相关（行车安全）：`com.baony.avm360`
 - CAN 协议盒、MCU 通讯、车辆信息服务：`com.wwc2.canbusapk`、`com.wwc2.canmcusdk`、`com.wwc2.carmanager`、
   `com.wwc2.main`（核心，含 ACC 上电广播）、`com.wwc2.poweroff`、`com.wwc2.mcuupdate`、`com.wwc2.canmcuupdate`
-- 原车 MMI 画面切换（左侧画面、"原车"入口）：具体组件未确认，候选 `com.wwc2.main`、`com.wwc2.mainui`、`com.wwc2.black`
+- 原车 MMI 画面切换（左侧画面、"原车"入口）：直达方式未确认。车主实测：点原厂「主页」`com.wwc2.launcher` 进安卓盒子桌面，
+  里面的「原车媒体」切原车；线索 `content://com.wwc2.canmcusdk.CanbusProvider/original_screen`、`com.wwc2.APK_TO_MAIN`、
+  main 的 `AvinLogic` / `VideoSource`。相关包 `com.wwc2.canmcusdk`、`com.wwc2.main`、`com.wwc2.mainui`、`com.wwc2.black` 都不动
 - 右侧侧栏（中控锁、安全带图标）和 SystemUI：`com.android.systemui`、`com.wwc2.mainui`
 - 音频通道切换、蓝牙、收音机、方向盘按键、MMI 旋钮映射：`com.wwc2.bluetooth`、`com.goodocom.gocsdk`（蓝牙协议栈）
 - ZLINK（以及试装的 DiPlay）：`com.zjinnova.zlink`
