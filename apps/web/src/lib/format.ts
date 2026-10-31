@@ -47,6 +47,9 @@ export function formatMoney(
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
+    // "$" rather than "US$" in every locale, as crypto apps write it; other dollars keep
+    // their prefix (HK$, S$...) so they stay distinguishable.
+    currencyDisplay: currency === 'USD' ? 'narrowSymbol' : 'symbol',
     notation: compact && abs >= 10_000 ? 'compact' : 'standard',
     maximumSignificantDigits: compact && abs >= 10_000 ? 3 : undefined,
     // Sub-cent prices need more digits; everything else reads as money.
