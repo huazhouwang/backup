@@ -65,7 +65,9 @@ class CompassView(context: Context) : View(context) {
             tick.color = if (major) Ui.TEXT_DIM else Ui.TEXT_FAINT
             val c = cos(a).toFloat(); val s = sin(a).toFloat()
             canvas.drawLine(cx + c * tickOuter, cy + s * tickOuter, cx + c * (tickOuter - len), cy + s * (tickOuter - len), tick)
-            if (major) {
+            // 正上方是指示线和北方小三角，那里的数字不画，免得挤在一起。
+            val atTop = kotlin.math.abs((((deg - rot) % 360) + 540) % 360 - 180) < 15
+            if (major && !atTop) {
                 number.color = Ui.TEXT_FAINT
                 canvas.drawText("$deg", cx + c * numberR, cy + s * numberR + number.textSize * 0.35f, number)
             }
