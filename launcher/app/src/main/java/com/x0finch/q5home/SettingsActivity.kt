@@ -45,6 +45,10 @@ class SettingsActivity : Activity() {
     private var reconRunning = false
     private var share: LocalShare? = null
     private var submitting = false
+    /** 提交进度说明（生成报告 / 上传）。 */
+    private var submitStage = ""
+    /** 最近生成的报告（手机扫码网页里看的就是它）。 */
+    @Volatile private var lastMarkdown: String? = null
     private var submitError: String? = null
     // GPS 与 4G
     private val signal by lazy { SignalCheck(this) }
@@ -193,7 +197,7 @@ class SettingsActivity : Activity() {
         })
 
         content.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
-        group(intervalRow())
+        group(intervalRow(), sunRow())
 
         subheader("在线壁纸")
         val store = OnlineWallpapers(this)
@@ -276,6 +280,24 @@ class SettingsActivity : Activity() {
             LinearLayout.LayoutParams(w, -2).apply { topMargin = dp(8); bottomMargin = dp(2) })
         cell.layoutParams = LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(6) }
         return cell
+    }
+
+    /** 按日出日落分白天 / 夜晚壁纸（只在自动轮换时生效）。副标题写今天的日出日落时刻。 */
+    private fun sunRow(): View {
+        val loc = Sun.location(this)
+        val times = loc?.let { Sun.times(it.first, it.second, System.currentTimeMillis()) }
+        val fmt = SimpleDateFormat("H:mm", Locale.CHINA)
+        val sub = when {
+            times != null -> "今天日出 ${fmt.format(Date(times.first))} · 日落 ${fmt.format(Date(times.second))}（按最近一次 GPS 位置）"
+            loc != null -> "这个位置今天没有日出 / 日落（极昼或极夜）"
+            else -> "还没有 GPS 位置，先按 7:00–19:00 算白天；首页显示过车速后就会用 GPS"
+        }
+        return toggleRow(R.drawable.ui_wallpaper, "按日出日落分白天 / 夜晚", sub, config.wallpaperSun) { on ->
+            config.setWallpaperSun(on)
+            if (on && config.wallpaper != Wallpapers.DAILY) config.setWallpaper(Wallpapers.DAILY)
+            Ui.refreshPageWallpaper(this, root)
+            render()
+        }
     }
 
     /** 自动轮换的频率：一排胶囊，当前的高亮。选了就切到自动轮换。 */
@@ -515,6 +537,8 @@ class SettingsActivity : Activity() {
 
         signalViews.clear()
         subheader("GPS")
+        group(toggleRow(R.drawable.ui_home, "首页显示车速、方向、海拔",
+            "在时钟下面；有新鲜定位时才显示，进隧道 15 秒后自动隐藏", config.homeGps) { on -> config.setHomeGps(on) })
         group(*signal.gpsLines().map { (title, value) -> liveInfo(title, value) }.toTypedArray())
         hint("GPS 天线一般接在车机背后；在地库、隧道里收不到。车机熄火久了第一次定位会慢一些。")
 
@@ -570,7 +594,7 @@ class SettingsActivity : Activity() {
             if (!reconRunning) {
                 reconRunning = true
                 Thread {
-                    val result = runCatching { Recon.collect(this) }
+                    val result = runCatching { Recon.collect(this, deep = false) }
                     runOnUiThread {
                         reconRunning = false
                         report = result.getOrNull()
@@ -585,21 +609,22 @@ class SettingsActivity : Activity() {
 
         val upload = ReconUpload(this)
         val status = when {
-            submitting -> "正在提交…"
+            submitting -> submitStage
             submitError != null -> "失败：$submitError"
             upload.lastIssueUrl != null -> "已提交：${upload.lastIssueUrl}"
             upload.hasToken -> "令牌已保存，点右边提交"
             else -> "需要 GitHub 令牌：点下面「生成二维码」，手机扫码后在网页里粘贴"
         }
-        val submitLabel = when {
-            submitting -> "提交中…"
-            upload.lastIssueUrl != null -> "重新提交"
-            else -> "提交"
-        }
+        val canSubmit = upload.hasToken && !submitting
         group(
-            row(R.drawable.ui_update, "提交到 GitHub Issue（${Updates.REPO}）", status,
-                Ui.pill(this, submitLabel, Ui.PillStyle.PRIMARY) { submitReport() }.apply {
-                    isEnabled = upload.hasToken && !submitting
+            row(R.drawable.ui_update, "提交重点报告", status,
+                Ui.pill(this, if (submitting) "进行中…" else "提交", Ui.PillStyle.PRIMARY) { submitReport(full = false) }.apply {
+                    isEnabled = canSubmit
+                    alpha = if (isEnabled) 1f else 0.4f
+                }),
+            row(R.drawable.ui_info, "提交完整报告", "全部应用、系统属性、调试线索等，比较长；一般不需要",
+                Ui.pill(this, "完整报告") { submitReport(full = true) }.apply {
+                    isEnabled = canSubmit
                     alpha = if (isEnabled) 1f else 0.4f
                 }),
             shareRow(),
@@ -626,7 +651,9 @@ class SettingsActivity : Activity() {
             if (r.candidates.size > shown.size) hint("还有 ${r.candidates.size - shown.size} 个，见完整报告。")
         }
 
-        hint("令牌只授权这个仓库的 Issues，存在车机上的 Q5 Home 里，不进仓库。临时网页只在这一页开着时运行，15 分钟后自动关闭。")
+        hint("重点报告：只看仓库 config/recon-targets.json 指定的应用、代码和接口（提交时自动下载最新的，改分析方向不用更新应用），" +
+            "只读，不改车机。提交到 GitHub Issue（${Updates.REPO}）。令牌只授权这个仓库的 Issues，存在车机上的 Q5 Home 里。" +
+            "临时网页只在这一页开着时运行，15 分钟后自动关闭。")
     }
 
     private fun candidateRow(c: Recon.Candidate): View {
@@ -692,10 +719,14 @@ class SettingsActivity : Activity() {
     private fun startShare() {
         stopShare()
         share = runCatching {
-            LocalShare(report = { report?.markdown }, onToken = { token ->
+            LocalShare(report = { lastMarkdown ?: report?.markdown }, onToken = { token ->
                 ReconUpload(this).saveToken(token)
-                val r = report ?: return@LocalShare "令牌已保存；报告还在生成，稍后在车机上点「提交」"
-                val result = runCatching { ReconUpload(this).submit(r.title, r.markdown) }
+                // 已经在服务线程里：直接生成重点报告并提交，手机网页等着结果。
+                val result = runCatching {
+                    val r = Recon.focused(this, ReconTargets.load())
+                    lastMarkdown = r.markdown
+                    ReconUpload(this).submit(r.title, r.markdown)
+                }
                 runOnUiThread {
                     submitError = result.exceptionOrNull()?.let { it.message ?: it.toString() }
                     if (section == SECTION_RECON) render()
@@ -716,13 +747,20 @@ class SettingsActivity : Activity() {
         share = null
     }
 
-    private fun submitReport() {
-        val r = report ?: return
+    /** 生成报告再提交：重点报告先下载分析目标；完整报告要读所有 APK，车机上可能要几十秒。 */
+    private fun submitReport(full: Boolean) {
+        if (submitting) return
         submitting = true
         submitError = null
+        submitStage = if (full) "正在生成完整报告（要读所有应用，可能几十秒）…" else "正在下载分析目标、生成重点报告…"
         render()
         Thread {
-            val result = runCatching { ReconUpload(this).submit(r.title, r.markdown) }
+            val result = runCatching {
+                val r = if (full) Recon.collect(this) else Recon.focused(this, ReconTargets.load())
+                lastMarkdown = r.markdown
+                runOnUiThread { submitStage = "正在提交…"; if (section == SECTION_RECON) render() }
+                ReconUpload(this).submit(r.title, r.markdown)
+            }
             runOnUiThread {
                 submitting = false
                 submitError = result.exceptionOrNull()?.let { it.message ?: it.toString() }

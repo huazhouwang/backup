@@ -42,7 +42,7 @@ class ConfigTest {
         writeConfig(
             """{"oem": "broadcast:com.wy.SWITCH_OEM@com.wy.oem",
                 "dock": [{"icon": "nav", "target": "com.autonavi.amapauto"}, "com.android.documentsui"],
-                "wallpaper": "city", "wallpaperInterval": 60, "autoCarplay": true}"""
+                "wallpaper": "city", "wallpaperInterval": 60, "wallpaperSun": true, "homeGps": false, "autoCarplay": true}"""
         )
         val config = Config(context)
         assertNull(config.reload())
@@ -51,6 +51,8 @@ class ConfigTest {
         assertEquals(DockItem(null, "com.android.documentsui"), config.dock[1])
         assertEquals("city", config.wallpaper)
         assertEquals(60, config.wallpaperInterval)
+        assertEquals(true, config.wallpaperSun)
+        assertEquals(false, config.homeGps)
         assertEquals(true, config.autoCarplay)
         // current.json 写出了生效的配置。
         assertNotNull(File(context.getExternalFilesDir(null), Config.CURRENT_FILE).readText())

@@ -73,7 +73,12 @@ MT6739、32 位 armeabi-v7a，平台是 WWC2（`com.wwc2.*`）。`user` 构建�
     `LocalShare.kt`（手机扫码打开的临时网页，路径带随机串、15 分钟关闭）、`QrCode.kt`（自写二维码，测试里有固定哈希）。
     `ApkStrings.kt`（读厂商 APK 的字符串常量）、`DexScan.kt`（只读反汇编：列出用到原车相关字符串的方法里的调用顺序；
     测试用 `test/resources/oem-switch.dex`，由同目录 `oem-switch.java.txt` 用 javac + d8 编出）。
+    「提交」默认是**重点报告**：分析目标来自仓库 `config/recon-targets.json`（车机提交时下载，`ReconTargets.kt` 里内置同一份，
+    测试会核对两者一致）。**换分析方向只改这个文件，不用发版**；它只能决定读什么，永远不要加写入 / 切换车机的能力。
+    「完整报告」才列全部应用、系统属性等。
     摸底页面只能读，不要在里面加任何改变车机状态的操作（停用、改设置等）。用户提交的摸底 Issue 用 GitHub 工具读。
+  - 首页 GPS：`HomeGps.kt`（车速 / 方向 / 海拔，首页显示时才监听）；日出日落：`Sun.kt`（本地公式，位置只存 0.1°），
+    壁纸 `wallpaper_sun` 模式按 `Wallpapers.isNight` 分白天 / 夜景（内置写死，在线的按亮度判断）。
   - 默认桌面：`HomeRole.kt`（RoleManager 请求 HOME 角色；恢复走系统主屏幕应用设置）。原厂桌面始终不停用。
   - 崩溃保护：`CrashGuard.kt`（同版本 10 分钟内崩 3 次）→ `SafeModeActivity.kt`（极简，只用系统控件，别给它加依赖）。
     回退：`.github/workflows/rollback.yml`（旧代码 + 更高版本号重新发布）。发布要等模拟器演示通过。

@@ -1,0 +1,28 @@
+{
+  "comment": "车机「提交重点报告」时下载这个文件，决定只读分析哪些应用、找哪些代码、试读哪些接口。改这里就能换分析方向，车机不用更新。只能决定读什么，不能让车机做任何写入或切换。",
+  "packages": [
+    "com.wwc2.launcher",
+    "com.wwc2.main",
+    "com.wwc2.mainui",
+    "com.wwc2.canmcusdk",
+    "com.wwc2.canbusapk"
+  ],
+  "code": [
+    {
+      "name": "原车画面切换",
+      "pattern": "original_screen|enter_original|switch_original|original_unlock|source_avin|media_box"
+    },
+    {
+      "name": "仪表 / 车辆数据（车速、转速、车门等）",
+      "pattern": "car_info|getCanMcuCarInfo|CarInfoLogic|canbusDataFromMCU|notifyCarInfo|uri_carinfo"
+    }
+  ],
+  "strings": "original|car_info|speed|rpm|engine|fuel|mileage|temperature",
+  "providers": [
+    "content://com.wwc2.canmcusdk.CanbusProvider/original_screen",
+    "content://com.wwc2.canmcusdk.CanbusProvider/car_info",
+    "content://com.wwc2.main.provider.logic/logic"
+  ],
+  "maxMethods": 15,
+  "maxEvents": 60
+}

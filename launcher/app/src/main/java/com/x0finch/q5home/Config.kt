@@ -40,6 +40,10 @@ class Config(private val context: Context) {
     var wallpaper = Wallpapers.DAILY; private set
     /** 自动轮换的频率（分钟）。 */
     var wallpaperInterval = Wallpapers.DEFAULT_INTERVAL; private set
+    /** 自动轮换时按日出日落分白天 / 夜晚壁纸。 */
+    var wallpaperSun = false; private set
+    /** 首页时钟下面显示 GPS 车速、方向、海拔。 */
+    var homeGps = true; private set
     /** 连 Wi-Fi 时自动下载新壁纸。 */
     var onlineWallpapers = true; private set
     /** 填了就用 Unsplash API 随机取图；不填用仓库里的精选清单。只能通过 config.json 设置。 */
@@ -58,6 +62,8 @@ class Config(private val context: Context) {
         autoCarplay = prefs.getBoolean(KEY_AUTO_CARPLAY, false)
         wallpaper = prefs.getString(KEY_WALLPAPER, Wallpapers.DAILY)!!
         wallpaperInterval = prefs.getInt(KEY_INTERVAL, Wallpapers.DEFAULT_INTERVAL).coerceIn(5, 1440)
+        wallpaperSun = prefs.getBoolean(KEY_SUN, false)
+        homeGps = prefs.getBoolean(KEY_HOME_GPS, true)
         onlineWallpapers = prefs.getBoolean(KEY_ONLINE, true)
         unsplashKey = prefs.getString(KEY_UNSPLASH_KEY, null)?.ifBlank { null }
         wallpaperQuery = prefs.getString(KEY_QUERY, null)?.ifBlank { null } ?: OnlineWallpapers.DEFAULT_QUERY
@@ -78,6 +84,8 @@ class Config(private val context: Context) {
     fun setAutoCarplay(on: Boolean) = edit { putBoolean(KEY_AUTO_CARPLAY, on) }
     fun setWallpaper(key: String) = edit { putString(KEY_WALLPAPER, key) }
     fun setWallpaperInterval(minutes: Int) = edit { putInt(KEY_INTERVAL, minutes) }
+    fun setWallpaperSun(on: Boolean) = edit { putBoolean(KEY_SUN, on) }
+    fun setHomeGps(on: Boolean) = edit { putBoolean(KEY_HOME_GPS, on) }
     fun setOnlineWallpapers(on: Boolean) = edit { putBoolean(KEY_ONLINE, on) }
 
     fun setDock(items: List<DockItem>) =
@@ -125,6 +133,8 @@ class Config(private val context: Context) {
             if (json.has("title")) e.putString(KEY_TITLE, json.getString("title"))
             if (json.has("wallpaper")) e.putString(KEY_WALLPAPER, json.getString("wallpaper"))
             if (json.has("wallpaperInterval")) e.putInt(KEY_INTERVAL, json.getInt("wallpaperInterval"))
+            if (json.has("wallpaperSun")) e.putBoolean(KEY_SUN, json.getBoolean("wallpaperSun"))
+            if (json.has("homeGps")) e.putBoolean(KEY_HOME_GPS, json.getBoolean("homeGps"))
             if (json.has("onlineWallpapers")) e.putBoolean(KEY_ONLINE, json.getBoolean("onlineWallpapers"))
             if (json.has("unsplashKey")) e.putString(KEY_UNSPLASH_KEY, json.getString("unsplashKey"))
             if (json.has("wallpaperQuery")) e.putString(KEY_QUERY, json.getString("wallpaperQuery"))
@@ -153,6 +163,8 @@ class Config(private val context: Context) {
             .put("autoCarplay", autoCarplay)
             .put("wallpaper", wallpaper)
             .put("wallpaperInterval", wallpaperInterval)
+            .put("wallpaperSun", wallpaperSun)
+            .put("homeGps", homeGps)
             .put("onlineWallpapers", onlineWallpapers)
             // 不把 key 原文写出来，只说明有没有配置。
             .put("unsplashKey", if (unsplashKey != null) "(已配置)" else JSONObject.NULL)
@@ -172,6 +184,8 @@ class Config(private val context: Context) {
         private const val KEY_AUTO_CARPLAY = "auto_carplay"
         private const val KEY_WALLPAPER = "wallpaper"
         private const val KEY_INTERVAL = "wallpaper_interval_min"
+        private const val KEY_SUN = "wallpaper_sun"
+        private const val KEY_HOME_GPS = "home_gps"
         private const val KEY_TITLE = "title"
         private const val KEY_ONLINE = "online_wallpapers"
         private const val KEY_UNSPLASH_KEY = "unsplash_key"

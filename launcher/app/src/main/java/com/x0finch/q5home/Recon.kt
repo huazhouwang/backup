@@ -54,6 +54,8 @@ object Recon {
     /** 要读 APK 字符串的厂商应用（除了所有桌面应用）。 */
     private val DIG_PACKAGES = Regex("\\.main$|mainui|black|carmanager|canbus|canmcu|\\.oem|avin")
     private const val DIG_LIMIT = 600
+    /** 重点报告里每个应用最多列几条相关字符串。 */
+    private const val STRING_LIMIT = 150
     /** 反汇编时找哪些字符串（原车画面相关）。 */
     private val ORIGINAL_CODE = Regex(
         "original_screen|enter_original|switch_original|original_unlock|source_avin|media_box", RegexOption.IGNORE_CASE)
@@ -61,7 +63,10 @@ object Recon {
     private const val PROVIDER_LIMIT = 12
     private const val PROVIDER_ROWS = 6
 
-    fun collect(context: Context, ports: List<Int> = listOf(5555)): Report {
+    /**
+     * 完整报告。[deep] = false 时跳过读 APK / 反汇编 / 试读接口（设置页打开时只要要点和候选入口，几秒钟）。
+     */
+    fun collect(context: Context, ports: List<Int> = listOf(5555), deep: Boolean = true): Report {
         val pm = context.packageManager
         val props = PROPS.associateWith { prop(it) }
         val md = StringBuilder()
@@ -156,68 +161,70 @@ object Recon {
         (sig.gpsLines() + sig.cellLines()).forEach { (k, v) -> md.appendLine("- $k：$v") }
         md.appendLine()
 
-        // 关键厂商应用（原厂桌面、main / mainui / black / carmanager / canbus）APK 里的字符串常量：
-        // 切原车画面多半是发广播或给 MCU 发指令，名字就在代码常量里。只读 APK 文件，不运行任何东西。
-        val homePackages = homes.map { it.activityInfo.packageName }.toSet()
-        val contentUris = linkedSetOf<String>()
-        val dig = vendor.filter { p ->
-            p.packageName != context.packageName && p.applicationInfo?.sourceDir != null &&
-                (p.packageName in homePackages || DIG_PACKAGES.containsMatchIn(p.packageName))
-        }.sortedBy { it.packageName }
-        md.appendLine("## 关键厂商应用的内部组件和字符串（找原车切换方式，${dig.size} 个应用）")
-        md.appendLine("全部页面 / 服务 / 广播接收器（含不对外的，标 🔒），以及 APK 代码里像广播动作、跳转参数、" +
-            "或含 原车 / oem / avin / canbus 等字样的常量。")
-        md.appendLine()
-        for (p in dig) {
-            val apk = File(p.applicationInfo!!.sourceDir)
-            md.appendLine("### `${p.packageName}`（${apk.length() / 1024} KB）")
-            val full = runCatching {
-                pm.getPackageInfo(p.packageName, PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
-                    PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS or PackageManager.MATCH_DISABLED_COMPONENTS)
-            }.getOrNull()
-            fun list(kind: String, items: List<android.content.pm.ComponentInfo>) {
-                items.take(PER_PACKAGE_LIMIT * 2).forEach {
-                    md.appendLine("- $kind：`${it.name}`${if (it.exported) "" else " 🔒"}")
+        if (deep) {
+            // 关键厂商应用（原厂桌面、main / mainui / black / carmanager / canbus）APK 里的字符串常量：
+            // 切原车画面多半是发广播或给 MCU 发指令，名字就在代码常量里。只读 APK 文件，不运行任何东西。
+            val homePackages = homes.map { it.activityInfo.packageName }.toSet()
+            val contentUris = linkedSetOf<String>()
+            val dig = vendor.filter { p ->
+                p.packageName != context.packageName && p.applicationInfo?.sourceDir != null &&
+                    (p.packageName in homePackages || DIG_PACKAGES.containsMatchIn(p.packageName))
+            }.sortedBy { it.packageName }
+            md.appendLine("## 关键厂商应用的内部组件和字符串（找原车切换方式，${dig.size} 个应用）")
+            md.appendLine("全部页面 / 服务 / 广播接收器（含不对外的，标 🔒），以及 APK 代码里像广播动作、跳转参数、" +
+                "或含 原车 / oem / avin / canbus 等字样的常量。")
+            md.appendLine()
+            for (p in dig) {
+                val apk = File(p.applicationInfo!!.sourceDir)
+                md.appendLine("### `${p.packageName}`（${apk.length() / 1024} KB）")
+                val full = runCatching {
+                    pm.getPackageInfo(p.packageName, PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
+                        PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS or PackageManager.MATCH_DISABLED_COMPONENTS)
+                }.getOrNull()
+                fun list(kind: String, items: List<android.content.pm.ComponentInfo>) {
+                    items.take(PER_PACKAGE_LIMIT * 2).forEach {
+                        md.appendLine("- $kind：`${it.name}`${if (it.exported) "" else " 🔒"}")
+                    }
+                    if (items.size > PER_PACKAGE_LIMIT * 2) md.appendLine("- …还有 ${items.size - PER_PACKAGE_LIMIT * 2} 个$kind")
                 }
-                if (items.size > PER_PACKAGE_LIMIT * 2) md.appendLine("- …还有 ${items.size - PER_PACKAGE_LIMIT * 2} 个$kind")
+                list("页面", full?.activities.orEmpty().toList())
+                list("服务", full?.services.orEmpty().toList())
+                list("广播", full?.receivers.orEmpty().toList())
+                full?.providers.orEmpty().forEach {
+                    md.appendLine("- 数据接口：`content://${it.authority}`（`${it.name}`${if (it.exported) "" else " 🔒"}）")
+                    contentUris += "content://${it.authority}/"
+                }
+                val strings = ApkStrings.fromApk(apk, limit = DIG_LIMIT, filter = ApkStrings::interestingDeep)
+                strings.filterTo(contentUris) { it.startsWith("content://") }
+                md.appendLine("- 字符串 ${strings.size} 条：")
+                if (strings.isEmpty()) md.appendLine("  （没读到，或没有匹配的字符串）")
+                else md.appendLine(strings.joinToString("\n") { "  - `$it`" })
+                md.appendLine()
             }
-            list("页面", full?.activities.orEmpty().toList())
-            list("服务", full?.services.orEmpty().toList())
-            list("广播", full?.receivers.orEmpty().toList())
-            full?.providers.orEmpty().forEach {
-                md.appendLine("- 数据接口：`content://${it.authority}`（`${it.name}`${if (it.exported) "" else " 🔒"}）")
-                contentUris += "content://${it.authority}/"
+
+            // 原车相关代码：用到这些字符串的方法里依次做了什么（只读反汇编 APK，不运行）。
+            md.appendLine("## 原车相关代码（只读反汇编）")
+            md.appendLine("用到 original_screen / enter_original / switch_original / original_unlock / source_avin / media_box 的方法，" +
+                "按顺序列出里面的字符串（str）、整数（int）、调用（call）、读写字段（get / put）。")
+            md.appendLine()
+            for (p in dig) {
+                val methods = DexScan.scanApk(File(p.applicationInfo!!.sourceDir), { ORIGINAL_CODE.containsMatchIn(it) })
+                if (methods.isEmpty()) continue
+                md.appendLine("### `${p.packageName}`（${methods.size} 个方法）")
+                methods.forEach { m ->
+                    md.appendLine("- `${m.name}`")
+                    md.appendLine("  " + m.events.joinToString(" → ") { "`$it`" })
+                }
+                md.appendLine()
             }
-            val strings = ApkStrings.fromApk(apk, limit = DIG_LIMIT, filter = ApkStrings::interestingDeep)
-            strings.filterTo(contentUris) { it.startsWith("content://") }
-            md.appendLine("- 字符串 ${strings.size} 条：")
-            if (strings.isEmpty()) md.appendLine("  （没读到，或没有匹配的字符串）")
-            else md.appendLine(strings.joinToString("\n") { "  - `$it`" })
+
+            // 试读找到的 content:// 地址（只 query，不写）：比如原厂桌面用的 CanbusProvider/original_screen。
+            val readable = contentUris.filter { it.startsWith("content://com.wwc2") }
+                .sortedBy { !it.contains("original") }.take(PROVIDER_LIMIT)
+            md.appendLine("## 厂商数据接口试读（只读 query，${readable.size} 个）")
+            readable.forEach { md.appendLine("- `$it`：${queryProvider(context, it)}") }
             md.appendLine()
         }
-
-        // 原车相关代码：用到这些字符串的方法里依次做了什么（只读反汇编 APK，不运行）。
-        md.appendLine("## 原车相关代码（只读反汇编）")
-        md.appendLine("用到 original_screen / enter_original / switch_original / original_unlock / source_avin / media_box 的方法，" +
-            "按顺序列出里面的字符串（str）、整数（int）、调用（call）、读写字段（get / put）。")
-        md.appendLine()
-        for (p in dig) {
-            val methods = DexScan.scanApk(File(p.applicationInfo!!.sourceDir), { ORIGINAL_CODE.containsMatchIn(it) })
-            if (methods.isEmpty()) continue
-            md.appendLine("### `${p.packageName}`（${methods.size} 个方法）")
-            methods.forEach { m ->
-                md.appendLine("- `${m.name}`")
-                md.appendLine("  " + m.events.joinToString(" → ") { "`$it`" })
-            }
-            md.appendLine()
-        }
-
-        // 试读找到的 content:// 地址（只 query，不写）：比如原厂桌面用的 CanbusProvider/original_screen。
-        val readable = contentUris.filter { it.startsWith("content://com.wwc2") }
-            .sortedBy { !it.contains("original") }.take(PROVIDER_LIMIT)
-        md.appendLine("## 厂商数据接口试读（只读 query，${readable.size} 个）")
-        readable.forEach { md.appendLine("- `$it`：${queryProvider(context, it)}") }
-        md.appendLine()
 
         // 系统设置里名字和 USB / adb / 开发者有关的页面（WY 可能只是把入口藏了）。
         val settings = packages.firstOrNull { it.packageName == "com.android.settings" }
@@ -257,6 +264,80 @@ object Recon {
             }
         }
     }
+
+    /**
+     * 重点报告：只看 [targets] 指定的东西——版本、GPS、指定应用里相关代码的调用顺序、相关字符串、
+     * 指定接口的只读结果。不列包名清单、系统属性这些不会变的内容。
+     */
+    fun focused(context: Context, targets: ReconTargets): Report {
+        val pm = context.packageManager
+        val md = StringBuilder()
+        val now = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
+        fun info(pkg: String) = runCatching { pm.getPackageInfo(pkg, 0) }.getOrNull()
+        val self = info(context.packageName)?.versionName ?: "?"
+
+        md.appendLine("<!-- q5home-recon focused v1 -->")
+        md.appendLine("由 Q5 Home $self 在车上生成（$now），**重点报告**，只读，没有改动车机。分析目标：${targets.source}。")
+        md.appendLine()
+
+        md.appendLine("## 版本")
+        md.appendLine("| 应用 | 版本 |")
+        md.appendLine("|---|---|")
+        md.appendLine("| 系统 | ${cell(Build.DISPLAY)}（API ${Build.VERSION.SDK_INT}） |")
+        targets.packages.forEach { pkg ->
+            val p = info(pkg)
+            md.appendLine("| `$pkg` | ${p?.let { "${it.versionName}（${it.longVersionCodeCompat()}）" } ?: "未安装"} |")
+        }
+        md.appendLine()
+
+        md.appendLine("## GPS（快照，不含坐标）")
+        SignalCheck(context).gpsLines().forEach { (k, v) -> md.appendLine("- $k：$v") }
+        md.appendLine()
+
+        val apks = targets.packages.mapNotNull { pkg ->
+            info(pkg)?.applicationInfo?.sourceDir?.let { pkg to File(it) }
+        }
+        for (group in targets.code) {
+            md.appendLine("## ${group.name}（只读反汇编）")
+            md.appendLine("匹配 `${group.pattern.pattern}` 的方法：按顺序列出字符串（str）、整数（int）、调用（call）、读写字段（get / put）。")
+            md.appendLine()
+            var any = false
+            for ((pkg, apk) in apks) {
+                val methods = DexScan.scanApk(apk, { group.pattern.containsMatchIn(it) }, targets.maxMethods, targets.maxEvents)
+                if (methods.isEmpty()) continue
+                any = true
+                md.appendLine("### `$pkg`（${methods.size} 个方法）")
+                methods.forEach { m ->
+                    md.appendLine("- `${m.name}`")
+                    md.appendLine("  " + m.events.joinToString(" → ") { "`$it`" })
+                }
+                md.appendLine()
+            }
+            if (!any) md.appendLine("（这些应用里没找到）\n")
+        }
+
+        targets.strings?.let { pattern ->
+            md.appendLine("## 相关字符串（`${pattern.pattern}`）")
+            for ((pkg, apk) in apks) {
+                val strings = ApkStrings.fromApk(apk, limit = STRING_LIMIT, filter = ApkStrings.matching(pattern))
+                if (strings.isEmpty()) continue
+                md.appendLine("- `$pkg`：" + strings.joinToString(" ") { "`$it`" })
+            }
+            md.appendLine()
+        }
+
+        if (targets.providers.isNotEmpty()) {
+            md.appendLine("## 数据接口试读（只读 query）")
+            targets.providers.forEach { md.appendLine("- `$it`：${queryProvider(context, it)}") }
+            md.appendLine()
+        }
+
+        return Report(md.toString(), emptyList(), emptyList(), "车机摸底（重点）${Build.MODEL} $now")
+    }
+
+    @Suppress("DEPRECATION")
+    private fun PackageInfo.longVersionCodeCompat(): Long =
+        if (Build.VERSION.SDK_INT >= 28) longVersionCode else versionCode.toLong()
 
     /** 只读查询一个 content:// 地址，返回列名和前几行（每格截到 60 字）。最多等 3 秒。 */
     fun queryProvider(context: Context, uri: String): String {

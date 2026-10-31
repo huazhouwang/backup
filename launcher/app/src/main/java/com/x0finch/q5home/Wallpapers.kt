@@ -16,6 +16,8 @@ object Wallpapers {
         val file: File? = null,
         /** 在线壁纸的摄影师，显示在右下角。 */
         val author: String? = null,
+        /** 夜景（日出日落模式里晚上用）；null = 按图片亮度判断。 */
+        val night: Boolean? = null,
     )
 
     /** 自动轮换（key 沿用旧名 daily，轮换频率见 [INTERVALS]）。 */
@@ -29,12 +31,12 @@ object Wallpapers {
     fun intervalName(minutes: Int) = INTERVALS.firstOrNull { it.first == minutes }?.second ?: "每 $minutes 分钟"
 
     val BUILTIN = listOf(
-        Wallpaper("stars", "星空雪山", R.drawable.wall_stars),
-        Wallpaper("city", "城市夜景", R.drawable.wall_city),
-        Wallpaper("road", "峡谷公路", R.drawable.wall_road),
-        Wallpaper("clouds", "云海", R.drawable.wall_clouds),
-        Wallpaper("lake", "湖畔黄昏", R.drawable.wall_lake),
-        Wallpaper("forest", "雾林", R.drawable.wall_forest),
+        Wallpaper("stars", "星空雪山", R.drawable.wall_stars, night = true),
+        Wallpaper("city", "城市夜景", R.drawable.wall_city, night = true),
+        Wallpaper("road", "峡谷公路", R.drawable.wall_road, night = false),
+        Wallpaper("clouds", "云海", R.drawable.wall_clouds, night = false),
+        Wallpaper("lake", "湖畔黄昏", R.drawable.wall_lake, night = true),
+        Wallpaper("forest", "雾林", R.drawable.wall_forest, night = false),
     )
 
     /** 全部可选壁纸：在线下载的（新的在前）+ 内置的。 */
@@ -57,13 +59,39 @@ object Wallpapers {
      * 每天 = 一年中的第几天（和旧版本一样）；更短的频率 = 今年过去的分钟数 ÷ 频率。
      */
     fun current(context: Context, setting: String, calendar: Calendar = Calendar.getInstance(),
-                intervalMinutes: Int = DEFAULT_INTERVAL): Wallpaper? {
+                intervalMinutes: Int = DEFAULT_INTERVAL, daylight: Boolean? = null): Wallpaper? {
         if (setting == NONE) return null
         val all = available(context)
         all.firstOrNull { it.key == setting }?.let { return it }
-        // 自动轮换，或者指定的在线壁纸已被清理掉。
-        return all[slot(calendar, intervalMinutes) % all.size]
+        // 自动轮换，或者指定的在线壁纸已被清理掉。日出日落模式：白天只轮换白天的，晚上只轮换夜景。
+        val pool = daylight?.let { day -> all.filter { isNight(context, it) != day } }?.ifEmpty { null } ?: all
+        return pool[slot(calendar, intervalMinutes) % pool.size]
     }
+
+    /** 夜景还是白天：内置的写死；在线的按缩略图平均亮度判断一次，记下来。 */
+    fun isNight(context: Context, w: Wallpaper): Boolean {
+        w.night?.let { return it }
+        val prefs = context.getSharedPreferences("wallpaper_night", Context.MODE_PRIVATE)
+        if (prefs.contains(w.key)) return prefs.getBoolean(w.key, false)
+        val night = brightness(context, w)?.let { it < NIGHT_BRIGHTNESS } ?: false
+        prefs.edit().putBoolean(w.key, night).apply()
+        return night
+    }
+
+    /** 平均亮度 0–1（缩成几十像素宽再算，很快）。 */
+    fun brightness(context: Context, w: Wallpaper): Float? {
+        val bmp = decode(context, w, 48) ?: return null
+        val px = IntArray(bmp.width * bmp.height)
+        bmp.getPixels(px, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+        if (px.isEmpty()) return null
+        val sum = px.sumOf { c ->
+            (0.2126 * ((c shr 16) and 0xFF) + 0.7152 * ((c shr 8) and 0xFF) + 0.0722 * (c and 0xFF)) / 255.0
+        }
+        return (sum / px.size).toFloat()
+    }
+
+    /** 平均亮度低于这个算夜景。 */
+    const val NIGHT_BRIGHTNESS = 0.3f
 
     fun slot(calendar: Calendar, intervalMinutes: Int): Int {
         val day = calendar.get(Calendar.DAY_OF_YEAR)

@@ -62,6 +62,15 @@ class MainActivity : Activity() {
     private lateinit var heroSub: TextView
     private lateinit var greeting: TextView
     private lateinit var date: TextView
+    private lateinit var trip: TextView
+    private lateinit var gps: HomeGps
+    /** 定位过时（进隧道）就隐藏那一行：每 5 秒看一次。 */
+    private val tripTicker = object : Runnable {
+        override fun run() {
+            updateTrip()
+            handler.postDelayed(this, 5000)
+        }
+    }
 
     private val handler = Handler(Looper.getMainLooper())
     private var tileHeight = 0
@@ -105,6 +114,8 @@ class MainActivity : Activity() {
         heroSub = findViewById(R.id.heroSub)
         greeting = findViewById(R.id.greeting)
         date = findViewById(R.id.date)
+        trip = findViewById(R.id.trip)
+        gps = HomeGps(this) { updateTrip() }
 
         overlay = Overlay(root as FrameLayout)
         config = Config(this)
@@ -179,6 +190,26 @@ class MainActivity : Activity() {
         updateWallpaper()
         updateBadge()
         rebuild()
+        if (config.homeGps) gps.start() else gps.stop()
+        handler.removeCallbacks(tripTicker)
+        handler.post(tripTicker)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!started) return
+        gps.stop()
+        handler.removeCallbacks(tripTicker)
+    }
+
+    private fun updateTrip() {
+        val text = if (config.homeGps) HomeGps.text(gps.last) else null
+        if (text == null) {
+            trip.visibility = View.GONE
+        } else {
+            if (trip.text != text) trip.text = text
+            trip.visibility = View.VISIBLE
+        }
     }
 
     /** 有新版本时右上角显示绿色胶囊。 */
@@ -244,7 +275,8 @@ class MainActivity : Activity() {
 
     /** 壁纸只在变化时重新解码（每分钟检查一次，自动轮换到点就换；新下载的在线壁纸也会进轮换）。 */
     private fun updateWallpaper() {
-        val wallpaper = Wallpapers.current(this, config.wallpaper, intervalMinutes = config.wallpaperInterval)
+        val wallpaper = Wallpapers.current(this, config.wallpaper, intervalMinutes = config.wallpaperInterval,
+            daylight = if (config.wallpaperSun) Sun.isDaylight(this) else null)
         if (wallpaper?.key == shownWallpaper && (wallpaper != null || wallpaperView.drawable == null)) return
         shownWallpaper = wallpaper?.key
         val bitmap = wallpaper?.let { Wallpapers.decode(this, it, resources.displayMetrics.widthPixels) }

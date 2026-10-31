@@ -19,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.x0finch.q5home.Config
 import com.x0finch.q5home.R
+import com.x0finch.q5home.Sun
 import com.x0finch.q5home.Wallpapers
 
 /**
@@ -121,7 +122,8 @@ object Ui {
     fun refreshPageWallpaper(activity: Activity, root: FrameLayout) {
         val image = root.getChildAt(0) as? ImageView ?: return
         val config = Config(activity).also { it.reload() }
-        val bmp = Wallpapers.current(activity, config.wallpaper, intervalMinutes = config.wallpaperInterval)
+        val bmp = Wallpapers.current(activity, config.wallpaper, intervalMinutes = config.wallpaperInterval,
+            daylight = if (config.wallpaperSun) Sun.isDaylight(activity) else null)
             ?.let { Wallpapers.decode(activity, it, activity.resources.displayMetrics.widthPixels / 2) }
         image.setImageBitmap(bmp)
     }

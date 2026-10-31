@@ -114,6 +114,20 @@
                         android:fontFamily="@font/outfit_regular"
                         android:letterSpacing="0.1" />
                 </LinearLayout>
+
+                <!-- GPS：车速 · 方向 · 海拔（有新鲜定位时才显示，见 HomeGps）。 -->
+                <TextView
+                    android:id="@+id/trip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginTop="4dp"
+                    android:singleLine="true"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/outfit_regular"
+                    android:letterSpacing="0.04"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout

@@ -48,6 +48,12 @@ object ApkStrings {
             !s.startsWith("android.permission.") && !s.startsWith("java.") && !s.startsWith("javax.")
     }
 
+    /** 排除库代码 / 安卓自带常量后，再用 [pattern] 筛（重点报告里"相关字符串"用）。 */
+    fun matching(pattern: Regex): (String) -> Boolean = { s ->
+        s.length in 2..120 && s.none { it == ' ' || it == '\n' } && !s.startsWith("\$this\$") &&
+            !LIBRARY.containsMatchIn(s) && !NOISE.containsMatchIn(s) && pattern.containsMatchIn(s)
+    }
+
     /** 像 Intent 参数名的字符串（打开页面时带的 extra，比如 start_page、jump_type）。 */
     private val EXTRA_LIKE = Regex(
         "^[a-zA-Z][a-zA-Z0-9_]{2,40}$",
