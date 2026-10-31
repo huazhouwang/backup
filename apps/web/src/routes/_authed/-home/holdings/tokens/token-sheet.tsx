@@ -1,0 +1,333 @@
+import {
+  Badge,
+  BottomSheet,
+  cn,
+  Drawer,
+  LogoAvatar,
+  SharedLayoutBg,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useMediaQuery,
+} from "@folio/ui";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+
+import { type ReactNode, useMemo, useState } from "react";
+import { useTranslations } from "use-intl";
+import { AccountName } from "@/components/account-name";
+import { AmountTicker } from "@/components/amount-ticker";
+import { AvatarStack } from "@/components/avatar-stack";
+import { type Range, RangeTabs, rangeSince } from "@/components/range-tabs";
+import { Sensitive } from "@/components/sensitive";
+import { collapseToSlots } from "@/components/tag-badges";
+import { formatNumber, signedUsd } from "@/lib/core/format-number";
+import type { Holding } from "@/lib/core/portfolio";
+import { tokenValueHistoryFromRaw } from "@/lib/core/portfolio";
+import { useChartScrub } from "@/lib/hooks/use-chart-scrub";
+import { useDisplayValue } from "@/lib/hooks/use-display-value";
+import { holdingHistoryQuery } from "@/lib/queries/accounts";
+import { TrendPanel } from "@/routes/_authed/-home/hero/trend-panel";
+import { deltaTone, NO_VALUE } from "@/routes/_authed/-home/holdings/value-delta";
+import { ACCOUNT_SLOTS, groupByAccount, groupByPlatform, type SourceGroup } from "./source-groups";
+
+// 代币 drill-down 侧边栏(v2):代币头部 + 来源明细。桌面右滑 Drawer、移动 BottomSheet 承载同一份内容。
+// 头部背景 = 单币【持仓价值】历史(片 2):折线随涨跌走 --pos/--neg,内容浮其上;可切 7d/30d/1y/全部。
+// 来源区是 Platforms / Accounts 两视图的 tab 切换(互为转置):按平台看散在哪些链/场馆,或按账户看散在哪些账户。
+// 窗口切换(RangeTabs)与账户抽屉共用,抽到 components/range-tabs。
+
+// 组头像:单 avatar → 单 logo;多 avatar(账户跨多链)→ 叠标 + N(共享 AvatarStack)。
+// manual 亦有内置 logo(NotebookPen),走普通 LogoAvatar,不再特判。
+function GroupAvatar({ group }: { group: SourceGroup }) {
+  const [first] = group.avatars;
+  if (group.avatars.length === 1 && first) {
+    return <LogoAvatar src={first.logo} fallback={first.name} size="sm" />;
+  }
+  return <AvatarStack items={group.avatars} size="md" />;
+}
+
+// 账户名统一走 <AccountName>(`@名` 前置,#351 ③):全站「一个符号 = 一种身份」,与平台名(有 logo
+// 头像 + 公认名)区分。平台名不加。account slot 由视图决定:平台视图账户在副行、账户视图在主行。
+function NameLine({
+  text,
+  account,
+  className,
+}: {
+  text: string;
+  account: boolean;
+  className: string;
+}) {
+  if (account) return <AccountName name={text} className={className} />;
+  return (
+    <span className={`flex min-w-0 items-center gap-1 ${className}`}>
+      <span className="truncate">{text}</span>
+    </span>
+  );
+}
+
+// 平台行副名:点名组内**按 value 倒序**的账户(#351 ③)—— 比原先的「{n} accounts」计数多说一句「是谁」。
+// 折叠与账户行的 tag 同一条规则(collapseToSlots):3 个以内全显,超过 3 个显 2 个 + `+n`。
+// 阈值直接用 source-groups 导出的 ACCOUNT_SLOTS —— 它同时决定 topAccounts 带几个候选,两边必须一致
+// (各写一份的话,阈值一改就会在「恰好等于阈值」那档静默少显一个)。
+// total 传组内账户总数(topAccounts 只带前几名),每个 `@名` 各自截断、尾巴不被挤掉。
+function AccountNames({
+  accounts,
+  total,
+}: {
+  accounts: { id: string; label: string }[];
+  total: number;
+}) {
+  const { shown, overflow } = collapseToSlots(accounts, ACCOUNT_SLOTS, total);
+  return (
+    <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+      {shown.map((a) => (
+        <AccountName key={a.id} name={a.label} className="min-w-0" />
+      ))}
+      {overflow > 0 && <span className="shrink-0">+{overflow}</span>}
+    </span>
+  );
+}
+
+// 来源组行:左 = 头像 + 主名 / 副名;右 = 数量 + symbol(上)· 占比(下,= 组 value / 总 value)。
+// accountSlot 标出哪格是账户(带图标);副名与主名【严格相等】(区分大小写)才省略副行 ——
+// 用户可能特意把账户命名为小写 "binance"(≠ 平台 "Binance"),这属不同名字,靠钱包图标区分、照常显示。
+function GroupRow({
+  group,
+  secondary,
+  symbol,
+  totalValue,
+  accountSlot,
+}: {
+  group: SourceGroup;
+  secondary: ReactNode; // null = 省略副行(与主名重复时)
+  symbol: string;
+  totalValue: number;
+  accountSlot: "primary" | "secondary";
+}) {
+  const pct = totalValue > 0 ? (group.value / totalValue) * 100 : 0;
+  const share = pct >= 10 ? pct.toFixed(0) : pct.toFixed(1);
+  return (
+    <div className="flex items-center gap-3 rounded-xl px-3 py-2.5">
+      <GroupAvatar group={group} />
+      <span className="flex min-w-0 flex-1 flex-col">
+        <NameLine
+          text={group.primary}
+          account={accountSlot === "primary"}
+          className="font-medium text-sm"
+        />
+        {secondary}
+      </span>
+      <span className="shrink-0 text-right">
+        <span className="block text-sm tabular-nums">
+          <Sensitive>{formatNumber(group.amount)}</Sensitive> {symbol}
+        </span>
+        <span className="block text-muted-foreground text-xs tabular-nums">{share}%</span>
+      </span>
+    </div>
+  );
+}
+
+// 一个来源视图(平台 / 账户):SharedLayoutBg 承载 hover(与代币行同款移动滑块)。
+function SourceView({
+  groups,
+  countKey,
+  symbol,
+  totalValue,
+}: {
+  groups: SourceGroup[];
+  countKey: "nAccounts" | "nSources"; // 副行多基数时的 i18n key(平台视图数账户、账户视图数平台)
+  symbol: string;
+  totalValue: number;
+}) {
+  const t = useTranslations("Overview");
+  const platformView = countKey === "nAccounts"; // 副维度是账户 → 副行点名;账户视图副维度是平台,仍报计数
+  // 副名与主名【严格相等】(区分大小写)才省略副行 —— 用户可能特意把账户命名为小写 "binance"
+  //(≠ 平台 "Binance"),那属不同名字,靠 `@` 区分、照常显示。
+  const secondaryFor = (g: SourceGroup) => {
+    if (g.count === 1) {
+      const only = g.single ?? "";
+      if (!only || only === g.primary) return null;
+      return platformView ? (
+        <AccountNames accounts={g.topAccounts} total={g.count} />
+      ) : (
+        <NameLine text={only} account={false} className="text-muted-foreground text-xs" />
+      );
+    }
+    return platformView ? (
+      <AccountNames accounts={g.topAccounts} total={g.count} />
+    ) : (
+      <NameLine
+        text={t(countKey, { n: g.count })}
+        account={false}
+        className="text-muted-foreground text-xs"
+      />
+    );
+  };
+  return (
+    <SharedLayoutBg inset={0} pillClassName="rounded-xl">
+      {groups.map((g) => (
+        <div key={g.key}>
+          <GroupRow
+            group={g}
+            secondary={secondaryFor(g)}
+            symbol={symbol}
+            totalValue={totalValue}
+            // 平台视图(countKey=nAccounts)账户在副行;账户视图(nSources)账户在主行。
+            accountSlot={platformView ? "secondary" : "primary"}
+          />
+        </div>
+      ))}
+    </SharedLayoutBg>
+  );
+}
+
+function TokenSheetContent({ holding }: { holding: Holding }) {
+  const t = useTranslations("Overview");
+  const usd = useDisplayValue();
+  // 划动读数(#470 片7)。
+  const scrub = useChartScrub();
+  const { token, totalValue, totalAmount, sources } = holding;
+  // 24h 盈亏(ADR 0040)—— server 算好的,与主页那一行同一个数。以前是 change24h 倒推的。
+  const dayValue = holding.gain24h?.amount ?? null;
+  const dayPct = holding.gain24h?.pct ?? null;
+  const platformGroups = groupByPlatform(sources);
+  const accountGroups = groupByAccount(sources);
+
+  // 单币持仓价值历史(片 2):按 Holding key + 窗口拉取,喂头部背景图。窗口切换即重取(keepPrevious 防闪)。
+  const [range, setRange] = useState<Range>("30d");
+  const since = rangeSince(range, Date.now());
+  const historyQuery = useQuery({
+    ...holdingHistoryQuery({ holdingKey: holding.key, range, since }),
+    placeholderData: keepPreviousData,
+  });
+  // 曲线在浏览器里画(FOL-50):接口发窗口内该币的原样余额行,阶梯重建在这儿。
+  const series = useMemo(
+    () => (historyQuery.data == null ? [] : tokenValueHistoryFromRaw(historyQuery.data)),
+    [historyQuery.data],
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* 头部:价值历史图垫底(hover 出 tooltip);内容 pointer-events-none 让 hover 透传。
+          窗口切换叠右下角、独占头部底部一带,与右侧价格徽标错开(name 行用满宽)。
+          预留固定高度(min-h-44)→ 图异步到达不撑高、不挤压列表。 */}
+      <div className="relative min-h-44 overflow-hidden">
+        <TrendPanel series={series} loading={historyQuery.isPending} onActive={scrub.onActive} />
+        {/* 窗口切换(可交互,独立于 pointer-events-none 内容层):右下角独占一带,避开价格徽标。 */}
+        <div className="absolute right-0 bottom-0 z-10">
+          <RangeTabs value={range} onChange={setRange} />
+        </div>
+        <div className="pointer-events-none relative flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <LogoAvatar src={token.logo} fallback={token.symbol} size="lg" />
+            <div className="min-w-0">
+              {/* 名称 + 徽标(中性 pill,无状态图标):市值排名 + 价格合一,贴在名称右侧。
+                    排名走 text-foreground(深色主题即白、亮色主题自动转深),价格保持 muted。 */}
+              <div className="flex min-w-0 items-center gap-2">
+                <h2 className="truncate font-semibold text-lg">{token.name}</h2>
+                {(token.marketCapRank != null || token.unitPrice != null) && (
+                  <Badge status="neutral" size="sm" showIcon={false}>
+                    <span className="inline-flex items-center gap-1">
+                      {token.marketCapRank != null && (
+                        <span className="text-foreground">#{token.marketCapRank}</span>
+                      )}
+                      {token.unitPrice != null && <span>{usd(token.unitPrice)}</span>}
+                    </span>
+                  </Badge>
+                )}
+              </div>
+              {totalAmount != null && (
+                <p className="text-muted-foreground text-sm tabular-nums">
+                  <Sensitive>{formatNumber(totalAmount)}</Sensitive> {token.symbol}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            {/* 划到某点 → 顶替成该点的值(#470 片7);下面那行 24h 换成那一刻的时间。
+                滚动与「整数/小数怎么拆」走 AmountTicker(hero、账户抽屉同一份);字号是这一处的事。 */}
+            <AmountTicker
+              value={scrub.point ? scrub.point.total : totalValue}
+              scrubbing={scrub.point != null}
+              className="font-bold text-3xl"
+              fractionClassName="font-bold text-muted-foreground text-xl tabular-nums"
+            />
+            {scrub.label ? (
+              <div className="mt-1 text-muted-foreground text-sm tabular-nums">{scrub.label}</div>
+            ) : null}
+            {/* 24h 盈亏 + %:共用一个前置符号、同色,与代币行/hero 一致。
+                算不出 → `—`(全站三态口径,见 ../value-delta)。 */}
+            {scrub.point ? null : holding.gain24h == null ? (
+              <div className={cn("mt-1 text-sm tabular-nums", deltaTone(null))}>{NO_VALUE}</div>
+            ) : (
+              <div className={cn("mt-1 text-sm tabular-nums", deltaTone(dayValue))}>
+                {/* 遮盈亏金额,留百分比(ADR 0052)。 */}
+                <Sensitive>{signedUsd(usd, dayValue ?? 0)}</Sensitive>
+                {dayPct != null ? ` ${Math.abs(dayPct).toFixed(2)}%` : ""}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 来源:Platforms / Accounts 两视图切换。tab 背景透明,与主页 Tokens/DeFi 一致。 */}
+      <Tabs defaultValue="platforms" variant="pill">
+        <TabsList className="bg-transparent p-0">
+          <TabsTrigger value="platforms">{t("platformsTab")}</TabsTrigger>
+          <TabsTrigger value="accounts">{t("accountsTab")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="platforms">
+          <SourceView
+            groups={platformGroups}
+            countKey="nAccounts"
+            symbol={token.symbol}
+            totalValue={totalValue}
+          />
+        </TabsContent>
+        <TabsContent value="accounts">
+          <SourceView
+            groups={accountGroups}
+            countKey="nSources"
+            symbol={token.symbol}
+            totalValue={totalValue}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export function TokenSheet({
+  holding,
+  open,
+  onOpenChange,
+}: {
+  holding: Holding | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  // 桌面右滑 Drawer;移动(< sm)用 BottomSheet。两壳复用同一份内容组件。
+  const isDesktop = useMediaQuery("(min-width: 640px)");
+
+  if (isDesktop) {
+    return (
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        side="right"
+        ariaLabel={holding?.token.name}
+        className="w-full max-w-md overflow-y-auto p-6"
+      >
+        {holding && <TokenSheetContent holding={holding} />}
+      </Drawer>
+    );
+  }
+
+  return (
+    // title 不传:内容头部已渲染代币名,避免 BottomSheet 自带标题区重复。
+    <BottomSheet open={open} onOpenChange={onOpenChange} snapPoints={[0.6, 0.92]}>
+      {holding && <TokenSheetContent holding={holding} />}
+    </BottomSheet>
+  );
+}

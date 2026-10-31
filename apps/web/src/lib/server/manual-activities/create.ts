@@ -1,0 +1,48 @@
+import { Effect } from "effect";
+import { z } from "zod";
+import { addManualActivities } from "@/lib/server/manual/store";
+import { refillDailyPrices } from "@/lib/server/prices/daily";
+import { OccurredAt } from "./occurred-at";
+
+export const ActivityKind = z.enum(["add", "reduce", "set"]);
+
+const BatchDraftInput = z.object({
+  token: z.object({
+    symbol: z.string().trim().min(1),
+    unitPrice: z.number().nonnegative(),
+    // 选币下拉发的那张不透明票(#202b)。这一层只校验「是个非空串」—— 解票在 ../manual/store,
+    // 解不开就当没选币。
+    ticket: z.string().trim().min(1).nullish(),
+  }),
+  kind: ActivityKind,
+  amount: z.number().nonnegative(),
+  occurredAt: OccurredAt,
+  price: z.number().nonnegative().nullish(),
+  fee: z.number().nonnegative().nullish(),
+  memo: z.string().trim().nullish(),
+});
+
+export const CreateActivitiesInput = z.object({
+  accountId: z.string().min(1),
+  drafts: z.array(BatchDraftInput).min(1),
+});
+
+// 批量新增(原子 + 整批拒;也承载"新建 token"流 —— 首条活动落 token)。
+// draft 形状直接取自 ../manual/store 的入参 —— 决策/物化都在那层,这里不复述一份会漂移的类型。
+export const handleCreateManualActivities = Effect.fn("createManualActivities")(function* (data: {
+  accountId: string;
+  drafts: Parameters<typeof addManualActivities>[1];
+}) {
+  const result = yield* addManualActivities(data.accountId, data.drafts);
+  return result;
+});
+
+// server fn 的那一层:写成功之后给这个账户的币投一条定向的 `daily-prices`(FOL-90),新币的历史
+// 曲线不必等下一个整点。消息里的 userId 由装配点填(`enqueueForUser`)。
+export const handleCreateManualActivitiesAndRefill = Effect.fn("createManualActivities")(function* (
+  data: Parameters<typeof handleCreateManualActivities>[0],
+) {
+  const result = yield* handleCreateManualActivities(data);
+  if (result.ok) yield* refillDailyPrices(data.accountId);
+  return result;
+});

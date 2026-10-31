@@ -1,0 +1,88 @@
+import {
+  makeRateLimit,
+  makeRequester,
+  type Outbound,
+  type Requester,
+  type UpstreamError,
+} from "@folio/client-core";
+import { Context, Duration, Effect, Layer, Schema, type Scope } from "effect";
+import {
+  API_KEY_HEADER,
+  BALANCE_PATH,
+  BLOCKCHAINS_PATH,
+  COINSTATS_API_BASE,
+  RATE_LIMIT_BURST,
+  RATE_LIMIT_KEY,
+  RATE_LIMIT_PER_SEC,
+  UPSTREAM,
+} from "./constants";
+import { CoinstatsCoin } from "./types";
+
+export interface CoinstatsConfig {
+  // 基址,**当不透明整串用**。**这家没有 #264 那个需求**(代理覆盖是给被按地区拒的交易所用的),
+  // 留这个口子是为了七个 client 形状一致,不是因为已经有人要用。
+  readonly apiBase?: string;
+}
+
+// CoinStats OpenAPI 的请求层。**方法按上游端点组织,吐的是上游形状(DTO)** ——
+// `parseBalances`、`tokenRef` 命名、「无 chain 的 coin 回落到 connectionId」那条规则,全在适配层。
+//
+// **apiKey 每次调用传**,不在建 client 时绑:它来自 ctx.creds(app 从 env 注入),而 client
+// 不读 env、不知道那个变量叫什么(ADR 0036 边界决定 2)。
+//
+// **connectionId 也是每次传**:它是 CoinStats 协议里的链标识(query 参数),而「solana 这条链
+// 对应哪个 connectionId」是适配层的知识 —— 老代码里那个工厂就住在适配层该住的位置。
+export interface CoinstatsClientApi {
+  // 钱包代币余额。上游直接吐一个 coin 数组(不是 { data: [...] })。
+  readonly balance: (params: {
+    readonly connectionId: string;
+    readonly address: string;
+    readonly apiKey: string;
+  }) => Effect.Effect<readonly CoinstatsCoin[], UpstreamError, Outbound>;
+
+  // 支持的链列表。**只需 key、不需地址** —— 用来实测 key 本身有没有效,而不是只检查它非空。
+  // 返回值没人看(调用方只关心成没成),所以类型是 `unknown`:声明一个假的形状不如说实话。
+  readonly blockchains: (apiKey: string) => Effect.Effect<unknown, UpstreamError, Outbound>;
+}
+
+export class CoinstatsClient extends Context.Tag("clients/Coinstats")<
+  CoinstatsClient,
+  CoinstatsClientApi
+>() {
+  static readonly layer = (config: CoinstatsConfig = {}): Layer.Layer<CoinstatsClient> =>
+    Layer.scoped(CoinstatsClient, make(config));
+}
+
+export function make(
+  config: CoinstatsConfig = {},
+): Effect.Effect<CoinstatsClientApi, never, Scope.Scope> {
+  return Effect.gen(function* () {
+    const limit = yield* makeRateLimit({
+      key: RATE_LIMIT_KEY,
+      limit: RATE_LIMIT_BURST,
+      interval: Duration.millis((RATE_LIMIT_BURST / RATE_LIMIT_PER_SEC) * 1000),
+    });
+
+    const request: Requester = makeRequester({
+      baseUrl: config.apiBase ?? COINSTATS_API_BASE,
+      upstream: UPSTREAM,
+      limit,
+    });
+
+    // 头是每请求算的 —— key 来自调用方给的凭据,不是模块级常量,所以随每一发传进去。
+    const keyed = (apiKey: string) =>
+      Effect.succeed({ [API_KEY_HEADER]: apiKey, accept: "application/json" });
+
+    return {
+      balance: ({ connectionId, address, apiKey }) =>
+        request(BALANCE_PATH, Schema.Array(CoinstatsCoin), {
+          query: { address, connectionId },
+          headers: keyed(apiKey),
+        }),
+
+      // 只用来探活「这把 key 通不通」,回什么形状不关心 —— 所以不声明形状。
+      blockchains: (apiKey) =>
+        request(BLOCKCHAINS_PATH, Schema.Unknown, { headers: keyed(apiKey) }),
+    };
+  });
+}

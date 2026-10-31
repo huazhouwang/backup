@@ -1,0 +1,34 @@
+{
+  "name": "@folio/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:triggers": "node scripts/data-version-triggers.ts"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@folio/connectors": "workspace:*",
+    "@folio/connectors-basic": "workspace:*",
+    "@folio/oracle-basic": "workspace:*",
+    "@folio/oracle-ref": "workspace:*",
+    "better-auth": "catalog:",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "catalog:",
+    "@types/node": "catalog:",
+    "drizzle-kit": "^0.31.10",
+    "effect": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Two jobs: everything that needs no browser, and e2e. Read this before splitting
+# the first one again — it used to be split, and the reason has expired.
+#
+# Everything here is CPU-bound compilation on a 2-core runner, so spreading it
+# over machines is the only lever on wall clock, and Actions bills each job
+# rounded UP to the whole minute, so that lever costs money. Back when these were
+# the only two jobs, buying the extra minute was worth it:
+#
+#   one job                                   145–159s  →  3 billed minutes
+#   checks | web-tests, balanced (~75s | ~90s)    ~90s  →  4 billed minutes
+#
+# Then e2e arrived and it is the long pole, so whether the rest finishes in 90s or
+# 150s changes the wall clock a PR actually waits by nothing — the extra minute
+# bought nothing, and a duplicate checkout+install came with it. Merged back.
+#
+# Measured after merging, on the same run:
+#
+#   checks (merged)  2m31s      e2e  2m36s      wall clock 2m36s
+#
+# **The margin is thin** — 5 seconds — because caching the Chromium download took
+# e2e from ~3m50s down to ~2m36s. So the condition to revisit is close: if e2e
+# gets any faster, or this job any slower, splitting this one in two starts buying
+# wall clock again (at the cost of a billed minute, since Actions rounds each job
+# up). Re-measure before deciding; don't split on the grounds that it "looks big".
+#
+# Step order is cheapest-first, so a red PR fails as early as it can.
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs pnpm using the version from package.json "packageManager".
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # --error-on-warnings:warning 也算红。少了它,`biome ci` 只拦 error,warning 会一路
+      # 堆到没人看(#427 那次堆了 13 条)。本地 `pnpm lint` 带同一个开关,两边判定一致。
+      - run: pnpm exec biome ci --error-on-warnings
+      - run: pnpm typecheck
+      - run: pnpm knip
+      # catalog 是约定,pnpm 不强制 —— 这一步是它的执行者(#370)。放在 knip 后面同一个理由:
+      # 便宜、只读 package.json,让「版本又开始各写一遍」在 review 之前就红。
+      - run: pnpm check:catalog
+      - run: pnpm build
+      # 跑的就是 `pnpm test` 那三趟(根目录各包 / apps/web 单测 / apps/web 的 D1 workers 池),
+      # 只是带着 istanbul 插桩,跑完合并成一个全仓行覆盖率,**低于 80% 就红**(FOL-103 / FOL-106)。
+      # 不另起一步「先跑测试、再跑覆盖率」—— 那是把整套测试跑两遍。口径与排除清单见
+      # scripts/coverage.mjs 顶上。
+      - run: pnpm coverage --min 80
+
+  # Stays its own job, and earns its own minute: it needs a browser and a real server, neither of
+  # which the job above wants, and it is the only one that can't run on a 2-core box in under a
+  # minute anyway. Runs the WebAuthn ceremonies that mocks structurally cannot cover — see
+  # apps/web/playwright.config.ts and #354.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Chromium is ~130MB and every run was re-downloading it. Keyed on the lockfile, so a
+      # Playwright bump invalidates it. The install step below stays unconditional on purpose: with
+      # a warm cache it just prints "already installed" and costs a second, and that beats a cache
+      # hit that turns out to be missing the browser and failing the whole job.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # Browser only — `--with-deps` also apt-installs system libs, and ubuntu-latest already has
+      # what headless chromium needs.
+      - run: pnpm --filter @folio/web exec playwright install chromium
+
+      # No step writes .dev.vars here on purpose. The suite runs with CLOUDFLARE_ENV=test (see
+      # playwright.config.ts), and when .dev.vars.<env> exists the Cloudflare plugin loads *only*
+      # that file — so the committed apps/web/.dev.vars.test is the whole environment, on CI and
+      # locally alike. One place to look, and the values are the same ones a developer runs against.
+      # It replaced a hand-written heredoc whose SECRETS_KEY was not actually valid (24 bytes after
+      # base64-decoding, not 32) — harmless while nothing encrypted anything, and a landmine the
+      # moment a test added an account.
+
+      # Fresh runner → empty local D1. The tests sign up their own users, so the auth tables have
+      # to exist before the first request. This targets wrangler's `test` env, which points at its
+      # own local database (see apps/web/wrangler.jsonc): e2e signs up users and writes snapshots
+      # every run, and none of that belongs in whatever database a developer runs `pnpm dev`
+      # against. On a fresh runner it makes no difference; locally it keeps the two apart.
+      - run: pnpm --filter @folio/web db:migrate:e2e
+
+      # playwright.config.ts serves the built worker via `vite preview` when CI is set, so the build
+      # has to exist first. This is not a nicety: on the first attempt the suite ran against `vite
+      # dev` and took 9.6 minutes, with 13 tests failing purely because on-demand compilation pushed
+      # every ceremony past its timeout. Against the build it's ~30s.
+      #
+      # CLOUDFLARE_ENV here, not just on the preview command: the plugin bakes the selected
+      # .dev.vars.<env> into dist/server/.dev.vars at *build* time (generateBundle), and that baked
+      # file is what preview reads. Build without it and preview comes up with no secrets at all.
+      - run: CLOUDFLARE_ENV=test pnpm --filter @folio/web build
+
+      - run: pnpm --filter @folio/web test:e2e
+
+      # A test that fails then passes on retry is reported as green, with one line of `1 flaky` in a
+      # summary nobody opens — so "this test isn't stable" quietly disappears. It happened twice
+      # while building this suite, both times a real race in the tests. Retries stay (they tell you
+      # whether a test fails always or only sometimes, which points at different causes), but a
+      # retried pass still turns the job red so someone has to look. The trace upload below fires on
+      # failure, so the diagnosis is attached either way.
+      - name: Flaky counts as failure
+        if: always()
+        working-directory: apps/web
+        run: |
+          # Explicit ifs, not `[ x ] && exit 0`: the default shell is `bash -e`, so a failing test
+          # in an && list exits the step right there — before the names below get printed.
+          report=playwright-report/results.json
+          if [ ! -f "$report" ]; then exit 0; fi
+          flaky=$(jq -r '.stats.flaky // 0' "$report")
+          if [ "$flaky" -eq 0 ]; then exit 0; fi
+          jq -r '.. | objects | select(.tests? and any(.tests[]?; .status? == "flaky"))
+                 | "::error::flaky: \(.title)"' "$report" || true
+          echo "::error::$flaky test(s) only passed on retry — fix the race, don't re-run."
+          exit 1
+
+      # Traces are retain-on-failure, so this only has content when something broke.
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7

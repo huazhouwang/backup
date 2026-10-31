@@ -1,0 +1,20 @@
+[
+  {
+    "symbol": "SUI",
+    "name": "Sui",
+    "amount": 40,
+    "price": 3.5,
+    "value": 140,
+    "kind": "spot",
+    "tokenRef": "sui/native"
+  },
+  {
+    "symbol": "XSUI",
+    "tokenRef": "sui-wallet/contract:0xSUITESTTOKEN00000000000000000000000000AB",
+    "name": "X Sui Token",
+    "amount": 10,
+    "price": 2,
+    "value": 20,
+    "kind": "spot"
+  }
+]

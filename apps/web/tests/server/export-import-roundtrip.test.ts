@@ -1,0 +1,387 @@
+import { env } from "cloudflare:test";
+import type { ConnectorId } from "@folio/connectors";
+import { Effect } from "effect";
+import { beforeEach, describe, expect, it } from "vitest";
+import { buildPortfolioHistory } from "@/lib/core/history";
+import {
+  accountRecord,
+  manualActivityRecord,
+  metaRecord,
+  ndjsonLine,
+  snapshotRecord,
+  tokenRecord,
+} from "@/lib/server/io/export";
+import { createImporter, type ImportDeps, parseImportLine } from "@/lib/server/io/import";
+import { dbFor } from "./db-effect";
+
+// #204 的核心验收:**导出的文件能单独导进一个空库,总资产与历史曲线跟原库一致**。
+// 走真 wire 路径:导出 → ndjsonLine 串成文本 → parseImportLine 解回 → 单遍导入到一个全新用户。
+// 真 D1(Miniflare)。不隔离每测存储 → beforeEach 重置两个用户。
+
+const SRC = "user-export-src";
+const DST = "user-import-dst";
+
+async function resetUser(userId: string): Promise<void> {
+  await env.DB.prepare("DELETE FROM user WHERE id = ?").bind(userId).run();
+  const now = Date.now();
+  await env.DB.prepare(
+    "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+  )
+    .bind(userId, userId, `${userId}@example.com`, 0, now, now)
+    .run();
+}
+
+beforeEach(async () => {
+  await resetUser(SRC);
+  await resetUser(DST);
+});
+
+// 复刻 route 的导出流(#204):meta → token → account → snapshot → activity。
+async function exportRecords(userId: string): Promise<unknown[]> {
+  const recs: unknown[] = [metaRecord(1_700_000_000_000)];
+  for (const t of await dbFor(userId).transfer.listTokensForExport()) recs.push(tokenRecord(t));
+  for (const a of await dbFor(userId).accounts.list()) {
+    const raw = await dbFor(userId).accounts.getRawCreds(a.id);
+    recs.push(accountRecord(a, raw ? JSON.parse(raw) : {}));
+  }
+  const page = await dbFor(userId).snapshots.listPage(1000, 0);
+  const bals = await dbFor(userId).snapshots.balancesFor(page.map((s) => s.id));
+  const bySnap = new Map<string, typeof bals>();
+  for (const b of bals) {
+    const arr = bySnap.get(b.snapshotId);
+    if (arr) arr.push(b);
+    else bySnap.set(b.snapshotId, [b]);
+  }
+  for (const s of page) recs.push(snapshotRecord(s, bySnap.get(s.id) ?? []));
+  for (const a of await dbFor(userId).manual.listAllActivity()) recs.push(manualActivityRecord(a));
+  return recs;
+}
+
+// route 的导入 deps,绑到 DST 用户。全走 import*(按内容自然键 find-or-create,幂等/可合并)。
+const dstDeps: ImportDeps = {
+  categorize: (connectorId) =>
+    connectorId === "evm"
+      ? { publicKeys: ["address"], semiKeys: [], secretKeys: [] }
+      : { publicKeys: [], semiKeys: [], secretKeys: [] },
+  // deps 现在收 Effect(#394 T7),而夹具手上只有门面那套 Promise —— `Effect.promise` 包一层即可:
+  // 这里是**测试的边缘**,不是生产路径上的中途转换。
+  importToken: (t, refs) =>
+    Effect.promise(async () => ({ id: await dbFor(DST).transfer.importToken(t, refs) })),
+  importAccount: (input) =>
+    Effect.promise(() =>
+      dbFor(DST).transfer.importAccount({
+        ...input,
+        connectorId: input.connectorId as ConnectorId,
+      }),
+    ),
+  importSnapshot: (accountId, input) =>
+    Effect.promise(async () => {
+      await dbFor(DST).transfer.importSnapshot(accountId, input);
+    }),
+  importManualActivity: (accountId, tokenId, input) =>
+    Effect.promise(async () => {
+      await dbFor(DST).transfer.importManualActivity(accountId, tokenId, input);
+    }),
+};
+
+async function importInto(records: unknown[]): Promise<void> {
+  const text = records.map(ndjsonLine).join("");
+  const imp = createImporter(dstDeps);
+  for (const line of text.split("\n")) {
+    const rec = parseImportLine(line);
+    if (rec) await Effect.runPromise(imp.apply(rec));
+  }
+}
+
+// —— 造源库数据 ——
+async function seedSource() {
+  const accW = await dbFor(SRC).accounts.create({
+    connectorId: "evm",
+    platform: "evm:1",
+    label: "Wallet",
+    creds: JSON.stringify({ address: "0xabc" }),
+  });
+  const accM = await dbFor(SRC).accounts.create({
+    connectorId: "manual",
+    platform: "manual",
+    label: "Manual",
+    creds: JSON.stringify({}),
+  });
+  // 一个归档账户(无快照):验证归档态随导出/导入保真,不会变回活跃(#204 review 发现)。
+  const accArch = await dbFor(SRC).accounts.create({
+    connectorId: "evm",
+    platform: "evm:1",
+    label: "Archived",
+    creds: JSON.stringify({ address: "0xarch" }),
+  });
+  await dbFor(SRC).accounts.setArchived(accArch.id, true);
+  const btc = await dbFor(SRC).transfer.importToken(
+    { symbol: "BTC", name: "Bitcoin", logo: "b.png", providerLogo: null, marketCapRank: 1 },
+    [{ namer: "coingecko", localName: "issued:bitcoin" }],
+  );
+  const eth = await dbFor(SRC).transfer.importToken({ symbol: "ETH", name: "Ethereum" }, [
+    { namer: "coingecko", localName: "issued:ethereum" },
+    { namer: "evm:1", localName: "contract:0xeee" },
+  ]);
+  const my = await dbFor(SRC).transfer.importToken({ symbol: "MYCOIN", name: "My Coin" }, [
+    { namer: "manual", localName: "custom:MYCOIN" },
+  ]);
+  // evm 账户两份快照(历史曲线两点)。
+  await dbFor(SRC).snapshots.write(accW.id, {
+    takenAt: 1000,
+    totalUsd: 100,
+    balances: [
+      { tokenId: btc, amount: 0.001, usdValue: 60, kind: "spot", platform: "evm:1" },
+      { tokenId: eth, amount: 0.02, usdValue: 40, kind: "spot", platform: "evm:1" },
+    ],
+  });
+  await dbFor(SRC).snapshots.write(accW.id, {
+    takenAt: 2000,
+    totalUsd: 150,
+    // 账户级 note(整钱包)
+    note: [{ title: "Wallet note", content: "hi" }],
+    balances: [
+      {
+        tokenId: btc,
+        amount: 0.001,
+        usdValue: 90,
+        kind: "spot",
+        platform: "evm:1",
+        selfPrice: 90000, // 估值原料
+        meta: { foo: "bar" }, // typed meta(perp coin 也走这条)
+        note: { title: "Locked", content: "x" }, // balance 级 note
+      },
+      { tokenId: eth, amount: 0.02, usdValue: 60, kind: "spot", platform: "evm:1" },
+    ],
+  });
+  // manual 账户不写快照(ADR 0018),只有账本。
+  await dbFor(SRC).manual.recordActivity(accM.id, my, {
+    kind: "add",
+    amount: 10,
+    price: 5,
+    occurredAt: 500,
+    createdAt: 100,
+  });
+  return { btc, eth, my };
+}
+
+const normTokens = (
+  ts: { symbol: string; name: string; refs: { namer: string; localName: string }[] }[],
+) =>
+  ts
+    .map((t) => ({
+      symbol: t.symbol,
+      name: t.name,
+      refs: t.refs.map((r) => `${r.namer}/${r.localName}`).sort(),
+    }))
+    .sort((a, b) => a.symbol.localeCompare(b.symbol));
+
+// 把一份导出记录归一成可比较的形状:去掉 exportedAt,把所有 id(token/account)换成内容键
+// (导入侧 id 全新,直接比会不等)。用来验「导入后再导出 ≡ 原导出」这个不动点。
+type Rec = Record<string, unknown>;
+function normalizeExport(records: unknown[]): Rec[] {
+  const recs = records as Rec[];
+  const key = new Map<string, string>();
+  for (const r of recs) {
+    if (r.type === "token") key.set(`t:${r.id}`, `token:${String(r.symbol)}`);
+    else if (r.type === "account") key.set(`a:${r.id}`, `acct:${String(r.label)}`);
+  }
+  const t = (id: unknown) => key.get(`t:${String(id)}`);
+  const a = (id: unknown) => key.get(`a:${String(id)}`);
+  return recs
+    .map((r): Rec => {
+      if (r.type === "meta") {
+        const { exportedAt, ...rest } = r;
+        return rest;
+      }
+      if (r.type === "token") return { ...r, id: t(r.id) };
+      if (r.type === "account")
+        // archivedAt 的精确时间戳有意不保真(导入用 now 重归档);只比归档**状态**。
+        return { ...r, id: a(r.id), archivedAt: r.archivedAt === undefined ? undefined : true };
+      if (r.type === "snapshot")
+        return {
+          ...r,
+          accountId: a(r.accountId),
+          balances: (r.balances as Rec[]).map((b) => ({ ...b, tokenId: t(b.tokenId) })),
+        };
+      if (r.type === "manualActivity")
+        return { ...r, accountId: a(r.accountId), tokenId: t(r.tokenId) };
+      return r;
+    })
+    .sort((x, y) => JSON.stringify(x).localeCompare(JSON.stringify(y)));
+}
+
+describe("export → import v3 往返(空库重建)", () => {
+  // 逐 Token 比 ref 集合 —— 多链归一(ETH 的 coingecko + evm:1 两条 ref 仍挂同一个 Token)也在这里钉住。
+  it("Token(含 ref)完整复现,id 是新的、不跟源库撞", async () => {
+    await seedSource();
+    await importInto(await exportRecords(SRC));
+
+    const src = await dbFor(SRC).transfer.listTokensForExport();
+    const dst = await dbFor(DST).transfer.listTokensForExport();
+    expect(normTokens(dst)).toEqual(normTokens(src));
+    // id 重映射:两边 id 集合无交集。
+    const srcIds = new Set(src.map((t) => t.id));
+    expect(dst.every((t) => !srcIds.has(t.id))).toBe(true);
+  });
+
+  it("账户 + creds(public)复现", async () => {
+    await seedSource();
+    await importInto(await exportRecords(SRC));
+
+    const dstAccts = await dbFor(DST).accounts.list();
+    expect(
+      dstAccts
+        .map((a) => ({ connectorId: a.connectorId, label: a.label, platform: a.platform }))
+        .sort((x, y) => x.label.localeCompare(y.label)),
+    ).toEqual([
+      { connectorId: "evm", label: "Archived", platform: "evm:1" },
+      { connectorId: "manual", label: "Manual", platform: "manual" },
+      { connectorId: "evm", label: "Wallet", platform: "evm:1" },
+    ]);
+    const wallet = dstAccts.find((a) => a.label === "Wallet")!;
+    expect(JSON.parse((await dbFor(DST).accounts.getRawCreds(wallet.id))!)).toEqual({
+      address: "0xabc",
+    });
+    // 归档态保真:归档账户导入后仍归档,活跃账户仍活跃(#204 review 修复)。
+    expect(dstAccts.find((a) => a.label === "Archived")!.archivedAt).toBeGreaterThan(0);
+    expect(wallet.archivedAt).toBeNull();
+  });
+
+  it("估值原料 / meta / balance note / 账户级 note 端到端保真", async () => {
+    await seedSource();
+    await importInto(await exportRecords(SRC));
+
+    const dstTokens = await dbFor(DST).transfer.listTokensForExport();
+    const btcId = dstTokens.find((t) => t.symbol === "BTC")!.id;
+    const latest = (await dbFor(DST).snapshots.latest())[0]!;
+    expect(latest.note).toEqual([{ title: "Wallet note", content: "hi" }]); // 账户级 note
+    const btcBal = latest.balances.find((b) => b.tokenId === btcId)!;
+    expect(btcBal.selfPrice).toBe(90000);
+    expect(JSON.parse(btcBal.metaJson ?? "{}")).toEqual({ foo: "bar" });
+    expect(btcBal.note).toEqual({ title: "Locked", content: "x" });
+  });
+
+  it("历史曲线逐点一致(总资产同源)", async () => {
+    await seedSource();
+    await importInto(await exportRecords(SRC));
+
+    const srcHist = buildPortfolioHistory(await dbFor(SRC).snapshots.listTotals());
+    const dstHist = buildPortfolioHistory(await dbFor(DST).snapshots.listTotals());
+    expect(dstHist).toEqual(srcHist);
+    // 冻结总资产(各账户最新快照之和)一致。
+    const total = (snaps: { snapshot: { totalUsd: number } }[]) =>
+      snaps.reduce((s, x) => s + x.snapshot.totalUsd, 0);
+    expect(total(await dbFor(DST).snapshots.latest())).toBe(
+      total(await dbFor(SRC).snapshots.latest()),
+    );
+  });
+
+  it("快照余额的 token_id 重映射到 DST 的 Token,金额/价值不变", async () => {
+    await seedSource();
+    await importInto(await exportRecords(SRC));
+
+    const dstTokens = await dbFor(DST).transfer.listTokensForExport();
+    const symById = new Map(dstTokens.map((t) => [t.id, t.symbol]));
+    const latest = await dbFor(DST).snapshots.latest();
+    expect(latest).toHaveLength(1); // 只有 evm 账户有快照
+    const bals = latest[0]!.balances;
+    expect(bals).toHaveLength(2);
+    // 每条余额的 token_id 都指向 DST 的 Token(不是源库 id)。
+    const bySym = new Map(bals.map((b) => [symById.get(b.tokenId ?? ""), b]));
+    expect(bySym.get("BTC")?.usdValue).toBe(90);
+    expect(bySym.get("ETH")?.usdValue).toBe(60);
+    expect(bySym.get("BTC")?.amount).toBe(0.001);
+  });
+
+  it("手记账本复现(kind/amount/price/occurredAt/createdAt 保留),挂到 DST 的 MYCOIN", async () => {
+    await seedSource();
+    await importInto(await exportRecords(SRC));
+
+    const dstAct = await dbFor(DST).manual.listAllActivity();
+    expect(dstAct).toHaveLength(1);
+    expect(dstAct[0]).toMatchObject({
+      kind: "add",
+      amount: 10,
+      price: 5,
+      occurredAt: 500,
+      createdAt: 100,
+    });
+    // tokenId 指向 DST 的 MYCOIN。
+    const dstTokens = await dbFor(DST).transfer.listTokensForExport();
+    const mycoin = dstTokens.find((t) => t.symbol === "MYCOIN")!;
+    expect(dstAct[0]!.tokenId).toBe(mycoin.id);
+  });
+
+  it("导入后再导出 ≡ 原导出(格式是不动点:归一掉 id/时间戳后逐条相等)", async () => {
+    await seedSource();
+    const srcExport = await exportRecords(SRC);
+    await importInto(srcExport);
+    const dstExport = await exportRecords(DST);
+    expect(normalizeExport(dstExport)).toEqual(normalizeExport(srcExport));
+  });
+
+  it("幂等:同一文件导 3 次,库内数据不翻倍;且再导出 ≡ 原导出(A 方案不动点)", async () => {
+    await seedSource();
+    const file = await exportRecords(SRC);
+    const srcNorm = normalizeExport(file);
+
+    for (let i = 0; i < 3; i++) await importInto(file); // 反复导入同一文件
+
+    // 各类实体计数不随导入次数增长(按内容自然键去重)。
+    expect(await dbFor(DST).accounts.list()).toHaveLength(3);
+    expect(await dbFor(DST).transfer.listTokensForExport()).toHaveLength(3);
+    expect(await dbFor(DST).manual.listAllActivity()).toHaveLength(1);
+    const snapCount = (await dbFor(DST).snapshots.listPage(1000, 0)).length;
+    expect(snapCount).toBe(2); // evm 账户两份快照,不重复
+    // 手记不折叠翻倍:数量还是 10(不是 30)。
+    expect((await dbFor(DST).manual.listAllActivity())[0]!.amount).toBe(10);
+
+    // 反复导入后再导出,归一后仍逐条等于原导出。
+    expect(normalizeExport(await exportRecords(DST))).toEqual(srcNorm);
+  });
+
+  it("合并:两份不同来源的文件能并进同一库,各自数据都在", async () => {
+    await seedSource();
+    const fileA = await exportRecords(SRC);
+
+    // 造第二份来源:一个新账户 + 新币 + 一笔账本,导出成 fileB。
+    const OTHER = "user-export-other";
+    await resetUser(OTHER);
+    const accB = await dbFor(OTHER).accounts.create({
+      connectorId: "manual",
+      platform: "manual",
+      label: "OtherManual",
+      creds: JSON.stringify({}),
+    });
+    const solId = await dbFor(OTHER).transfer.importToken({ symbol: "SOL", name: "Solana" }, [
+      { namer: "coingecko", localName: "issued:solana" },
+    ]);
+    await dbFor(OTHER).manual.recordActivity(accB.id, solId, {
+      kind: "add",
+      amount: 7,
+      occurredAt: 900,
+      createdAt: 200,
+    });
+    const fileB = await (async () => {
+      const recs: unknown[] = [metaRecord(1_700_000_000_000)];
+      for (const t of await dbFor(OTHER).transfer.listTokensForExport()) recs.push(tokenRecord(t));
+      for (const a of await dbFor(OTHER).accounts.list()) {
+        const raw = await dbFor(OTHER).accounts.getRawCreds(a.id);
+        recs.push(accountRecord(a, raw ? JSON.parse(raw) : {}));
+      }
+      for (const a of await dbFor(OTHER).manual.listAllActivity())
+        recs.push(manualActivityRecord(a));
+      return recs;
+    })();
+
+    await importInto(fileA);
+    await importInto(fileB);
+
+    // A(3 账户)+ B(1 账户)= 4;币 3 + 1 = 4;账本 1 + 1 = 2。
+    expect(await dbFor(DST).accounts.list()).toHaveLength(4);
+    const dstTokens = await dbFor(DST).transfer.listTokensForExport();
+    expect(dstTokens.map((t) => t.symbol).sort()).toEqual(["BTC", "ETH", "MYCOIN", "SOL"]);
+    expect(await dbFor(DST).manual.listAllActivity()).toHaveLength(2);
+  });
+});

@@ -1,0 +1,39 @@
+[
+  {
+    "symbol": "BTC",
+    "tokenRef": "okx/issued:BTC",
+    "amount": 0.5,
+    "price": 60000,
+    "value": 30000,
+    "kind": "spot"
+  },
+  {
+    "symbol": "USDT",
+    "tokenRef": "okx/issued:USDT",
+    "amount": 1000,
+    "price": 1,
+    "value": 1000,
+    "kind": "spot"
+  },
+  {
+    "symbol": "ETH",
+    "tokenRef": "okx/issued:ETH",
+    "amount": 2,
+    "price": 3000,
+    "value": 6000,
+    "kind": "spot",
+    "note": {
+      "title": "Frozen",
+      "icon": "warning",
+      "content": "0.5 ETH · 25%"
+    }
+  },
+  {
+    "symbol": "OKSOL",
+    "tokenRef": "okx/issued:OKSOL",
+    "amount": 10,
+    "price": 70,
+    "value": 700,
+    "kind": "spot"
+  }
+]

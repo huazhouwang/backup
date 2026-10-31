@@ -1,0 +1,161 @@
+import { env } from "cloudflare:test";
+import type { SnapshotWithBalances } from "@folio/db";
+import { beforeEach, describe, expect, it } from "vitest";
+import { dbFor } from "./db-effect";
+import { createManualAccount, injectManualSnapshots, manualBalancesForWarm } from "./manual-fns";
+import { ticketOf } from "./ticket";
+
+// T2(ADR 0018)服务端集成:manual 退出 snapshot、当下值由 creds 现造。真实 D1(Miniflare)。
+// 不隔离每测存储 → beforeEach 重置。
+const USER = "user-manual-t2";
+
+async function resetUser(): Promise<void> {
+  await env.DB.prepare("DELETE FROM user WHERE id = ?").bind(USER).run();
+  const now = Date.now();
+  await env.DB.prepare(
+    "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+  )
+    .bind(USER, USER, `${USER}@example.com`, 0, now, now)
+    .run();
+}
+
+beforeEach(resetUser);
+
+// 合成余额不再带 symbol / tokenRef(#243:都住 Token 那一行)。「这条余额认成了哪个上游币」
+// 改由它的 token_id 反查 token_refs 的 coingecko 那一档 —— 选了币 → `issued:<coinId>`,没选 → null。
+async function coingeckoRefOf(tokenId: string | null | undefined): Promise<string | null> {
+  if (!tokenId) return null;
+  const row = await env.DB.prepare(
+    "SELECT local_name AS n FROM token_refs WHERE user_id = ? AND namer = 'coingecko' AND token_id = ?",
+  )
+    .bind(USER, tokenId)
+    .first<{ n: string }>();
+  return row?.n ?? null;
+}
+
+describe("injectManualSnapshots (D1 round-trip)", () => {
+  it("为 manual 账户注入合成当下项(cache 冷 → 回退 unitPrice)", async () => {
+    const account = await createManualAccount(
+      USER,
+      "My BTC",
+      JSON.stringify([
+        { symbol: "BTC", unitPrice: "64000", ticket: ticketOf("bitcoin"), amount: "0.5" },
+      ]),
+    );
+    const accounts = await dbFor(USER).accounts.list();
+    const byAccount = new Map<string, SnapshotWithBalances>();
+    await injectManualSnapshots(USER, accounts, byAccount, 1_700_000_000_000);
+
+    const synth = byAccount.get(account.id);
+    expect(synth).toBeDefined();
+    expect(synth?.balances.map((b) => b.amount)).toEqual([0.5]);
+    // 测试环境 token 缓存空 → enrich 无价 → 回退 amount × unitPrice = 0.5 × 64000。
+    expect(synth?.snapshot.totalUsd).toBe(32000);
+    expect(synth?.balances[0].selfPrice).toBeNull();
+    // 选了 bitcoin → 该行的 token 认成 coingecko 的 bitcoin(身份住 Token,#243)。
+    expect(await coingeckoRefOf(synth?.balances[0].tokenId)).toBe("issued:bitcoin");
+  });
+
+  // 给已 mint 的 per-user token(coingecko ref = `issued:<coinId>`)灌一个市价 —— 模拟同步的
+  // 队列 `prices` 活 / 手动同步收尾刷过价之后、缓存里有价的状态。新参考层价 facet 就在
+  // 该用户 `tokens` 行上(#199),读路径 enrich 从这里取(cache-only,零网络)。
+  async function warmUserPrice(coinId: string, unitPrice: number): Promise<void> {
+    const row = await env.DB.prepare(
+      "SELECT token_id FROM token_refs WHERE user_id = ? AND namer = 'coingecko' AND local_name = ?",
+    )
+      .bind(USER, `issued:${coinId}`)
+      .first<{ token_id: string }>();
+    if (!row) throw new Error(`no minted token for coingecko/issued:${coinId}`);
+    await env.DB.prepare(
+      "UPDATE tokens SET unit_price = ?, price_as_of = ?, price_expires_at = ? WHERE user_id = ? AND id = ?",
+    )
+      .bind(unitPrice, 1, 4_000_000_000_000, USER, row.token_id)
+      .run();
+  }
+
+  // **#223 / #227:手敲的 symbol 不许拿别人的价。**
+  // 没选币的手记币其 token 行 `ref` 为空、从不链 CGK —— enrich 按 token_id 只看它自己那行,
+  // 结构上就够不到任何真币的价(哪怕同用户库里另有一个有市价的真 USDC)。故自填价恒赢。
+  it("没选币 → 用他填的单价,哪怕库里另有个有市价的真 USDC", async () => {
+    // 同用户库里先摆一个真 USDC(选了币 + 有市价)——证明隔离靠的是 token_id,不是没币可拿。
+    await createManualAccount(
+      USER,
+      "Picked USDC",
+      JSON.stringify([
+        { symbol: "USDC", unitPrice: "1", amount: "1", ticket: ticketOf("usd-coin") },
+      ]),
+    );
+    await warmUserPrice("usd-coin", 1);
+    const account = await createManualAccount(
+      USER,
+      "My USDC",
+      JSON.stringify([{ symbol: "USDC", unitPrice: "777", amount: "10" }]),
+    );
+    const accounts = await dbFor(USER).accounts.list();
+    const byAccount = new Map<string, SnapshotWithBalances>();
+    await injectManualSnapshots(USER, accounts, byAccount, 1_700_000_000_000);
+
+    const synth = byAccount.get(account.id);
+    // 没选币 → token 没有 coingecko 那一档(它自己命名 manual/custom:USDC),故够不到真 USDC 的价。
+    expect(await coingeckoRefOf(synth?.balances[0].tokenId)).toBeNull();
+    expect(synth?.snapshot.totalUsd).toBe(7770); // 10 × 777,不是 10 × 1
+  });
+
+  // 对照:选了币、缓存里有价就该拿市价 —— 否则上面那条用「一律不问价」也能绿,等于没测。
+  it("选了币 + 缓存有价 → 拿市价,不是他填的单价", async () => {
+    const account = await createManualAccount(
+      USER,
+      "Picked USDC",
+      JSON.stringify([
+        { symbol: "USDC", unitPrice: "777", amount: "10", ticket: ticketOf("usd-coin") },
+      ]),
+    );
+    await warmUserPrice("usd-coin", 1); // mint 之后灌价(新层价 facet 在 per-user token 行上)
+    const accounts = await dbFor(USER).accounts.list();
+    const byAccount = new Map<string, SnapshotWithBalances>();
+    await injectManualSnapshots(USER, accounts, byAccount, 1_700_000_000_000);
+
+    const synth = byAccount.get(account.id);
+    expect(await coingeckoRefOf(synth?.balances[0].tokenId)).toBe("issued:usd-coin");
+    expect(synth?.snapshot.totalUsd).toBe(10); // 10 × 1
+  });
+
+  it("非 manual 账户不注入", async () => {
+    const btc = await dbFor(USER).accounts.create({
+      connectorId: "bitcoin",
+      label: "BTC wallet",
+      creds: null,
+    });
+    const accounts = await dbFor(USER).accounts.list();
+    const byAccount = new Map<string, SnapshotWithBalances>();
+    await injectManualSnapshots(USER, accounts, byAccount);
+    expect(byAccount.has(btc.id)).toBe(false);
+  });
+});
+
+// 刷价用的合成余额收集器(`prices/job.ts` 的 heldTokenIdsOf,与 injector enrich 门同源)。
+describe("manualBalancesForWarm", () => {
+  it("返回活跃 manual 账户的合成余额,排除归档", async () => {
+    await createManualAccount(
+      USER,
+      "Active",
+      JSON.stringify([
+        { symbol: "BTC", unitPrice: "60000", ticket: ticketOf("bitcoin"), amount: "1" },
+      ]),
+    );
+    const archived = await createManualAccount(
+      USER,
+      "Archived",
+      JSON.stringify([
+        { symbol: "ETH", unitPrice: "3000", ticket: ticketOf("ethereum"), amount: "2" },
+      ]),
+    );
+    await dbFor(USER).accounts.setArchived(archived.id, true);
+
+    const accounts = await dbFor(USER).accounts.list(); // 含归档
+    const balances = await manualBalancesForWarm(USER, accounts);
+    // 只应含活跃账户的币(BTC),不含归档账户的币(ETH)。身份走 token_id(#243:无 symbol/tokenRef)。
+    expect(balances).toHaveLength(1);
+    expect(await coingeckoRefOf(balances[0].tokenId)).toBe("issued:bitcoin");
+  });
+});

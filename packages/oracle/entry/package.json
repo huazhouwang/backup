@@ -1,0 +1,25 @@
+{
+  "name": "@folio/oracle",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@folio/client-core": "workspace:*",
+    "@folio/db": "workspace:*",
+    "@folio/oracle-basic": "workspace:*",
+    "@folio/oracle-ref": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

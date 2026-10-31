@@ -1,0 +1,230 @@
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  createFileRoute,
+  isRedirect,
+  Outlet,
+  redirect,
+  retainSearchParams,
+  useNavigate,
+} from "@tanstack/react-router";
+import { type ReactNode, useEffect, useState } from "react";
+import { useTranslations } from "use-intl";
+import { z } from "zod";
+import { AppShell, AppShellSkeleton } from "@/components/app-shell";
+import { LockScreen } from "@/components/lock-screen";
+import { PortfolioSelector } from "@/components/portfolio-selector";
+import { BalancePrivacyProvider } from "@/lib/hooks/use-balance-privacy";
+import { readLockFlag } from "@/lib/hooks/use-idle-lock";
+import { PortfolioProvider, pickSelectedPortfolio, usePortfolio } from "@/lib/hooks/use-portfolio";
+import {
+  CurrencyProvider,
+  readStoredCurrency,
+  useStoredCurrency,
+} from "@/lib/hooks/use-prefer-currency";
+import { RETRY, withRetry } from "@/lib/queries/constants";
+import { watchDataVersion } from "@/lib/queries/data-version";
+import { dataVersionKeys } from "@/lib/queries/keys";
+import { forgetQueryCache, queryPersistence } from "@/lib/queries/persist";
+import { portfolioListQuery } from "@/lib/queries/portfolio";
+import { currencyPreferenceQuery } from "@/lib/queries/preferences";
+import { dataVersionQuery, valuationSettingsQuery } from "@/lib/queries/settings";
+import { prefetchSyncStatusAtoms, useSyncStatus } from "@/lib/queries/sync";
+import { getSession } from "@/lib/server/session";
+import type { PageKey } from "./_authed/-page-keys";
+import { prefetchPage } from "./_authed/-pages";
+
+// 受保护布局:无 session 则重定向到 /login(仅 UX;数据安全靠各 authedServerFn)。
+// loader 定展示币种 + 汇率(localStorage 里的币种码 + 服务端汇率),并**预取**全局同步状态
+// → CurrencyProvider + AppShell 下发给整个认证区。
+//
+// 同步状态不再由 loader 返回,而是 `ensureQueryData` 预取 + 组件 `useSuspenseQuery` 读(ADR 0038)。
+// loader 里 await 的东西没有 key 可指,只能整页刷;进了缓存才刷得动一个前缀。首屏不变:
+// 预取没 resolve 时路由 pending 照常生效,SSR 把缓存 dehydrate 下去,客户端直接 hydrate。
+export const Route = createFileRoute("/_authed")({
+  // **登录后的整棵树不做服务端渲染**(ADR 0049)。
+  //
+  // 为什么:生产跑 Cloudflare 免费档,一次请求只给 10 毫秒 CPU;而服务端渲这些页面要串行跑
+  // 26 个数据查询,每个都背着约百毫秒的框架杂务,合计约 3 秒 —— 10 毫秒处被掐,整站白屏。
+  // 业务计算本身不到 10ms(实测:总览 1.1ms、24h 盈亏 6.1ms),被掐死的是「在请求里跑它们」
+  // 这件事本身。所以 loader 与组件全部搬进浏览器,服务器只出下面那张零数据的骨架壳。
+  //
+  // **必须是 `false`,不是 `'data-only'`**:后者只是不渲染 HTML,loader 照样在服务端跑,
+  // 那 3 秒 CPU 一毫秒都没省 —— 它解决的是别的问题。
+  //
+  // 这个设置**整树继承**(router-core 的 `parentMatch?.ssr === false` 分支),所以四个子页面
+  // 不必各写一遍;跟着一起下去的还有 `beforeLoad`,也就是下面那次真鉴权只在浏览器里跑了。
+  // 「没登录 → /login」因此也只在浏览器里发生:HTML 文档是构建期产出的静态文件(ADR 0049 补记),
+  // 未登录访客先拿到那张零数据的壳,闪屏盖着,这里判定后客户端跳走。
+  ssr: false,
+  // 客户端接手后 loader 未落地那一段的 Suspense fallback。与静态壳里那张骨架(根上的
+  // `ClientOnly` fallback,见 -root/root-document)是**同一个组件**—— 首帧到数据浮现之间
+  // 观感连续,不闪两种东西。
+  pendingComponent: PendingShell,
+  // 选中的 Portfolio 进 URL(ADR 0046):`?portfolio=<id>`,默认那个不写。声明在**这一层** ——
+  // 作用域是全站的(总额 / 代币 / 曲线 / Insights,ADR 0033),三页共享同一个参数。
+  //
+  // `.catch(undefined)` 与 home / accounts 那两条同款:地址栏里敲坏一个参数(空串、重复参数)
+  // 不该把页面打没,统一收成「没带这个参数」。认不出的 id 由 `pickSelectedPortfolio` 兜回默认。
+  validateSearch: z.object({
+    portfolio: z.string().min(1).optional().catch(undefined),
+  }),
+  // 跨页保留:链接与程序化导航都不必手动带这个参数,**没有地方可以忘**(这正是选查询参数而非
+  // 路径参数的关键理由之一,见 ADR 0046)。它只在「新 search 里没有这个键」时补旧值,并且尊重
+  // 显式写的 `portfolio: undefined` —— 所以「切回默认 → 参数消失」与这条同时成立。
+  search: { middlewares: [retainSearchParams(["portfolio"])] },
+  beforeLoad: async ({ abortController, context }) => {
+    // 这次调用不走查询缓存,所以 QueryClient 上那份重试默认值管不到它 —— 单独包一层同款退避,
+    // 且**不放弃**(理由见 constants 的 withRetry)。signal 一定要接:导航取消 / 预取被丢弃时
+    // 路由会 abort 它,不接的话每次取消都留一条循环在后台打服务器。
+    const current = await withRetry(getSession, isRedirect, RETRY.forever, abortController.signal);
+    if (!current) {
+      // 会话没了(过期 / 别处登出):这台机器上存着的查询缓存也不该再留(FOL-94)。
+      await forgetQueryCache(context.queryClient);
+      throw redirect({ to: "/login" });
+    }
+    // **先把上次的查询缓存恢复进内存,再让 loader 跑**(FOL-94,`lib/queries/persist.ts`):loader 里的
+    // `ensureQueryData` 命中恢复出来的数据就不发请求 —— 重开页面只剩版本号那一发。同一个用户第二次
+    // 走到这里是 no-op。锁着的时候不恢复、也不开写(锁屏期间的导航同样走到这里,review #14)。
+    await queryPersistence().start(context.queryClient, current.user.id, {
+      locked: readLockFlag(),
+    });
+    // 缓存里没有版本号(头一回打开 / 锁着重开过)时,**赶在 loader 的数据请求之前**先把它问出去
+    // (review #24):版本号的监视器会把第一次读到的号当基准、不失效 —— 这只在「那个号不晚于数据」
+    // 时才对。先发它,数据就是在这个号或更新的号上读到的;中间有人写了,下一次问号时号变了,照常失效。
+    if (!context.queryClient.getQueryData(dataVersionKeys.all)) {
+      void context.queryClient.prefetchQuery(dataVersionQuery());
+    }
+    return { user: current.user };
+  },
+  // **这里故意不声明 `loaderDeps`**(与 home / insights 相反),尽管 loader 读了地址里的组合参数:
+  // 声明了的话 match id 会跟着参数变 → 每次切组合都是一个**新 match** → `beforeLoad` 跟着重跑,
+  // 也就是每切一下组合多一次 `getSession()` 往返。而这个 loader 读那个参数只为了「首次进入时预取对的
+  // 那份摘要」——切组合那条路径上,页头的摘要由 `ShellWithSync` 自己的 `useSuspenseQuery` 取,
+  // 不需要 loader 再跑一次。
+  loader: async ({ context, location, cause }) => {
+    // 隐私开关(FOL-75/ADR 0052)跟展示币种一样是**整树都要读**的偏好 —— 隐私 Provider 挂在这一层,
+    // 底下每处金额都靠它。这里**发出即返回、不 await**:fail-closed 已经兜住「还没读到」那一段,
+    // 不值得让它挡首屏。
+    context.queryClient.ensureQueryData(valuationSettingsQuery());
+    // **同步摘要要先知道是哪个 Portfolio**(ADR 0033),所以这两个不能并发:先拿到 Portfolio 列表
+    // 才认得出地址里那个 id(以及默认那个)。
+    const [, portfolios] = await Promise.all([
+      context.queryClient.ensureQueryData(currencyPreferenceQuery(readStoredCurrency())),
+      context.queryClient.ensureQueryData(portfolioListQuery()),
+    ]);
+    // 按**地址里那个**组合预取(ADR 0046)。以前写死 `defaultId` 恰好是对的 —— 那时选中态总是从默认
+    // 开始;URL 能说别的之后,不改这里会静默慢一拍:硬加载一个非默认地址先取默认那份,组件再各自
+    // 重拉一遍。读的是 `location.search`(原始解析结果,可能是空串/数组),兜底交给这个纯函数。
+    //
+    // 那份 search 在 loader 里**没有类型**(它是原始解析结果,不是某条路由校验过的那份),所以就地
+    // 断言成「可能有这个键」,值合不合法交给纯函数判 —— 它收 `unknown` 正是为了这个调用点。
+    const requested = (location.search as { portfolio?: unknown }).portfolio;
+    const selectedId = pickSelectedPortfolio(
+      requested,
+      portfolios.portfolios,
+      portfolios.defaultId,
+    );
+    const summaryAtoms = prefetchSyncStatusAtoms(context.queryClient, selectedId);
+    // 只有**首次进入**才等。这个 `await` 是替页头那块同步摘要挡首屏挂起的(它没有自己的 suspense
+    // 边界),冷加载时不等它会退成整页挂起。站内往返 / invalidate 触发的重跑(`cause === "stay"`)
+    // 这里不等 —— 但**不是**「旧界面还在、让它自己挂起就好」:外壳挂起会被 Suspense 整个隐掉换成
+    // 骨架壳,页头药丸的换字动画在隐藏中跑坏(新旧名字并排卡住)。切组合那条路上由 `{-$page}` 的
+    // loader 等同一份原料,见那里。
+    if (cause === "enter") await summaryAtoms;
+  },
+  component: AuthedLayout,
+  // 最后一道网:退避重试都用尽了(约半分钟),仍旧失败时接住它 —— 否则落到框架自带的那张
+  // 白底「Something went wrong!」上,没有外壳、没有导航、也不会再试,只能自己刷新。
+  // 这里继续每隔一段重跑整条路由:服务器缓过来的下一轮就自己长回来了。
+  errorComponent: StalledShell,
+});
+
+/** 等了这么久还没数据,就把「连不上」这句话摆出来 —— 短于它的等待是正常首屏,不必解释。 */
+const SAY_STALLED_AFTER = 12_000;
+
+// 等待态的壳。首帧没有那句话,只在浏览器里等超时后才出现 —— 静态壳里那张骨架(构建期渲的)
+// 也就与它的首帧逐像素相同。
+function PendingShell() {
+  const t = useTranslations("Shell");
+  const [stalled, setStalled] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setStalled(true), SAY_STALLED_AFTER);
+    return () => clearTimeout(timer);
+  }, []);
+  return <AppShellSkeleton note={stalled ? t("stalled") : null} />;
+}
+
+// 最后一道网,接的是**渲染异常**:复位它有用,因为下一次渲染是全新的一次尝试。
+// 拉取失败落到这里则是另一回事 —— 那时 match 是 error 态,`reset` 清不掉它(见 constants 的
+// withRetry 注释),所以拉取失败那条路是靠「外壳数据与鉴权一直重试、根本不进 error 态」堵住的,
+// 不是靠这里。
+function StalledShell({ reset }: { reset?: () => void }) {
+  const t = useTranslations("Shell");
+  useEffect(() => {
+    if (!reset) return;
+    const timer = setInterval(reset, RETRY.selfHeal);
+    return () => clearInterval(timer);
+  }, [reset]);
+  return <AppShellSkeleton note={t("stalled")} />;
+}
+
+// 外壳那一层要的同步摘要**必须在 Provider 之内取**:它按选中的 Portfolio 而来,而选中态就住
+// Provider 里。以前在 Provider 外面取(那时摘要是全局的,取哪儿都一样)—— 收口之后不行了,
+// 在外面取到的永远是默认那个,切了组合外壳上的来源数不会动。
+function ShellWithSync({ userName, children }: { userName: string; children: ReactNode }) {
+  const { selectedId } = usePortfolio();
+  const syncStatus = useSyncStatus(selectedId);
+  const queryClient = useQueryClient();
+  // 意图预热(FOL-81):指针按在某个导航项上就先把那页的 chunk + 数据拉起来,点下去更快。严格 lazy
+  // 之下这是唯一的提前量 —— 没按过的页一律不加载。**接在这一层**,因为 `prefetchPage` 牵着
+  // 四个 page 的查询链,而外壳那个文件同时住着必须零依赖的 `AppShellSkeleton`(ADR 0049)。
+  const warm = (page: PageKey) => prefetchPage(page, queryClient, selectedId);
+  // 数据版本号(FOL-94):回到页面 / 可见时每分钟问一次,号变了才失效数据查询。挂在**锁屏之内**
+  // 这一层 —— 锁着的时候不问(页面都卸了,没有要刷的东西)。
+  useEffect(() => watchDataVersion(queryClient, dataVersionQuery()), [queryClient]);
+  return (
+    <AppShell
+      userName={userName}
+      syncStatus={syncStatus}
+      selector={<PortfolioSelector />}
+      onNavIntent={warm}
+    >
+      {children}
+    </AppShell>
+  );
+}
+
+function AuthedLayout() {
+  const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
+  // 别的标签页登出了(review #3):本页的持久化已经停写、内存已清空(`persist.ts`),会话是整个浏览器
+  // 共用的 cookie、已经没了 —— 直接送回登录页。挂在锁屏**之外**:锁着的标签页也得走。
+  useEffect(
+    () => queryPersistence().onSignedOutElsewhere(() => void navigate({ to: "/login" })),
+    [navigate],
+  );
+  const currencyCode = useStoredCurrency();
+  const { data: preferCurrency } = useSuspenseQuery(currencyPreferenceQuery(currencyCode));
+  const { data: portfolios } = useSuspenseQuery(portfolioListQuery());
+  // 隐私开关的权威值喂给 Provider(ADR 0052)。**非 suspense**:loader 只 fire-and-forget 预取它,
+  // 没读到时 `undefined` 让 Provider 走 fail-closed,不该为它挂起整个外壳。
+  const { data: settings } = useQuery(valuationSettingsQuery());
+  return (
+    <CurrencyProvider value={preferCurrency}>
+      {/* Portfolio 选中态(ADR 0033):住布局层,三页共享;事实源是 URL 上的 `?portfolio=`(ADR 0046)。 */}
+      <PortfolioProvider portfolios={portfolios.portfolios} defaultId={portfolios.defaultId}>
+        {/* 余额隐私(ADR 0052):顶层持有「遮不遮 / 临时显示」,底下每处金额靠 <Sensitive> 读它。 */}
+        <BalancePrivacyProvider hideBalances={settings?.hideBalances}>
+          {/* 闲置锁屏(ADR 0029)：父包裹整个认证区，锁定时卸载下方 App(DOM 不留内容)、只留锁屏。 */}
+          <LockScreen>
+            {/* 四个 page 由下面那条 `{-$page}` 路由 + PageSwitcher 承载:切 page 只换可见组件、不换路由,
+                去过的页由 <Activity> 保活(FOL-69 / ADR 0053)。旧的「克隆盖板交叉淡入」(TabTransition)已删。 */}
+            <ShellWithSync userName={user.name || user.email || ""}>
+              <Outlet />
+            </ShellWithSync>
+          </LockScreen>
+        </BalancePrivacyProvider>
+      </PortfolioProvider>
+    </CurrencyProvider>
+  );
+}

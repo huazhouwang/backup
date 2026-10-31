@@ -1,0 +1,17 @@
+BETTER_AUTH_SECRET=replace-with-openssl-rand-hex-32
+# https —— 本地 dev / preview 都配了自签名证书(vite.config.ts,为的是 HTTP/2)。这里的 scheme 必须
+# 和实际访问的 origin 逐字一致,否则 passkey 的 expectedOrigin 对不上,每个 ceremony 都失败。
+BETTER_AUTH_URL=https://localhost:3000
+# base64 of 32 random bytes — `openssl rand -base64 32` (AES-GCM key for encrypting credentials)
+SECRETS_KEY=replace-with-openssl-rand-base64-32
+# Zerion API key (OPTIONAL — EVM defaults to Rabby, which needs no key; Zerion is kept as an
+# alternate EVM source). Free dev tier at developers.zerion.io.
+# ZERION_API_KEY=replace-with-zerion-dev-key
+# CoinStats API key (free tier at openapi.coinstats.app) — global key for onchain_solana/sui/cosmos
+COINSTATS_API_KEY=replace-with-coinstats-key
+# CoinGecko API key (OPTIONAL — free tier works keyless; a demo/pro key raises rate limits) — token pricing + FX
+# COINGECKO_API_KEY=replace-with-coingecko-key
+# Logging (P6.7): LOG_LEVEL = trace|debug|info|warning|error|fatal (default info).
+# LOG_PRETTY=true → @logtape/pretty colored output for local dev; unset in prod → JSON Lines for Workers Logs.
+LOG_LEVEL=debug
+LOG_PRETTY=true

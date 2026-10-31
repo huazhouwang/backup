@@ -1,0 +1,19 @@
+{
+  "request": {
+    "addressOrXpub": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+  },
+  "response": {
+    "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+    "balance": "8000000",
+    "unconfirmedBalance": "500000"
+  },
+  "expected": [
+    {
+      "symbol": "BTC",
+      "amount": 0.08,
+      "value": 0,
+      "kind": "spot",
+      "tokenRef": "bitcoin/native"
+    }
+  ]
+}

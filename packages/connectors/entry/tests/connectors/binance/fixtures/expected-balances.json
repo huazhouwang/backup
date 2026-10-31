@@ -1,0 +1,38 @@
+[
+  {
+    "symbol": "BTC",
+    "tokenRef": "binance/issued:BTC",
+    "amount": 0.5,
+    "price": 60000,
+    "value": 30000,
+    "kind": "spot"
+  },
+  {
+    "symbol": "ETH",
+    "tokenRef": "binance/issued:ETH",
+    "amount": 3,
+    "price": 3000,
+    "value": 9000,
+    "kind": "spot",
+    "note": {
+      "title": "Locked",
+      "icon": "warning",
+      "content": "1 ETH · 33%"
+    }
+  },
+  {
+    "symbol": "USDT",
+    "tokenRef": "binance/issued:USDT",
+    "amount": 1000,
+    "price": 1,
+    "value": 1000,
+    "kind": "spot"
+  },
+  {
+    "symbol": "NOPRICE",
+    "tokenRef": "binance/issued:NOPRICE",
+    "amount": 5,
+    "value": 0,
+    "kind": "spot"
+  }
+]
