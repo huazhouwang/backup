@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { heardText } from '../src/voice/transcribe'
+import { heardText, withoutLoops } from '../src/voice/transcribe'
 
 describe('what a recording heard', () => {
   it('drops what Whisper made up from background noise', () => {
@@ -24,5 +24,27 @@ describe('what a recording heard', () => {
     expect(heardText({ text: 'she had 120 ml', segments })).toBe('she had 120 ml')
     expect(heardText({ text: ' 换尿布了 ' })).toBe('换尿布了')
     expect(heardText({ text: '嗨', segments: [{ text: '嗨', avg_logprob: -2 }] })).toBe('')
+  })
+})
+
+describe('a recording Whisper got stuck on', () => {
+  it('loses the loop but keeps what was said, numbers included', () => {
+    expect(
+      heardText({
+        text: '',
+        segments: [
+          {
+            text: '喝了130的奶粉，智智智智智智智智智智智智',
+            no_speech_prob: 0.1,
+            avg_logprob: -0.3,
+            compression_ratio: 3.1,
+          },
+        ],
+      }),
+    ).toBe('喝了130的奶粉，')
+    expect(withoutLoops('哈哈哈哈哈你好 1111 毫升')).toBe('你好 1111 毫升')
+    expect(withoutLoops('宝宝宝宝宝宝宝宝睡了')).toBe('睡了')
+    // Said twice or three times, it stays.
+    expect(withoutLoops('好好好，换尿布了')).toBe('好好好，换尿布了')
   })
 })

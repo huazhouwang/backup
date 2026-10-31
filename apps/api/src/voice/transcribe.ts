@@ -1,8 +1,12 @@
 const MODEL = '@cf/openai/whisper-large-v3-turbo'
 
-/** Words Whisper may not expect, so it spells them as the family does (and in simplified script). */
+/**
+ * Words Whisper may not expect, so it spells them as the family does (and in simplified
+ * script). Words, not a sentence: over noise Whisper writes out a prompt's sentence as if
+ * it were said ("喝了20毫升奶粉" from "宝宝喝了120毫升奶粉").
+ */
 const VOCABULARY: Record<string, string> = {
-  zh: '宝宝喝了120毫升奶粉，母乳亲喂左边10分钟，换尿布，便便，睡着了，醒了，体温，辅食。',
+  zh: '母乳，奶粉，亲喂，瓶喂，毫升，分钟，换尿布，便便，睡着了，醒了，体温，辅食。',
 }
 /** Whisper reads only the last couple of hundred tokens of a prompt; keep it within that. */
 const PROMPT_CHARS = 200
@@ -61,24 +65,29 @@ export function likelyNoise({ no_speech_prob: noSpeech = 0, avg_logprob: logprob
   return (noSpeech > 0.5 && logprob < -0.7) || logprob < -1.2
 }
 
+/**
+ * Without a word or a few run together four times or more ("智智智智智"): Whisper stuck in
+ * a loop, which nobody says. Only the loop goes, as the segment holding it often holds what
+ * was said too (its compression ratio, logged, shows the loop). Digits are left alone.
+ */
+export const withoutLoops = (text: string) => text.replaceAll(/(\p{L}{1,4}?)\1{3,}/gu, '')
+
 /** What a recording's segments say, without the ones that were likely noise. */
 export function heardText(output: Ai_Cf_Openai_Whisper_Large_V3_Turbo_Output) {
   const { segments } = output
-  if (!segments?.length) return output.text.trim()
+  if (!segments?.length) return withoutLoops(output.text).trim()
   const kept = segments.filter((segment) => !likelyNoise(segment))
   // How sure Whisper was, for tuning the above in the Worker's logs: never what was said.
   console.log('Transcription', {
     segments: segments.map((segment) => ({
       noSpeech: Number((segment.no_speech_prob ?? 0).toFixed(2)),
+      compression: Number((segment.compression_ratio ?? 0).toFixed(2)),
       logprob: Number((segment.avg_logprob ?? 0).toFixed(2)),
       seconds: Number(((segment.end ?? 0) - (segment.start ?? 0)).toFixed(1)),
       dropped: !kept.includes(segment),
     })),
   })
-  return kept
-    .map((segment) => segment.text ?? '')
-    .join('')
-    .trim()
+  return withoutLoops(kept.map((segment) => segment.text ?? '').join('')).trim()
 }
 
 /**
