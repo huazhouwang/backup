@@ -1,6 +1,7 @@
 import type { SourceInfo } from '@folio/shared'
 import { Input } from '@folio/ui/components/motion/input'
 
+import { m } from '../../paraglide/messages.js'
 import { formFields } from './schema-form'
 
 export type ConfigValues = Record<string, string>
@@ -32,11 +33,13 @@ export function ConfigForm({
         return (
           <div key={field.name}>
             <Input
-              label={field.required || saved ? field.title : `${field.title} (optional)`}
+              label={
+                field.required || saved ? field.title : m.fieldOptional({ label: field.title })
+              }
               type={field.secret ? 'password' : 'text'}
               autoComplete={field.secret ? 'new-password' : 'off'}
               spellCheck={false}
-              placeholder={saved ? 'Saved — leave empty to keep' : field.placeholder}
+              placeholder={saved ? m.fieldSecretSaved() : field.placeholder}
               value={values[field.name] ?? ''}
               onChange={(value) => onChange({ ...values, [field.name]: value })}
               error={errors[field.name]}

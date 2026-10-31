@@ -2,6 +2,7 @@ import type { PerpPosition } from '@folio/shared'
 
 import { Avatar } from '../../components/Avatar'
 import { formatAmount } from '../../lib/format'
+import { m } from '../../paraglide/messages.js'
 import { ChangeText } from './ChangePill'
 
 /** Perp positions grouped by account, each group with its equity and PnL. */
@@ -19,9 +20,7 @@ export function PerpsList({
     groups.set(perp.connectionId, [...(groups.get(perp.connectionId) ?? []), perp])
   }
   if (!perps.length) {
-    return (
-      <p className="py-10 text-center text-sm text-muted-foreground">No open perp positions.</p>
-    )
+    return <p className="py-10 text-center text-sm text-muted-foreground">{m.perpsNone()}</p>
   }
   return (
     <div className="flex flex-col gap-8">
@@ -34,21 +33,21 @@ export function PerpsList({
           <section key={connectionId}>
             <header className="flex items-center gap-2">
               <Avatar src={account?.icon} label={account?.label ?? '?'} size="sm" />
-              <h3 className="font-medium">{account?.label ?? 'Account'}</h3>
+              <h3 className="font-medium">{account?.label ?? m.accountFallback()}</h3>
             </header>
             <dl className="mt-3 grid grid-cols-3 gap-3 rounded-2xl bg-card p-4 text-xs">
               <div>
-                <dt className="text-muted-foreground">Equity</dt>
+                <dt className="text-muted-foreground">{m.perpsEquity()}</dt>
                 <dd className="mt-1 font-mono tabular">{formatMoney(equity)}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Unrealized PnL</dt>
+                <dt className="text-muted-foreground">{m.perpsUnrealizedPnl()}</dt>
                 <dd className={`mt-1 font-mono tabular ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {formatMoney(pnl, { signed: true })}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Notional</dt>
+                <dt className="text-muted-foreground">{m.perpsNotional()}</dt>
                 <dd className="mt-1 font-mono tabular">{formatMoney(notional)}</dd>
               </div>
             </dl>
@@ -63,16 +62,21 @@ export function PerpsList({
                     }`}
                   >
                     {perp.leverage ? `${perp.leverage}x ` : ''}
-                    {perp.side === 'long' ? 'Long' : 'Short'}
+                    {perp.side === 'long' ? m.perpsLong() : m.perpsShort()}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-mono text-sm tabular">
                       {formatAmount(perp.size)} {perp.symbol}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Entry {formatMoney(perp.entryPrice)} · Mark {formatMoney(perp.markPrice)}
-                      {perp.liquidationPrice !== null &&
-                        ` · Liq. ${formatMoney(perp.liquidationPrice)}`}
+                      {[
+                        m.perpsEntry({ price: formatMoney(perp.entryPrice) }),
+                        m.perpsMark({ price: formatMoney(perp.markPrice) }),
+                        perp.liquidationPrice !== null &&
+                          m.perpsLiquidation({ price: formatMoney(perp.liquidationPrice) }),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -93,9 +97,7 @@ export function PerpsList({
           </section>
         )
       })}
-      <p className="text-xs text-muted-foreground">
-        Net worth counts each account's equity (margin plus unrealized PnL), not the notional size.
-      </p>
+      <p className="text-xs text-muted-foreground">{m.perpsNote()}</p>
     </div>
   )
 }

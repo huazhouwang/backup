@@ -64,6 +64,7 @@ pnpm build         # build the SPA and bundle the Worker (dry run)
 pnpm check         # format:check + lint + typecheck + test (run before pushing)
 pnpm test:e2e      # build, then Playwright against wrangler dev with a stubbed price feed
 pnpm --filter @folio/e2e screenshots   # key screens, desktop + phone, light + dark
+SCREENSHOT_LOCALE=zh-CN pnpm --filter @folio/e2e screenshots   # the same in Chinese
 pnpm --filter @folio/api db:generate   # after changing apps/api/src/db/schema.ts
 pnpm --filter @folio/ui add-beui <name> # add a beUI component (packages/ui/VENDORED.md)
 ```
@@ -82,3 +83,21 @@ pnpm --filter @folio/ui add-beui <name> # add a beUI component (packages/ui/VEND
 One Worker, configured in `wrangler.jsonc` at the repository root, serves the SPA build
 through Workers Static Assets; only `/api/*` runs Worker code. The D1 schema is in
 `apps/api/src/db/schema.ts`, with Drizzle migrations in `apps/api/migrations`.
+
+## Internationalization
+
+The web app ships in English (the base locale) and Simplified Chinese. UI strings live in
+`apps/web/messages/{locale}.json` and are compiled by [Paraglide JS](https://paraglidejs.com)
+into typed functions (`m.someKey()`) in `apps/web/src/paraglide` (generated on install by
+`pnpm codegen` and by the Vite plugin; not committed).
+
+- Never hard-code user-facing text in JSX; `react/jsx-no-literals` enforces this. Text from
+  source plugins (names, field titles, upstream errors) is shown as the plugin gives it.
+- Counts use plural variants (`"1 account"` / `"3 accounts"`); a test checks that every
+  locale has the same keys and parameters.
+- Numbers, money and dates go through `apps/web/src/lib/format.ts` and `lib/time.ts`, which
+  use `Intl` with the active locale.
+- The locale follows the browser's languages until someone picks one (Settings → Display,
+  or the toggle on the sign-in page); the choice is kept per device in `localStorage`.
+- To add a locale, add it to `apps/web/project.inlang/settings.json` and create
+  `messages/<locale>.json`.

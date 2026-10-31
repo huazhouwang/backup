@@ -2,6 +2,7 @@ import type { MeResponse } from '@folio/shared'
 import { queryOptions } from '@tanstack/react-query'
 
 import { ApiError, api } from '../../lib/api'
+import { m } from '../../paraglide/messages.js'
 import { derivePasswordKey, normalizeEmail } from './password'
 
 /** The signed-in user, or null when signed out. */
@@ -41,10 +42,10 @@ export async function signOut() {
 /** Readable messages for the auth error codes Better Auth answers with. */
 export function authErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.code === 'INVALID_EMAIL_OR_PASSWORD') return 'Wrong email or password.'
-    if (error.code.startsWith('USER_ALREADY_EXISTS')) return 'An account with this email exists.'
-    if (error.code === 'INVALID_EMAIL') return 'Enter a valid email address.'
-    if (error.status === 429) return 'Too many attempts. Try again in a minute.'
+    if (error.code === 'INVALID_EMAIL_OR_PASSWORD') return m.authWrongPassword()
+    if (error.code.startsWith('USER_ALREADY_EXISTS')) return m.authEmailTaken()
+    if (error.code === 'INVALID_EMAIL') return m.authInvalidEmail()
+    if (error.status === 429) return m.authTooManyAttempts()
   }
-  return 'Something went wrong. Try again.'
+  return m.errorGeneric()
 }

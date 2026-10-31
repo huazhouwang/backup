@@ -8,6 +8,7 @@ import { type FormEvent, type ReactNode, useState } from 'react'
 
 import { ApiError } from '../../lib/api'
 import { useWide } from '../../lib/use-media'
+import { m } from '../../paraglide/messages.js'
 import { ConfigForm, type ConfigValues, configToSend } from './ConfigForm'
 import { KINDS } from './kinds'
 import { ManualEditor, holdingsToSend } from './ManualEditor'
@@ -97,7 +98,7 @@ function Header({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
+          aria-label={m.dialogBack()}
           className="-ml-1 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
@@ -112,7 +113,7 @@ function Header({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={m.dialogClose()}
           className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <X className="size-4" />
@@ -133,18 +134,14 @@ function Picker({
 }) {
   return (
     <div>
-      <Header
-        title="Add account"
-        subtitle="Pick a source, then fill in its details."
-        onClose={onClose}
-      />
+      <Header title={m.accountsAdd()} subtitle={m.dialogPick()} onClose={onClose} />
       <div className="flex max-h-[60vh] flex-col gap-5 overflow-y-auto">
         {KINDS.map(({ kind, label }) => {
           const group = sources.filter((source) => source.kind === kind)
           if (!group.length) return null
           return (
             <section key={kind}>
-              <h3 className="mb-2 text-xs text-muted-foreground">{label}</h3>
+              <h3 className="mb-2 text-xs text-muted-foreground">{label()}</h3>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {group.map((source) => (
                   <button
@@ -170,9 +167,9 @@ function Picker({
 /** Turns an API error into a message, and a field to attach it to when the API names one. */
 function describeError(error: unknown): { field?: string; message: string } {
   if (error instanceof ApiError) {
-    if (error.code === 'invalid_config') return { message: 'Check the details and try again.' }
+    if (error.code === 'invalid_config') return { message: m.connectionInvalidConfig() }
   }
-  return { message: 'Something went wrong. Try again.' }
+  return { message: m.errorGeneric() }
 }
 
 function useFormState(initialLabel: string) {
@@ -186,7 +183,9 @@ function useFormState(initialLabel: string) {
 async function messageOf(error: unknown, source: SourceInfo): Promise<string> {
   if (error instanceof ApiError && error.detail?.message) {
     const field = formFields(source.configSchema).find((f) => f.name === error.detail?.field)
-    return field ? `${field.title}: ${error.detail.message}` : error.detail.message
+    return field
+      ? m.connectionFieldError({ field: field.title, message: error.detail.message })
+      : error.detail.message
   }
   return describeError(error).message
 }
@@ -230,7 +229,7 @@ function NewForm({
       <Header title={source.label} subtitle={source.description} onBack={onBack} />
       <div className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto p-0.5">
         <Input
-          label="Label (optional)"
+          label={m.fieldOptional({ label: m.connectionLabel() })}
           value={form.label}
           onChange={form.setLabel}
           placeholder={source.label}
@@ -248,7 +247,7 @@ function NewForm({
       )}
       <div className="mt-6 flex justify-end">
         <Button type="submit" disabled={create.isPending}>
-          {create.isPending ? 'Checking…' : 'Add account'}
+          {create.isPending ? m.connectionChecking() : m.accountsAdd()}
         </Button>
       </div>
     </form>
@@ -308,11 +307,11 @@ function EditForm({
       />
       {connection.error && (
         <p className="mb-4 rounded-xl bg-loss-surface px-3 py-2 text-sm text-loss">
-          Last sync failed: {connection.error.message}
+          {m.connectionLastSyncFailed({ message: connection.error.message })}
         </p>
       )}
       <div className="flex max-h-[55vh] flex-col gap-4 overflow-y-auto p-0.5">
-        <Input label="Label" value={form.label} onChange={form.setLabel} />
+        <Input label={m.connectionLabel()} value={form.label} onChange={form.setLabel} />
         {source.kind === 'manual' ? (
           <ManualEditor holdings={holdings} onChange={setHoldings} />
         ) : (
@@ -339,10 +338,10 @@ function EditForm({
               onClick={() => void remove.mutateAsync(connection.id).then(onDone)}
               disabled={remove.isPending}
             >
-              Delete for good
+              {m.connectionDeleteConfirm()}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setConfirmDelete(false)}>
-              Keep
+              {m.connectionKeep()}
             </Button>
           </>
         ) : (
@@ -351,7 +350,7 @@ function EditForm({
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="Delete account"
+              aria-label={m.connectionDelete()}
               onClick={() => setConfirmDelete(true)}
             >
               <Trash2 className="size-4" />
@@ -360,7 +359,7 @@ function EditForm({
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="Sync this account"
+              aria-label={m.connectionSync()}
               onClick={() => {
                 sync.mutate(connection.id)
                 onDone()
@@ -369,7 +368,7 @@ function EditForm({
               <RefreshCw className="size-4" />
             </Button>
             <Button type="submit" className="ml-auto" disabled={update.isPending}>
-              {update.isPending ? 'Saving…' : 'Save'}
+              {update.isPending ? m.saving() : m.save()}
             </Button>
           </>
         )}

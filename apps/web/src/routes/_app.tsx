@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react'
 
 import { Shell } from '../app/Shell'
 import { meQuery, signOut } from '../features/auth/auth'
+import { m } from '../paraglide/messages.js'
 
 /** Pages inside the app shell; signed-out visitors go to sign-in. */
 export const Route = createFileRoute('/_app')({
@@ -45,8 +46,8 @@ function AccountChip() {
       <button
         type="button"
         onClick={() => void leave()}
-        aria-label="Sign out"
-        title="Sign out"
+        aria-label={m.signOut()}
+        title={m.signOut()}
         className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         <LogOut className="size-4" />

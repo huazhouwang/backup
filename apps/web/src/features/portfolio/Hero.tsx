@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { formatPercent } from '../../lib/format'
 import { useWide } from '../../lib/use-media'
+import { m } from '../../paraglide/messages.js'
 import { useMoney } from '../money/queries'
 import { ChangePill } from './ChangePill'
 import { dayHighlights } from './insights'
@@ -17,7 +18,7 @@ export function Hero({ portfolio, chart }: { portfolio: Portfolio; chart?: React
   return (
     <section className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-center">
       <div>
-        <p className="text-xs text-muted-foreground">Total net worth</p>
+        <p className="text-xs text-muted-foreground">{m.heroNetWorth()}</p>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
           <NumberTicker
             value={convert(portfolio.totalUsd)}
@@ -32,17 +33,19 @@ export function Hero({ portfolio, chart }: { portfolio: Portfolio; chart?: React
           />
         </div>
         <dl className="mt-6 grid grid-cols-3 gap-4 text-xs">
-          <Stat label="Top today">
+          <Stat label={m.heroTopToday()}>
             {top
               ? `${top.symbol} ${format(top.changeUsd24h, { signed: true, compact: true })}`
               : '—'}
           </Stat>
-          <Stat label="Worst today">
+          <Stat label={m.heroWorstToday()}>
             {worst
               ? `${worst.symbol} ${format(worst.changeUsd24h, { signed: true, compact: true })}`
               : '—'}
           </Stat>
-          <Stat label="Stablecoins">{stableShare === null ? '—' : formatPercent(stableShare)}</Stat>
+          <Stat label={m.heroStablecoins()}>
+            {stableShare === null ? '—' : formatPercent(stableShare)}
+          </Stat>
         </dl>
       </div>
       {chart}

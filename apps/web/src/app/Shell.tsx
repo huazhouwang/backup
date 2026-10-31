@@ -3,6 +3,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 
 import { Logo } from '../components/Logo'
+import { m } from '../paraglide/messages.js'
 import { NAV } from './nav'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -22,7 +23,7 @@ export function Shell({ children, account }: { children: ReactNode; account?: Re
         <Link to="/" className="px-3">
           <Logo />
         </Link>
-        <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
+        <nav className="mt-8 flex flex-col gap-1" aria-label={m.navMain()}>
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
@@ -31,7 +32,7 @@ export function Shell({ children, account }: { children: ReactNode; account?: Re
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[active]:bg-muted data-[active]:font-medium data-[active]:text-foreground"
             >
               <Icon className="size-4" />
-              {label}
+              {label()}
             </Link>
           ))}
         </nav>
@@ -54,12 +55,12 @@ export function Shell({ children, account }: { children: ReactNode; account?: Re
 
       <nav
         className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 flex justify-center md:hidden"
-        aria-label="Main"
+        aria-label={m.navMain()}
       >
         <Dock size={48}>
           {NAV.map(({ to, label, icon: Icon }) => (
             <DockItem key={to} active={isActive(pathname, to)}>
-              <Link to={to} aria-label={label} className="grid size-full place-items-center">
+              <Link to={to} aria-label={label()} className="grid size-full place-items-center">
                 <Icon className="size-5" />
               </Link>
             </DockItem>

@@ -1,12 +1,14 @@
 import { HISTORY_RANGES, type HistoryRange } from '@folio/shared'
 import { Tabs, TabsList, TabsTrigger } from '@folio/ui/components/motion/tabs'
 
-const LABEL: Record<HistoryRange, string> = {
-  '7d': '7D',
-  '30d': '30D',
-  '90d': '90D',
-  '1y': '1Y',
-  all: 'All',
+import { m } from '../../paraglide/messages.js'
+
+const LABEL: Record<HistoryRange, () => string> = {
+  '7d': m.range7d,
+  '30d': m.range30d,
+  '90d': m.range90d,
+  '1y': m.range1y,
+  all: m.rangeAll,
 }
 
 export function RangeTabs({
@@ -25,7 +27,7 @@ export function RangeTabs({
       <TabsList>
         {HISTORY_RANGES.map((range) => (
           <TabsTrigger key={range} value={range}>
-            {LABEL[range]}
+            {LABEL[range]()}
           </TabsTrigger>
         ))}
       </TabsList>

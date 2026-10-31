@@ -1,5 +1,6 @@
 import { DonutChart } from '@folio/ui/components/charts/donut-chart'
 
+import { m } from '../../paraglide/messages.js'
 import { useMoney } from '../money/queries'
 import { type Slice, topSlices } from './allocation'
 
@@ -27,7 +28,7 @@ export function AllocationCard({ title, slices }: { title: string; slices: Slice
           formatValue={(value) => format(value / convert(1), { compact: true })}
         />
       ) : (
-        <p className="py-8 text-center text-sm text-muted-foreground">Nothing priced yet.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{m.allocationEmpty()}</p>
       )}
     </section>
   )

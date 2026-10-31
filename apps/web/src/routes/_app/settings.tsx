@@ -19,24 +19,32 @@ import { meQuery, signOut } from '../../features/auth/auth'
 import { useMoney } from '../../features/money/queries'
 import { useSaveSettings } from '../../features/money/use-save-settings'
 import { api } from '../../lib/api'
+import { getLocale, localeName, locales, setLocale } from '../../lib/i18n'
 import { type ThemePreference, useTheme } from '../../lib/theme'
+import { m } from '../../paraglide/messages.js'
 
 export const Route = createFileRoute('/_app/settings')({ component: SettingsPage })
 
-const CURRENCY_NAMES: Record<DisplayCurrency, string> = {
-  USD: 'US dollar',
-  EUR: 'Euro',
-  GBP: 'British pound',
-  JPY: 'Japanese yen',
-  CNY: 'Chinese yuan',
-  HKD: 'Hong Kong dollar',
-  SGD: 'Singapore dollar',
-  KRW: 'South Korean won',
-  AUD: 'Australian dollar',
-  CAD: 'Canadian dollar',
-  CHF: 'Swiss franc',
-  BTC: 'Bitcoin',
-  ETH: 'Ether',
+const CURRENCY_NAMES: Record<DisplayCurrency, () => string> = {
+  USD: m.currencyUSD,
+  EUR: m.currencyEUR,
+  GBP: m.currencyGBP,
+  JPY: m.currencyJPY,
+  CNY: m.currencyCNY,
+  HKD: m.currencyHKD,
+  SGD: m.currencySGD,
+  KRW: m.currencyKRW,
+  AUD: m.currencyAUD,
+  CAD: m.currencyCAD,
+  CHF: m.currencyCHF,
+  BTC: m.currencyBTC,
+  ETH: m.currencyETH,
+}
+
+const THEME_NAMES: Record<ThemePreference, () => string> = {
+  light: m.themeLight,
+  dark: m.themeDark,
+  system: m.themeSystem,
 }
 
 const DUST_STEPS = [0, 1, 10, 100] as const
@@ -57,9 +65,9 @@ function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="Display and account" />
+      <PageHeader title={m.navSettings()} subtitle={m.settingsSubtitle()} />
       <div className="flex flex-col gap-5">
-        <Section title="Account">
+        <Section title={m.settingsAccount()}>
           <Row
             label={
               <span className="flex items-center gap-3">
@@ -74,13 +82,13 @@ function SettingsPage() {
             }
           >
             <Button variant="outline" size="sm" onClick={() => void leave()}>
-              <LogOut className="size-4" /> Sign out
+              <LogOut className="size-4" /> {m.signOut()}
             </Button>
           </Row>
         </Section>
 
-        <Section title="Display">
-          <Row label="Theme">
+        <Section title={m.settingsDisplay()}>
+          <Row label={m.settingsTheme()}>
             <Tabs
               value={preference}
               onValueChange={(value) =>
@@ -90,14 +98,33 @@ function SettingsPage() {
             >
               <TabsList>
                 {(['light', 'dark', 'system'] satisfies ThemePreference[]).map((value) => (
-                  <TabsTrigger key={value} value={value} className="capitalize">
-                    {value}
+                  <TabsTrigger key={value} value={value}>
+                    {THEME_NAMES[value]()}
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
           </Row>
-          <Row label="Currency" hint="Values are kept in USD and converted for display.">
+          <Row label={m.language()}>
+            <Tabs
+              value={getLocale()}
+              // Saves the choice on this device and reloads the app in that language.
+              onValueChange={(value) => {
+                const locale = locales.find((candidate) => candidate === value)
+                if (locale) void setLocale(locale)
+              }}
+              variant="segment"
+            >
+              <TabsList>
+                {locales.map((locale) => (
+                  <TabsTrigger key={locale} value={locale}>
+                    {localeName(locale)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </Row>
+          <Row label={m.settingsCurrency()} hint={m.settingsCurrencyHint()}>
             <Select
               value={settings.currency}
               onValueChange={(value) => {
@@ -111,16 +138,13 @@ function SettingsPage() {
               <SelectContent>
                 {DISPLAY_CURRENCIES.map((code) => (
                   <SelectItem key={code} value={code}>
-                    {`${code} · ${CURRENCY_NAMES[code]}`}
+                    {`${code} · ${CURRENCY_NAMES[code]()}`}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Row>
-          <Row
-            label="Small holdings"
-            hint="Holdings worth less than this fold away on the overview."
-          >
+          <Row label={m.settingsDust()} hint={m.settingsDustHint()}>
             <Tabs
               value={String(settings.dustUsd)}
               onValueChange={(value) => save.mutate({ ...settings, dustUsd: Number(value) })}
@@ -129,7 +153,7 @@ function SettingsPage() {
               <TabsList>
                 {DUST_STEPS.map((step) => (
                   <TabsTrigger key={step} value={String(step)}>
-                    {step === 0 ? 'Show all' : `< $${step}`}
+                    {step === 0 ? m.settingsDustAll() : m.settingsDustUnder({ amount: `$${step}` })}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -147,17 +171,15 @@ function DeleteAccount({ onDeleted }: { onDeleted: () => void }) {
   const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
-  const ready = confirm.trim().toLowerCase() === 'delete'
+  const word = m.deleteUserConfirmWord()
+  const ready = confirm.trim().toLowerCase() === word.toLowerCase()
   return (
-    <Section title="Delete account">
+    <Section title={m.deleteUserTitle()}>
       <div>
-        <p className="text-sm text-muted-foreground">
-          Removes your account, every connection and its saved keys, and all history. This can't be
-          undone.
-        </p>
+        <p className="text-sm text-muted-foreground">{m.deleteUserBody()}</p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <Input label='Type "delete" to confirm' value={confirm} onChange={setConfirm} />
+            <Input label={m.deleteUserConfirm({ word })} value={confirm} onChange={setConfirm} />
           </div>
           <Button
             variant="outline"
@@ -167,11 +189,11 @@ function DeleteAccount({ onDeleted }: { onDeleted: () => void }) {
               setBusy(true)
               api('/api/me', { method: 'DELETE' })
                 .then(onDeleted)
-                .catch(() => setError('Could not delete the account. Try again.'))
+                .catch(() => setError(m.deleteUserFailed()))
                 .finally(() => setBusy(false))
             }}
           >
-            Delete everything
+            {m.deleteUserSubmit()}
           </Button>
         </div>
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}

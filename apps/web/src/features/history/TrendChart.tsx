@@ -1,14 +1,12 @@
 import type { HistoryRange } from '@folio/shared'
 import { LineChart } from '@folio/ui/components/charts/line-chart'
 
+import { getLocale } from '../../lib/i18n'
+import { m } from '../../paraglide/messages.js'
 import { useMoney } from '../money/queries'
 
-const DAY_LABEL = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' })
-const HOUR_LABEL = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-})
+const DAY_LABEL: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+const HOUR_LABEL: Intl.DateTimeFormatOptions = { ...DAY_LABEL, hour: 'numeric' }
 
 /**
  * Value over time as an area chart. Green when the period ended higher than it started, red
@@ -31,12 +29,13 @@ export function TrendChart({
       <div
         className={`grid min-h-40 place-items-center rounded-2xl border border-dashed border-border-strong px-6 text-center text-sm text-muted-foreground ${className ?? ''}`}
       >
-        The trend appears after a few syncs.
+        {m.trendEmpty()}
       </div>
     )
   }
   const short = range === '7d'
-  const categories = points.map((point) => (short ? HOUR_LABEL : DAY_LABEL).format(point.t))
+  const dates = new Intl.DateTimeFormat(getLocale(), short ? HOUR_LABEL : DAY_LABEL)
+  const categories = points.map((point) => dates.format(point.t))
   // The chart keys points by label, so repeats get invisible zero-width suffixes.
   const seen = new Map<string, number>()
   const unique = categories.map((text) => {
@@ -55,7 +54,7 @@ export function TrendChart({
       series={[
         {
           id: 'value',
-          name: 'Value',
+          name: m.trendSeries(),
           color: up ? 'var(--gain)' : 'var(--loss)',
           values: points.map((point) => convert(point.v)),
         },

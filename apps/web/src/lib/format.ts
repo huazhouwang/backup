@@ -1,7 +1,9 @@
 /**
  * Number formatting for the whole app, on Intl. Values arrive in the display currency already
- * converted; these only decide how they read.
+ * converted; these only decide how they read, in the active locale unless one is given.
  */
+
+import { getLocale } from './i18n'
 
 /** Crypto display currencies Intl doesn't know, with their symbols and precision. */
 const CRYPTO = {
@@ -20,15 +22,18 @@ export interface MoneyOptions {
   signed?: boolean
 }
 
-const LOCALE = 'en-US'
-
 /** Formats a value in a fiat currency (ISO 4217) or BTC/ETH. */
-export function formatMoney(value: number, currency: string, options: MoneyOptions = {}): string {
+export function formatMoney(
+  value: number,
+  currency: string,
+  options: MoneyOptions = {},
+  locale: string = getLocale(),
+): string {
   const { compact = false, signed = false } = options
   const signDisplay = signed ? 'exceptZero' : 'auto'
   if (isCrypto(currency)) {
     const { symbol, digits } = CRYPTO[currency]
-    const number = new Intl.NumberFormat(LOCALE, {
+    const number = new Intl.NumberFormat(locale, {
       notation: compact ? 'compact' : 'standard',
       maximumFractionDigits: compact ? 2 : digits,
       minimumFractionDigits: compact ? 0 : Math.min(2, digits),
@@ -39,7 +44,7 @@ export function formatMoney(value: number, currency: string, options: MoneyOptio
     return `${sign}${symbol}${number.slice(sign.length)}`
   }
   const abs = Math.abs(value)
-  return new Intl.NumberFormat(LOCALE, {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     notation: compact && abs >= 10_000 ? 'compact' : 'standard',
@@ -58,8 +63,12 @@ function significantDigits(abs: number): number {
 }
 
 /** A ratio as a percentage: 0.1234 → "12.34%". */
-export function formatPercent(ratio: number, options: { signed?: boolean } = {}): string {
-  return new Intl.NumberFormat(LOCALE, {
+export function formatPercent(
+  ratio: number,
+  options: { signed?: boolean } = {},
+  locale: string = getLocale(),
+): string {
+  return new Intl.NumberFormat(locale, {
     style: 'percent',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -68,11 +77,11 @@ export function formatPercent(ratio: number, options: { signed?: boolean } = {})
 }
 
 /** A token amount (decimal string or number) with sensible precision. */
-export function formatAmount(amount: string | number): string {
+export function formatAmount(amount: string | number, locale: string = getLocale()): string {
   const value = typeof amount === 'number' ? amount : Number(amount)
   if (!Number.isFinite(value)) return String(amount)
   const abs = Math.abs(value)
-  return new Intl.NumberFormat(LOCALE, {
+  return new Intl.NumberFormat(locale, {
     maximumFractionDigits: abs === 0 ? 0 : abs < 1 ? significantDigits(abs) : abs < 1000 ? 4 : 2,
   }).format(value)
 }

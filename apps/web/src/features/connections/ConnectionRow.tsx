@@ -2,6 +2,7 @@ import type { ConnectionView, Holding, SourceInfo } from '@folio/shared'
 
 import { Avatar } from '../../components/Avatar'
 import { timeAgo } from '../../lib/time'
+import { m } from '../../paraglide/messages.js'
 import { SourceIcon } from './SourceIcon'
 
 const MAX_LOGOS = 5
@@ -27,12 +28,12 @@ export function ConnectionRow({
   onOpen: () => void
 }) {
   const status = syncing
-    ? 'Syncing…'
+    ? m.syncing()
     : connection.error
-      ? `Failed: ${connection.error.message}`
+      ? m.syncFailed({ message: connection.error.message })
       : connection.syncedAt
-        ? `Synced ${timeAgo(connection.syncedAt, now)}`
-        : 'Waiting for the first sync'
+        ? m.syncedAgo({ time: timeAgo(connection.syncedAt, now) })
+        : m.syncWaiting()
   return (
     <li>
       <button
@@ -66,7 +67,7 @@ export function ConnectionRow({
               ))}
               {holdings.length > MAX_LOGOS && (
                 <span className="grid h-5 min-w-5 place-items-center rounded-full bg-muted px-1 text-[9px] text-muted-foreground ring-2 ring-background">
-                  +{holdings.length - MAX_LOGOS}
+                  {`+${holdings.length - MAX_LOGOS}`}
                 </span>
               )}
             </div>

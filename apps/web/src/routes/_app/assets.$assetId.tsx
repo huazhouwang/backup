@@ -13,15 +13,16 @@ import { useMoney } from '../../features/money/queries'
 import { ChangePill } from '../../features/portfolio/ChangePill'
 import { useAccountIcons } from '../../features/portfolio/use-accounts'
 import { formatAmount, formatPercent } from '../../lib/format'
+import { m } from '../../paraglide/messages.js'
 
 export const Route = createFileRoute('/_app/assets/$assetId')({ component: AssetPage })
 
 const KIND_LABEL = {
-  spot: 'Balance',
-  staked: 'Staked',
-  lending: 'Lent',
-  borrowed: 'Borrowed',
-  reward: 'Rewards',
+  spot: m.positionSpot,
+  staked: m.positionStaked,
+  lending: m.positionLending,
+  borrowed: m.positionBorrowed,
+  reward: m.positionReward,
 } as const
 
 function AssetPage() {
@@ -37,12 +38,12 @@ function AssetPage() {
         to="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> Overview
+        <ArrowLeft className="size-4" /> {m.navOverview()}
       </Link>
       {!portfolio ? (
         <div className="mt-6 h-24 w-64 animate-pulse rounded-2xl bg-card" />
       ) : !holding ? (
-        <p className="mt-6 text-sm text-muted-foreground">You don't hold this asset any more.</p>
+        <p className="mt-6 text-sm text-muted-foreground">{m.assetGone()}</p>
       ) : (
         <>
           <header className="mt-6 flex items-center gap-4">
@@ -58,7 +59,7 @@ function AssetPage() {
             </div>
           </header>
           <section className="mt-8">
-            <p className="text-xs text-muted-foreground">Your holding</p>
+            <p className="text-xs text-muted-foreground">{m.assetHolding()}</p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span className="font-mono text-4xl font-medium tracking-tight tabular">
                 {holding.valueUsd === null ? '—' : format(holding.valueUsd)}
@@ -73,12 +74,13 @@ function AssetPage() {
             </div>
             <p className="mt-2 font-mono text-sm text-muted-foreground tabular">
               {formatAmount(holding.amount)} {holding.symbol}
-              {holding.share !== null && ` · ${formatPercent(holding.share)} of portfolio`}
+              {holding.share !== null &&
+                ` · ${m.assetShare({ share: formatPercent(holding.share) })}`}
             </p>
           </section>
           <AssetTrend assetId={assetId} />
           <section className="mt-10">
-            <h2 className="mb-2 text-sm font-medium">Where you hold it</h2>
+            <h2 className="mb-2 text-sm font-medium">{m.assetWhere()}</h2>
             <ul>
               {holding.sources.map((source, index) => {
                 const account = accounts.get(source.connectionId)
@@ -90,9 +92,11 @@ function AssetPage() {
                   >
                     <Avatar src={account?.icon} label={account?.label ?? '?'} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{account?.label ?? 'Account'}</p>
+                      <p className="truncate text-sm font-medium">
+                        {account?.label ?? m.accountFallback()}
+                      </p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {KIND_LABEL[source.kind]}
+                        {KIND_LABEL[source.kind]()}
                         {source.location && ` · ${source.location}`}
                       </p>
                     </div>
@@ -121,11 +125,11 @@ function AssetTrend({ assetId }: { assetId: string }) {
   return (
     <section className="mt-10">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium">Value over time</h2>
+        <h2 className="text-sm font-medium">{m.assetTrendTitle()}</h2>
         <RangeTabs value={range} onChange={setRange} />
       </div>
       {data ? (
-        <TrendChart points={data.points} range={range} label="Value of this asset over time" />
+        <TrendChart points={data.points} range={range} label={m.assetTrend()} />
       ) : (
         <div className="h-48 animate-pulse rounded-2xl bg-card" />
       )}

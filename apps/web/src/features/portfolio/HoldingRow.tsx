@@ -45,7 +45,7 @@ export function HoldingRow({
               })}
               {held.length > MAX_SOURCE_LOGOS && (
                 <span className="pl-2 text-[10px] text-muted-foreground">
-                  +{held.length - MAX_SOURCE_LOGOS}
+                  {`+${held.length - MAX_SOURCE_LOGOS}`}
                 </span>
               )}
             </span>

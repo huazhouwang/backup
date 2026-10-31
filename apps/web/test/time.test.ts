@@ -8,4 +8,15 @@ test('reads like a person would say it', () => {
   expect(timeAgo(now - 5 * 60_000, now)).toBe('5 minutes ago')
   expect(timeAgo(now - 2 * 3_600_000, now)).toBe('2 hours ago')
   expect(timeAgo(now - 26 * 3_600_000, now)).toBe('yesterday')
+  expect(timeAgo(now - 60_000, now)).toBe('1 minute ago')
+  expect(timeAgo(now - 3 * 86_400_000, now)).toBe('3 days ago')
+})
+
+test('follows the locale', () => {
+  const now = Date.parse('2026-10-01T12:00:00Z')
+  expect(timeAgo(now - 10_000, now, 'zh-CN')).toBe('刚刚')
+  expect(timeAgo(now - 5 * 60_000, now, 'zh-CN')).toBe('5 分钟前')
+  expect(timeAgo(now - 2 * 3_600_000, now, 'zh-CN')).toBe('2 小时前')
+  expect(timeAgo(now - 26 * 3_600_000, now, 'zh-CN')).toBe('昨天')
+  expect(timeAgo(now - 3 * 86_400_000, now, 'zh-CN')).toBe('3 天前')
 })

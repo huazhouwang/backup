@@ -1,6 +1,7 @@
 import { Monitor, Moon, Sun } from 'lucide-react'
 
 import { type ThemePreference, useTheme } from '../lib/theme'
+import { m } from '../paraglide/messages.js'
 
 const NEXT: Record<ThemePreference, ThemePreference> = {
   system: 'light',
@@ -8,7 +9,7 @@ const NEXT: Record<ThemePreference, ThemePreference> = {
   dark: 'system',
 }
 const ICON = { system: Monitor, light: Sun, dark: Moon }
-const LABEL = { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' }
+const LABEL = { system: m.themeToggleSystem, light: m.themeToggleLight, dark: m.themeToggleDark }
 
 /** Cycles system → light → dark. */
 export function ThemeToggle() {
@@ -18,8 +19,8 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => choose(NEXT[preference])}
-      aria-label={LABEL[preference]}
-      title={LABEL[preference]}
+      aria-label={LABEL[preference]()}
+      title={LABEL[preference]()}
       className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
     >
       <Icon className="size-4" />

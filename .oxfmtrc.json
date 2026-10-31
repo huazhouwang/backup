@@ -13,6 +13,7 @@
     "packages/ui/src/components/motion/**",
     "packages/ui/src/components/charts/**",
     "packages/ui/src/lib/**",
-    "**/worker-configuration.d.ts"
+    "**/worker-configuration.d.ts",
+    "apps/web/src/paraglide/**"
   ]
 }

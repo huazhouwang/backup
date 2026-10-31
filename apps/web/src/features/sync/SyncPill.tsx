@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 
 import { timeAgo } from '../../lib/time'
 import { useNow } from '../../lib/use-now'
+import { m } from '../../paraglide/messages.js'
 import { SYNCED_DATA, syncQuery, useStartSync } from '../connections/queries'
 
 /** Sync state and a refresh-all button. Refreshes the data views when a sync finishes. */
@@ -23,17 +24,17 @@ export function SyncPill() {
   }, [running, client])
 
   const label = running
-    ? 'Syncing…'
+    ? m.syncing()
     : status?.finishedAt
-      ? `Synced ${timeAgo(status.finishedAt, now)}`
-      : 'Not synced yet'
+      ? m.syncedAgo({ time: timeAgo(status.finishedAt, now) })
+      : m.syncNever()
 
   return (
     <button
       type="button"
       onClick={() => start.mutate(undefined)}
       disabled={running}
-      aria-label={running ? 'Syncing' : 'Sync all accounts'}
+      aria-label={running ? m.syncingLabel() : m.syncAll()}
       className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-card px-3 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-default disabled:hover:bg-card"
     >
       <span

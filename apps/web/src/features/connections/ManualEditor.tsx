@@ -6,6 +6,7 @@ import { useDeferredValue, useState } from 'react'
 
 import { Avatar } from '../../components/Avatar'
 import { api } from '../../lib/api'
+import { m } from '../../paraglide/messages.js'
 
 const DECIMAL = /^\d+(\.\d+)?$/
 
@@ -28,11 +29,11 @@ export function ManualEditor({
             <Avatar src={holding.logo} label={holding.symbol} className="mt-1.5" />
             <div className="min-w-0 flex-1">
               <Input
-                aria-label={`${holding.symbol} amount`}
+                aria-label={m.manualAmount({ symbol: holding.symbol })}
                 inputMode="decimal"
-                placeholder={`Amount of ${holding.symbol}`}
+                placeholder={m.manualAmountPlaceholder({ symbol: holding.symbol })}
                 value={holding.amount}
-                error={invalid ? 'Enter a number like 1.25' : undefined}
+                error={invalid ? m.manualAmountInvalid() : undefined}
                 onChange={(amount) =>
                   onChange(holdings.map((row, i) => (i === index ? { ...row, amount } : row)))
                 }
@@ -41,7 +42,7 @@ export function ManualEditor({
             </div>
             <button
               type="button"
-              aria-label={`Remove ${holding.symbol}`}
+              aria-label={m.manualRemove({ symbol: holding.symbol })}
               onClick={() => onChange(holdings.filter((_, i) => i !== index))}
               className="mt-1.5 grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
             >
@@ -77,7 +78,7 @@ export function ManualEditor({
           onClick={() => setSearching(true)}
           className="inline-flex items-center gap-2 self-start rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
-          <Plus className="size-4" /> Add an asset
+          <Plus className="size-4" /> {m.manualAdd()}
         </button>
       )}
     </div>
@@ -96,8 +97,8 @@ function AssetSearch({ onPick }: { onPick: (asset: AssetSearchResult) => void })
   return (
     <div>
       <Input
-        aria-label="Search coins"
-        placeholder="Search coins, e.g. Bitcoin"
+        aria-label={m.manualSearch()}
+        placeholder={m.manualSearchPlaceholder()}
         value={text}
         onChange={setText}
         leftIcon={<Search className="size-4" />}
@@ -118,10 +119,10 @@ function AssetSearch({ onPick }: { onPick: (asset: AssetSearchResult) => void })
             </li>
           ))}
           {data?.length === 0 && (
-            <li className="px-3 py-2 text-sm text-muted-foreground">No coins match.</li>
+            <li className="px-3 py-2 text-sm text-muted-foreground">{m.manualNoMatch()}</li>
           )}
           {!data && isFetching && (
-            <li className="px-3 py-2 text-sm text-muted-foreground">Searching…</li>
+            <li className="px-3 py-2 text-sm text-muted-foreground">{m.manualSearching()}</li>
           )}
         </ul>
       )}
@@ -131,9 +132,9 @@ function AssetSearch({ onPick }: { onPick: (asset: AssetSearchResult) => void })
 
 /** Holdings ready to save, or a message saying what's missing. */
 export function holdingsToSend(holdings: ManualHoldingInput[]) {
-  if (!holdings.length) return { error: 'Add at least one asset.' } as const
+  if (!holdings.length) return { error: m.manualNeedAsset() } as const
   if (holdings.some((holding) => !DECIMAL.test(holding.amount.trim()))) {
-    return { error: 'Every asset needs an amount.' } as const
+    return { error: m.manualNeedAmount() } as const
   }
   return {
     holdings: holdings.map((holding) => ({ ...holding, amount: holding.amount.trim() })),

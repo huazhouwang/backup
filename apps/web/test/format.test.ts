@@ -51,3 +51,14 @@ describe('formatAmount', () => {
     expect(formatAmount('abc')).toBe('abc')
   })
 })
+
+describe('in Chinese', () => {
+  test('money, percentages and amounts follow zh-CN', () => {
+    expect(formatMoney(1234.5, 'CNY', {}, 'zh-CN')).toBe('¥1,234.50')
+    expect(formatMoney(1234.5, 'USD', {}, 'zh-CN')).toBe('US$1,234.50')
+    expect(formatMoney(1_234_567, 'CNY', { compact: true }, 'zh-CN')).toBe('¥123万')
+    expect(formatMoney(-1.5, 'ETH', { signed: true }, 'zh-CN')).toBe('-Ξ1.50')
+    expect(formatPercent(0.05, { signed: true }, 'zh-CN')).toBe('+5.00%')
+    expect(formatAmount('123456.789', 'zh-CN')).toBe('123,456.79')
+  })
+})

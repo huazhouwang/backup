@@ -1,3 +1,4 @@
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react from '@vitejs/plugin-react'
@@ -10,6 +11,8 @@ export default defineConfig({
     proxy: { '/api': 'http://localhost:8787' },
   },
   plugins: [
+    // Compiles messages/*.json into src/paraglide; options in project.inlang/paraglide.config.js.
+    paraglideVitePlugin({ project: './project.inlang' }),
     tailwindcss(),
     tanstackStart({
       // A static SPA: the Worker only answers /api/*, every page is client-rendered.

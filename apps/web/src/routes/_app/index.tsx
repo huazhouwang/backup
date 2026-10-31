@@ -15,13 +15,14 @@ import { type HoldingSort, sortHoldings, splitDust } from '../../features/portfo
 import { PerpsList } from '../../features/portfolio/PerpsList'
 import { useAccountIcons } from '../../features/portfolio/use-accounts'
 import { SyncPill } from '../../features/sync/SyncPill'
+import { m } from '../../paraglide/messages.js'
 
 export const Route = createFileRoute('/_app/')({ component: OverviewPage })
 
-const SORTS: { value: HoldingSort; label: string }[] = [
-  { value: 'value', label: 'Value' },
-  { value: 'change', label: '24h change' },
-  { value: 'name', label: 'Name' },
+const SORTS: { value: HoldingSort; label: () => string }[] = [
+  { value: 'value', label: m.sortValue },
+  { value: 'change', label: m.sortChange },
+  { value: 'name', label: m.sortName },
 ]
 
 function OverviewPage() {
@@ -35,11 +36,11 @@ function OverviewPage() {
 
   const header = (
     <PageHeader
-      title="Overview"
+      title={m.navOverview()}
       subtitle={
         connections?.length
-          ? `Live portfolio across ${connections.length} ${connections.length === 1 ? 'source' : 'sources'}`
-          : 'Your portfolio at a glance'
+          ? m.overviewSubtitleLive({ count: connections.length })
+          : m.overviewSubtitle()
       }
       actions={<SyncPill />}
     />
@@ -64,15 +65,13 @@ function OverviewPage() {
       <>
         {header}
         <div className="flex flex-col items-center rounded-3xl border border-dashed border-border-strong px-6 py-16 text-center">
-          <h2 className="text-lg font-medium">Nothing to show yet</h2>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Add a wallet, an exchange or holdings by hand and your net worth appears here.
-          </p>
+          <h2 className="text-lg font-medium">{m.overviewEmptyTitle()}</h2>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">{m.overviewEmptyBody()}</p>
           <Link
             to="/accounts"
             className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground"
           >
-            <Plus className="size-4" /> Add an account
+            <Plus className="size-4" /> {m.overviewEmptyAction()}
           </Link>
         </div>
       </>
@@ -90,14 +89,14 @@ function OverviewPage() {
       <div className="mt-10 flex items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={(value) => setTab(value === 'perps' ? 'perps' : 'tokens')}>
           <TabsList>
-            <TabsTrigger value="tokens">Tokens</TabsTrigger>
-            <TabsTrigger value="perps">Perps</TabsTrigger>
+            <TabsTrigger value="tokens">{m.tabTokens()}</TabsTrigger>
+            <TabsTrigger value="perps">{m.tabPerps()}</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="flex items-center gap-3">
           {tab === 'tokens' && (
             <label className="relative text-xs text-muted-foreground">
-              <span className="sr-only">Sort by</span>
+              <span className="sr-only">{m.sortBy()}</span>
               <select
                 value={sort}
                 onChange={(event) =>
@@ -107,7 +106,7 @@ function OverviewPage() {
               >
                 {SORTS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {option.label()}
                   </option>
                 ))}
               </select>
@@ -139,13 +138,13 @@ function OverviewPage() {
                 className="mt-3 text-sm text-muted-foreground hover:text-foreground"
               >
                 {showDust
-                  ? 'Hide small holdings'
-                  : `${dust.length} small ${dust.length === 1 ? 'holding' : 'holdings'} under ${format(settings.dustUsd)}`}
+                  ? m.dustHide()
+                  : m.dustShow({ count: dust.length, amount: format(settings.dustUsd) })}
               </button>
             )}
             {!visible.length && !dust.length && (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                Waiting for the first sync to finish…
+                {m.waitingForFirstSync()}
               </p>
             )}
           </>
@@ -161,5 +160,5 @@ function OverviewPage() {
 function OverviewTrend() {
   const { data } = useQuery(historyQuery('30d'))
   if (!data) return <div className="h-40 animate-pulse rounded-2xl bg-card" />
-  return <TrendChart points={data.points} range="30d" label="Net worth, last 30 days" />
+  return <TrendChart points={data.points} range="30d" label={m.overviewTrend()} />
 }

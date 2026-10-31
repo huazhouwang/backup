@@ -12,6 +12,7 @@ import { RangeTabs } from '../../features/history/RangeTabs'
 import { TrendChart } from '../../features/history/TrendChart'
 import { useMoney } from '../../features/money/queries'
 import { ChangePill } from '../../features/portfolio/ChangePill'
+import { m } from '../../paraglide/messages.js'
 
 export const Route = createFileRoute('/_app/insights')({ component: InsightsPage })
 
@@ -29,11 +30,11 @@ function InsightsPage() {
 
   return (
     <>
-      <PageHeader title="Insights" subtitle="History and allocation over time" />
+      <PageHeader title={m.navInsights()} subtitle={m.insightsSubtitle()} />
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-medium">Net worth</h2>
+            <h2 className="text-sm font-medium">{m.insightsNetWorth()}</h2>
             {change !== null && first !== undefined && (
               <ChangePill
                 amount={change}
@@ -46,16 +47,16 @@ function InsightsPage() {
           <RangeTabs value={range} onChange={setRange} />
         </div>
         {history ? (
-          <TrendChart points={points} range={range} label="Net worth over time" />
+          <TrendChart points={points} range={range} label={m.insightsTrend()} />
         ) : (
           <div className="h-64 animate-pulse rounded-2xl bg-card" />
         )}
       </section>
       {portfolio && (
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
-          <AllocationCard title="By asset" slices={byAsset(portfolio)} />
+          <AllocationCard title={m.insightsByAsset()} slices={byAsset(portfolio)} />
           <AllocationCard
-            title="By account"
+            title={m.insightsByAccount()}
             slices={byAccount(portfolio, new Map(connections.map((c) => [c.id, c.label])))}
           />
         </div>

@@ -1,19 +1,20 @@
-const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+import { m } from '../paraglide/messages.js'
+import { type Locale, getLocale } from './i18n'
 
-const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ['day', 86_400_000],
-  ['hour', 3_600_000],
-  ['minute', 60_000],
-]
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
 
-/** "just now", "5 minutes ago", "yesterday". */
-export function timeAgo(time: number, now: number): string {
+/** "just now", "5 minutes ago", "yesterday", in the active locale unless one is given. */
+export function timeAgo(time: number, now: number, locale: Locale = getLocale()): string {
   const elapsed = now - time
-  if (elapsed < 45_000) return 'just now'
-  for (const [unit, size] of UNITS) {
-    if (elapsed >= size || unit === 'minute') {
-      return relative.format(-Math.max(1, Math.round(elapsed / size)), unit)
-    }
+  const options = { locale }
+  if (elapsed < 45_000) return m.timeJustNow({}, options)
+  const count = (size: number) => Math.max(1, Math.round(elapsed / size))
+  if (elapsed >= DAY) {
+    const days = count(DAY)
+    return days === 1 ? m.timeYesterday({}, options) : m.timeDaysAgo({ count: days }, options)
   }
-  return 'just now'
+  if (elapsed >= HOUR) return m.timeHoursAgo({ count: count(HOUR) }, options)
+  return m.timeMinutesAgo({ count: count(MINUTE) }, options)
 }

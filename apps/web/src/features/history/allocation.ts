@@ -1,5 +1,7 @@
 import type { Portfolio } from '@folio/shared'
 
+import { m } from '../../paraglide/messages.js'
+
 export interface Slice {
   id: string
   name: string
@@ -13,7 +15,7 @@ export function topSlices(slices: Slice[], top: number): Slice[] {
     .toSorted((a, b) => b.valueUsd - a.valueUsd)
   if (positive.length <= top + 1) return positive
   const rest = positive.slice(top).reduce((sum, slice) => sum + slice.valueUsd, 0)
-  return [...positive.slice(0, top), { id: 'other', name: 'Other', valueUsd: rest }]
+  return [...positive.slice(0, top), { id: 'other', name: m.allocationOther(), valueUsd: rest }]
 }
 
 export function byAsset(portfolio: Portfolio): Slice[] {
@@ -38,5 +40,9 @@ export function byAccount(portfolio: Portfolio, labels: Map<string, string>): Sl
   for (const perp of portfolio.perps) {
     totals.set(perp.connectionId, (totals.get(perp.connectionId) ?? 0) + perp.equityUsd)
   }
-  return [...totals].map(([id, valueUsd]) => ({ id, name: labels.get(id) ?? 'Account', valueUsd }))
+  return [...totals].map(([id, valueUsd]) => ({
+    id,
+    name: labels.get(id) ?? m.accountFallback(),
+    valueUsd,
+  }))
 }

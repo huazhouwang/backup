@@ -40,7 +40,7 @@ export function ChangeText({
   ratio: number | null
   formatMoney: (valueUsd: number, options?: { signed?: boolean }) => string
 }) {
-  if (amount === null) return <span className="text-xs text-muted-foreground">—</span>
+  if (amount === null) return <span className="text-xs text-muted-foreground">{'—'}</span>
   const tone = amount > 0 ? 'text-gain' : amount < 0 ? 'text-loss' : 'text-muted-foreground'
   return (
     <span className={`font-mono text-xs tabular ${tone}`}>

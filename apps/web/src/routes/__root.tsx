@@ -7,8 +7,9 @@ import {
   createRootRouteWithContext,
   useHydrated,
 } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
 
+import { getLocale } from '../lib/i18n'
 import { themeInitScript } from '../lib/theme'
 
 import appCss from '../styles/app.css?url'
@@ -28,7 +29,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
@@ -45,5 +46,9 @@ function RootLayout() {
   // The prerendered shell holds no page content; pages render after hydration so the first
   // client render matches it.
   const hydrated = useHydrated()
+  // The shell is prerendered in English; name the language the app resolved to.
+  useEffect(() => {
+    document.documentElement.lang = getLocale()
+  }, [])
   return hydrated ? <Outlet /> : null
 }

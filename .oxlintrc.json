@@ -25,7 +25,7 @@
     "react/exhaustive-deps": "warn",
     "import/no-cycle": "error",
     "react/react-in-jsx-scope": "off",
-    "react/jsx-no-literals": "off"
+    "react/jsx-no-literals": "error"
   },
   "ignorePatterns": [
     "**/dist/**",
@@ -36,7 +36,8 @@
     "packages/ui/src/components/motion/**",
     "packages/ui/src/components/charts/**",
     "packages/ui/src/lib/**",
-    "**/worker-configuration.d.ts"
+    "**/worker-configuration.d.ts",
+    "apps/web/src/paraglide/**"
   ],
   "overrides": [
     {

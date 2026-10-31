@@ -1,4 +1,4 @@
-import type { Holding } from '@folio/shared'
+import { APP_NAME, type Holding } from '@folio/shared'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Plus, Wallet } from 'lucide-react'
@@ -16,6 +16,7 @@ import {
 import { useMoney } from '../../features/money/queries'
 import { SyncPill } from '../../features/sync/SyncPill'
 import { useNow } from '../../lib/use-now'
+import { m } from '../../paraglide/messages.js'
 
 export const Route = createFileRoute('/_app/accounts')({ component: AccountsPage })
 
@@ -48,14 +49,14 @@ function AccountsPage() {
   return (
     <>
       <PageHeader
-        title="Accounts"
-        subtitle="Manage your data sources"
+        title={m.navAccounts()}
+        subtitle={m.accountsSubtitle()}
         actions={
           <>
             <SyncPill />
             <button
               type="button"
-              aria-label="Add account"
+              aria-label={m.accountsAdd()}
               onClick={() => setDialog({ view: 'pick' })}
               className="grid size-9 place-items-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-accent"
             >
@@ -73,7 +74,7 @@ function AccountsPage() {
       ) : connections?.length ? (
         <>
           <h2 className="mb-3 text-2xl font-semibold tracking-tight">
-            {connections.length} {connections.length === 1 ? 'account' : 'accounts'}
+            {m.accountsCount({ count: connections.length })}
           </h2>
           <ul className="flex flex-col">
             {connections.map((connection) => {
@@ -110,16 +111,16 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <span className="grid size-12 place-items-center rounded-full bg-muted">
         <Wallet className="size-5" />
       </span>
-      <h2 className="mt-4 text-lg font-medium">No accounts yet</h2>
+      <h2 className="mt-4 text-lg font-medium">{m.accountsEmptyTitle()}</h2>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-        Add a wallet address, an exchange API key or holdings by hand. Folio only reads balances.
+        {m.accountsEmptyBody({ app: APP_NAME })}
       </p>
       <button
         type="button"
         onClick={onAdd}
         className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground"
       >
-        <Plus className="size-4" /> Add your first account
+        <Plus className="size-4" /> {m.accountsEmptyAction()}
       </button>
     </div>
   )
