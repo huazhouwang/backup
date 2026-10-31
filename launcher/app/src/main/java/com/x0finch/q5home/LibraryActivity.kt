@@ -31,6 +31,7 @@ class LibraryActivity : Activity() {
         super.onCreate(savedInstanceState)
         apps = Targets.launchableApps(this)
 
+        Ui.applyTheme(this)
         val root = Ui.pageRoot(this)
         overlay = Overlay(root)
         val page = LinearLayout(this).apply {
@@ -109,9 +110,9 @@ class LibraryActivity : Activity() {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
                 setPadding(dp(8), dp(14), dp(8), dp(12))
-                background = Ui.rounded(this@LibraryActivity, Ui.GROUP, 18, Ui.STROKE, 1)
+                background = Ui.bento(this@LibraryActivity, 18, com.x0finch.q5home.ui.BentoDrawable.Style.RESTING)
                 addView(ImageView(context), LinearLayout.LayoutParams(dp(56), dp(56)))
-                addView(Ui.text(context, "", 13f, 0xE6FFFFFF.toInt()).apply { gravity = Gravity.CENTER },
+                addView(Ui.text(context, "", 13f, Ui.TEXT).apply { gravity = Gravity.CENTER },
                     LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
             }
             val info = apps[position]

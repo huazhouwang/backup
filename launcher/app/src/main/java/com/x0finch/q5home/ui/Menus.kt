@@ -100,10 +100,10 @@ object Menus {
         }
         val frame = FrameLayout(context)
         frame.addView(ImageView(context).apply {
-            if (drawable != null) setImageDrawable(drawable) else background = Ui.rounded(context, 0x26FFFFFF, 14)
+            if (drawable != null) setImageDrawable(drawable) else background = Ui.rounded(context, Ui.TRACK, 14)
         }, FrameLayout.LayoutParams(Ui.dp(context, 52), Ui.dp(context, 52)))
         if (selected) {
-            frame.addView(Ui.glyph(context, R.drawable.ui_check, 16, 0xFF0B2A17.toInt()).apply {
+            frame.addView(Ui.glyph(context, R.drawable.ui_check, 16, Ui.ON_ACCENT).apply {
                 background = Ui.rounded(context, Ui.ACCENT, 10)
                 setPadding(Ui.dp(context, 2), Ui.dp(context, 2), Ui.dp(context, 2), Ui.dp(context, 2))
             }, FrameLayout.LayoutParams(Ui.dp(context, 20), Ui.dp(context, 20), Gravity.END or Gravity.TOP).apply {
@@ -120,7 +120,6 @@ object Menus {
     fun column(context: Context, padDp: Int): LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
         background = Ui.card(context)
-        elevation = Ui.dp(context, 12).toFloat()
         val p = Ui.dp(context, padDp)
         setPadding(p, p, p, p)
     }

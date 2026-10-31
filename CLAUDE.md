@@ -63,7 +63,11 @@ MT6739、32 位 armeabi-v7a，平台是 WWC2（`com.wwc2.*`）。`user` 构建�
     剩余空间 < 300 MB 不下载。改动时不要放宽这些上限，除非用户同意。清单在仓库根目录 `wallpapers/feed.json`。
     清单由工作流 `wallpapers.yml` + `wallpapers/update_feed.py` 每天自动追加（Secret `UNSPLASH_ACCESS_KEY`，最多 60 张）。
     自动轮换的 key 仍是 `daily`（向后兼容），频率存 `wallpaper_interval_min`（分钟，默认 1440）。
-  - 界面组件在 `ui/`（`Ui` 风格常量、`Overlay` 弹出层、`Menus` 菜单/确认/图标网格、`Toggle` 开关），
+  - 界面风格：极简 **Bento 卡片**（`ui/BentoDrawable.kt`）——多重投影 + 1px 描边 + 顶部内发光；
+    两种样式：抬起 `LIFTED`（投影大、往下偏：首页磁贴、弹出卡片、按钮平时）和贴合 `RESTING`（描边略深、底色更亮：设置分组、按下时）。
+    投影按 1/4 尺寸画成 ALPHA_8 小图缓存（安卓 8.1 硬件加速不支持形状模糊阴影），父布局要 `Ui.allowShadows` 关掉裁剪。
+    外观 `appearance`：auto（白天浅色、日落后深色，按 `Sun`）/ light / dark；颜色都从 `Ui` 的主题色取，别再写死颜色。
+  - 界面组件在 `ui/`（`Ui` 风格和主题色、`Overlay` 弹出层、`Menus` 菜单/确认/图标网格、`Toggle` 开关），
     设置是整页 `SettingsActivity`。不要再用系统 AlertDialog / Toast。
   - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。
   - `fakeapps/` 是 CI 录屏用的假 ZLINK / 原车应用，绝不能装到车机上（包名和真 ZLINK 相同）。

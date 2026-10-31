@@ -65,7 +65,8 @@ class SettingsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         config = Config(this).also { it.reload() }
-        section = intent.getStringExtra(EXTRA_SECTION) ?: SECTION_WALLPAPER
+        Ui.applyTheme(this)
+        section = savedInstanceState?.getString(EXTRA_SECTION) ?: intent.getStringExtra(EXTRA_SECTION) ?: SECTION_WALLPAPER
         root = Ui.pageRoot(this)
         overlay = Overlay(root)
 
@@ -77,11 +78,13 @@ class SettingsActivity : Activity() {
         scroll = ScrollView(this).apply { isVerticalScrollBarEnabled = false; clipToPadding = false }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(8), dp(6), dp(8), dp(32))
+            // 两边留出卡片投影的位置。
+            setPadding(dp(14), dp(6), dp(14), dp(40))
         }
         scroll.addView(content)
-        page.addView(scroll, LinearLayout.LayoutParams(0, -1, 1f).apply { marginStart = dp(24) })
+        page.addView(scroll, LinearLayout.LayoutParams(0, -1, 1f).apply { marginStart = dp(18) })
         root.addView(page, FrameLayout.LayoutParams(-1, -1))
+        Ui.allowShadows(page, scroll, content, nav)
         setContentView(root)
         render()
     }
@@ -90,6 +93,11 @@ class SettingsActivity : Activity() {
         super.onResume()
         config.reload()
         render()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(EXTRA_SECTION, section)
     }
 
     override fun onStop() {
@@ -136,7 +144,7 @@ class SettingsActivity : Activity() {
             LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(16); marginStart = dp(6) })
         // 分类多了矮屏放不下：分类列表可以滚动，「返回桌面」固定在底部。
         val items = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        navItem(items, SECTION_WALLPAPER, "壁纸", R.drawable.ui_wallpaper)
+        navItem(items, SECTION_WALLPAPER, "外观与壁纸", R.drawable.ui_wallpaper)
         navItem(items, SECTION_CARPLAY, "CarPlay 与原车", R.drawable.glyph_carplay)
         val badge = if (Updates(this).hasUpdate) "  ●" else ""
         navItem(items, SECTION_UPDATE, "版本更新$badge", R.drawable.ui_update)
@@ -183,7 +191,9 @@ class SettingsActivity : Activity() {
     // ---- 壁纸 ----
 
     private fun renderWallpaper() {
-        header("壁纸", "当前：${Wallpapers.label(this, config.wallpaper, config.wallpaperInterval)}")
+        header("外观与壁纸", "当前壁纸：${Wallpapers.label(this, config.wallpaper, config.wallpaperInterval)}")
+        group(appearanceRow())
+        content.addView(View(this), LinearLayout.LayoutParams(1, dp(14)))
 
         val all = Wallpapers.available(this)
         val strip = LinearLayout(this).apply { setPadding(0, dp(4), 0, dp(4)) }
@@ -239,7 +249,7 @@ class SettingsActivity : Activity() {
             }
         }
         val frame = FrameLayout(this).apply {
-            background = Ui.rounded(this@SettingsActivity, Color.BLACK, 14, Ui.STROKE, 1)
+            background = Ui.rounded(this@SettingsActivity, Color.BLACK, 14, Ui.DIVIDER, 1)
             clipToOutline = true
             foreground = if (selected) Ui.rounded(this@SettingsActivity, Color.TRANSPARENT, 14, Ui.ACCENT, 3) else null
         }
@@ -267,7 +277,7 @@ class SettingsActivity : Activity() {
             }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         }
         if (selected) {
-            frame.addView(Ui.glyph(this, R.drawable.ui_check, 16, 0xFF0B2A17.toInt()).apply {
+            frame.addView(Ui.glyph(this, R.drawable.ui_check, 16, Ui.ON_ACCENT).apply {
                 background = Ui.rounded(this@SettingsActivity, Ui.ACCENT, 11)
                 setPadding(dp(3), dp(3), dp(3), dp(3))
             }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.END or Gravity.TOP).apply {
@@ -280,6 +290,26 @@ class SettingsActivity : Activity() {
             LinearLayout.LayoutParams(w, -2).apply { topMargin = dp(8); bottomMargin = dp(2) })
         cell.layoutParams = LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(6) }
         return cell
+    }
+
+    /** 外观：自动（白天浅色、日落后深色）/ 浅色 / 深色。改了就按新主题重建页面。 */
+    private fun appearanceRow(): View {
+        val chips = LinearLayout(this)
+        listOf(Config.APPEARANCE_AUTO to "自动", Config.APPEARANCE_LIGHT to "浅色", Config.APPEARANCE_DARK to "深色")
+            .forEach { (value, name) ->
+                val selected = value == config.appearance
+                chips.addView(Ui.pill(this, name, if (selected) Ui.PillStyle.PRIMARY else Ui.PillStyle.SECONDARY) {
+                    if (value == config.appearance) return@pill
+                    config.setAppearance(value)
+                    if (Ui.applyTheme(this)) recreate() else render()
+                }.apply { (layoutParams as LinearLayout.LayoutParams).marginStart = dp(8) })
+            }
+        val now = if (Ui.dark) "深色" else "浅色"
+        val sub = when (config.appearance) {
+            Config.APPEARANCE_AUTO -> "白天浅色、日落后深色（按日出日落自动切换；现在是$now）"
+            else -> "固定$now"
+        }
+        return row(R.drawable.ui_palette, "外观", sub, chips)
     }
 
     /** 按日出日落分白天 / 夜晚壁纸（只在自动轮换时生效）。副标题写今天的日出日落时刻。 */
@@ -347,7 +377,7 @@ class SettingsActivity : Activity() {
         private val rect = RectF()
         override fun onDraw(canvas: Canvas) {
             val r = height / 2f
-            paint.color = 0x26FFFFFF
+            paint.color = Ui.TRACK
             rect.set(0f, 0f, width.toFloat(), height.toFloat())
             canvas.drawRoundRect(rect, r, r, paint)
             paint.color = if (fraction > 0.85f) Ui.DANGER else Ui.ACCENT
@@ -867,7 +897,7 @@ class SettingsActivity : Activity() {
     private fun group(vararg rows: View) {
         val g = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = Ui.rounded(this@SettingsActivity, Ui.GROUP, 20, Ui.STROKE, 1)
+            background = Ui.group(this@SettingsActivity)
             setPadding(dp(6), dp(6), dp(6), dp(6))
         }
         rows.forEachIndexed { i, r ->

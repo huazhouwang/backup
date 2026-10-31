@@ -38,6 +38,12 @@ class ScreenshotTest {
         File(outDir, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** 截图要稳定：默认固定浅色（白天）；名字带 -dark 的固定深色。 */
+    @org.junit.Before
+    fun lightByDefault() = Config(context).setAppearance(Config.APPEARANCE_LIGHT)
+
+    private fun dark() = Config(context).setAppearance(Config.APPEARANCE_DARK)
+
     private fun home(qualifiers: String, name: String, wallpaper: String = "stars") {
         RuntimeEnvironment.setQualifiers(qualifiers)
         FakeApps.installCar(context)
@@ -52,6 +58,7 @@ class ScreenshotTest {
     @Test fun home1920x720() = home("w1280dp-h480dp-land-hdpi", "home-1920x720", "city")
     @Test fun home1024x600() = home("w1024dp-h600dp-land-mdpi", "home-1024x600", "road")
     @Test fun homeBlack() = home("w1280dp-h480dp-land-mdpi", "home-black", Wallpapers.NONE)
+    @Test fun homeDark() { dark(); home("w1280dp-h480dp-land-hdpi", "home-1920x720-dark", "city") }
 
     @Test
     fun library() {
@@ -106,6 +113,7 @@ class ScreenshotTest {
     }
 
     @Test fun settingsWallpaper() = settings(SettingsActivity.SECTION_WALLPAPER, "ui-settings-wallpaper")
+    @Test fun settingsWallpaperDark() { dark(); settings(SettingsActivity.SECTION_WALLPAPER, "ui-settings-wallpaper-dark") }
     @Test fun settingsCarPlay() = settings(SettingsActivity.SECTION_CARPLAY, "ui-settings-carplay")
     @Test fun settingsAdvanced() = settings(SettingsActivity.SECTION_ADVANCED, "ui-settings-advanced")
     @Test fun settingsSignal() = settings(SettingsActivity.SECTION_SIGNAL, "ui-settings-signal")

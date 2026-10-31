@@ -40,7 +40,7 @@ class Toggle(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         val h = height.toFloat()
         rect.set(0f, 0f, width.toFloat(), h)
-        paint.color = blend(0x40FFFFFF, Ui.ACCENT, fraction)
+        paint.color = blend(Ui.TRACK, Ui.ACCENT, fraction)
         canvas.drawRoundRect(rect, h / 2, h / 2, paint)
         val r = h / 2 - Ui.dp(context, 3)
         val cx = h / 2 + (width - h) * fraction

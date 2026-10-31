@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -25,9 +26,11 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.x0finch.q5home.ui.BentoDrawable
 import com.x0finch.q5home.ui.MenuItem
 import com.x0finch.q5home.ui.Menus
 import com.x0finch.q5home.ui.Overlay
+import com.x0finch.q5home.ui.Ui
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -78,9 +81,12 @@ class MainActivity : Activity() {
     private var shownWallpaper: String? = null
     private lateinit var overlay: Overlay
     private var started = false
+    /** 这个页面按哪个主题建的；日落 / 改设置后主题变了就 recreate。 */
+    private var createdDark = true
 
     private val timeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            if (themeChanged()) return // 自动外观：日出 / 日落那一分钟换主题
             updateGreeting()
             updateWallpaper()
         }
@@ -102,6 +108,8 @@ class MainActivity : Activity() {
             return
         }
         maybeCrashForTest(intent)
+        Ui.applyTheme(this)
+        createdDark = Ui.dark
         setContentView(R.layout.activity_main)
         root = findViewById(R.id.root)
         wallpaperView = findViewById(R.id.wallpaper)
@@ -121,6 +129,18 @@ class MainActivity : Activity() {
         config = Config(this)
         config.reload()?.let { toast("config.json 有误：$it") }
 
+        // 右上角胶囊：Bento 小卡片（叠在壁纸上）。
+        for (id in intArrayOf(R.id.pillApps, R.id.pillSettings)) {
+            findViewById<TextView>(id).apply {
+                background = Ui.pillBackground(this@MainActivity)
+                setTextColor(Ui.TEXT)
+            }
+        }
+        findViewById<TextView>(R.id.pillUpdate).apply {
+            background = Ui.pillBackground(this@MainActivity, Ui.PillStyle.PRIMARY)
+            setTextColor(Ui.ON_ACCENT)
+        }
+        Ui.allowShadows(tiles, tileScroll)
         findViewById<View>(R.id.pillApps).setOnClickListener {
             startActivity(Intent(this, LibraryActivity::class.java))
         }
@@ -185,6 +205,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         if (!started) return // 已经转去安全模式，没有初始化界面
+        if (themeChanged()) return
         config.reload()?.let { toast("config.json 有误：$it") }
         updateGreeting()
         updateWallpaper()
@@ -200,6 +221,14 @@ class MainActivity : Activity() {
         if (!started) return
         gps.stop()
         handler.removeCallbacks(tripTicker)
+    }
+
+    /** 外观设置改了、或者自动模式下天亮 / 天黑了：按新主题重建页面。 */
+    private fun themeChanged(): Boolean {
+        Ui.applyTheme(this)
+        if (Ui.dark == createdDark) return false
+        recreate()
+        return true
     }
 
     private fun updateTrip() {
@@ -360,22 +389,20 @@ class MainActivity : Activity() {
         val color = tile.icon?.top ?: Glow.dominantColor(icon)
 
         val card = FrameLayout(this)
-        card.background = GradientDrawable().apply {
-            cornerRadius = dp(20).toFloat()
-            when {
-                !available || tile.slot == Slot.ADD -> {
-                    setColor(0x99141416.toInt())
-                    setStroke(dp(1), 0x38FFFFFF, dp(6).toFloat(), dp(5).toFloat())
-                }
-                tile.wide -> {
-                    orientation = GradientDrawable.Orientation.TL_BR
-                    colors = intArrayOf(Glow.darken(color, 0.55f), Glow.darken(color, 0.16f) and 0xE6FFFFFF.toInt())
-                }
-                // 半透明深色：叠在壁纸上像磨砂卡片。
-                else -> setColor(0xCC1C1C1E.toInt())
+        card.background = when {
+            // 加号 / 没装的应用：虚线框，叠在壁纸上。
+            !available || tile.slot == Slot.ADD -> GradientDrawable().apply {
+                cornerRadius = dp(20).toFloat()
+                setColor(0x33000000)
+                setStroke(dp(1), 0x59FFFFFF, dp(6).toFloat(), dp(5).toFloat())
+            }
+            // Bento 卡片：平时抬起，按下变贴合（像被按下去）。
+            else -> StateListDrawable().apply {
+                addState(intArrayOf(android.R.attr.state_pressed), Ui.bento(this@MainActivity, 20, BentoDrawable.Style.RESTING))
+                addState(intArrayOf(), Ui.bento(this@MainActivity, 20, BentoDrawable.Style.LIFTED))
             }
         }
-        card.foreground = getDrawable(R.drawable.tile_focus)
+        card.foreground = Ui.focusRing(this, 20)
         card.isFocusable = true
         card.isClickable = true
         card.tag = TileInfo(tile, color)
@@ -402,7 +429,7 @@ class MainActivity : Activity() {
             val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             texts.addView(TextView(this).apply {
                 text = tile.title
-                setTextColor(Color.WHITE)
+                setTextColor(if (available) Ui.TEXT else 0xE6FFFFFF.toInt())
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, if (tile.wide) 26f else 17f)
                 typeface = resources.getFont(if (tile.wide) R.font.outfit_light else R.font.outfit_medium)
                 isSingleLine = true
@@ -411,7 +438,7 @@ class MainActivity : Activity() {
             if (tile.sub.isNotEmpty()) {
                 texts.addView(TextView(this).apply {
                     text = tile.sub
-                    setTextColor(0x99FFFFFF.toInt())
+                    setTextColor(if (available) Ui.TEXT_DIM else 0x99FFFFFF.toInt())
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     typeface = resources.getFont(R.font.outfit_regular)
                     isSingleLine = true

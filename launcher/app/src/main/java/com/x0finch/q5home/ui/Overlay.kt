@@ -89,10 +89,9 @@ class Overlay(private val host: FrameLayout) {
     fun snackbar(message: String) {
         snack?.let { host.removeView(it) }
         val v = Ui.text(context, message, 15f, Ui.TEXT, Ui.Font.MEDIUM, singleLine = false).apply {
-            background = Ui.rounded(context, Ui.CARD, 22, Ui.STROKE, 1)
+            background = Ui.card(context, 22)
             setPadding(Ui.dp(context, 22), Ui.dp(context, 13), Ui.dp(context, 22), Ui.dp(context, 13))
             gravity = Gravity.CENTER
-            elevation = Ui.dp(context, 8).toFloat()
         }
         host.addView(v, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
             bottomMargin = Ui.dp(context, 28)
