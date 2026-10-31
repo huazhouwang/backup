@@ -14,7 +14,8 @@ object ApkStrings {
     /** 和原车切换可能有关的词（类名、常量里出现就保留）。 */
     private val KEYWORDS = Regex(
         // 只用车机行业里的专门词；reverse / origin / source 这类通用词在库代码里到处都是，会刷屏。
-        "oem|yuanche|原车|原厂|avin|aux_?in|cvbs|lvds|canbus|carinfo|video_?source|source_?switch|backcar|reverse_?car|org_?car|ori_?car",
+        "oem|yuanche|原车|原厂|original|orig_|avin|aux_?in|cvbs|lvds|canbus|carinfo|video_?source|source_?switch|" +
+            "screen_?switch|mediabox|media_?box|backcar|reverse_?car|org_?car|ori_?car|^content://",
         RegexOption.IGNORE_CASE,
     )
     /** 像广播 / Intent 动作的字符串：至少三段的点分名，最后一段全大写（如 com.wwc2.main.ACTION_X）。 */
@@ -25,9 +26,21 @@ object ApkStrings {
         "^L?(kotlin|kotlinx|java|javax|androidx|android[./]support|com[./]google|okhttp3|okio|retrofit2|io[./]reactivex|org)[./]",
     )
 
+    /**
+     * 安卓自带的常量（媒体元数据、语音、附加参数等）和生成的类（资源 R$、数据绑定），
+     * 每个应用都有一大堆，和厂商逻辑无关。android.intent.action.* 保留：厂商会自定义这种动作。
+     */
+    private val NOISE = Regex(
+        "^(android\\.(media|speech|service|view|intent\\.extra|intent\\.category|hardware|car|wearable|net|provider)\\.|aios\\.|\\[L)" +
+            "|/R\\$|/R;|/databinding/|/holdr/|/BuildConfig;",
+    )
+
+    /** 命中车机关键词（排在报告前面）。 */
+    fun isKeyword(s: String) = KEYWORDS.containsMatchIn(s)
+
     fun interesting(s: String): Boolean {
         if (s.length !in 2..120 || s.any { it == ' ' || it == '\n' }) return false
-        if (s.startsWith("\$this\$") || LIBRARY.containsMatchIn(s)) return false
+        if (s.startsWith("\$this\$") || LIBRARY.containsMatchIn(s) || NOISE.containsMatchIn(s)) return false
         if (KEYWORDS.containsMatchIn(s)) return true
         if (!ACTION_LIKE.matches(s)) return false
         val last = s.substringAfterLast('.')
@@ -58,7 +71,8 @@ object ApkStrings {
                     }
             }
         }
-        return found.take(limit)
+        // 关键词命中的排前面，免得被截断。
+        return found.sortedWith(compareBy({ !isKeyword(it) }, { it })).take(limit)
     }
 
     /** dex 字符串表：header 0x38 = 个数，0x3C = 偏移；每项是 uleb128 长度 + MUTF-8 + 0。 */

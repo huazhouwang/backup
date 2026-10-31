@@ -72,6 +72,31 @@ class ReconTest {
         assertTrue(report.facts.any { it.first == "adb" })
     }
 
+    /** 假的 WWC2 CanbusProvider：original_screen 返回一行。 */
+    class FakeCanbusProvider : android.content.ContentProvider() {
+        override fun onCreate() = true
+        override fun query(uri: android.net.Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?) =
+            if (uri.lastPathSegment == "original_screen")
+                android.database.MatrixCursor(arrayOf("name", "value")).apply { addRow(arrayOf<Any>("original_screen", 1)) }
+            else null
+        override fun getType(uri: android.net.Uri): String? = null
+        override fun insert(uri: android.net.Uri, v: android.content.ContentValues?): android.net.Uri? = null
+        override fun delete(uri: android.net.Uri, s: String?, a: Array<out String>?) = 0
+        override fun update(uri: android.net.Uri, v: android.content.ContentValues?, s: String?, a: Array<out String>?) = 0
+    }
+
+    @Test
+    fun readsVendorContentProviders() {
+        org.robolectric.Robolectric.setupContentProvider(FakeCanbusProvider::class.java, "com.wwc2.canmcusdk.CanbusProvider")
+        val apk = ApkStringsTest.fakeApk(java.io.File.createTempFile("launcher", ".apk"),
+            listOf("content://com.wwc2.canmcusdk.CanbusProvider/original_screen"))
+        installPackage("com.wwc2.canmcusdk", "CanMcuSDK", listOf("com.wwc2.canmcusdk.MainActivity"), apk = apk)
+        val md = Recon.collect(app, ports = emptyList()).markdown
+        assertTrue(md.contains("## 厂商数据接口试读"))
+        assertTrue(md, md.contains("`content://com.wwc2.canmcusdk.CanbusProvider/original_screen`：1 行，列 name, value"))
+        assertTrue(md.contains("name=original_screen, value=1"))
+    }
+
     @Test
     fun uploadSplitsLongReportIntoComments() {
         TestHttpServer { path ->

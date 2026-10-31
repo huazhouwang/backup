@@ -52,8 +52,11 @@ object Recon {
     private val CARPLAY_WORDS = Regex("zlink|carplay|diplay|autokit|carlink|androidauto", RegexOption.IGNORE_CASE)
     private const val PER_PACKAGE_LIMIT = 40
     /** 要读 APK 字符串的厂商应用（除了所有桌面应用）。 */
-    private val DIG_PACKAGES = Regex("\\.main$|mainui|black|carmanager|canbus|\\.oem|avin")
-    private const val DIG_LIMIT = 400
+    private val DIG_PACKAGES = Regex("\\.main$|mainui|black|carmanager|canbus|canmcu|\\.oem|avin")
+    private const val DIG_LIMIT = 600
+    /** 最多试读几个 content:// 地址、每个最多几行。 */
+    private const val PROVIDER_LIMIT = 12
+    private const val PROVIDER_ROWS = 6
 
     fun collect(context: Context, ports: List<Int> = listOf(5555)): Report {
         val pm = context.packageManager
@@ -153,6 +156,7 @@ object Recon {
         // 关键厂商应用（原厂桌面、main / mainui / black / carmanager / canbus）APK 里的字符串常量：
         // 切原车画面多半是发广播或给 MCU 发指令，名字就在代码常量里。只读 APK 文件，不运行任何东西。
         val homePackages = homes.map { it.activityInfo.packageName }.toSet()
+        val contentUris = linkedSetOf<String>()
         val dig = vendor.filter { p ->
             p.packageName != context.packageName && p.applicationInfo?.sourceDir != null &&
                 (p.packageName in homePackages || DIG_PACKAGES.containsMatchIn(p.packageName))
@@ -166,7 +170,7 @@ object Recon {
             md.appendLine("### `${p.packageName}`（${apk.length() / 1024} KB）")
             val full = runCatching {
                 pm.getPackageInfo(p.packageName, PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
-                    PackageManager.GET_RECEIVERS or PackageManager.MATCH_DISABLED_COMPONENTS)
+                    PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS or PackageManager.MATCH_DISABLED_COMPONENTS)
             }.getOrNull()
             fun list(kind: String, items: List<android.content.pm.ComponentInfo>) {
                 items.take(PER_PACKAGE_LIMIT * 2).forEach {
@@ -177,12 +181,23 @@ object Recon {
             list("页面", full?.activities.orEmpty().toList())
             list("服务", full?.services.orEmpty().toList())
             list("广播", full?.receivers.orEmpty().toList())
+            full?.providers.orEmpty().forEach {
+                md.appendLine("- 数据接口：`content://${it.authority}`（`${it.name}`${if (it.exported) "" else " 🔒"}）")
+                contentUris += "content://${it.authority}/"
+            }
             val strings = ApkStrings.fromApk(apk, limit = DIG_LIMIT, filter = ApkStrings::interestingDeep)
+            strings.filterTo(contentUris) { it.startsWith("content://") }
             md.appendLine("- 字符串 ${strings.size} 条：")
             if (strings.isEmpty()) md.appendLine("  （没读到，或没有匹配的字符串）")
             else md.appendLine(strings.joinToString("\n") { "  - `$it`" })
             md.appendLine()
         }
+
+        // 试读找到的 content:// 地址（只 query，不写）：比如原厂桌面用的 CanbusProvider/original_screen。
+        val readable = contentUris.filter { it.startsWith("content://com.wwc2") }.take(PROVIDER_LIMIT)
+        md.appendLine("## 厂商数据接口试读（只读 query，${readable.size} 个）")
+        readable.forEach { md.appendLine("- `$it`：${queryProvider(context, it)}") }
+        md.appendLine()
 
         // 系统设置里名字和 USB / adb / 开发者有关的页面（WY 可能只是把入口藏了）。
         val settings = packages.firstOrNull { it.packageName == "com.android.settings" }
@@ -220,6 +235,31 @@ object Recon {
             pm.getInstalledPackages(PackageManager.MATCH_DISABLED_COMPONENTS).map { p ->
                 runCatching { pm.getPackageInfo(p.packageName, flags) }.getOrDefault(p)
             }
+        }
+    }
+
+    /** 只读查询一个 content:// 地址，返回列名和前几行（每格截到 60 字）。最多等 3 秒。 */
+    fun queryProvider(context: Context, uri: String): String {
+        val task = java.util.concurrent.FutureTask {
+            context.contentResolver.query(android.net.Uri.parse(uri), null, null, null, null)?.use { c ->
+                val cols = c.columnNames.toList()
+                val rows = mutableListOf<String>()
+                while (rows.size < PROVIDER_ROWS && c.moveToNext()) {
+                    rows += cols.indices.joinToString(", ") { i ->
+                        "${cols[i]}=" + (runCatching { c.getString(i) }.getOrNull() ?: "null").take(60)
+                    }
+                }
+                "${c.count} 行，列 ${cols.joinToString()}" + rows.joinToString("") { "<br>　`$it`" }
+            } ?: "返回空（没有这个地址或不让读）"
+        }
+        Thread(task, "recon-query").apply { isDaemon = true }.start()
+        return try {
+            task.get(3, java.util.concurrent.TimeUnit.SECONDS)
+        } catch (e: java.util.concurrent.TimeoutException) {
+            "3 秒没响应"
+        } catch (e: Exception) {
+            val cause = (e.cause ?: e)
+            "读不了：${cause.javaClass.simpleName}${cause.message?.let { "（${it.take(80)}）" } ?: ""}"
         }
     }
 

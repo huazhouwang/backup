@@ -81,6 +81,15 @@ class ApkStringsTest {
         assertTrue(ApkStrings.interesting("ACTION_REVERSE_CAR"))
         assertFalse(ApkStrings.interestingDeep("DEFAULT_SOURCE"))
         assertFalse(ApkStrings.interestingDeep("DEFAULT_TARGET"))
+        // 安卓自带常量、生成的类不要；厂商自定义的 android.intent.action.* 和 content:// 要。
+        assertFalse(ApkStrings.interesting("android.media.metadata.ALBUM"))
+        assertFalse(ApkStrings.interesting("android.speech.action.WEB_SEARCH"))
+        assertFalse(ApkStrings.interesting("Lcom/wwc2/canbusapk/R\$string;"))
+        assertFalse(ApkStrings.interesting("Lcom/wwc2/canbusapk/databinding/FragmentAirBinding;"))
+        assertFalse(ApkStrings.interesting("[Lcom/wwc2/canbus_interface/CarInfoDefine\$Text;"))
+        assertTrue(ApkStrings.interesting("android.intent.action.SYSTEM_NAVI_NAME"))
+        assertTrue(ApkStrings.interesting("content://com.wwc2.canmcusdk.CanbusProvider/original_screen"))
+        assertTrue(ApkStrings.interesting("origin_screen_switch"))
     }
 
     @Test
@@ -96,6 +105,10 @@ class ApkStringsTest {
         val apk = fakeApk(File.createTempFile("fake", ".apk"),
             listOf("noise", "com.wwc2.mainui.ACTION_OEM"), listOf("com.wwc2.main.SWITCH_AVIN", "noise2"))
         assertEquals(listOf("com.wwc2.main.SWITCH_AVIN", "com.wwc2.mainui.ACTION_OEM"), ApkStrings.fromApk(apk))
+        // 关键词命中的排在前面。
+        val apk2 = fakeApk(File.createTempFile("fake2", ".apk"), listOf("com.a.b.ZZZ_FIRST", "com.wwc2.ORIGINAL_SCREEN"))
+        assertEquals(listOf("com.wwc2.ORIGINAL_SCREEN", "com.a.b.ZZZ_FIRST"), ApkStrings.fromApk(apk2))
+        apk2.delete()
         assertEquals(emptyList<String>(), ApkStrings.fromApk(File("/nonexistent.apk")))
         apk.delete()
     }
