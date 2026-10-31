@@ -95,6 +95,18 @@ class ReconTest {
         assertTrue(md.contains("## 厂商数据接口试读"))
         assertTrue(md, md.contains("`content://com.wwc2.canmcusdk.CanbusProvider/original_screen`：1 行，列 name, value"))
         assertTrue(md.contains("name=original_screen, value=1"))
+        // 原车相关代码：用真的 dex（OemSwitch.enterOriginalMedia）做 APK，报告里要有它的调用顺序。
+        val dexApk = java.io.File.createTempFile("oem-switch", ".apk")
+        java.util.zip.ZipOutputStream(dexApk.outputStream()).use { zip ->
+            zip.putNextEntry(java.util.zip.ZipEntry("classes.dex"))
+            zip.write(javaClass.classLoader!!.getResourceAsStream("oem-switch.dex")!!.readBytes())
+            zip.closeEntry()
+        }
+        installPackage("com.wwc2.main", "main", listOf("com.wwc2.main.MainActivity"), apk = dexApk)
+        val md2 = Recon.collect(app, ports = emptyList()).markdown
+        assertTrue(md2.contains("## 原车相关代码（只读反汇编）"))
+        assertTrue(md2, md2.contains("- `com.wwc2.fake.OemSwitch.enterOriginalMedia`"))
+        assertTrue(md2.contains("`str \"original_screen\"` → `call Map.put`"))
     }
 
     @Test

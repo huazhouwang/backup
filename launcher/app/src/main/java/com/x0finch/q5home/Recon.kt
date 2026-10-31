@@ -54,6 +54,9 @@ object Recon {
     /** 要读 APK 字符串的厂商应用（除了所有桌面应用）。 */
     private val DIG_PACKAGES = Regex("\\.main$|mainui|black|carmanager|canbus|canmcu|\\.oem|avin")
     private const val DIG_LIMIT = 600
+    /** 反汇编时找哪些字符串（原车画面相关）。 */
+    private val ORIGINAL_CODE = Regex(
+        "original_screen|enter_original|switch_original|original_unlock|source_avin|media_box", RegexOption.IGNORE_CASE)
     /** 最多试读几个 content:// 地址、每个最多几行。 */
     private const val PROVIDER_LIMIT = 12
     private const val PROVIDER_ROWS = 6
@@ -193,8 +196,25 @@ object Recon {
             md.appendLine()
         }
 
+        // 原车相关代码：用到这些字符串的方法里依次做了什么（只读反汇编 APK，不运行）。
+        md.appendLine("## 原车相关代码（只读反汇编）")
+        md.appendLine("用到 original_screen / enter_original / switch_original / original_unlock / source_avin / media_box 的方法，" +
+            "按顺序列出里面的字符串（str）、整数（int）、调用（call）、读写字段（get / put）。")
+        md.appendLine()
+        for (p in dig) {
+            val methods = DexScan.scanApk(File(p.applicationInfo!!.sourceDir), { ORIGINAL_CODE.containsMatchIn(it) })
+            if (methods.isEmpty()) continue
+            md.appendLine("### `${p.packageName}`（${methods.size} 个方法）")
+            methods.forEach { m ->
+                md.appendLine("- `${m.name}`")
+                md.appendLine("  " + m.events.joinToString(" → ") { "`$it`" })
+            }
+            md.appendLine()
+        }
+
         // 试读找到的 content:// 地址（只 query，不写）：比如原厂桌面用的 CanbusProvider/original_screen。
-        val readable = contentUris.filter { it.startsWith("content://com.wwc2") }.take(PROVIDER_LIMIT)
+        val readable = contentUris.filter { it.startsWith("content://com.wwc2") }
+            .sortedBy { !it.contains("original") }.take(PROVIDER_LIMIT)
         md.appendLine("## 厂商数据接口试读（只读 query，${readable.size} 个）")
         readable.forEach { md.appendLine("- `$it`：${queryProvider(context, it)}") }
         md.appendLine()
