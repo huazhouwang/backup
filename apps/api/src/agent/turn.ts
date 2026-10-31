@@ -7,6 +7,7 @@ import { spokenWords, writableBabies } from './data'
 import { correctHeard } from './heard'
 import { runAgent } from './run'
 import type { AgentScope, AgentTurn } from './scope'
+import { withHeard } from './spoken'
 
 /** Foods and medicines logged within this long help recognise speech. */
 const WORDS_SINCE_MS = 30 * 86_400_000
@@ -86,6 +87,7 @@ export async function turn(
       conversation: options.spoken.recent,
     })
     options.spoken.onHeard(text)
+    text = withHeard(text, said)
   }
   return runAgent(adapter, scope, text, now)
 }

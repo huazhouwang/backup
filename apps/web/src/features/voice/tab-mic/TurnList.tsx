@@ -6,6 +6,7 @@ import { AnimatePresence, m as motion } from 'motion/react'
 import { m } from '../../../paraglide/messages.js'
 import { ChangingText, typingDots } from '../ChangingText'
 import { ConfirmAnswer } from '../ConfirmAnswer'
+import { CorrectedText } from '../CorrectedText'
 import type { Phase, Talk, Turn } from './types'
 
 /** A user's message, as in the chat. */
@@ -41,7 +42,7 @@ export function TurnList({
         {turns.flatMap((turn) => [
           <motion.div key={`${turn.id}-said`} layout="position" {...riseIn} className={userBubble}>
             <span className="sr-only">{m.voiceChatSpeakerMe()}</span>
-            <ChangingText text={turn.said} />
+            <CorrectedText text={turn.said} heard={turn.heard} />
           </motion.div>,
           <motion.div
             key={`${turn.id}-reply`}

@@ -1,3 +1,4 @@
+import { correctionChanged } from '@lullabo/shared'
 import { Bun } from '@lullabo/ui/bun'
 import { showToast } from '@lullabo/ui/toast'
 import { cn } from '@lullabo/ui/utils'
@@ -76,7 +77,11 @@ export function TabMic() {
       const recent = recentContext(history())
       const answer = await voiceApi.stream(
         { text, spoken, recent },
-        { heard: (said) => change({ said }), text: (reply) => change({ reply }) },
+        {
+          heard: (said) =>
+            change({ said, heard: correctionChanged(text, said) ? text : undefined }),
+          text: (reply) => change({ reply }),
+        },
       )
       change({ reply: answer.reply, confirming: answer.confirming })
       answered()

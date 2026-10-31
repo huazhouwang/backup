@@ -43,7 +43,7 @@ async function standInApi(page: Page, { partials: hearParts = true } = {}) {
     route.fulfill({ json: { phrase: '记录宝宝', token: null, ai: { kind: 'own' } } }),
   )
   // The conversation so far, as the server keeps it and the page refetches it.
-  const lines: { id: string; threadId: string; role: string; text: string }[] = []
+  const lines: { id: string; threadId: string; role: string; text: string; heard?: string }[] = []
   await page.route('**/api/voice/chat', async (route) => {
     const request = route.request()
     if (request.method() === 'GET') {
@@ -59,7 +59,8 @@ async function standInApi(page: Page, { partials: hearParts = true } = {}) {
     await wait('answer')
     const text = spoken ? said.replace('换尿不', '换尿布') : said
     const reply = `已记录：${text}。还有吗？`
-    lines.push({ id: `t~${lines.length}`, threadId: 't', role: 'user', text })
+    const heard = text === said ? {} : { heard: said }
+    lines.push({ id: `t~${lines.length}`, threadId: 't', role: 'user', text, ...heard })
     lines.push({ id: `t~${lines.length}`, threadId: 't', role: 'assistant', text: reply })
     await route.fulfill({
       contentType: 'text/event-stream',
@@ -133,11 +134,18 @@ test('talks to the AI on its own page, by holding the microphone or tapping it',
   await expect(page.getByText('我说：换尿布 1')).toBeVisible()
   await expect(page.getByText('已记录：换尿布 1。还有吗？')).toBeVisible()
   await expect(page.getByText('识别中')).toHaveCount(0)
+  // What was heard before the correction, behind a tap.
+  const original = page.getByRole('button', { name: '识别原文' })
+  await expect(original).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByText('换尿不 1', { exact: true })).toHaveCount(0)
+  await original.click()
+  await expect(page.getByText('换尿不 1', { exact: true })).toBeVisible()
   expect(api.partials()).toBeGreaterThan(0)
   expect(api.uploads[0]).toMatchObject({ type: 'audio/wav', head: 'RIFF' })
   expect(api.uploads[0]?.query.get('speech')).toBe('zh-CN')
 
   // Slid up before letting go, nothing is sent.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
   await page.waitForTimeout(800)
   await page.mouse.move(box.x + box.width / 2, box.y - 100, { steps: 5 })
@@ -453,6 +461,9 @@ test('talks to the AI from the tab bar, over the blurred page', async ({ browser
   await expect(page.getByText('按住麦克风继续说 · 点空白处关闭')).toBeVisible()
   // The chat bar's example changes by the day.
   await expect(page).toHaveScreenshot('tab-mic-answered.png', { mask: [page.getByText(/^比如：/)] })
+  // What was heard before the correction, behind a tap.
+  await page.getByRole('button', { name: '识别原文' }).click()
+  await expect(page.getByText('换尿不 1', { exact: true })).toBeVisible()
   // Down (Today's pull to refresh) and up (the page's bounce at its end).
   await slideOverFrost(page, [60, 150], [60, 420])
   await slideOverFrost(page, [60, 420], [60, 150])

@@ -1,4 +1,4 @@
-import { tipById } from '@lullabo/shared'
+import { correctionChanged, tipById } from '@lullabo/shared'
 import { useBounce } from '@lullabo/ui/bounce'
 import { Button } from '@lullabo/ui/button'
 import { FormError } from '@lullabo/ui/form-error'
@@ -18,6 +18,7 @@ import { type ChatMessage, type ChatTurn, voiceApi } from './api'
 import { ChangingText, typingDots as dots } from './ChangingText'
 import { ConfirmAnswer } from './ConfirmAnswer'
 import { answered, hearSoFar, recentContext } from './conversation'
+import { CorrectedText } from './CorrectedText'
 import { voiceKeys } from './queries'
 import { type Startup, canRecord } from './recorder'
 import { TalkRow } from './TalkRow'
@@ -112,7 +113,8 @@ export function ChatPage({
         { text: said, spoken, recent, tip: tip?.id },
         {
           // What was heard, corrected: the message changes in place.
-          heard: (corrected) => update(mine, corrected),
+          heard: (corrected) =>
+            update(mine, corrected, correctionChanged(said, corrected) ? said : undefined),
           text: (sofar) => {
             if (reply) update(reply, sofar)
             else {
@@ -350,7 +352,7 @@ function Bubble({ message }: { message: ChatMessage }) {
     <p className={bubbleClass(mine)}>
       {/* Only your own lines are marked; the rest are the replies. */}
       {mine && <span className="sr-only">{m.voiceChatSpeakerMe()}</span>}
-      <ChangingText text={message.text} />
+      <CorrectedText text={message.text} heard={message.heard} />
     </p>
   )
 }

@@ -321,13 +321,17 @@ describe('siri voice logging', () => {
 
   it('streams the answer, corrected first by the user’s own model', async () => {
     let own = ''
+    let asked = ''
     corrected = '小米力今天怎么样。'
     fake.setResponses([
       ({ request }) => {
         own = JSON.stringify(request.systemPrompts ?? [])
         return { text: '小米粒今天怎么样' }
       },
-      { text: '今天一切都好。' },
+      ({ request }) => {
+        asked = JSON.stringify(request.messages)
+        return { text: '今天一切都好。' }
+      },
     ])
     const res = await t.request('/api/voice/chat', {
       method: 'POST',
@@ -353,10 +357,18 @@ describe('siri voice logging', () => {
     expect(own).toContain('小米粒')
     expect(own).toContain('还有吗？')
     expect(correction).toContain('<transcription>小米力今天怎么样</transcription> /no_think')
+    // The assistant reads what was heard too, as the correction changed a word.
+    expect(asked).toContain('小米粒今天怎么样\\n（语音原文：小米力今天怎么样）')
     corrected = null
     const chat = await t.request('/api/voice/chat', { headers })
     const { lines } = (await chat.json()) as { lines: Array<{ role: string; text: string }> }
-    expect(lines.at(-2)).toMatchObject({ role: 'user', text: '小米粒今天怎么样' })
+    expect(lines.at(-2)).toEqual({
+      id: expect.any(String),
+      threadId: expect.any(String),
+      role: 'user',
+      text: '小米粒今天怎么样',
+      heard: '小米力今天怎么样',
+    })
   })
 
   it('falls back to the quick model when the user’s own fails to correct', async () => {

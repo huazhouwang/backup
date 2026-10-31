@@ -2,6 +2,7 @@ import { type ChatPage, idTime } from '@lullabo/shared'
 import type { ModelMessage } from '@tanstack/ai'
 
 import { KEEP_MS } from '../agent/retention'
+import { splitHeard } from '../agent/spoken'
 import { withoutThinking } from '../agent/text'
 import { SESSION_IDLE_MS, threadPrefix, threadRange } from '../agent/threads'
 
@@ -24,6 +25,7 @@ interface ChatLine {
   threadId: string
   role: 'user' | 'assistant'
   text: string
+  heard?: string
 }
 
 /** What a conversation shows: what the user said and the answers, not tool calls. */
@@ -38,7 +40,13 @@ function visibleLines(threadId: string, messagesJson: string): ChatLine[] {
   for (const message of messages) {
     if (message.role !== 'user' && message.role !== 'assistant') continue
     const text = messageText(message).trim()
-    if (text) lines.push({ id: `${threadId}~${lines.length}`, threadId, role: message.role, text })
+    if (!text) continue
+    const id = `${threadId}~${lines.length}`
+    lines.push(
+      message.role === 'user'
+        ? { id, threadId, role: 'user', ...splitHeard(text) }
+        : { id, threadId, role: 'assistant', text },
+    )
   }
   return lines
 }

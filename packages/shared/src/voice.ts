@@ -28,7 +28,16 @@ export interface ChatLine {
   threadId: string | null
   role: 'user' | 'assistant'
   text: string
+  /** What the speech model heard, for a spoken message the correction changed. */
+  heard?: string
 }
+
+/** A text's words alone: no punctuation, spacing or case. */
+const wordsOf = (text: string) => text.replaceAll(/[\s\p{P}\p{S}]/gu, '').toLowerCase()
+
+/** Whether a correction changed the words, not just punctuation, spacing or case. */
+export const correctionChanged = (heard: string, corrected: string) =>
+  wordsOf(heard) !== wordsOf(corrected)
 
 /** A page of the last 30 days of conversations, oldest message first. */
 export interface ChatPage {

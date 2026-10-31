@@ -41,13 +41,16 @@ export function useChatHistory(open: boolean) {
     })
     return id
   }
-  /** Changes the text of a message shown by `append`: corrected, or a reply growing. */
-  const update = (id: string, text: string) =>
+  /**
+   * Changes the text of a message shown by `append`: corrected (with what was `heard` when
+   * the correction changed the words), or a reply growing.
+   */
+  const update = (id: string, text: string, heard?: string) =>
     queryClient.setQueryData<InfiniteData<ChatPage, string | null>>(voiceKeys.chat, (data) => {
       if (!data) return data
       const [latest, ...rest] = data.pages
       if (!latest) return data
-      const lines = latest.lines.map((line) => (line.id === id ? { ...line, text } : line))
+      const lines = latest.lines.map((line) => (line.id === id ? { ...line, text, heard } : line))
       return { ...data, pages: [{ ...latest, lines }, ...rest] }
     })
 
