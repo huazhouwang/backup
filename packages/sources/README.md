@@ -88,3 +88,9 @@ CoinGecko id, anything else is `cex:<TICKER>` with the venue's USDT price as `pr
   are dropped; NFTs (0 decimals) are skipped; mints past the 300-mint lookup cap are kept with a
   shortened mint as symbol. Both upstreams throttle bursts (the RPC answers JSON-RPC error 429).
   Staked SOL is not read. 6 requests.
+- `bitcoin` — an address (P2PKH, P2SH, bech32/bech32m) or an account's xpub/ypub/zpub, read
+  from Trezor's public Blockbook (`btc1.trezor.io`); no key. Blockbook scans an extended key's
+  addresses (gap limit) itself, so a ypub/zpub or an address is one request; a bare xpub is
+  ambiguous about its script type, so four descriptors (`pkh`, `sh(wpkh)`, `wpkh`, `tr`) are
+  scanned and summed (4 requests). Reports the confirmed balance (`details=basic` leaves out
+  unconfirmed amounts). No published rate limit; addresses and keys are checked locally first.
