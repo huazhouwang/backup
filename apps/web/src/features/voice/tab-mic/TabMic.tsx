@@ -99,7 +99,6 @@ export function TabMic() {
     setLive('')
     setProblem(null)
   }
-  const lastReply = () => history().findLast((line) => line.role === 'assistant')?.text
   const openChat = () => {
     reset()
     void navigate({ to: '/chat' })
@@ -129,7 +128,7 @@ export function TabMic() {
       setPhase('talking')
     },
     onPartial: async (soFar) => {
-      const text = await hearSoFar(soFar, lastReply())
+      const text = await hearSoFar(soFar)
       if (text && talking.current) setLive(text)
     },
     // Dropped: back to the conversation so far, or closed when there is none.
@@ -149,7 +148,7 @@ export function TabMic() {
         setPhase('done')
       }
       voiceApi
-        .transcribe(recording, { recent: lastReply(), startup })
+        .transcribe(recording, { startup })
         .then(({ text }) => (text ? send(text, true) : failed(m.voiceUnheard())))
         .catch(() => failed(m.actionFailed()))
     },

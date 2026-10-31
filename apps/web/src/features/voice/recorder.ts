@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { audioContext, audioSessionType, setAudioUse, sinceAudioUseChanged } from '../../lib/audio'
+import { trimSilence } from './silence'
 
 /** Longest recording; the chat sends it then. 30 s of 16 kHz WAV stays under the API's 1 MB. */
 export const MAX_RECORDING_MS = 30_000
@@ -444,7 +445,7 @@ export function useRecorder() {
       }
       return { said: null, why: 'unheard', unheard }
     }
-    return { said: wav(samples), startup: current.startup }
+    return { said: wav(trimSilence(samples, SAMPLE_RATE)), startup: current.startup }
   }, [release])
 
   const cancel = useCallback(() => {

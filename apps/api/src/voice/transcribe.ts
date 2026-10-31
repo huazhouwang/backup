@@ -38,18 +38,18 @@ export interface SpeechHints {
   names: string[]
   /** Foods and medicines the family logs. */
   words: string[]
-  /** The assistant's last line, which this may answer. */
-  recent?: string
 }
 
 /**
- * The prompt Whisper reads as the text before the recording: the conversation's last line
- * and the words it should know, ending with the vocabulary in the right script.
+ * The prompt Whisper reads as the text before the recording: the words it should know,
+ * ending with the vocabulary in the right script. Words only: Whisper writes out a prompt's
+ * sentences over noise as if they were said (the assistant's last question among them, so
+ * that is left to the correction, which reads the conversation).
  */
 export function speechPrompt(language: string | undefined, hints: SpeechHints) {
   const vocabulary = language ? (VOCABULARY[language] ?? '') : ''
   const words = [...hints.names, ...hints.words].join(', ')
-  const prompt = [hints.recent, words, vocabulary].filter(Boolean).join(' ')
+  const prompt = [words, vocabulary].filter(Boolean).join(' ')
   // The end matters most: the vocabulary sets the script, the names come right before.
   return prompt.slice(-PROMPT_CHARS)
 }
@@ -109,6 +109,10 @@ export async function transcribe(
     task: 'transcribe',
     ...(prompt ? { initial_prompt: prompt } : {}),
     vad_filter: true,
+    // Beam search falls into repeating itself far less than greedy decoding does.
+    beam_size: 5,
+    // One short recording: nothing earlier to carry a loop over from.
+    condition_on_previous_text: false,
     // Skips what it would make up over a pause, as it does at a recording's noisy end.
     hallucination_silence_threshold: 1.5,
   })

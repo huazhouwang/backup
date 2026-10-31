@@ -8,7 +8,7 @@ import type { AgentTurn } from '../agent/scope'
 import { REPLIES, speechHints, stop, turn } from '../agent/turn'
 import { json } from '../http'
 import type { AppEnv } from '../types'
-import { MAX_TEXT, localeSchema, textSchema, timeZoneSchema } from '../validation'
+import { localeSchema, textSchema, timeZoneSchema } from '../validation'
 import { readSettings, saveSettings, settingsView } from '../voice/settings'
 import { createToken, revokeToken } from '../voice/tokens'
 import { transcribe } from '../voice/transcribe'
@@ -23,15 +23,11 @@ const tokenCreateSchema = z.object({
   locale: localeSchema.optional(),
 })
 /**
- * What comes with a recording: the language it is likely in (the app's), the
- * assistant's last line, and whether it is a part heard while the user is still talking.
+ * What comes with a recording: the language it is likely in (the app's), and whether it
+ * is a part heard while the user is still talking.
  */
 const speechQuerySchema = z.object({
   speech: localeSchema.optional(),
-  recent: z
-    .string()
-    .transform((line) => line.slice(0, MAX_TEXT))
-    .optional(),
   partial: z.literal('1').optional(),
   /** How long recording took to start on the device (ms), and taking the microphone. */
   ready: z
@@ -190,7 +186,7 @@ export const voiceRoutes = new Hono<AppEnv>()
         retakes: Number(retakes ?? 0),
       })
     }
-    const hints = { ...(await speechHints(db, access, now)), recent: query.data.recent }
+    const hints = await speechHints(db, access, now)
     try {
       return c.json({ text: await transcribe(ai, audio, query.data.speech, hints) })
     } catch (error) {

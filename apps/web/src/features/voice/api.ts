@@ -92,18 +92,13 @@ export const voiceApi = {
     ),
   /**
    * What was said in a recording (WAV), likely in the app's language: the whole of it, or a
-   * `partial` one while the user is still talking. `recent` is the
-   * assistant's last line, which it may answer; `startup`, how long recording took to start,
-   * is logged to see where the wait goes.
+   * `partial` one while the user is still talking. `startup`, how long recording took to
+   * start, is logged to see where the wait goes.
    */
-  transcribe: (
-    recording: Blob,
-    options: { partial?: boolean; recent?: string; startup?: Startup } = {},
-  ) =>
+  transcribe: (recording: Blob, options: { partial?: boolean; startup?: Startup } = {}) =>
     apiFetch<{ text: string | null }>(
       `/api/voice/transcribe?${new URLSearchParams({
         speech: getLocale(),
-        ...(options.recent ? { recent: options.recent.slice(0, 300) } : {}),
         ...(options.partial ? { partial: '1' } : {}),
         ...(options.startup
           ? {

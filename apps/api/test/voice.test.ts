@@ -50,7 +50,7 @@ describe('siri voice logging', () => {
   let system = ''
   // What the fake Whisper hears next, and what it was asked.
   let heard = ''
-  let whisper: { language?: string; initial_prompt?: string } = {}
+  let whisper: Record<string, unknown> & { language?: string; initial_prompt?: string } = {}
   // The correction model on Workers AI: what it was told, and what it answers next.
   let correction = ''
   let corrected: string | null = null
@@ -268,14 +268,16 @@ describe('siri voice logging', () => {
     expect(whisper.language).toBeUndefined()
     expect(whisper.initial_prompt).toBe('小米粒')
 
-    // In Chinese the prompt also carries the words it should spell in simplified script,
-    // after the assistant's last line, which this may answer.
+    // In Chinese the prompt also carries the words it should spell in simplified script;
+    // never the assistant's last line (an older app still sends it), as Whisper writes a
+    // prompt's sentences out over noise.
     heard = '  '
     expect(await (await hear(32_000, 'zh-Hans-CN&recent=要删除吗？')).json()).toEqual({
       text: null,
     })
     expect(whisper.language).toBeUndefined()
-    expect(whisper.initial_prompt).toMatch(/^要删除吗？ 小米粒 .*毫升/)
+    expect(whisper.initial_prompt).toMatch(/^小米粒 .*毫升/)
+    expect(whisper).toMatchObject({ beam_size: 5, condition_on_previous_text: false })
     // Too short to hold anything, or over the body limit.
     expect((await hear(100)).status).toBe(400)
     expect((await hear(1024 * 1024 + 1)).status).toBe(413)

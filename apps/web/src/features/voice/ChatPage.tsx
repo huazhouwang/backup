@@ -100,7 +100,6 @@ export function ChatPage({
   } | null>(null)
   // Whether the assistant's reply has started to show, growing as it is written.
   const [answering, setAnswering] = useState(false)
-  const lastReply = messages.findLast((message) => message.role === 'assistant')?.text
 
   const send = useMutation<ChatTurn, Error, { text: string; spoken?: boolean }>({
     mutationFn: async ({ text: said, spoken }) => {
@@ -149,7 +148,7 @@ export function ChatPage({
   }
   const hear = useMutation({
     mutationFn: ({ recording, startup }: { recording: Blob; startup: Startup }) =>
-      voiceApi.transcribe(recording, { recent: lastReply, startup }),
+      voiceApi.transcribe(recording, { startup }),
     onMutate: () => setUnheard(false),
     onSuccess: ({ text: heard }) => {
       setLive(null)
@@ -171,7 +170,7 @@ export function ChatPage({
       if (talking.current) setLive((current) => ({ phase: 'talking', text: current?.text ?? '' }))
     },
     onPartial: async (soFar: Blob) => {
-      const heard = await hearSoFar(soFar, lastReply)
+      const heard = await hearSoFar(soFar)
       if (heard && talking.current) setLive({ phase: 'talking', text: heard })
     },
     onDrop: () => {

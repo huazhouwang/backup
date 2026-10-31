@@ -7,9 +7,9 @@ export const recentContext = (lines: readonly { role: 'user' | 'assistant'; text
   lines.slice(-4).map((line) => `${line.role === 'user' ? 'User' : 'Assistant'}: ${line.text}`)
 
 /** What has been said so far, made out while still talking; null when nothing is. */
-export const hearSoFar = (soFar: Blob, lastReply: string | undefined) =>
+export const hearSoFar = (soFar: Blob) =>
   voiceApi
-    .transcribe(soFar, { partial: true, recent: lastReply })
+    .transcribe(soFar, { partial: true })
     .then(({ text }) => text)
     .catch(() => null)
 
