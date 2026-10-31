@@ -19,6 +19,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import com.x0finch.q5home.ui.Glass
 import com.x0finch.q5home.ui.Menus
 import com.x0finch.q5home.ui.Overlay
 import com.x0finch.q5home.ui.Toggle
@@ -85,6 +86,7 @@ class SettingsActivity : Activity() {
         page.addView(scroll, LinearLayout.LayoutParams(0, -1, 1f).apply { marginStart = dp(18) })
         root.addView(page, FrameLayout.LayoutParams(-1, -1))
         Ui.allowShadows(page, scroll, content, nav)
+        Glass.followScroll(scroll)
         setContentView(root)
         render()
     }
@@ -138,7 +140,7 @@ class SettingsActivity : Activity() {
 
     private fun renderNav() {
         // 记住分类列表滚到哪了，重建后滚回去。
-        val oldScroll = (nav.getChildAt(1) as? ScrollView)?.scrollY ?: 0
+        val oldScroll = ((nav.getChildAt(1) as? FrameLayout)?.getChildAt(0) as? ScrollView)?.scrollY ?: 0
         nav.removeAllViews()
         nav.addView(Ui.text(this, "桌面设置", 34f, Ui.TEXT, Ui.Font.LIGHT),
             LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(16); marginStart = dp(6) })
@@ -152,12 +154,19 @@ class SettingsActivity : Activity() {
         navItem(items, SECTION_RECON, "车机摸底", R.drawable.ui_info)
         navItem(items, SECTION_ADVANCED, "高级", R.drawable.ui_tune)
         val itemScroll = ScrollView(this).apply {
+            Glass.followScroll(this)
             isVerticalScrollBarEnabled = false
             isVerticalFadingEdgeEnabled = true
             setFadingEdgeLength(dp(24))
             addView(items)
         }
-        nav.addView(itemScroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        // 分类列表放在一张磨砂卡片上，背后是壁纸时也看得清。
+        val navCard = FrameLayout(this).apply {
+            background = Ui.group(this@SettingsActivity, 20)
+            setPadding(dp(6), dp(6), dp(6), dp(6))
+            addView(itemScroll, FrameLayout.LayoutParams(-1, -1))
+        }
+        nav.addView(navCard, LinearLayout.LayoutParams(-1, 0, 1f))
         itemScroll.post { itemScroll.scrollTo(0, oldScroll) }
         nav.addView(Ui.pill(this, "返回桌面") { finish() },
             LinearLayout.LayoutParams(-2, dp(48)).apply { topMargin = dp(10); bottomMargin = dp(20) })

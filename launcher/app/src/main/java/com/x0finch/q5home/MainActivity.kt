@@ -27,6 +27,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.x0finch.q5home.ui.BentoDrawable
+import com.x0finch.q5home.ui.Glass
 import com.x0finch.q5home.ui.MenuItem
 import com.x0finch.q5home.ui.Menus
 import com.x0finch.q5home.ui.Overlay
@@ -256,7 +257,8 @@ class MainActivity : Activity() {
     private fun styleDashboard() {
         root.setBackgroundColor(Ui.PAGE)
         // 背景壁纸只淡淡透一点。
-        scrim.setBackgroundColor(if (Ui.dark) 0xE60F0F11.toInt() else 0xF0ECEBE8.toInt())
+        // 背景就是壁纸，只压一点点；卡片是磨砂玻璃（Glass）。
+        scrim.setBackgroundColor(if (Ui.dark) 0x40000000 else 0x0D000000)
         credit.setTextColor(Ui.TEXT_FAINT)
         val clockCard = findViewById<View>(R.id.clockCard)
         val gpsCard = findViewById<View>(R.id.gpsCard)
@@ -268,6 +270,7 @@ class MainActivity : Activity() {
         }
         carplayCard.foreground = Ui.focusRing(this, 26)
         Ui.allowShadows(findViewById(R.id.grid), findViewById(R.id.topRow), tileScroll, tiles)
+        Glass.followScroll(tileScroll)
         for (v in listOf<TextView>(greeting, gpsLabel, findViewById(R.id.carplayLabel))) {
             v.setTextColor(Ui.TEXT_DIM)
             v.setCompoundDrawablesRelative(dot(), null, null, null)
@@ -302,6 +305,14 @@ class MainActivity : Activity() {
         }
         carplayCard.setOnLongClickListener { v -> onTileLongClick(carplayTile(), v); true }
         pressAnimation(carplayCard, 1.02f)
+    }
+
+    /** 换壁纸 / 页面尺寸变了：重算磨砂玻璃用的模糊背景，卡片重画。 */
+    private fun refreshGlass(bitmap: android.graphics.Bitmap?, key: String?) {
+        wallpaperView.post {
+            Glass.update(wallpaperView, bitmap, key)
+            Glass.invalidateTree(root)
+        }
     }
 
     /** 卡片标签前的小圆点（强调色）。 */
@@ -417,6 +428,7 @@ class MainActivity : Activity() {
         shownWallpaper = wallpaper?.key
         val bitmap = wallpaper?.let { Wallpapers.decode(this, it, resources.displayMetrics.widthPixels) }
         wallpaperView.setImageBitmap(bitmap)
+        refreshGlass(bitmap, wallpaper?.key)
         // 纯色壁纸时封面用 CarPlay 图标。
         if (bitmap != null) art.setImageBitmap(bitmap) else art.setImageDrawable(Icons.byKey("carplay")?.let { Icons.badge(this, it) })
         val author = wallpaper?.author
@@ -486,12 +498,8 @@ class MainActivity : Activity() {
 
         val card = FrameLayout(this)
         card.background = when {
-            // 加号 / 没装的应用：贴合的虚线框，不抢眼。
-            !available || tile.slot == Slot.ADD -> GradientDrawable().apply {
-                cornerRadius = dp(22).toFloat()
-                setColor(Ui.PRESSED)
-                setStroke(dp(1), Ui.TEXT_FAINT, dp(6).toFloat(), dp(5).toFloat())
-            }
+            // 加号：贴合的磨砂卡片（不抬起，不抢眼）。没装的应用照常显示，内容变淡。
+            tile.slot == Slot.ADD -> Ui.bento(this, 22, BentoDrawable.Style.RESTING)
             // Bento 卡片：平时抬起，按下变贴合（像被按下去）。
             else -> StateListDrawable().apply {
                 addState(intArrayOf(android.R.attr.state_pressed), Ui.bento(this@MainActivity, 22, BentoDrawable.Style.RESTING))

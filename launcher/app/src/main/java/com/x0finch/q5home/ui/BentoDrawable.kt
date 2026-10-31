@@ -24,6 +24,8 @@ import android.util.LruCache
  *  - [Style.LIFTED] 抬起：投影扩散更大、y 更往下，像卡片浮起来（首页磁贴、弹出卡片）；
  *  - [Style.RESTING] 贴合：投影很浅，描边微微加深，卡片背景更亮（设置分组、按钮、按下时）。
  *
+ * 磨砂玻璃：有壁纸时卡片底色半透明，后面先画一块模糊过的壁纸（[Glass]），像毛玻璃。
+ *
  * 投影在卡片外面画（需要父布局 clipChildren=false）。安卓 8.1 的硬件加速不支持形状的模糊阴影，
  * 所以投影先按 1/4 尺寸画成 ALPHA_8 小图（软件画布）缓存起来，再放大贴上，很省内存和 CPU。
  */
@@ -51,6 +53,12 @@ class BentoDrawable(
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val rect = RectF()
+    private val clip = android.graphics.Path()
+    /** 这次画的是不是玻璃（有模糊背景）；底色按它选。 */
+    private var glassShader: android.graphics.Shader? = null
+    private var solidShader: android.graphics.Shader? = null
+    private var glassStroke = 0
+    private var solidStroke = 0
     private val src = Rect()
     private val dst = RectF()
     private var shadowBitmap: Bitmap? = null
@@ -64,10 +72,15 @@ class BentoDrawable(
         super.onBoundsChange(bounds)
         shadowBitmap = if (bounds.isEmpty) null else shadowFor(bounds.width(), bounds.height())
         val w = Ui.cardColors(dark, style, fill)
-        fillPaint.shader = LinearGradient(0f, bounds.top.toFloat(), 0f, bounds.bottom.toFloat(),
+        solidShader = LinearGradient(0f, bounds.top.toFloat(), 0f, bounds.bottom.toFloat(),
             w.top, w.bottom, Shader.TileMode.CLAMP)
-        strokePaint.color = w.stroke
-        strokeAlpha = Color.alpha(w.stroke)
+        solidStroke = w.stroke
+        val g = Ui.glassColors(dark, style)
+        glassShader = LinearGradient(0f, bounds.top.toFloat(), 0f, bounds.bottom.toFloat(),
+            g.top, g.bottom, Shader.TileMode.CLAMP)
+        glassStroke = g.stroke
+        clip.reset()
+        clip.addRoundRect(RectF(bounds), radiusPx, radiusPx, android.graphics.Path.Direction.CW)
         strokePaint.strokeWidth = density.coerceAtLeast(1f) // 1dp ≈ 1.5px，车机上看起来正好是一条细线
         // 内发光：上沿亮，往下 1/3 渐隐到透明。
         glowPaint.strokeWidth = density * 1.5f
@@ -107,6 +120,18 @@ class BentoDrawable(
             shadowPaint.alpha = alphaMul
             canvas.drawBitmap(bmp, src, dst, shadowPaint)
         }
+        // 磨砂玻璃：先在圆角里画模糊的壁纸，再盖一层半透明底色。
+        var glass = false
+        if (fill == null && Glass.blurred != null) {
+            val save = canvas.save()
+            canvas.clipPath(clip)
+            glass = Glass.draw(canvas, hostView(), bounds, alphaMul)
+            canvas.restoreToCount(save)
+        }
+        fillPaint.shader = if (glass) glassShader else solidShader
+        val stroke = if (glass) glassStroke else solidStroke
+        strokePaint.color = stroke
+        strokeAlpha = Color.alpha(stroke)
         fillPaint.alpha = alphaMul
         canvas.drawRoundRect(rect, radiusPx, radiusPx, fillPaint)
         // 描边和内发光画在 0.5px 内侧，线条才清楚。
@@ -117,6 +142,14 @@ class BentoDrawable(
         canvas.drawRoundRect(rect, r, r, glowPaint)
         strokePaint.alpha = strokeAlpha * alphaMul / 255
         canvas.drawRoundRect(rect, r, r, strokePaint)
+    }
+
+    /** 画在哪个 View 上（StateListDrawable 里的子 Drawable 的 callback 是外层 Drawable，要往上找）。 */
+    private fun hostView(): android.view.View? {
+        var cb: Any? = callback
+        var depth = 0
+        while (cb is Drawable && depth++ < 4) cb = cb.callback
+        return cb as? android.view.View
     }
 
     override fun setAlpha(alpha: Int) { alphaMul = alpha; invalidateSelf() }

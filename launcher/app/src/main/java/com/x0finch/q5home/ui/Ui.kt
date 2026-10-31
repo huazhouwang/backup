@@ -82,6 +82,21 @@ object Ui {
         }
     }
 
+    /**
+     * 磨砂玻璃卡片的颜色：半透明底（后面是模糊的壁纸）、白色细边（玻璃边缘反光）、更亮的顶部内发光。
+     * 贴合 RESTING 更不透明一点（按下 / 分组更"实"）。
+     */
+    fun glassColors(dark: Boolean, style: BentoDrawable.Style): CardColors {
+        val resting = style == BentoDrawable.Style.RESTING
+        return if (dark) {
+            if (resting) CardColors(0x992C2C31.toInt(), 0x8C202024.toInt(), 0x2EFFFFFF, 0x3DFFFFFF)
+            else CardColors(0x80292A2E.toInt(), 0x6B1A1A1D, 0x24FFFFFF, 0x38FFFFFF)
+        } else {
+            if (resting) CardColors(0xE0FFFFFF.toInt(), 0xCCFBFAF8.toInt(), 0xB3FFFFFF.toInt(), 0xFFFFFFFF.toInt())
+            else CardColors(0xCCFFFFFF.toInt(), 0xA8F6F5F2.toInt(), 0x99FFFFFF.toInt(), 0xFFFFFFFF.toInt())
+        }
+    }
+
     private fun lighten(c: Int, t: Float) = Color.rgb(
         (Color.red(c) + (255 - Color.red(c)) * t).toInt(),
         (Color.green(c) + (255 - Color.green(c)) * t).toInt(),
@@ -210,7 +225,8 @@ object Ui {
         val root = FrameLayout(activity).apply { setBackgroundColor(PAGE) }
         root.addView(ImageView(activity).apply { scaleType = ImageView.ScaleType.CENTER_CROP }, FrameLayout.LayoutParams(-1, -1))
         root.addView(View(activity).apply {
-            setBackgroundColor(if (dark) 0xE00F0F11.toInt() else 0xEBECEBE8.toInt())
+            // 壁纸透出来（卡片是磨砂玻璃），但标题直接写在背景上，所以还是压一层。
+            setBackgroundColor(if (dark) 0xB30F0F11.toInt() else 0xB3ECEBE8.toInt())
         }, FrameLayout.LayoutParams(-1, -1))
         refreshPageWallpaper(activity, root)
         return root
@@ -220,9 +236,13 @@ object Ui {
     fun refreshPageWallpaper(activity: Activity, root: FrameLayout) {
         val image = root.getChildAt(0) as? ImageView ?: return
         val config = Config(activity).also { it.reload() }
-        val bmp = Wallpapers.current(activity, config.wallpaper, intervalMinutes = config.wallpaperInterval,
+        val wallpaper = Wallpapers.current(activity, config.wallpaper, intervalMinutes = config.wallpaperInterval,
             daylight = if (config.wallpaperSun) Sun.isDaylight(activity) else null)
-            ?.let { Wallpapers.decode(activity, it, activity.resources.displayMetrics.widthPixels / 2) }
+        val bmp = wallpaper?.let { Wallpapers.decode(activity, it, activity.resources.displayMetrics.widthPixels / 2) }
         image.setImageBitmap(bmp)
+        image.post {
+            Glass.update(image, bmp, wallpaper?.key + "/half")
+            Glass.invalidateTree(root)
+        }
     }
 }

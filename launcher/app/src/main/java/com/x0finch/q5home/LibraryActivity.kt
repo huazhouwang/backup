@@ -60,6 +60,13 @@ class LibraryActivity : Activity() {
             setPadding(0, dp(18), 0, dp(24))
             adapter = AppAdapter()
             setOnItemClickListener { _, _, position, _ -> onPick(apps[position]) }
+            // 磨砂卡片：滚动时重画，背景的模糊壁纸才对得上位置。
+            setOnScrollListener(object : android.widget.AbsListView.OnScrollListener {
+                override fun onScrollStateChanged(view: android.widget.AbsListView, state: Int) {}
+                override fun onScroll(view: android.widget.AbsListView, first: Int, visible: Int, total: Int) {
+                    com.x0finch.q5home.ui.Glass.invalidateTree(view)
+                }
+            })
             setOnItemLongClickListener { _, view, position, _ -> onLongPick(apps[position], view); true }
         }
         page.addView(grid, LinearLayout.LayoutParams(-1, 0, 1f))

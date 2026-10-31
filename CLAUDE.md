@@ -66,6 +66,8 @@ MT6739、32 位 armeabi-v7a，平台是 WWC2（`com.wwc2.*`）。`user` 构建�
   - 界面风格：极简 **Bento 卡片**（`ui/BentoDrawable.kt`）——多重投影 + 1px 描边 + 顶部内发光；
     两种样式：抬起 `LIFTED`（投影大、往下偏：首页磁贴、弹出卡片、按钮平时）和贴合 `RESTING`（描边略深、底色更亮：设置分组、按下时）。
     投影按 1/4 尺寸画成 ALPHA_8 小图缓存（安卓 8.1 硬件加速不支持形状模糊阴影），父布局要 `Ui.allowShadows` 关掉裁剪。
+    磨砂玻璃（`ui/Glass.kt`）：页面背景是壁纸，卡片底色半透明，后面画一块模糊过的壁纸（安卓 8.1 没有系统模糊：
+    缩到 1/10 软件盒式模糊三遍，换壁纸才重算）；滚动容器要 `Glass.followScroll`，否则模糊背景对不上位置。
     外观 `appearance`：auto（白天浅色、日落后深色，按 `Sun`）/ light / dark；颜色都从 `Ui` 的主题色取，别再写死颜色。
   - 界面组件在 `ui/`（`Ui` 风格和主题色、`Overlay` 弹出层、`Menus` 菜单/确认/图标网格、`Toggle` 开关），
     设置是整页 `SettingsActivity`。不要再用系统 AlertDialog / Toast。
