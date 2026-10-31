@@ -4,3 +4,4 @@ backups/
 .DS_Store
 __pycache__/
 demo-out/
+.review/
