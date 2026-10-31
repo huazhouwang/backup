@@ -94,3 +94,11 @@ CoinGecko id, anything else is `cex:<TICKER>` with the venue's USDT price as `pr
   ambiguous about its script type, so four descriptors (`pkh`, `sh(wpkh)`, `wpkh`, `tr`) are
   scanned and summed (4 requests). Reports the confirmed balance (`details=basic` leaves out
   unconfirmed amounts). No published rate limit; addresses and keys are checked locally first.
+- `hyperliquid` — perp positions and spot balances of an account from Hyperliquid's keyless
+  info API (`api.hyperliquid.xyz/info`); no key. Up to 4 requests: the account mode, perp
+  state, spot state, and spot prices (only when a token has no CoinGecko id). Perps count their
+  equity; free collateral is USDC at `perp margin`, so perp-side values add up to the account
+  value. In unified and portfolio-margin accounts the spot USDC balance already holds the perp
+  account value, which is subtracted so nothing counts twice. Only the default (validator-run)
+  perp dex is read. Rate limit is weight-based per IP (1200 per minute; these queries weigh
+  2 to 20).

@@ -16,6 +16,7 @@ export { budgetedFetch, fetchJson, type BudgetedFetch, type FetchLike } from './
 export { binance } from './binance'
 export { bybit } from './bybit'
 export { bitcoin } from './bitcoin'
+export { hyperliquid } from './hyperliquid'
 export { manual, type ManualHolding } from './manual'
 export { okx } from './okx'
 export { isKnownTicker, tickerAsset, tickerAssetId } from './tickers'

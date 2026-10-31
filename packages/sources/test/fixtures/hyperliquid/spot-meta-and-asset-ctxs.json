@@ -1,0 +1,157 @@
+[
+  {
+    "universe": [
+      {
+        "tokens": [150, 0],
+        "name": "@107",
+        "index": 107,
+        "isCanonical": false
+      },
+      {
+        "tokens": [197, 0],
+        "name": "@142",
+        "index": 142,
+        "isCanonical": false
+      },
+      {
+        "tokens": [235, 0],
+        "name": "@150",
+        "index": 150,
+        "isCanonical": false
+      },
+      {
+        "tokens": [254, 0],
+        "name": "@156",
+        "index": 156,
+        "isCanonical": false
+      },
+      {
+        "tokens": [150, 235],
+        "name": "@255",
+        "index": 255,
+        "isCanonical": false
+      }
+    ],
+    "tokens": [
+      {
+        "name": "USDC",
+        "szDecimals": 8,
+        "weiDecimals": 8,
+        "index": 0,
+        "tokenId": "0x6d1e7cde53ba9467b783cb7c530ce054",
+        "isCanonical": true,
+        "evmContract": {
+          "address": "0x6b9e773128f453f5c2c60935ee2de2cbc5390a24",
+          "evm_extra_wei_decimals": -2
+        },
+        "fullName": null,
+        "deployerTradingFeeShare": "0.0"
+      },
+      {
+        "name": "HYPE",
+        "szDecimals": 2,
+        "weiDecimals": 8,
+        "index": 150,
+        "tokenId": "0x0d01dc56dcaaca66ad901c959b4011ec",
+        "isCanonical": false,
+        "evmContract": null,
+        "fullName": "Hyperliquid",
+        "deployerTradingFeeShare": "0.0"
+      },
+      {
+        "name": "UBTC",
+        "szDecimals": 5,
+        "weiDecimals": 10,
+        "index": 197,
+        "tokenId": "0x8f254b963e8468305d409b33aa137c67",
+        "isCanonical": false,
+        "evmContract": {
+          "address": "0x9fdbda0a5e284c32744d2f17ee5c74b284993463",
+          "evm_extra_wei_decimals": -2
+        },
+        "fullName": "Unit Bitcoin",
+        "deployerTradingFeeShare": "1.0"
+      },
+      {
+        "name": "USDE",
+        "szDecimals": 2,
+        "weiDecimals": 8,
+        "index": 235,
+        "tokenId": "0x2e6d84f2d7ca82e6581e03523e4389f7",
+        "isCanonical": false,
+        "evmContract": {
+          "address": "0x5d3a1ff2b6bab83b63cd9ad0787074081a52ef34",
+          "evm_extra_wei_decimals": 10
+        },
+        "fullName": "USDe",
+        "deployerTradingFeeShare": "0.0"
+      },
+      {
+        "name": "USOL",
+        "szDecimals": 3,
+        "weiDecimals": 8,
+        "index": 254,
+        "tokenId": "0x49b67c39f5566535de22b29b0e51e685",
+        "isCanonical": false,
+        "evmContract": {
+          "address": "0x068f321fa8fb9f0d135f290ef6a3e2813e1c8a29",
+          "evm_extra_wei_decimals": 1
+        },
+        "fullName": "Unit Solana",
+        "deployerTradingFeeShare": "1.0"
+      }
+    ]
+  },
+  [
+    {
+      "prevDayPx": "93.031",
+      "dayNtlVlm": "77050651.3724700063",
+      "markPx": "87.62",
+      "midPx": "87.6205",
+      "circulatingSupply": "301913913.0152852535",
+      "coin": "@107",
+      "totalSupply": "998808191.5577468872",
+      "dayBaseVlm": "858510.2900000002"
+    },
+    {
+      "prevDayPx": "77716.0",
+      "dayNtlVlm": "38074721.1787800193",
+      "markPx": "77342.0",
+      "midPx": "77341.5",
+      "circulatingSupply": "20999999.9968149699",
+      "coin": "@142",
+      "totalSupply": "20999999.9968149774",
+      "dayBaseVlm": "493.91814"
+    },
+    {
+      "prevDayPx": "0.9987",
+      "dayNtlVlm": "18814.9776539",
+      "markPx": "0.9986",
+      "midPx": "0.99865",
+      "circulatingSupply": "100000000000.0",
+      "coin": "@150",
+      "totalSupply": "100000000000.0",
+      "dayBaseVlm": "18847.73"
+    },
+    {
+      "prevDayPx": "96.882",
+      "dayNtlVlm": "3789036.2005420011",
+      "markPx": "95.632",
+      "midPx": "95.6315",
+      "circulatingSupply": "499999999.7272463441",
+      "coin": "@156",
+      "totalSupply": "499999999.7360163331",
+      "dayBaseVlm": "39739.84"
+    },
+    {
+      "prevDayPx": "93.363",
+      "dayNtlVlm": "16988.46816",
+      "markPx": "87.845",
+      "midPx": "87.757",
+      "circulatingSupply": "301913913.0152852535",
+      "coin": "@255",
+      "totalSupply": "998808191.5577468872",
+      "dayBaseVlm": "191.18"
+    }
+  ]
+]
