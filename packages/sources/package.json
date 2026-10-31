@@ -13,9 +13,12 @@
   },
   "dependencies": {
     "@folio/shared": "workspace:*",
+    "@scure/base": "^2.4.0",
+    "big.js": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/big.js": "catalog:",
     "@types/node": "catalog:"
   }
 }
