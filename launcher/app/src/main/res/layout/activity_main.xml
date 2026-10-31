@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  首页 = Bento 仪表盘：纯色页面铺满卡片。
+  上排：时钟卡 | GPS 卡（车速 + 日出日落弧线）| CarPlay 大卡（左边方块是当前壁纸）。
+  下排：应用卡（原车、常用应用、添加、全部应用、桌面设置），多了可以左右滑。
+  壁纸只在 CarPlay 卡里完整显示，页面背景里只淡淡透一点。
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 壁纸（设置里可选每日轮换 / 指定 / 纯黑）。 -->
+    <!-- 页面背景里很淡的一层壁纸（上面盖一层主题色）。 -->
     <ImageView
         android:id="@+id/wallpaper"
         android:layout_width="match_parent"
@@ -12,17 +18,8 @@
         android:scaleType="centerCrop"
         android:importantForAccessibility="no" />
 
-    <!-- 压暗壁纸，保证时钟和磁贴文字看得清：上下更暗，中间透一点。 -->
     <View
         android:id="@+id/scrim"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/wallpaper_scrim"
-        android:importantForAccessibility="no" />
-
-    <!-- 环境光：当前选中磁贴的主色，从左下角晕开。 -->
-    <View
-        android:id="@+id/ambient"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:importantForAccessibility="no" />
@@ -33,181 +30,262 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="3dp"
         android:singleLine="true"
-        android:textColor="#80FFFFFF"
-        android:textSize="11sp"
+        android:textSize="10sp"
         android:fontFamily="@font/outfit_regular"
         android:visibility="gone" />
 
     <LinearLayout
+        android:id="@+id/grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingStart="40dp"
-        android:paddingEnd="40dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="22dp">
 
-        <RelativeLayout
+        <LinearLayout
+            android:id="@+id/topRow"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="0dp"
+            android:layout_weight="1.2"
+            android:orientation="horizontal">
 
+            <!-- 时钟卡（不可点：在上面左右滑也能滚动下排）。 -->
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@+id/pills"
-                android:orientation="vertical">
+                android:id="@+id/clockCard"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:padding="20dp">
 
                 <TextView
                     android:id="@+id/greeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="3dp"
                     android:singleLine="true"
-                    android:textColor="#8CFFFFFF"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/outfit_medium"
+                    android:letterSpacing="0.16"
+                    android:textAllCaps="true" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextClock
+                    android:id="@+id/clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:format12Hour="HH:mm"
+                    android:format24Hour="HH:mm"
+                    android:textSize="64sp"
+                    android:fontFamily="@font/outfit_light"
+                    android:letterSpacing="-0.04"
+                    android:includeFontPadding="false" />
+
+                <!-- 日期固定用中文显示，不跟随系统语言（车机可能是英文系统）。 -->
+                <TextView
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:singleLine="true"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_regular"
+                    android:letterSpacing="0.04" />
+
+                <!-- 有新版本时显示，点了进设置的"版本更新"。 -->
+                <TextView
+                    android:id="@+id/pillUpdate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:singleLine="true"
                     android:textSize="12sp"
                     android:fontFamily="@font/outfit_medium"
-                    android:letterSpacing="0.22"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- GPS 卡：车速大字、方向 / 海拔、日出日落弧线（不可点）。 -->
+            <LinearLayout
+                android:id="@+id/gpsCard"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/gpsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/outfit_medium"
+                    android:letterSpacing="0.16"
                     android:textAllCaps="true" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal">
 
-                    <TextClock
-                        android:id="@+id/clock"
+                    <TextView
+                        android:id="@+id/speed"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:format12Hour="HH:mm"
-                        android:format24Hour="HH:mm"
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="52sp"
+                        android:singleLine="true"
+                        android:textSize="40sp"
                         android:fontFamily="@font/outfit_light"
-                        android:letterSpacing="-0.04"
+                        android:letterSpacing="-0.03"
                         android:includeFontPadding="false" />
 
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="26dp"
-                        android:layout_gravity="bottom"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
-                        android:layout_marginBottom="8dp"
-                        android:background="#33FFFFFF" />
-
-                    <!-- 日期固定用中文显示，不跟随系统语言（车机可能是英文系统）。 -->
                     <TextView
-                        android:id="@+id/date"
+                        android:id="@+id/speedUnit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:layout_marginBottom="9dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginBottom="4dp"
                         android:singleLine="true"
-                        android:textColor="#A6FFFFFF"
-                        android:textSize="15sp"
-                        android:fontFamily="@font/outfit_regular"
-                        android:letterSpacing="0.1" />
+                        android:text="km/h"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_regular" />
                 </LinearLayout>
 
-                <!-- GPS：车速 · 方向 · 海拔（有新鲜定位时才显示，见 HomeGps）。 -->
+                <!-- 方向 · 海拔；没有定位时是提示文字。 -->
                 <TextView
                     android:id="@+id/trip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="3dp"
                     android:layout_marginTop="4dp"
                     android:singleLine="true"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="15sp"
-                    android:fontFamily="@font/outfit_regular"
-                    android:letterSpacing="0.04"
-                    android:visibility="gone" />
+                    android:ellipsize="end"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/outfit_regular" />
+
+                <FrameLayout
+                    android:id="@+id/sunHolder"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="6dp" />
             </LinearLayout>
 
+            <!-- CarPlay 大卡：左边方块是当前壁纸（像音乐卡片的封面）。 -->
             <LinearLayout
-                android:id="@+id/pills"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentTop="true"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal">
+                android:id="@+id/firstTile"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:layout_marginStart="16dp"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusedByDefault="true">
 
-                <!-- 有新版本时显示，点了进设置的"版本更新"。 -->
-                <TextView
-                    android:id="@+id/pillUpdate"
-                    style="@style/Pill"
-                    android:background="@drawable/pill_accent"
-                    android:textColor="#FF0B2A17"
-                    android:visibility="gone" />
+                <ImageView
+                    android:id="@+id/art"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:adjustViewBounds="false"
+                    android:scaleType="centerCrop"
+                    android:importantForAccessibility="no" />
 
-                <TextView
-                    android:id="@+id/pillApps"
-                    style="@style/Pill"
-                    android:text="@string/apps" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="20dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="4dp"
+                    android:paddingEnd="6dp"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/pillSettings"
-                    style="@style/Pill"
-                    android:text="@string/settings" />
+                    <TextView
+                        android:id="@+id/carplayLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:letterSpacing="0.16"
+                        android:textAllCaps="true" />
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/carplayTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:text="@string/carplay"
+                        android:textSize="34sp"
+                        android:fontFamily="@font/outfit_light"
+                        android:letterSpacing="-0.02"
+                        android:includeFontPadding="false" />
+
+                    <TextView
+                        android:id="@+id/carplaySub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_regular" />
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <!-- 进入按钮：圆形，深色底 + 箭头。 -->
+                    <ImageView
+                        android:id="@+id/carplayGo"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="end"
+                        android:padding="13dp"
+                        android:src="@drawable/ui_right"
+                        android:importantForAccessibility="no" />
+                </LinearLayout>
             </LinearLayout>
-        </RelativeLayout>
+        </LinearLayout>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <!-- 顶部焦点区：当前选中磁贴的名称（参考 CleanYourTV 的 top shelf）。 -->
-        <TextView
-            android:id="@+id/heroName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:singleLine="true"
-            android:textColor="#FFFFFFFF"
-            android:textSize="34sp"
-            android:fontFamily="@font/outfit_light"
-            android:letterSpacing="-0.01"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/heroSub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="3dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="16dp"
-            android:singleLine="true"
-            android:textColor="#99FFFFFF"
-            android:textSize="14sp"
-            android:fontFamily="@font/outfit_regular"
-            android:letterSpacing="0.04" />
-
+        <!-- 下排：应用卡。 -->
         <HorizontalScrollView
             android:id="@+id/tileScroll"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="16dp"
             android:scrollbars="none"
             android:overScrollMode="never"
-            android:clipChildren="false"
-            android:clipToPadding="false">
+            android:fillViewport="true">
 
             <LinearLayout
                 android:id="@+id/tiles"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:clipChildren="false"
-                android:clipToPadding="false" />
+                android:layout_height="match_parent"
+                android:orientation="horizontal" />
         </HorizontalScrollView>
     </LinearLayout>
 </FrameLayout>

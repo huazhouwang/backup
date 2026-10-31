@@ -324,45 +324,42 @@ def main():
     failed = None
     try:
         time.sleep(1)
-        demo.caption("① 首页：CarPlay、原车、文件、系统设置；时钟下面是 GPS 车速和海拔")
+        demo.caption("① 首页 Bento 仪表盘：时钟卡、GPS 卡（车速 + 日出日落弧线）、CarPlay 大卡、下排应用卡")
         time.sleep(2)
         demo.shot("home")
 
-        demo.tap("CarPlay", "② 点击 CarPlay 磁贴 → 打开 ZLINK（模拟）")
+        demo.tap("CarPlay", "② 点 CarPlay 大卡 → 打开 ZLINK（模拟）")
         demo.find("ZLINK（模拟）")
         demo.shot("carplay-opened")
         demo.home()
 
-        demo.tap("原车", "③ 点击「原车」磁贴 → 打开原车画面（模拟）")
+        demo.tap("原车", "③ 点「原车」卡片 → 打开原车画面（模拟）")
         demo.find("原车 MMI 画面（模拟）")
         demo.shot("oem-opened")
         demo.home()
 
-        demo.long_press("系统设置", "④ 长按「系统设置」磁贴 → 弹出操作菜单")
+        demo.long_press("系统设置", "④ 长按「系统设置」卡片 → 弹出操作菜单")
         demo.shot("tile-menu")
         demo.tap("更换图标", "⑤ 点「更换图标」→ 图标网格")
         demo.shot("icon-picker")
         demo.tap("应用自带", "⑥ 选「应用自带」图标：只换图标，打开的还是系统设置")
         demo.shot("icon-changed")
 
-        demo.tap("应用", "⑦ 点右上角「应用」→ 全部应用", which="first")
+        demo.tap("全部应用", "⑦ 点「全部应用」卡片 → 全部应用列表")
         demo.shot("library")
         demo.key("KEYCODE_BACK", "按键：返回")
 
-        # 首页空白处（时钟和名称之间）左右滑，也能滚动底部的磁贴。
-        before = demo.scroll_x("文件")
-        demo.swipe(1400, 250, 500, 250, "⑧ 在首页空白处往左滑 → 底部磁贴跟着滚（不用对准磁贴那一条）")
-        demo.shot("swipe-blank")
-        if before - demo.scroll_x("文件") < 200:
-            raise RuntimeError("在空白处滑动，磁贴没有滚动")
+        demo.long_press("CarPlay", "⑧ 长按 CarPlay 大卡 → 菜单：更换应用、应用信息")
+        demo.shot("carplay-menu")
+        demo.key("KEYCODE_BACK", "按键：返回，关闭菜单")
 
-        demo.tap("桌面设置", "⑨ 点右上角「桌面设置」→ 整页设置（桌面自己的设置，不是安卓系统设置）")
+        demo.tap("桌面设置", "⑨ 点「桌面设置」卡片 → 整页设置（桌面自己的设置，不是安卓系统设置）")
         demo.shot("settings-wallpaper")
         demo.tap("浅色", "⑩ 外观选「浅色」→ 极简 Bento 卡片（默认「自动」：白天浅色、日落后深色）")
         demo.find("固定浅色")
         demo.shot("settings-light")
         demo.tap("每小时", "⑪ 轮换频率选「每小时」→ 自动轮换，每小时换一张（还有 30 分钟 / 3 小时 / 每天）")
-        demo.find("当前：自动轮换 · 每小时")
+        demo.find("当前壁纸：自动轮换 · 每小时")
         demo.shot("settings-wallpaper-hourly")
         demo.tap("按日出日落分白天 / 夜晚", "⑫ 打开「按日出日落分白天 / 夜晚」→ 白天轮换白天的壁纸，日落后换夜景（按 GPS 位置算）")
         demo.shot("settings-wallpaper-sun")
@@ -406,8 +403,9 @@ def main():
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "㉕ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
-        demo.key("KEYCODE_DPAD_RIGHT", "㉖ 方向键 →：焦点移到下一个磁贴", times=4)
+        demo.key("KEYCODE_DPAD_DOWN", "㉕ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 大卡开始")
+        demo.key("KEYCODE_DPAD_DOWN", "㉖ 方向键 ↓ →：焦点移到下排应用卡")
+        demo.key("KEYCODE_DPAD_RIGHT", "㉖ 方向键 ↓ →：焦点移到下排应用卡", times=2)
         demo.shot("dpad-focus")
         demo.home()
 

@@ -43,12 +43,12 @@ class HomeTilesTest {
     @Test
     fun matchingIconUsesUnifiedName() {
         val t = titles(listOf(DockItem("settings", Targets.SYSTEM_SETTINGS), DockItem("nav", FakeApps.NAVI)))
-        assertEquals(listOf("系统设置", "导航"), t.subList(2, 4))
+        assertEquals(listOf("系统设置", "导航"), t.subList(1, 3))
     }
 
     @Test
     fun mismatchedOrAppIconUsesAppName() {
         val t = titles(listOf(DockItem("nav", Targets.SYSTEM_SETTINGS), DockItem(null, FakeApps.NAVI)))
-        assertEquals(listOf("Settings", "高德地图车机版"), t.subList(2, 4))
+        assertEquals(listOf("Settings", "高德地图车机版"), t.subList(1, 3))
     }
 }

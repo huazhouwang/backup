@@ -31,6 +31,7 @@ import com.x0finch.q5home.ui.MenuItem
 import com.x0finch.q5home.ui.Menus
 import com.x0finch.q5home.ui.Overlay
 import com.x0finch.q5home.ui.Ui
+import com.x0finch.q5home.ui.SunArcView
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -38,7 +39,7 @@ import java.util.Locale
 
 class MainActivity : Activity() {
 
-    private enum class Slot { CARPLAY, OEM, DOCK, ADD }
+    private enum class Slot { CARPLAY, OEM, DOCK, ADD, APPS, SETTINGS }
 
     private class Tile(
         val slot: Slot,
@@ -50,24 +51,26 @@ class MainActivity : Activity() {
         val wide: Boolean,
     )
 
-    /** 挂在磁贴 View 上，供焦点 / 触摸时更新顶部信息。 */
-    private class TileInfo(val tile: Tile, val color: Int)
 
     private lateinit var config: Config
     private lateinit var root: View
     private lateinit var wallpaperView: ImageView
     private lateinit var scrim: View
     private lateinit var credit: TextView
-    private lateinit var ambient: View
     private lateinit var tiles: LinearLayout
     private lateinit var tileScroll: HorizontalScrollView
-    private lateinit var heroName: TextView
-    private lateinit var heroSub: TextView
     private lateinit var greeting: TextView
     private lateinit var date: TextView
+    private lateinit var gpsLabel: TextView
+    private lateinit var speed: TextView
+    private lateinit var speedUnit: TextView
     private lateinit var trip: TextView
+    private lateinit var sunArc: SunArcView
+    private lateinit var carplayCard: View
+    private lateinit var art: ImageView
+    private lateinit var carplaySub: TextView
     private lateinit var gps: HomeGps
-    /** 定位过时（进隧道）就隐藏那一行：每 5 秒看一次。 */
+    /** 定位过时（进隧道）就换成提示：每 5 秒看一次。 */
     private val tripTicker = object : Runnable {
         override fun run() {
             updateTrip()
@@ -77,7 +80,7 @@ class MainActivity : Activity() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var tileHeight = 0
-    private var ambientColor = 0
+    private var tileWidth = 0
     private var shownWallpaper: String? = null
     private lateinit var overlay: Overlay
     private var started = false
@@ -115,49 +118,40 @@ class MainActivity : Activity() {
         wallpaperView = findViewById(R.id.wallpaper)
         scrim = findViewById(R.id.scrim)
         credit = findViewById(R.id.credit)
-        ambient = findViewById(R.id.ambient)
         tiles = findViewById(R.id.tiles)
         tileScroll = findViewById(R.id.tileScroll)
-        heroName = findViewById(R.id.heroName)
-        heroSub = findViewById(R.id.heroSub)
         greeting = findViewById(R.id.greeting)
         date = findViewById(R.id.date)
+        gpsLabel = findViewById(R.id.gpsLabel)
+        speed = findViewById(R.id.speed)
+        speedUnit = findViewById(R.id.speedUnit)
         trip = findViewById(R.id.trip)
+        carplayCard = findViewById(R.id.firstTile)
+        art = findViewById(R.id.art)
+        carplaySub = findViewById(R.id.carplaySub)
+        sunArc = SunArcView(this)
+        findViewById<FrameLayout>(R.id.sunHolder).addView(sunArc, FrameLayout.LayoutParams(-1, -1))
         gps = HomeGps(this) { updateTrip() }
 
         overlay = Overlay(root as FrameLayout)
         config = Config(this)
         config.reload()?.let { toast("config.json 有误：$it") }
 
-        // 右上角胶囊：Bento 小卡片（叠在壁纸上）。
-        for (id in intArrayOf(R.id.pillApps, R.id.pillSettings)) {
-            findViewById<TextView>(id).apply {
-                background = Ui.pillBackground(this@MainActivity)
-                setTextColor(Ui.TEXT)
-            }
-        }
-        findViewById<TextView>(R.id.pillUpdate).apply {
-            background = Ui.pillBackground(this@MainActivity, Ui.PillStyle.PRIMARY)
-            setTextColor(Ui.ON_ACCENT)
-        }
-        Ui.allowShadows(tiles, tileScroll)
-        findViewById<View>(R.id.pillApps).setOnClickListener {
-            startActivity(Intent(this, LibraryActivity::class.java))
-        }
-        findViewById<View>(R.id.pillSettings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+        styleDashboard()
         forwardSwipesToTiles()
 
-        // 磁贴大小跟着安卓区域的高度走：车机分辨率和 WY 侧栏占位还没摸清，先做成自适应。
-        root.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
-            if (bottom - top != oldBottom - oldTop) {
-                val h = (bottom - top) * 0.36f
-                val newHeight = h.toInt().coerceIn(dp(96), dp(170))
-                if (newHeight != tileHeight) {
-                    tileHeight = newHeight
-                    handler.post { rebuild() }
-                }
+        // 下排卡片大小跟着那一排的实际高度走：车机分辨率和 WY 侧栏占位还没摸清，做成自适应。
+        tileScroll.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+            val h = v.height
+            if (h > 0 && h != tileHeight) {
+                tileHeight = h
+                handler.post { rebuild() }
+            }
+        }
+        // 封面方块：边长 = CarPlay 卡的内容高度。
+        art.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+            if (v.height > 0 && v.layoutParams.width != v.height) {
+                v.post { v.layoutParams = v.layoutParams.apply { width = v.height } }
             }
         }
 
@@ -231,17 +225,130 @@ class MainActivity : Activity() {
         return true
     }
 
+    /** GPS 卡：车速大字、方向 / 海拔；没有新鲜定位时显示提示。日出日落弧线也在这里刷新。 */
     private fun updateTrip() {
-        val text = if (config.homeGps) HomeGps.text(gps.last) else null
-        if (text == null) {
-            trip.visibility = View.GONE
+        val now = System.currentTimeMillis()
+        val reading = if (config.homeGps) HomeGps.reading(gps.last, now) else null
+        val speedText = reading?.speedKmh?.toString() ?: "—"
+        if (speed.text != speedText) speed.text = speedText
+        val detail = when {
+            reading != null -> reading.detail.ifEmpty { "GPS 已定位" }
+            !config.homeGps -> "首页 GPS 已关闭"
+            !gps.hasPermission() -> "没有定位权限（设置 → GPS 与 4G）"
+            else -> "等待 GPS 定位…"
+        }
+        if (trip.text != detail) trip.text = detail
+        val loc = Sun.location(this)
+        val times = loc?.let { Sun.times(it.first, it.second, now) }
+        if (times != null) {
+            sunArc.set(times.first, times.second, now, approximate = false)
         } else {
-            if (trip.text != text) trip.text = text
-            trip.visibility = View.VISIBLE
+            val day = Calendar.getInstance().apply {
+                timeInMillis = now
+                set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            }
+            val rise = day.apply { set(Calendar.HOUR_OF_DAY, 7) }.timeInMillis
+            sunArc.set(rise, rise + 12 * 3_600_000L, now, approximate = true)
         }
     }
 
-    /** 有新版本时右上角显示绿色胶囊。 */
+    /** 上排卡片和页面背景按主题上色（颜色都从 Ui 取）。 */
+    private fun styleDashboard() {
+        root.setBackgroundColor(Ui.PAGE)
+        // 背景壁纸只淡淡透一点。
+        scrim.setBackgroundColor(if (Ui.dark) 0xE60F0F11.toInt() else 0xF0ECEBE8.toInt())
+        credit.setTextColor(Ui.TEXT_FAINT)
+        val clockCard = findViewById<View>(R.id.clockCard)
+        val gpsCard = findViewById<View>(R.id.gpsCard)
+        clockCard.background = Ui.bento(this, 26, BentoDrawable.Style.LIFTED)
+        gpsCard.background = Ui.bento(this, 26, BentoDrawable.Style.LIFTED)
+        carplayCard.background = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), Ui.bento(this@MainActivity, 26, BentoDrawable.Style.RESTING))
+            addState(intArrayOf(), Ui.bento(this@MainActivity, 26, BentoDrawable.Style.LIFTED))
+        }
+        carplayCard.foreground = Ui.focusRing(this, 26)
+        Ui.allowShadows(findViewById(R.id.grid), findViewById(R.id.topRow), tileScroll, tiles)
+        for (v in listOf<TextView>(greeting, gpsLabel, findViewById(R.id.carplayLabel))) {
+            v.setTextColor(Ui.TEXT_DIM)
+            v.setCompoundDrawablesRelative(dot(), null, null, null)
+            v.compoundDrawablePadding = dp(8)
+        }
+        findViewById<TextView>(R.id.clock).setTextColor(Ui.TEXT)
+        date.setTextColor(Ui.TEXT_DIM)
+        speed.setTextColor(Ui.TEXT)
+        speedUnit.setTextColor(Ui.TEXT_DIM)
+        trip.setTextColor(Ui.TEXT_DIM)
+        gpsLabel.text = "行车 · GPS"
+        findViewById<TextView>(R.id.carplayLabel).text = "CarPlay"
+        findViewById<TextView>(R.id.carplayTitle).setTextColor(Ui.TEXT)
+        carplaySub.setTextColor(Ui.TEXT_DIM)
+        // 封面：圆角裁剪（硬件加速下的 outline 裁剪，安卓 8.1 支持圆角矩形）。
+        art.background = Ui.rounded(this, Ui.TRACK, 18)
+        art.clipToOutline = true
+        findViewById<ImageView>(R.id.carplayGo).apply {
+            background = Ui.rounded(this@MainActivity, Ui.TEXT, 24)
+            imageTintList = android.content.res.ColorStateList.valueOf(Ui.PAGE)
+        }
+        findViewById<TextView>(R.id.pillUpdate).apply {
+            background = Ui.pillBackground(this@MainActivity, Ui.PillStyle.PRIMARY)
+            setTextColor(Ui.ON_ACCENT)
+        }
+        carplayCard.setOnClickListener {
+            if (Targets.isAvailable(this, config.carplay)) {
+                if (!Targets.launch(this, config.carplay)) toast("无法打开：${config.carplay}")
+            } else {
+                pick(REQ_CARPLAY)
+            }
+        }
+        carplayCard.setOnLongClickListener { v -> onTileLongClick(carplayTile(), v); true }
+        pressAnimation(carplayCard, 1.02f)
+    }
+
+    /** 卡片标签前的小圆点（强调色）。 */
+    private fun dot(): Drawable = GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setColor(Ui.ACCENT)
+        setBounds(0, 0, dp(6), dp(6))
+    }
+
+    private fun carplayTile(): Tile {
+        val available = Targets.isAvailable(this, config.carplay)
+        return Tile(
+            Slot.CARPLAY, 0, config.carplay, Icons.byKey("carplay"), getString(R.string.carplay),
+            if (available) Targets.label(this, config.carplay) ?: "" else getString(R.string.not_set),
+            wide = true,
+        )
+    }
+
+    private fun updateCarplay() {
+        val tile = carplayTile()
+        val available = Targets.isAvailable(this, config.carplay)
+        carplaySub.text = if (available) listOf(tile.sub, "轻触进入").filter { it.isNotEmpty() }.joinToString("  ·  ")
+            else tile.sub
+        carplayCard.contentDescription = "CarPlay"
+    }
+
+    /** 按下缩一点，选中（旋钮）放大一点。 */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun pressAnimation(v: View, focusScale: Float) {
+        v.setOnFocusChangeListener { view, focused ->
+            view.animate().scaleX(if (focused) focusScale else 1f).scaleY(if (focused) focusScale else 1f)
+                .setDuration(150).start()
+            if (focused && view.parent == tiles) keepVisible(view)
+        }
+        v.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> view.animate().scaleX(0.97f).scaleY(0.97f).setDuration(90).start()
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val s = if (view.isFocused) focusScale else 1f
+                    view.animate().scaleX(s).scaleY(s).setDuration(120).start()
+                }
+            }
+            false
+        }
+    }
+
+    /** 有新版本时时钟卡里显示强调色胶囊。 */
     private fun updateBadge() {
         val updates = Updates(this)
         val pill = findViewById<TextView>(R.id.pillUpdate)
@@ -310,7 +417,8 @@ class MainActivity : Activity() {
         shownWallpaper = wallpaper?.key
         val bitmap = wallpaper?.let { Wallpapers.decode(this, it, resources.displayMetrics.widthPixels) }
         wallpaperView.setImageBitmap(bitmap)
-        scrim.visibility = if (bitmap != null) View.VISIBLE else View.GONE
+        // 纯色壁纸时封面用 CarPlay 图标。
+        if (bitmap != null) art.setImageBitmap(bitmap) else art.setImageDrawable(Icons.byKey("carplay")?.let { Icons.badge(this, it) })
         val author = wallpaper?.author
         credit.text = if (author.isNullOrBlank()) "" else "Photo · $author / Unsplash"
         credit.visibility = if (bitmap != null && !author.isNullOrBlank()) View.VISIBLE else View.GONE
@@ -320,12 +428,6 @@ class MainActivity : Activity() {
 
     private fun buildTiles(): List<Tile> {
         val list = mutableListOf<Tile>()
-        val carplayLabel = Targets.label(this, config.carplay)
-        list += Tile(
-            Slot.CARPLAY, 0, config.carplay, Icons.byKey("carplay"), getString(R.string.carplay),
-            if (Targets.isAvailable(this, config.carplay)) carplayLabel ?: "" else getString(R.string.not_set),
-            wide = true,
-        )
         list += Tile(
             Slot.OEM, 0, config.oem, Icons.byKey("oem"), getString(R.string.oem),
             when {
@@ -351,31 +453,25 @@ class MainActivity : Activity() {
             list += Tile(Slot.DOCK, i, item.target, icon, title, sub, wide = false)
         }
         list += Tile(Slot.ADD, 0, null, null, getString(R.string.add), "", wide = false)
+        // 固定的两张：全部应用、桌面设置（原来右上角的两个按钮）。
+        list += Tile(Slot.APPS, 0, null, Icons.byKey("apps"), getString(R.string.all_apps), "已安装的应用", wide = false)
+        list += Tile(Slot.SETTINGS, 0, null, DESK_ICON, getString(R.string.settings), "外观 · 壁纸 · 摸底", wide = false)
         return list
     }
 
     private fun rebuild() {
+        updateCarplay()
         if (tileHeight == 0) return
         tiles.removeAllViews()
-        val gap = dp(14)
-        for (tile in buildTiles()) {
-            val view = makeTileView(tile)
-            val lp = LinearLayout.LayoutParams(
-                if (tile.wide) tileHeight * 3 + gap else (tileHeight * 1.5f).toInt(),
-                tileHeight,
-            )
-            lp.marginEnd = gap
-            tiles.addView(view, lp)
-        }
-        // 默认展示 CarPlay 的信息和光晕。
-        tiles.getChildAt(0)?.let { first ->
-            showHero(first.tag as TileInfo)
-            // 旋钮 / 方向键：从右上角按钮往下，先到 CarPlay，而不是离得最近的最右边磁贴。
-            first.id = R.id.firstTile
-            // 第一次按方向键 / 转旋钮时直接选中 CarPlay，而不是右上角的按钮。
-            first.isFocusedByDefault = true
-            findViewById<View>(R.id.pillApps).nextFocusDownId = R.id.firstTile
-            findViewById<View>(R.id.pillSettings).nextFocusDownId = R.id.firstTile
+        val gap = dp(16)
+        val list = buildTiles()
+        // 卡片少时正好铺满一排（Bento 网格），多了按最小宽度排、左右滑。
+        val fit = (tileScroll.width - gap * (list.size - 1)) / list.size
+        tileWidth = fit.coerceIn((tileHeight * 0.72f).toInt(), (tileHeight * 1.4f).toInt())
+        list.forEachIndexed { i, tile ->
+            val lp = LinearLayout.LayoutParams(tileWidth, tileHeight)
+            if (i > 0) lp.marginStart = gap
+            tiles.addView(makeTileView(tile), lp)
         }
     }
 
@@ -384,41 +480,40 @@ class MainActivity : Activity() {
         tile.icon?.let { Icons.badge(this, it) } ?: Targets.icon(this, tile.spec)
 
     private fun makeTileView(tile: Tile): View {
-        val available = tile.slot == Slot.ADD || Targets.isAvailable(this, tile.spec)
+        val fixed = tile.slot == Slot.APPS || tile.slot == Slot.SETTINGS
+        val available = tile.slot == Slot.ADD || fixed || Targets.isAvailable(this, tile.spec)
         val icon = if (tile.slot == Slot.ADD) null else iconFor(tile)
-        val color = tile.icon?.top ?: Glow.dominantColor(icon)
 
         val card = FrameLayout(this)
         card.background = when {
-            // 加号 / 没装的应用：虚线框，叠在壁纸上。
+            // 加号 / 没装的应用：贴合的虚线框，不抢眼。
             !available || tile.slot == Slot.ADD -> GradientDrawable().apply {
-                cornerRadius = dp(20).toFloat()
-                setColor(0x33000000)
-                setStroke(dp(1), 0x59FFFFFF, dp(6).toFloat(), dp(5).toFloat())
+                cornerRadius = dp(22).toFloat()
+                setColor(Ui.PRESSED)
+                setStroke(dp(1), Ui.TEXT_FAINT, dp(6).toFloat(), dp(5).toFloat())
             }
             // Bento 卡片：平时抬起，按下变贴合（像被按下去）。
             else -> StateListDrawable().apply {
-                addState(intArrayOf(android.R.attr.state_pressed), Ui.bento(this@MainActivity, 20, BentoDrawable.Style.RESTING))
-                addState(intArrayOf(), Ui.bento(this@MainActivity, 20, BentoDrawable.Style.LIFTED))
+                addState(intArrayOf(android.R.attr.state_pressed), Ui.bento(this@MainActivity, 22, BentoDrawable.Style.RESTING))
+                addState(intArrayOf(), Ui.bento(this@MainActivity, 22, BentoDrawable.Style.LIFTED))
             }
         }
-        card.foreground = Ui.focusRing(this, 20)
+        card.foreground = Ui.focusRing(this, 22)
         card.isFocusable = true
         card.isClickable = true
-        card.tag = TileInfo(tile, color)
-        val pad = dp(16)
+        card.contentDescription = tile.title
+        val pad = dp(18)
 
         if (tile.slot == Slot.ADD) {
-            card.addView(TextView(this).apply {
-                text = "+"
-                setTextColor(0x99FFFFFF.toInt())
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, tileHeight * 0.32f)
-                typeface = resources.getFont(R.font.outfit_light)
+            card.addView(Ui.text(this, "+", 1f, Ui.TEXT_DIM, Ui.Font.LIGHT).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, tileHeight * 0.3f)
                 gravity = Gravity.CENTER
             }, FrameLayout.LayoutParams(-1, -1))
+            card.addView(Ui.text(this, tile.title, 13f, Ui.TEXT_DIM).apply { gravity = Gravity.CENTER },
+                FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { bottomMargin = pad })
         } else {
             if (icon != null) {
-                val size = (tileHeight * (if (tile.wide) 0.42f else 0.36f)).toInt()
+                val size = (tileHeight * 0.3f).toInt().coerceIn(dp(36), dp(56))
                 card.addView(ImageView(this).apply {
                     setImageDrawable(icon)
                     if (!available) alpha = 0.4f
@@ -427,22 +522,10 @@ class MainActivity : Activity() {
                 })
             }
             val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            texts.addView(TextView(this).apply {
-                text = tile.title
-                setTextColor(if (available) Ui.TEXT else 0xE6FFFFFF.toInt())
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, if (tile.wide) 26f else 17f)
-                typeface = resources.getFont(if (tile.wide) R.font.outfit_light else R.font.outfit_medium)
-                isSingleLine = true
-                ellipsize = TextUtils.TruncateAt.END
-            })
+            texts.addView(Ui.text(this, tile.title, 17f, if (available) Ui.TEXT else Ui.TEXT_DIM, Ui.Font.MEDIUM))
             if (tile.sub.isNotEmpty()) {
-                texts.addView(TextView(this).apply {
-                    text = tile.sub
-                    setTextColor(if (available) Ui.TEXT_DIM else 0x99FFFFFF.toInt())
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                    typeface = resources.getFont(R.font.outfit_regular)
-                    isSingleLine = true
-                    ellipsize = TextUtils.TruncateAt.END
+                texts.addView(Ui.text(this, tile.sub, 12f, if (available) Ui.TEXT_DIM else Ui.TEXT_FAINT).apply {
+                    setPadding(0, dp(4), 0, 0)
                 })
             }
             card.addView(texts, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.START).apply {
@@ -452,27 +535,7 @@ class MainActivity : Activity() {
 
         card.setOnClickListener { onTileClick(tile, available) }
         card.setOnLongClickListener { v -> onTileLongClick(tile, v); true }
-        card.setOnFocusChangeListener { v, focused ->
-            v.animate().scaleX(if (focused) 1.05f else 1f).scaleY(if (focused) 1.05f else 1f)
-                .setDuration(150).start()
-            if (focused) {
-                showHero(v.tag as TileInfo)
-                keepVisible(v)
-            }
-        }
-        card.setOnTouchListener { v, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(90).start()
-                    showHero(v.tag as TileInfo)
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val s = if (v.isFocused) 1.05f else 1f
-                    v.animate().scaleX(s).scaleY(s).setDuration(120).start()
-                }
-            }
-            false
-        }
+        pressAnimation(card, 1.05f)
         return card
     }
 
@@ -508,27 +571,11 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun showHero(info: TileInfo) {
-        val tile = info.tile
-        heroName.text = if (tile.slot == Slot.ADD) "添加常用应用" else tile.title
-        heroSub.text = when (tile.slot) {
-            Slot.CARPLAY -> if (tile.sub.isNotEmpty()) "${tile.sub}  ·  轻触进入" else ""
-            Slot.OEM -> tile.sub
-            Slot.DOCK -> tile.sub.ifEmpty { "轻触打开  ·  长按管理" }
-            Slot.ADD -> "从全部应用里挑选"
-        }
-        val color = if (tile.slot == Slot.ADD) Glow.FALLBACK else info.color
-        if (color != ambientColor) {
-            ambientColor = color
-            ambient.background = Glow.ambient(resources, color)
-            ambient.alpha = 0.4f
-            ambient.animate().alpha(1f).setDuration(500).start()
-        }
-    }
-
     private fun onTileClick(tile: Tile, available: Boolean) {
         when {
             tile.slot == Slot.ADD -> pick(REQ_ADD)
+            tile.slot == Slot.APPS -> startActivity(Intent(this, LibraryActivity::class.java))
+            tile.slot == Slot.SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
             !available -> pick(requestCodeFor(tile))
             !Targets.launch(this, tile.spec) -> toast("无法打开：${tile.spec}")
         }
@@ -536,6 +583,7 @@ class MainActivity : Activity() {
 
     private fun onTileLongClick(tile: Tile, view: View) {
         if (tile.slot == Slot.ADD) { pick(REQ_ADD); return }
+        if (tile.slot == Slot.APPS || tile.slot == Slot.SETTINGS) { onTileClick(tile, true); return }
         val items = mutableListOf(MenuItem("更换应用", R.drawable.ui_swap) { pick(requestCodeFor(tile)) })
         if (tile.slot == Slot.DOCK) {
             items += MenuItem("更换图标", R.drawable.ui_palette) { pickIcon(tile) }
@@ -565,7 +613,7 @@ class MainActivity : Activity() {
         Slot.CARPLAY -> REQ_CARPLAY
         Slot.OEM -> REQ_OEM
         Slot.DOCK -> REQ_REPLACE_BASE + tile.index
-        Slot.ADD -> REQ_ADD
+        Slot.ADD, Slot.APPS, Slot.SETTINGS -> REQ_ADD
     }
 
     private fun pick(requestCode: Int) {
@@ -615,5 +663,8 @@ class MainActivity : Activity() {
         private const val REQ_OEM = 2
         private const val REQ_ADD = 3
         private const val REQ_REPLACE_BASE = 100
+
+        /** 「桌面设置」卡片的图标（调节滑块，和系统设置的齿轮区分开）。 */
+        private val DESK_ICON = Icons.Icon("desk", "桌面设置", R.drawable.ui_tune, 0xFF7D8BFF.toInt(), 0xFF2F48F5.toInt())
     }
 }

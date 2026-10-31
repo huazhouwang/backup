@@ -59,15 +59,24 @@ class HomeGps(private val context: Context, private val onChange: (Location?) ->
 
         fun compass(bearing: Float): String = DIRECTIONS[(((bearing % 360 + 360) % 360 + 22.5f) / 45f).toInt() % 8]
 
-        /** 首页那一行；没有新鲜的定位返回 null（隐藏）。方向只在车动起来时显示（静止时 GPS 方向不准）。 */
-        fun text(location: Location?, nowMs: Long = System.currentTimeMillis()): String? {
+        /** 首页 GPS 卡：车速（大字）+ 方向 · 海拔。 */
+        class Reading(val speedKmh: Int?, val detail: String)
+
+        /** 没有新鲜的定位返回 null。方向只在车动起来时显示（静止时 GPS 方向不准）。 */
+        fun reading(location: Location?, nowMs: Long = System.currentTimeMillis()): Reading? {
             val l = location ?: return null
             if (nowMs - l.time > STALE_MS) return null
-            val parts = listOfNotNull(
-                if (l.hasSpeed()) "${(l.speed * 3.6f).roundToInt()} km/h" else null,
+            val detail = listOfNotNull(
                 if (l.hasBearing() && l.hasSpeed() && l.speed >= 1.5f) "${compass(l.bearing)} ${l.bearing.roundToInt() % 360}°" else null,
                 if (l.hasAltitude()) "海拔 ${l.altitude.roundToInt()} m" else null,
-            )
+            ).joinToString("  ·  ")
+            return Reading(if (l.hasSpeed()) (l.speed * 3.6f).roundToInt() else null, detail)
+        }
+
+        /** 一行文字版（车速 · 方向 · 海拔）；没有新鲜的定位返回 null。 */
+        fun text(location: Location?, nowMs: Long = System.currentTimeMillis()): String? {
+            val r = reading(location, nowMs) ?: return null
+            val parts = listOfNotNull(r.speedKmh?.let { "$it km/h" }, r.detail.ifEmpty { null })
             return parts.takeIf { it.isNotEmpty() }?.joinToString("  ·  ")
         }
     }
