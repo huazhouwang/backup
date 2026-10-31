@@ -212,6 +212,14 @@ object Ui {
             isClickable = true
             setOnClickListener { onClick() }
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(context, 48))
+            // 按钮的投影画在自己外面：放进行 / 卡片后，往上两层不裁剪，否则投影被切成方块。
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    var p = v.parent
+                    repeat(2) { (p as? ViewGroup)?.let { g -> g.clipChildren = false; g.clipToPadding = false }; p = p?.parent }
+                }
+                override fun onViewDetachedFromWindow(v: View) {}
+            })
         }
 
     /** 让投影画到自己范围外面：卡片所在的各层容器都要关掉裁剪。 */
@@ -226,7 +234,7 @@ object Ui {
         root.addView(ImageView(activity).apply { scaleType = ImageView.ScaleType.CENTER_CROP }, FrameLayout.LayoutParams(-1, -1))
         root.addView(View(activity).apply {
             // 壁纸透出来（卡片是磨砂玻璃），但标题直接写在背景上，所以还是压一层。
-            setBackgroundColor(if (dark) 0xB30F0F11.toInt() else 0xB3ECEBE8.toInt())
+            setBackgroundColor(if (dark) 0xBF0F0F11.toInt() else 0xC7ECEBE8.toInt())
         }, FrameLayout.LayoutParams(-1, -1))
         refreshPageWallpaper(activity, root)
         return root

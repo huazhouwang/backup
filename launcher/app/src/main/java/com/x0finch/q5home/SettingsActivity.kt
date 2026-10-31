@@ -163,7 +163,7 @@ class SettingsActivity : Activity() {
         // 分类列表放在一张磨砂卡片上，背后是壁纸时也看得清。
         val navCard = FrameLayout(this).apply {
             background = Ui.group(this@SettingsActivity, 20)
-            setPadding(dp(6), dp(6), dp(6), dp(6))
+            setPadding(dp(4), dp(4), dp(4), dp(4))
             addView(itemScroll, FrameLayout.LayoutParams(-1, -1))
         }
         nav.addView(navCard, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -177,7 +177,8 @@ class SettingsActivity : Activity() {
         val color = if (selected) Ui.ACCENT else Ui.TEXT_DIM
         parent.addView(LinearLayout(this).apply {
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = dp(52)
+            // 48dp：六个分类在 480dp 高的屏幕上正好放进分类卡片，不用滚动。
+            minimumHeight = dp(48)
             setPadding(dp(14), 0, dp(14), 0)
             background = Ui.rowBackground(this@SettingsActivity, 16, selected)
             isFocusable = true
