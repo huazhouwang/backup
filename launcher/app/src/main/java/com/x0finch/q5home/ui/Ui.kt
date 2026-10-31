@@ -23,20 +23,27 @@ import com.x0finch.q5home.Sun
 import com.x0finch.q5home.Wallpapers
 
 /**
- * 桌面里统一的界面风格（不用系统弹窗）：磨砂深色卡片、圆角、Outfit 字体、绿色强调色。
- * 车上操作：行高至少 56dp，字号偏大；旋钮 / 方向键选中时有白色描边。
+ * 桌面里统一的界面风格（不用系统弹窗），参考理想汽车车机：近黑页面、扁平深灰圆角卡片（不用投影和描边）、
+ * 蓝色强调色、细字大数字。车上操作：行高至少 56dp，字号偏大；旋钮 / 方向键选中时有蓝色描边。
  */
 object Ui {
-    const val ACCENT = 0xFF8EF0B0.toInt()
-    const val DANGER = 0xFFFF6961.toInt()
-    const val TEXT = 0xFFFFFFFF.toInt()
-    const val TEXT_DIM = 0x99FFFFFF.toInt()
-    const val TEXT_FAINT = 0x66FFFFFF
-    const val CARD = 0xF21C1C1E.toInt()
-    const val GROUP = 0xB31C1C1E.toInt()
-    const val STROKE = 0x26FFFFFF
-    const val DIVIDER = 0x1AFFFFFF
-    const val SCRIM = 0x99000000.toInt()
+    const val ACCENT = 0xFF3B76F6.toInt()
+    /** 强调色上的文字 / 图形。 */
+    const val ON_ACCENT = 0xFFFFFFFF.toInt()
+    const val DANGER = 0xFFFF5A52.toInt()
+    const val TEXT = 0xFFF2F3F5.toInt()
+    const val TEXT_DIM = 0x99F2F3F5.toInt()
+    const val TEXT_FAINT = 0x5CF2F3F5
+    /** 页面底色（卡片之间的缝）。 */
+    const val PAGE = 0xFF0A0B0D.toInt()
+    /** 卡片 / 弹出层底色。 */
+    const val CARD = 0xFF1A1C20.toInt()
+    /** 卡片里再分一层（选中项、输入框、按钮底）。 */
+    const val RAISED = 0xFF26292E.toInt()
+    const val GROUP = 0xFF16181B.toInt()
+    const val STROKE = 0x0FFFFFFF
+    const val DIVIDER = 0x14FFFFFF
+    const val SCRIM = 0xB3000000.toInt()
 
     fun dp(context: Context, v: Number): Int = (v.toFloat() * context.resources.displayMetrics.density).toInt()
 
@@ -53,9 +60,9 @@ object Ui {
     fun rowBackground(context: Context, radiusDp: Number = 14, selected: Boolean = false): Drawable =
         StateListDrawable().apply {
             addState(intArrayOf(android.R.attr.state_focused),
-                rounded(context, 0x1FFFFFFF, radiusDp, 0xF2FFFFFF.toInt(), 2))
-            addState(intArrayOf(android.R.attr.state_pressed), rounded(context, 0x26FFFFFF, radiusDp))
-            addState(intArrayOf(), if (selected) rounded(context, 0x1FFFFFFF, radiusDp) else ColorDrawable(Color.TRANSPARENT))
+                rounded(context, RAISED, radiusDp, ACCENT, 2))
+            addState(intArrayOf(android.R.attr.state_pressed), rounded(context, RAISED, radiusDp))
+            addState(intArrayOf(), if (selected) rounded(context, RAISED, radiusDp) else ColorDrawable(Color.TRANSPARENT))
         }
 
     enum class Font(val res: Int) { LIGHT(R.font.outfit_light), REGULAR(R.font.outfit_regular), MEDIUM(R.font.outfit_medium) }
@@ -83,21 +90,28 @@ object Ui {
 
     enum class PillStyle { PRIMARY, SECONDARY, DANGER }
 
+    /** 旋钮 / 方向键选中时的蓝色描边（叠在 foreground 上）。 */
+    fun focusRing(context: Context, radiusDp: Number): Drawable = StateListDrawable().apply {
+        addState(intArrayOf(android.R.attr.state_focused), rounded(context, Color.TRANSPARENT, radiusDp, ACCENT, 2))
+        addState(intArrayOf(), ColorDrawable(Color.TRANSPARENT))
+    }
+
     /** 胶囊按钮。 */
     fun pill(context: Context, label: String, style: PillStyle = PillStyle.SECONDARY, onClick: () -> Unit): TextView {
         val (bg, fg) = when (style) {
-            PillStyle.PRIMARY -> ACCENT to 0xFF0B2A17.toInt()
-            PillStyle.SECONDARY -> 0x26FFFFFF to TEXT
-            PillStyle.DANGER -> 0x33FF6961 to DANGER
+            PillStyle.PRIMARY -> ACCENT to ON_ACCENT
+            PillStyle.SECONDARY -> RAISED to TEXT
+            PillStyle.DANGER -> 0x33FF5A52 to DANGER
         }
-        return text(context, label, 16f, fg, Font.MEDIUM).apply {
+        return text(context, label, 16f, fg, Font.REGULAR).apply {
             gravity = Gravity.CENTER
             minWidth = dp(context, 88)
             setPadding(dp(context, 22), 0, dp(context, 22), 0)
+            // 理想的按钮是小圆角矩形，不是胶囊。
             background = StateListDrawable().apply {
-                addState(intArrayOf(android.R.attr.state_focused), rounded(context, bg, 24, 0xF2FFFFFF.toInt(), 2))
-                addState(intArrayOf(android.R.attr.state_pressed), rounded(context, bg, 24).apply { alpha = 170 })
-                addState(intArrayOf(), rounded(context, bg, 24))
+                addState(intArrayOf(android.R.attr.state_focused), rounded(context, bg, 10, if (style == PillStyle.PRIMARY) TEXT else ACCENT, 2))
+                addState(intArrayOf(android.R.attr.state_pressed), rounded(context, bg, 10).apply { alpha = 170 })
+                addState(intArrayOf(), rounded(context, bg, 10))
             }
             isFocusable = true
             isClickable = true
@@ -106,25 +120,6 @@ object Ui {
         }
     }
 
-    /**
-     * 设置页、应用列表等整页的背景：当前壁纸 + 较重的暗色遮罩，和首页连成一体。
-     * 返回放内容的容器。
-     */
-    fun pageRoot(activity: Activity): FrameLayout {
-        val root = FrameLayout(activity).apply { setBackgroundColor(Color.BLACK) }
-        root.addView(ImageView(activity).apply { scaleType = ImageView.ScaleType.CENTER_CROP }, FrameLayout.LayoutParams(-1, -1))
-        root.addView(View(activity).apply { setBackgroundColor(0xD9000000.toInt()) }, FrameLayout.LayoutParams(-1, -1))
-        refreshPageWallpaper(activity, root)
-        return root
-    }
-
-    /** 换壁纸后刷新整页背景（背景图是 [pageRoot] 的第一个子 View）。 */
-    fun refreshPageWallpaper(activity: Activity, root: FrameLayout) {
-        val image = root.getChildAt(0) as? ImageView ?: return
-        val config = Config(activity).also { it.reload() }
-        val bmp = Wallpapers.current(activity, config.wallpaper, intervalMinutes = config.wallpaperInterval,
-            daylight = if (config.wallpaperSun) Sun.isDaylight(activity) else null)
-            ?.let { Wallpapers.decode(activity, it, activity.resources.displayMetrics.widthPixels / 2) }
-        image.setImageBitmap(bmp)
-    }
+    /** 设置页、应用列表等整页的背景：和理想车机一样是纯色近黑（不再铺壁纸）。返回放内容的容器。 */
+    fun pageRoot(activity: Activity): FrameLayout = FrameLayout(activity).apply { setBackgroundColor(PAGE) }
 }

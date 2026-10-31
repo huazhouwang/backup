@@ -27,7 +27,7 @@ class HomeSwipeTest {
         RuntimeEnvironment.setQualifiers("w1280dp-h480dp-land-mdpi")
         FakeApps.installCar(context)
         // 常用应用多放几个，让磁贴超出屏幕宽度。
-        Config(context).apply { repeat(6) { i -> setDock(dock + DockItem("nav", "${FakeApps.NAVI}$i")) } }
+        Config(context).apply { reload(); setDock(dock + (0 until 30).map { i -> DockItem("nav", "${FakeApps.NAVI}$i") }) }
         val home = Robolectric.buildActivity(MainActivity::class.java).setup().visible().get()
         shadowOf(Looper.getMainLooper()).idle()
         val root = home.findViewById<View>(R.id.root)

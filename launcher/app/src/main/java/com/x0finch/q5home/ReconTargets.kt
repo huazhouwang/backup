@@ -33,12 +33,29 @@ data class ReconTargets(
         /** 和仓库里 config/recon-targets.json 保持一致（下载失败时用）。 */
         val DEFAULT_JSON = """
             {
-              "packages": ["com.wwc2.launcher", "com.wwc2.main", "com.wwc2.mainui", "com.wwc2.canmcusdk", "com.wwc2.canbusapk"],
-              "code": [
-                {"name": "原车画面切换", "pattern": "original_screen|enter_original|switch_original|original_unlock|source_avin|media_box"},
-                {"name": "仪表 / 车辆数据（车速、转速、车门等）", "pattern": "car_info|getCanMcuCarInfo|CarInfoLogic|canbusDataFromMCU|notifyCarInfo|uri_carinfo"}
+              "packages": [
+                "com.wwc2.launcher",
+                "com.wwc2.main",
+                "com.wwc2.mainui",
+                "com.wwc2.canmcusdk",
+                "com.wwc2.canbusapk",
+                "com.zjinnova.zlink"
               ],
-              "strings": "original|car_info|speed|rpm|engine|fuel|mileage|temperature",
+              "code": [
+                {
+                  "name": "原车画面切换",
+                  "pattern": "original_screen|enter_original|switch_original|original_unlock|source_avin|media_box"
+                },
+                {
+                  "name": "仪表 / 车辆数据（车速、转速、车门等）",
+                  "pattern": "car_info|getCanMcuCarInfo|CarInfoLogic|canbusDataFromMCU|notifyCarInfo|uri_carinfo"
+                },
+                {
+                  "name": "ZLINK 小窗 / 画中画 / 悬浮窗",
+                  "pattern": "PictureInPicture|picture_in_picture|pip_|float_?window|floatview|small_?window|mini_?window|freeform|split_?screen|TYPE_APPLICATION_OVERLAY|SYSTEM_ALERT_WINDOW|auto_?(enter|open|start)"
+                }
+              ],
+              "strings": "original|car_info|speed|rpm|engine|fuel|mileage|temperature|PictureInPicture|float|small_?window|mini_?window|freeform|split|overlay|auto_?(enter|open|start)",
               "providers": [
                 "content://com.wwc2.canmcusdk.CanbusProvider/original_screen",
                 "content://com.wwc2.canmcusdk.CanbusProvider/car_info",

@@ -88,7 +88,8 @@ class Demo:
             raise RuntimeError("uiautomator dump 失败")
         found = []
         for node in ET.fromstring(xml).iter("node"):
-            text = node.get("text") or ""
+            # 只有图标的按钮（首页底栏）用 content-desc 当文字。
+            text = node.get("text") or node.get("content-desc") or ""
             m = re.match(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.get("bounds", ""))
             if text and m:
                 x1, y1, x2, y2 = map(int, m.groups())
@@ -324,39 +325,36 @@ def main():
     failed = None
     try:
         time.sleep(1)
-        demo.caption("① 首页：CarPlay、原车、文件、系统设置；时钟下面是 GPS 车速和海拔")
+        demo.caption("① 首页（参考理想车机）：左车辆卡 + CarPlay，中间壁纸画框，右边时间 / 日出日落 / 指南针，底栏两段")
         time.sleep(2)
         demo.shot("home")
 
-        demo.tap("CarPlay", "② 点击 CarPlay 磁贴 → 打开 ZLINK（模拟）")
+        demo.tap("CarPlay", "② 点左下 CarPlay 媒体条 → 打开 ZLINK（模拟）", which="first")
         demo.find("ZLINK（模拟）")
         demo.shot("carplay-opened")
         demo.home()
 
-        demo.tap("原车", "③ 点击「原车」磁贴 → 打开原车画面（模拟）")
+        demo.tap("原车", "③ 点底栏「原车」图标 → 打开原车画面（模拟）")
         demo.find("原车 MMI 画面（模拟）")
         demo.shot("oem-opened")
         demo.home()
 
-        demo.long_press("系统设置", "④ 长按「系统设置」磁贴 → 弹出操作菜单")
+        demo.long_press("系统设置", "④ 长按底栏「系统设置」→ 弹出操作菜单")
         demo.shot("tile-menu")
         demo.tap("更换图标", "⑤ 点「更换图标」→ 图标网格")
         demo.shot("icon-picker")
         demo.tap("应用自带", "⑥ 选「应用自带」图标：只换图标，打开的还是系统设置")
         demo.shot("icon-changed")
 
-        demo.tap("应用", "⑦ 点右上角「应用」→ 全部应用", which="first")
+        demo.tap("全部应用", "⑦ 点底栏「全部应用」图标 → 全部应用列表")
         demo.shot("library")
         demo.key("KEYCODE_BACK", "按键：返回")
 
-        # 首页空白处（时钟和名称之间）左右滑，也能滚动底部的磁贴。
-        before = demo.scroll_x("文件")
-        demo.swipe(1400, 250, 500, 250, "⑧ 在首页空白处往左滑 → 底部磁贴跟着滚（不用对准磁贴那一条）")
-        demo.shot("swipe-blank")
-        if before - demo.scroll_x("文件") < 200:
-            raise RuntimeError("在空白处滑动，磁贴没有滚动")
+        demo.long_press("CarPlay", "⑧ 长按 CarPlay 媒体条 → 菜单：更换应用、应用信息", which="first")
+        demo.shot("carplay-menu")
+        demo.key("KEYCODE_BACK", "按键：返回，关闭菜单")
 
-        demo.tap("桌面设置", "⑨ 点右上角「桌面设置」→ 整页设置（桌面自己的设置，不是安卓系统设置）")
+        demo.tap("桌面设置", "⑨ 点底栏「桌面设置」图标 → 整页设置（桌面自己的设置，不是安卓系统设置）")
         demo.shot("settings-wallpaper")
         demo.tap("每小时", "⑩ 轮换频率选「每小时」→ 自动轮换，每小时换一张（还有 30 分钟 / 3 小时 / 每天）")
         demo.find("当前：自动轮换 · 每小时")
@@ -403,8 +401,9 @@ def main():
         demo.shot("home-city")
 
         # 旋钮 / 方向键：焦点在磁贴间移动。
-        demo.key("KEYCODE_DPAD_DOWN", "㉔ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 开始")
-        demo.key("KEYCODE_DPAD_RIGHT", "㉕ 方向键 →：焦点移到下一个磁贴", times=4)
+        demo.key("KEYCODE_DPAD_DOWN", "㉔ 方向键 ↓（模拟旋钮）：焦点从 CarPlay 媒体条开始")
+        demo.key("KEYCODE_DPAD_DOWN", "㉕ 方向键 ↓ →：焦点移到底栏")
+        demo.key("KEYCODE_DPAD_RIGHT", "㉕ 方向键 ↓ →：焦点移到底栏", times=2)
         demo.shot("dpad-focus")
         demo.home()
 

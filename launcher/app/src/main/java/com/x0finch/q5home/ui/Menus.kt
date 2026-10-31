@@ -103,7 +103,7 @@ object Menus {
             if (drawable != null) setImageDrawable(drawable) else background = Ui.rounded(context, 0x26FFFFFF, 14)
         }, FrameLayout.LayoutParams(Ui.dp(context, 52), Ui.dp(context, 52)))
         if (selected) {
-            frame.addView(Ui.glyph(context, R.drawable.ui_check, 16, 0xFF0B2A17.toInt()).apply {
+            frame.addView(Ui.glyph(context, R.drawable.ui_check, 16, Ui.ON_ACCENT).apply {
                 background = Ui.rounded(context, Ui.ACCENT, 10)
                 setPadding(Ui.dp(context, 2), Ui.dp(context, 2), Ui.dp(context, 2), Ui.dp(context, 2))
             }, FrameLayout.LayoutParams(Ui.dp(context, 20), Ui.dp(context, 20), Gravity.END or Gravity.TOP).apply {

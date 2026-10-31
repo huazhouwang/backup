@@ -109,7 +109,7 @@ class LibraryActivity : Activity() {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
                 setPadding(dp(8), dp(14), dp(8), dp(12))
-                background = Ui.rounded(this@LibraryActivity, Ui.GROUP, 18, Ui.STROKE, 1)
+                background = Ui.rounded(this@LibraryActivity, Ui.CARD, 14)
                 addView(ImageView(context), LinearLayout.LayoutParams(dp(56), dp(56)))
                 addView(Ui.text(context, "", 13f, 0xE6FFFFFF.toInt()).apply { gravity = Gravity.CENTER },
                     LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })

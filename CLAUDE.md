@@ -63,6 +63,11 @@ MT6739、32 位 armeabi-v7a，平台是 WWC2（`com.wwc2.*`）。`user` 构建�
     剩余空间 < 300 MB 不下载。改动时不要放宽这些上限，除非用户同意。清单在仓库根目录 `wallpapers/feed.json`。
     清单由工作流 `wallpapers.yml` + `wallpapers/update_feed.py` 每天自动追加（Secret `UNSPLASH_ACCESS_KEY`，最多 60 张）。
     自动轮换的 key 仍是 `daily`（向后兼容），频率存 `wallpaper_interval_min`（分钟，默认 1440）。
+  - 界面风格参考**理想汽车车机**（参考图来源见 `examples/li-auto-reference.md`）：近黑页面 `Ui.PAGE`、扁平深灰圆角卡片
+    `Ui.CARD`（不用投影和描边）、蓝色强调色 `Ui.ACCENT`、细字大数字；颜色从 `Ui` 常量取，别写死。
+    首页三列 + 底栏：左车辆卡（GPS 车速 + `ui/RoadView` 行车视图 + CarPlay 媒体条，id `firstTile`）、
+    中间壁纸画框（`ui/RoundedImageView`）、右边时间 + 日出日落 + `ui/CompassView` 指南针；
+    底栏左段固定图标（CarPlay / 原车 / 全部应用 / 桌面设置 / 添加，content-desc 是名字），右段常用应用（图标 + 名字，可左右滑）。
   - 界面组件在 `ui/`（`Ui` 风格常量、`Overlay` 弹出层、`Menus` 菜单/确认/图标网格、`Toggle` 开关），
     设置是整页 `SettingsActivity`。不要再用系统 AlertDialog / Toast。
   - 测试：`./gradlew :app:testDebugUnitTest`（Robolectric，含截图输出到 `app/build/screenshots`）。

@@ -234,7 +234,6 @@ class SettingsActivity : Activity() {
             isClickable = true
             setOnClickListener {
                 config.setWallpaper(key)
-                Ui.refreshPageWallpaper(this@SettingsActivity, root)
                 render()
             }
         }
@@ -267,7 +266,7 @@ class SettingsActivity : Activity() {
             }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         }
         if (selected) {
-            frame.addView(Ui.glyph(this, R.drawable.ui_check, 16, 0xFF0B2A17.toInt()).apply {
+            frame.addView(Ui.glyph(this, R.drawable.ui_check, 16, Ui.ON_ACCENT).apply {
                 background = Ui.rounded(this@SettingsActivity, Ui.ACCENT, 11)
                 setPadding(dp(3), dp(3), dp(3), dp(3))
             }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.END or Gravity.TOP).apply {
@@ -295,7 +294,6 @@ class SettingsActivity : Activity() {
         return toggleRow(R.drawable.ui_wallpaper, "按日出日落分白天 / 夜晚", sub, config.wallpaperSun) { on ->
             config.setWallpaperSun(on)
             if (on && config.wallpaper != Wallpapers.DAILY) config.setWallpaper(Wallpapers.DAILY)
-            Ui.refreshPageWallpaper(this, root)
             render()
         }
     }
@@ -309,7 +307,6 @@ class SettingsActivity : Activity() {
             chips.addView(Ui.pill(this, name, if (selected) Ui.PillStyle.PRIMARY else Ui.PillStyle.SECONDARY) {
                 config.setWallpaperInterval(minutes)
                 if (!auto) config.setWallpaper(Wallpapers.DAILY)
-                Ui.refreshPageWallpaper(this, root)
                 render()
             }.apply { (layoutParams as LinearLayout.LayoutParams).marginStart = dp(8) })
         }
@@ -331,7 +328,6 @@ class SettingsActivity : Activity() {
             Menus.confirm(overlay, this, "清除在线壁纸", "删除已下载的 $count 张在线壁纸？内置壁纸不受影响。", "清除", danger = true) {
                 OnlineWallpapers(this).clear()
                 if (config.wallpaper.startsWith(OnlineWallpapers.KEY_PREFIX)) config.setWallpaper(Wallpapers.DAILY)
-                Ui.refreshPageWallpaper(this, root)
                 overlay.snackbar("已清除")
                 render()
             }
@@ -783,7 +779,6 @@ class SettingsActivity : Activity() {
                 Menus.confirm(overlay, this, "恢复默认布局",
                     "会清空手动设置的 CarPlay、原车入口、常用应用和壁纸选择。", "恢复", danger = true) {
                     config.reset()
-                    Ui.refreshPageWallpaper(this, root)
                     overlay.snackbar("已恢复默认")
                     render()
                 }
@@ -867,7 +862,7 @@ class SettingsActivity : Activity() {
     private fun group(vararg rows: View) {
         val g = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = Ui.rounded(this@SettingsActivity, Ui.GROUP, 20, Ui.STROKE, 1)
+            background = Ui.rounded(this@SettingsActivity, Ui.CARD, 14)
             setPadding(dp(6), dp(6), dp(6), dp(6))
         }
         rows.forEachIndexed { i, r ->
